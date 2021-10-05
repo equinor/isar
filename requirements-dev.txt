@@ -1,0 +1,7 @@
+black
+mypy
+pytest
+pytest-dotenv
+pytest-mock
+pytest-xdist
+requests-mock

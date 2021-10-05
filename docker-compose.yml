@@ -1,0 +1,11 @@
+version: "3"
+services:
+  api:
+    environment:
+      - ENVIRONMENT
+      - AZURE_CLIENT_ID
+      - AZURE_TENANT_ID
+      - AZURE_CLIENT_SECRET
+    build: .
+    ports:
+      - "5000:5000"

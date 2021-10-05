@@ -1,0 +1,2 @@
+class KeyvaultError(Exception):
+    pass

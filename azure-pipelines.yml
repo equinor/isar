@@ -1,0 +1,76 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+  branches:
+    include:
+      - master
+      - prod
+
+pr:
+  branches:
+    include:
+      - master
+      - prod
+
+pool:
+  vmImage: "ubuntu-latest"
+strategy:
+  matrix:
+    Python38:
+      python.version: "3.8"
+
+variables:
+  - group: public_api_env
+
+steps:
+  - task: PowerShell@2
+    inputs:
+      targetType: "inline"
+      script: "az login --service-principal --username $(AZURE-CLIENT-ID)  --password $(AZURE-CLIENT-SECRET) --tenant $(AZURE-TENANT-ID)"
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: "$(python.version)"
+    displayName: "Use Python $(python.version)"
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+      pip install -r requirements-dev.txt
+      pip install .
+    displayName: "Install dependencies"
+
+  - script: |
+      black --check src/
+    displayName: "black"
+
+  - script: |
+      mypy .
+    displayName: "MyPy"
+
+  - script: |
+      pip install pytest pytest-azurepipelines
+      pip install pytest-cov
+      export PYTHONPATH="${PYTHONPATH}:/home/vsts/work/1/s"
+      export ENVIRONMENT='development'
+      export JWT_DECODE_AUDIENCE=$(JWT-DECODE-AUDIENCE)
+      export AZURE_KEYS_URL=$(AZURE-KEYS-URL)
+      export API_USERNAME=$(API-USERNAME)
+      export API_PASSWORD=$(API-PASSWORD)
+      export AZURE_STORAGE_CONNECTION_STRING=$(AZURE-STORAGE-CONNECTION-STRING)
+      pytest -n 8 --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+    displayName: "pytest with coverage"
+
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: "$(System.DefaultWorkingDirectory)/**/coverage.xml"
+      reportDirectory: "$(System.DefaultWorkingDirectory)/**/htmlcov"
+      displayName: "Format coverage using Cobertura"
+
+  - script: |
+      coverage report --fail-under=50
+    displayName: "Checking coverage"
