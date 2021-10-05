@@ -1,0 +1,49 @@
+{
+  "map_name": "klab_compressor",
+  "robot_reference_points": {
+    "points": [
+      {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "frame": "robot"
+      },
+      {
+        "x": -1.88,
+        "y": -5.353,
+        "z": 0,
+        "frame": "robot"
+      },
+      {
+        "x": 3.88,
+        "y": -0.957,
+        "z": 0,
+        "frame": "robot"
+      }
+    ],
+    "frame": "robot"
+  },
+  "asset_reference_points": {
+    "points": [
+      {
+        "x": 20249.480,
+        "y": 5247.046,
+        "z": 14.5,
+        "frame": "asset"
+      },
+      {
+        "x": 20251.360,
+        "y": 5252.399,
+        "z": 14.5,
+        "frame": "asset"
+      },
+      {
+        "x": 20245.600,
+        "y": 5248.003,
+        "z": 14.5,
+        "frame": "asset"
+      }
+    ],
+    "frame": "asset"
+  }
+}

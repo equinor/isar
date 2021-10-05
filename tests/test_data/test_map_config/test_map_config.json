@@ -1,0 +1,49 @@
+{
+  "map_name": "test_map",
+  "robot_reference_points": {
+    "points": [
+      {
+        "x": 10,
+        "y": 20,
+        "z": 30,
+        "frame": "robot"
+      },
+      {
+        "x": 40,
+        "y": 50,
+        "z": 60,
+        "frame": "robot"
+      },
+      {
+        "x": 70,
+        "y": 80,
+        "z": 90,
+        "frame": "robot"
+      }
+    ],
+    "frame": "robot"
+  },
+  "asset_reference_points": {
+    "points": [
+      {
+        "x": 11,
+        "y": 21,
+        "z": 31,
+        "frame": "asset"
+      },
+      {
+        "x": 41,
+        "y": 51,
+        "z": 61,
+        "frame": "asset"
+      },
+      {
+        "x": 71,
+        "y": 81,
+        "z": 91,
+        "frame": "asset"
+      }
+    ],
+    "frame": "asset"
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "mission_id": 2,
+  "mission_steps": [
+    {
+      "step_name": "drive_to_pose",
+      "pose": {
+        "position": {
+          "x": -2,
+          "y": -2,
+          "z": 0,
+          "frame": "asset"
+        },
+        "orientation": {
+          "x": 0,
+          "y": 0,
+          "z": 0.4794255,
+          "w": 0.8775826,
+          "frame": "asset"
+        },
+        "frame": "asset"
+      }
+    },
+    {
+      "step_name": "take_image",
+      "target": {
+        "x": 2,
+        "y": 2,
+        "z": 0,
+        "frame": "robot"
+      }
+    },
+    {
+      "step_name": "drive_to_pose",
+      "pose": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "frame": "asset"
+        },
+        "orientation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1,
+          "frame": "asset"
+        },
+        "frame": "asset"
+      }
+    },
+    {
+      "step_name": "take_image",
+      "target": {
+        "x": 2,
+        "y": 2,
+        "z": 0,
+        "frame": "robot"
+      }
+    },
+    {
+      "step_name": "drive_to_pose",
+      "pose": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "frame": "asset"
+        },
+        "orientation": {
+          "x": 0,
+          "y": 0,
+          "z": 0.4794255,
+          "w": 0.8775826,
+          "frame": "asset"
+        },
+        "frame": "asset"
+      }
+    }
+  ]
+}

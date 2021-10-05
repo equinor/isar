@@ -1,0 +1,2 @@
+class QueueTimeoutError(Exception):
+    pass

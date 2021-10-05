@@ -1,0 +1,70 @@
+import logging
+from typing import TYPE_CHECKING, List, Sequence, Union
+
+from injector import inject
+from isar.services.coordinates.transformation import Transformation
+from models.enums.states import States
+from models.geometry.frame import Frame
+from models.inspections.inspection import Inspection
+from models.metadata.inspection_metadata import TimeIndexedPose
+from robot_interfaces.robot_storage_interface import RobotStorageInterface
+from transitions import State
+
+if TYPE_CHECKING:
+    from isar.state_machine.state_machine import StateMachine
+
+
+class Collect(State):
+    @inject
+    def __init__(
+        self,
+        state_machine: "StateMachine",
+        storage: RobotStorageInterface,
+        transform: Transformation,
+    ):
+        super().__init__(name="collect", on_enter=self.start)
+        self.state_machine: "StateMachine" = state_machine
+        self.logger = logging.getLogger("state_machine")
+        self.storage = storage
+        self.transform = transform
+
+    def start(self):
+        self.state_machine.update_status()
+        self.logger.info(f"State: {self.state_machine.status.current_state}")
+
+        next_state = self.collect_results()
+        self.state_machine.to_next_state(next_state)
+
+    def collect_results(self) -> States:
+        instance_id = self.state_machine.status.current_mission_instance_id
+        current_step = self.state_machine.status.current_mission_step
+
+        inspections: Sequence[Inspection] = self.storage.get_inspection_references(
+            vendor_mission_id=instance_id,
+            current_step=current_step,
+        )
+        for inspection_ref in inspections:
+            inspection_ref.metadata.tag_id = current_step.tag_id  # type: ignore
+
+            self.transform_results_to_asset_frame(
+                time_indexed_pose=inspection_ref.metadata.time_indexed_pose
+            )
+
+        self.state_machine.status.mission_schedule.inspections.extend(inspections)
+
+        return States.Send
+
+    def transform_results_to_asset_frame(
+        self, time_indexed_pose: Union[TimeIndexedPose, List[TimeIndexedPose]]
+    ):
+        if isinstance(time_indexed_pose, TimeIndexedPose):
+            time_indexed_pose.pose = self.transform.transform_pose(
+                pose=time_indexed_pose.pose,
+                to_=Frame.Asset,
+            )
+        elif isinstance(time_indexed_pose, list):
+            for indexed_pose in time_indexed_pose:
+                indexed_pose.pose = self.transform.transform_pose(
+                    pose=indexed_pose.pose,
+                    to_=Frame.Asset,
+                )

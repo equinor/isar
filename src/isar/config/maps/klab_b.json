@@ -1,0 +1,49 @@
+{
+  "map_name": "klab_b",
+  "robot_reference_points": {
+    "points": [
+      {
+        "x": 25.8147,
+        "y": 19.7512,
+        "z": 0.0029153,
+        "frame": "robot"
+      },
+      {
+        "x": 33.79958,
+        "y": 16.73696,
+        "z": 0.0014949,
+        "frame": "robot"
+      },
+      {
+        "x": 33.02274,
+        "y": 17.5206,
+        "z": 0.0030265,
+        "frame": "robot"
+      }
+    ],
+    "frame": "robot"
+  },
+  "asset_reference_points": {
+    "points": [
+      {
+        "x": 20237.040,
+        "y": 5204.024,
+        "z": 14.965,
+        "frame": "asset"
+      },
+      {
+        "x": 20240.67,
+        "y": 5212.172,
+        "z": 15.165,
+        "frame": "asset"
+      },
+      {
+        "x": 20239.91,
+        "y": 5210.63,
+        "z": 15.14,
+        "frame": "asset"
+      }
+    ],
+    "frame": "asset"
+  }
+}
