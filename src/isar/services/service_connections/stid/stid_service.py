@@ -3,7 +3,7 @@ from typing import Optional
 
 from azure.identity import DefaultAzureCredential
 from injector import inject
-from requests import RequestException, Response
+from requests import Response
 
 from isar.config import config
 from isar.services.auth.azure_credentials import AzureCredentials

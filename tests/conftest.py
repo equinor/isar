@@ -1,12 +1,14 @@
 import pytest
+from fastapi.testclient import TestClient
 from injector import Injector
 
-from isar import create_app
+from isar.app import create_app
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
 from isar.modules import (
+    APIModule,
     CoordinateModule,
     LocalPlannerModule,
     QueuesModule,
@@ -34,6 +36,7 @@ from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 def injector():
     return Injector(
         [
+            APIModule,
             CoordinateModule,
             QueuesModule,
             ReaderModule,
@@ -51,13 +54,13 @@ def injector():
 @pytest.fixture()
 def app(injector):
     app = create_app(injector=injector)
-    with app.app_context():
-        yield app
+    return app
 
 
 @pytest.fixture()
 def client(app):
-    return app.test_client()
+    client = TestClient(app)
+    return client
 
 
 @pytest.fixture()

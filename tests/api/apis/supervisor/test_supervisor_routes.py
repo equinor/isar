@@ -1,17 +1,23 @@
-from dataclasses import asdict
+import json
 from http import HTTPStatus
 from typing import Optional, Tuple
 
 import pytest
+
+from isar.mission_planner.local_planner import LocalPlanner
+from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.communication.messages import (
     StartMessage,
     StartMissionMessages,
     StopMissionMessages,
 )
+from isar.models.communication.messages.stop_message import StopMessage
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-
+from tests.test_utilities.mock_models.mock_mission_definition import (
+    mock_mission_definition,
+)
 from tests.test_utilities.mock_models.mock_status import mock_status
 
 
@@ -58,6 +64,99 @@ def mock_start_mission(status_code: int) -> Tuple[StartMessage, int]:
 
 class TestSupervisorRoutes:
     @pytest.mark.parametrize(
+        "mission_id, mock_get_mission, expected_exception,"
+        "mock_ready_to_start, mock_start, expected_output, expected_status_code",
+        [
+            (
+                12345,
+                mock_mission_definition(),
+                MissionPlannerError,
+                mock_ready_to_start_mission(HTTPStatus.OK),
+                mock_start_mission(HTTPStatus.OK),
+                StartMissionMessages.mission_not_found(),
+                HTTPStatus.NOT_FOUND,
+            ),
+            (
+                1,
+                mock_mission_definition(),
+                None,
+                mock_ready_to_start_mission(HTTPStatus.REQUEST_TIMEOUT),
+                mock_start_mission(HTTPStatus.OK),
+                StartMissionMessages.queue_timeout(),
+                HTTPStatus.REQUEST_TIMEOUT,
+            ),
+            (
+                1,
+                mock_mission_definition(),
+                None,
+                mock_ready_to_start_mission(HTTPStatus.CONFLICT),
+                mock_start_mission(HTTPStatus.OK),
+                StartMissionMessages.mission_in_progress(),
+                HTTPStatus.CONFLICT,
+            ),
+            (
+                1,
+                mock_mission_definition(),
+                None,
+                mock_ready_to_start_mission(HTTPStatus.OK),
+                mock_start_mission(HTTPStatus.REQUEST_TIMEOUT),
+                StartMissionMessages.queue_timeout(),
+                HTTPStatus.REQUEST_TIMEOUT,
+            ),
+            (
+                1,
+                mock_mission_definition(),
+                None,
+                mock_ready_to_start_mission(HTTPStatus.OK),
+                mock_start_mission(HTTPStatus.OK),
+                StartMissionMessages.success(),
+                HTTPStatus.OK,
+            ),
+        ],
+    )
+    def test_start_mission(
+        self,
+        client,
+        access_token,
+        mocker,
+        mission_id,
+        mock_get_mission,
+        expected_exception,
+        mock_ready_to_start,
+        mock_start,
+        expected_output,
+        expected_status_code,
+    ):
+        mocker.patch.object(
+            LocalPlanner,
+            "get_mission",
+            return_value=mock_get_mission,
+            side_effect=expected_exception,
+        )
+        mocker.patch.object(
+            SchedulingUtilities,
+            "ready_to_start_mission",
+            return_value=mock_ready_to_start,
+        )
+        mocker.patch.object(
+            SchedulingUtilities,
+            "start_mission",
+            return_value=mock_start,
+        )
+
+        response = client.post(
+            f"schedule/start-mission?ID={mission_id}",
+            headers={"Authorization": "Bearer {}".format(access_token)},
+        )
+
+        result_message = json.loads(response.text)
+        result = StartMessage(
+            message=result_message["message"], started=result_message["started"]
+        )
+        assert result == expected_output
+        assert response.status_code == expected_status_code
+
+    @pytest.mark.parametrize(
         "should_stop, mock_return, expected_output, expected_status_code",
         [
             (
@@ -86,27 +185,18 @@ class TestSupervisorRoutes:
     ):
         mocker.patch.object(QueueUtilities, "check_queue", side_effect=mock_return)
 
-        response = client.get(
-            "/schedule/stop_mission",
+        response = client.post(
+            "/schedule/stop-mission",
             headers={"Authorization": "Bearer {}".format(access_token)},
         )
 
-        assert response.json == asdict(expected_output)
+        result_message = json.loads(response.text)
+        result = StopMessage(
+            message=result_message["message"], stopped=result_message["stopped"]
+        )
+
+        assert result == expected_output
         assert response.status_code == expected_status_code
-
-    def test_list_predefined_missions(
-        self,
-        client,
-        access_token,
-    ):
-        response = client.get(
-            "/missions/list-predefined-missions",
-            headers={"Authorization": "Bearer {}".format(access_token)},
-        )
-        assert response.status_code == HTTPStatus.OK
-        response_dict = response.json
-        assert type(response_dict) == dict
-        assert "id" in response_dict["missions"][0]
 
     @pytest.mark.parametrize(
         "was_mission_started, state_at_request,expected_status_code,request_params",
@@ -129,11 +219,10 @@ class TestSupervisorRoutes:
                 HTTPStatus.CONFLICT,
                 {"x": 1, "y": 1, "z": 1, "orientation": "0,0,0,1"},
             ),
-            (False, "idle", HTTPStatus.BAD_REQUEST, None),
             (
                 False,
                 "idle",
-                HTTPStatus.BAD_REQUEST,
+                HTTPStatus.UNPROCESSABLE_ENTITY,
                 {"x": None, "y": 1, "z": 1, "orientation": "0,0,0,1"},
             ),
         ],
@@ -150,66 +239,20 @@ class TestSupervisorRoutes:
     ):
         mocker_return = mock_check_queue(was_mission_started, state_at_request)
         mocker.patch.object(QueueUtilities, "check_queue", side_effect=mocker_return)
-        response = client.get(
-            "/schedule/drive-to",
-            headers={"Authorization": "Bearer {}".format(access_token)},
-            query_string=request_params,
-        )
-        assert response.status_code == expected_status_code
 
-    @pytest.mark.parametrize(
-        "mock_ready_to_start, mock_start, expected_status_code, request_params",
-        [
-            (
-                mock_ready_to_start_mission(HTTPStatus.REQUEST_TIMEOUT),
-                mock_start_mission(HTTPStatus.OK),
-                HTTPStatus.REQUEST_TIMEOUT,
-                {"x_target": 1, "y_target": 1, "z_target": 1},
-            ),
-            (
-                mock_ready_to_start_mission(HTTPStatus.CONFLICT),
-                mock_start_mission(HTTPStatus.OK),
-                HTTPStatus.CONFLICT,
-                {"x_target": 1, "y_target": 1, "z_target": 1},
-            ),
-            (
-                mock_ready_to_start_mission(HTTPStatus.OK),
-                mock_start_mission(HTTPStatus.OK),
-                HTTPStatus.OK,
-                {"x_target": 1, "y_target": 1, "z_target": 1},
-            ),
-            (
-                mock_ready_to_start_mission(HTTPStatus.OK),
-                mock_start_mission(HTTPStatus.REQUEST_TIMEOUT),
-                HTTPStatus.REQUEST_TIMEOUT,
-                {"x_target": 1, "y_target": 1, "z_target": 1},
-            ),
-        ],
-    )
-    def test_take_image(
-        self,
-        client,
-        access_token,
-        mock_ready_to_start,
-        mock_start,
-        mocker,
-        expected_status_code,
-        request_params,
-    ):
-        mocker.patch.object(
-            SchedulingUtilities,
-            "ready_to_start_mission",
-            return_value=mock_ready_to_start,
-        )
-        mocker.patch.object(
-            SchedulingUtilities,
-            "start_mission",
-            return_value=mock_start,
+        query_string = (
+            f"x-value={request_params['x']}&"
+            f"y-value={request_params['y']}&"
+            f"z-value={request_params['z']}&"
+            f"quaternion={request_params['orientation'][0]}&"
+            f"quaternion={request_params['orientation'][2]}&"
+            f"quaternion={request_params['orientation'][4]}&"
+            f"quaternion={request_params['orientation'][6]}"
         )
 
-        response = client.get(
-            "/schedule/take-image",
+        response = client.post(
+            f"/schedule/drive-to?{query_string}",
             headers={"Authorization": "Bearer {}".format(access_token)},
-            query_string=request_params,
         )
+
         assert response.status_code == expected_status_code

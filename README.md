@@ -10,7 +10,7 @@ missions.
 The system consists of two threads running in parallel.
 
 1. State machine
-1. Flask API
+1. FastAPI
 
 ### State machine
 
@@ -29,14 +29,13 @@ main states are:
   canceled. The cancel state also functions as a wrap-up state when a mission is finished, prior to the state machine
   returning to idle.
 
-### Flask API
+### FastAPI
 
-The Flask API establishes an interface to the state machine for the user. As the API and state machine are separate
-threads, they communicate through python queues. The main flask extension used for the API design is
-the [flask-restx](https://github.com/python-restx/flask-restx) package.
+The FastAPI establishes an interface to the state machine for the user. As the API and state machine are separate
+threads, they communicate through python queues. FastAPI runs on an ASGI-server, specifically uvicorn. The 
+FastAPI-framework is split into routers where the endpoint operations are defined.
 
 ## Installation
-
 ```bash
 $ pip install git+https://github.com/equinor/isar.git@main
 ```
@@ -57,7 +56,7 @@ this [section](#robot-integration) for installing a mocked robot.
 Once the application has been started the swagger site may be accessed at
 
 ```
-http://localhost:3000/
+http://localhost:3000/docs
 ```
 
 Execute the `/schedule/start-mission` with `mission_id=1` to run a mission.
