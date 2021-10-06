@@ -1,4 +1,5 @@
 import importlib.resources as pkg_resources
+import logging
 from configparser import ConfigParser
 from os import getenv
 

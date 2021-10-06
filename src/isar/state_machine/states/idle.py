@@ -1,6 +1,5 @@
 import logging
 import time
-from os import stat_result
 from typing import TYPE_CHECKING
 
 from transitions import State

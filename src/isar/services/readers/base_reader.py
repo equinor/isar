@@ -1,12 +1,11 @@
 import json
 import logging
 from dataclasses import is_dataclass
-from json import JSONDecodeError
 from logging import Logger
 from pathlib import Path
 from typing import Any, Optional
 
-from dacite import Config, MissingValueError, WrongTypeError, from_dict
+from dacite import Config, from_dict
 
 logger: Logger = logging.getLogger("api")
 

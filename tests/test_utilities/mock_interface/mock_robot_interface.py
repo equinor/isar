@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from logging import Logger
 from typing import Any, List, Optional, Tuple
 
 from robot_interface.models.geometry.frame import Frame

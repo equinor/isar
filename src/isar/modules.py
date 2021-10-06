@@ -5,6 +5,9 @@ from typing import List, Tuple
 
 from injector import Module, provider, singleton
 
+from isar.apis.schedule.drive_to import DriveTo
+from isar.apis.schedule.start_mission import StartMission
+from isar.apis.schedule.stop_mission import StopMission
 from isar.config import config
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.echo_planner import EchoPlanner
@@ -23,6 +26,27 @@ from isar.storage.local_storage import LocalStorage
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.storage_service import StorageService
 from robot_interface.robot_interface import RobotInterface
+
+
+class APIModule(Module):
+    @provider
+    @singleton
+    def provide_drive_to(self, scheduling_utilities: SchedulingUtilities) -> DriveTo:
+        return DriveTo(scheduling_utilities)
+
+    @provider
+    @singleton
+    def provide_start_mission(
+        self,
+        mission_planner: MissionPlannerInterface,
+        scheduling_utilities: SchedulingUtilities,
+    ) -> StartMission:
+        return StartMission(mission_planner, scheduling_utilities)
+
+    @provider
+    @singleton
+    def provide_stop_mission(self, queues: Queues) -> StopMission:
+        return StopMission(queues)
 
 
 class RobotModule(Module):
@@ -147,6 +171,7 @@ class CoordinateModule(Module):
 
 
 modules: dict = {
+    "api": {"default": APIModule},
     "coordinate": {"default": CoordinateModule},
     "queues": {"default": QueuesModule},
     "reader": {"default": ReaderModule},

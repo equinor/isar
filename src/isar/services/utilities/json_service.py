@@ -22,7 +22,6 @@ class JsonService:
 class EnhancedJSONEncoder(json.JSONEncoder):
     """
     Custom JSONEncoder used in this project. Of special note is the ability to encode dataclasses.
-    This encoder is set as the default encoder which Flask uses when returning results.
     """
 
     def default(self, o):
