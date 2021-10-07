@@ -17,6 +17,21 @@ predefined_poses = {
         orientation=Orientation(x=0, y=0, z=0.998122, w=0.0612579, frame=Frame.Robot),
         frame=Frame.Robot,
     ),
+    "346-LD-1073": Pose(
+        position=Position(x=25.005, y=23.607, z=0, frame=Frame.Robot),
+        orientation=Orientation(x=0, y=0, z=0.9995287, w=-0.0306988, frame=Frame.Robot),
+        frame=Frame.Robot,
+    ),
+    "314-PI-001": Pose(
+        position=Position(x=25.041, y=23.682, z=0, frame=Frame.Robot),
+        orientation=Orientation(x=0, y=0, z=0.8907533, w=0.4544871, frame=Frame.Robot),
+        frame=Frame.Robot,
+    ),
+    "300-LD-0025": Pose(
+        position=Position(x=21.279, y=17.392, z=0, frame=Frame.Robot),
+        orientation=Orientation(x=0, y=0, z=0.2006291, w=0.9796673, frame=Frame.Robot),
+        frame=Frame.Robot,
+    ),
     "344-LD-1001": Pose(
         position=Position(x=24.853, y=23.761, z=0, frame=Frame.Robot),
         orientation=Orientation(x=0, y=0, z=0.998122, w=0.0612579, frame=Frame.Robot),
