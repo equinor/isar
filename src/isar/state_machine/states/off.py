@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 
 from transitions import State
 
+from isar.state_machine.states_enum import States
+
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
@@ -14,5 +16,5 @@ class Off(State):
         self.state_machine: "StateMachine" = state_machine
 
     def start(self):
-        self.state_machine.update_status()
-        self.logger.info(f"State: {self.state_machine.status.current_state}")
+        self.state_machine.update_state(States.Off)
+        self.logger.info(f"State: {self.state_machine.current_state}")

@@ -70,10 +70,6 @@ class StartMission(Resource):
             message = StartMissionMessages.mission_not_found()
             return message, HTTPStatus.NOT_FOUND
 
-        ready, response = self.scheduling_utilities.ready_to_start_mission()
-        if not ready:
-            return response
-
         response = self.scheduling_utilities.start_mission(mission=mission)
 
         self.logger.info(response)

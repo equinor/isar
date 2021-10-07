@@ -5,10 +5,7 @@ from flask_restx import Namespace, Resource, fields
 from injector import inject
 
 from isar.config import config
-from isar.models.communication.messages import StopMessage, StopMissionMessages
-from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
-from isar.models.communication.queues.queues import Queues
-from isar.services.utilities.queue_utilities import QueueUtilities
+from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 
 api = Namespace(
     config.get("api_namespaces", "eqrobot_schedule_namespace"),
@@ -30,27 +27,15 @@ stop_response = api.model(
 )
 class StopMission(Resource):
     @inject
-    def __init__(self, queues: Queues, *args, **kwargs):
+    def __init__(self, scheduling_utilities: SchedulingUtilities, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("api")
-        self.queues = queues
-        self.queue_timeout: int = config.getint("mission", "eqrobot_queue_timeout")
+        self.scheduling_utilities = scheduling_utilities
 
     @api.response(HTTPStatus.OK, "Success", stop_response)
     @api.response(HTTPStatus.REQUEST_TIMEOUT, "Request Timeout", stop_response)
     def get(self):
 
-        self.queues.stop_mission.input.put(True)
-
-        try:
-            message: StopMessage = QueueUtilities.check_queue(
-                self.queues.stop_mission.output,
-                self.queue_timeout,
-            )
-        except QueueTimeoutError:
-            response = StopMissionMessages.queue_timeout(), HTTPStatus.REQUEST_TIMEOUT
-            self.logger.error(response)
-            return response
-        response = message, HTTPStatus.OK
+        response = self.scheduling_utilities.stop_mission()
         self.logger.info(response)
         return response

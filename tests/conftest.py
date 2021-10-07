@@ -5,11 +5,9 @@ from isar import create_app
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
-from isar.models.communication.queues.queues import Queues
 from isar.modules import (
     CoordinateModule,
     LocalPlannerModule,
-    QueuesModule,
     ReaderModule,
     RequestHandlerModule,
     RobotModule,
@@ -19,6 +17,7 @@ from isar.modules import (
 )
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
+from isar.services.service_connections.mqtt.mqtt_service import MQTTService
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.path_service import PathService
@@ -35,7 +34,6 @@ def injector():
     return Injector(
         [
             CoordinateModule,
-            QueuesModule,
             ReaderModule,
             RequestHandlerModule,
             RobotModule,
@@ -81,12 +79,12 @@ def keyvault(injector):
 
 
 @pytest.fixture()
-def state_machine(injector, robot, transform):
+def state_machine(injector, robot, transform, mqtt_service):
     return StateMachine(
-        queues=injector.get(Queues),
         robot=robot,
         transform=transform,
         storage_service=injector.get(StorageService),
+        mqtt_service=mqtt_service,
     )
 
 
@@ -153,3 +151,8 @@ def map_config_reader(injector):
 @pytest.fixture()
 def transform(injector):
     return injector.get(Transformation)
+
+
+@pytest.fixture()
+def mqtt_service(injector):
+    return injector.get(MQTTService)

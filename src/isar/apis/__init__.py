@@ -6,7 +6,6 @@ from isar.apis.schedule.drive_to import api as drive_to_api
 from isar.apis.schedule.image_towards_coordinate import api as image_coordinate_api
 from isar.apis.schedule.start_mission import api as start_mission_api
 from isar.apis.schedule.stop_mission import api as stop_mission_api
-from isar.apis.telemetry.mission_status import api as mission_status_api
 
 api_blueprint = Blueprint("api", __name__)
 
@@ -23,5 +22,3 @@ api.add_namespace(drive_to_api, path="/schedule")
 api.add_namespace(image_coordinate_api, path="/schedule")
 
 api.add_namespace(predefined_missions_api, path="/missions")
-
-api.add_namespace(mission_status_api, path="/telemetry")

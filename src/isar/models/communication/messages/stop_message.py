@@ -14,10 +14,8 @@ class StopMissionMessages:
         return StopMessage(stopped=True, message="Mission stopping")
 
     @staticmethod
-    def queue_timeout() -> StopMessage:
-        return StopMessage(
-            stopped=False, message="Waiting for return message on queue timed out"
-        )
+    def ack_timeout() -> StopMessage:
+        return StopMessage(stopped=False, message="Acknowledgement timed out")
 
     @staticmethod
     def no_active_missions() -> StopMessage:

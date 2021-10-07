@@ -1,4 +1,5 @@
 import logging
+from logging import Logger
 from typing import TYPE_CHECKING
 
 from transitions import State
@@ -14,13 +15,13 @@ class Send(State):
     def __init__(self, state_machine: "StateMachine"):
         super().__init__(name="send", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
-        self.send_failure_counter = 0
-        self.send_failure_counter_limit = 10
-        self.logger = logging.getLogger("state_machine")
+        self.send_failure_counter: int = 0
+        self.send_failure_counter_limit: int = 10
+        self.logger: Logger = logging.getLogger("state_machine")
 
     def start(self):
-        self.state_machine.update_status()
-        self.logger.info(f"State: {self.state_machine.status.current_state}")
+        self.state_machine.update_state(States.Send)
+        self.logger.info(f"State: {self.state_machine.current_state}")
 
         self._run()
 
@@ -31,17 +32,17 @@ class Send(State):
         while True:
             if self.state_machine.should_stop():
                 self.state_machine.stop_mission()
-            if not self.state_machine.status.mission_in_progress:
+            if not self.state_machine.mission_in_progress:
                 next_state: States = States.Cancel
                 break
 
-            if not self.state_machine.status.mission_schedule.mission_steps:
+            if not self.state_machine.mission_schedule.mission_steps:
                 next_state: States = States.Cancel
                 break
 
-            self.state_machine.status.current_mission_step = self._get_current_mission()
+            self.state_machine.current_mission_step = self._get_current_mission()
             next_state: States = self._send_mission(
-                self.state_machine.status.current_mission_step
+                self.state_machine.current_mission_step
             )
             if not next_state == States.Send:
                 break
@@ -59,13 +60,13 @@ class Send(State):
                 next_state: States = States.Cancel
                 break
 
-            self.state_machine.status.mission_schedule.mission_steps.insert(
-                0, self.state_machine.status.current_mission_step  # type: ignore
+            self.state_machine.mission_schedule.mission_steps.insert(
+                0, self.state_machine.current_mission_step  # type: ignore
             )
         self.state_machine.to_next_state(next_state)
 
     def _get_current_mission(self) -> Step:
-        return self.state_machine.status.mission_schedule.mission_steps.pop(0)
+        return self.state_machine.mission_schedule.mission_steps.pop(0)
 
     def _send_mission(self, current_mission_step: Step) -> States:
         (
@@ -75,19 +76,18 @@ class Send(State):
         ) = self.state_machine.robot.schedule_step(current_mission_step)
 
         if send_success:
-            self.state_machine.status.current_mission_instance_id = mission_instance_id
+            self.state_machine.current_mission_instance_id = mission_instance_id
             if isinstance(
-                self.state_machine.status.current_mission_step,
+                self.state_machine.current_mission_step,
                 TakeImage,
             ):
-                self.state_machine.status.current_mission_step.computed_joints = (
+                self.state_machine.current_mission_step.computed_joints = (
                     computed_joints
                 )
         else:
             send_success = False
 
-        if self.state_machine.should_send_status():
-            self.state_machine.send_status()
+        self.state_machine.send_status()
 
         if send_success:
             return States.Monitor

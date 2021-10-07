@@ -1,84 +1,102 @@
+import json
 import logging
-from copy import deepcopy
+import time
 from http import HTTPStatus
-from typing import Optional, Tuple
+from logging import Logger
+from threading import Lock
+from typing import Any, Optional, Tuple
 
 from injector import inject
+from paho.mqtt.client import Client, MQTTMessage
 
 from isar.config import config
-from isar.models.communication.messages import StartMessage, StartMissionMessages
-from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
-from isar.models.communication.queues.queues import Queues
-from isar.models.communication.status import Status
+from isar.models.communication.messages import (
+    StartMessage,
+    StartMissionMessages,
+    StopMessage,
+    StopMissionMessages,
+)
 from isar.models.mission import Mission
-from isar.services.utilities.queue_utilities import QueueUtilities
-from isar.state_machine.states_enum import States
+from isar.services.service_connections.mqtt.mqtt_service import MQTTService
+from isar.services.utilities.json_service import StartMessageDecoder, StopMessageDecoder
 
 
 class SchedulingUtilities:
     """
     Contains utility functions for scheduling missions from the API. The class handles required thread communication
-    through queues to the state machine.
+    through MQTT to the state machine.
     """
 
     @inject
     def __init__(
         self,
-        queues: Queues,
-        queue_timeout: int = config.getint("mission", "eqrobot_queue_timeout"),
+        mqtt_service: MQTTService,
+        ack_timeout: float = config.getfloat("mqtt", "ack_timeout"),
     ):
-        self.queues = queues
-        self.queue_timeout: int = queue_timeout
-        self.logger = logging.getLogger("api")
-
-    def ready_to_start_mission(self) -> Tuple[bool, Optional[Tuple[StartMessage, int]]]:
-        """
-        Checks the current mission status by communicating with the state machine thread through queues.
-        :return: (True, None) if the mission may be started. Otherwise (False, response) with a relevant response
-        message indicating the cause.
-        """
-        self.queues.mission_status.input.put(True)
-        try:
-            status: Status = QueueUtilities.check_queue(
-                self.queues.mission_status.output, self.queue_timeout
-            )
-        except QueueTimeoutError:
-            error_message = (
-                StartMissionMessages.queue_timeout(),
-                HTTPStatus.REQUEST_TIMEOUT,
-            )
-            self.logger.error(error_message)
-            return False, error_message
-
-        if status.mission_in_progress or status.current_state != States.Idle:
-            message = StartMissionMessages.mission_in_progress()
-            error_message = message, HTTPStatus.CONFLICT
-            return False, error_message
-        return True, None
+        self.ack_timeout: float = ack_timeout
+        self.logger: Logger = logging.getLogger("api")
+        self.mqtt_service: MQTTService = mqtt_service
+        self.mqtt_service.subscribe_start_mission_ack(
+            self.on_start_mission_ack_callback
+        )
+        self.mqtt_service.subscribe_stop_mission_ack(self.on_stop_mission_ack_callback)
+        self.start_message_ack: Optional[StartMessage] = None
+        self.stop_message_ack: Optional[StopMessage] = None
 
     def start_mission(self, mission: Mission) -> Tuple[StartMessage, int]:
         """
-        Starts a mission by communicating with the state machine thread through queues.
+        Starts a mission by communicating with the state machine thread through MQTT.
         :param mission: A Mission containing the mission steps to be started.
         :return: (message, status_code) is returned indicating the success and cause of the operation.
         """
-        self.queues.start_mission.input.put(deepcopy(mission))
-        try:
-            start_message: StartMessage = QueueUtilities.check_queue(
-                self.queues.start_mission.output, self.queue_timeout
-            )
-        except QueueTimeoutError:
-            error_message = (
-                StartMissionMessages.queue_timeout(),
-                HTTPStatus.REQUEST_TIMEOUT,
-            )
-            self.logger.error(error_message)
-            return error_message
-        if not start_message.started:
-            error_message = start_message, HTTPStatus.CONFLICT
-            self.logger.error(error_message)
-            return error_message
+        self.mqtt_service.publish_start_mission(mission)
+        start_message: StartMessage = self.wait_on_start_ack()
+        self.start_message_ack = None
 
-        error_message = start_message, HTTPStatus.OK
-        self.logger.info(error_message)
-        return error_message
+        if not start_message.started:
+            return start_message, HTTPStatus.CONFLICT
+
+        return start_message, HTTPStatus.OK
+
+    def stop_mission(self) -> Tuple[StopMessage, int]:
+
+        self.mqtt_service.publish_stop_mission()
+        stop_message: StopMessage = self.wait_on_stop_ack()
+        self.stop_message_ack = None
+
+        if not stop_message.stopped:
+            return stop_message, HTTPStatus.CONFLICT
+
+        return stop_message, HTTPStatus.OK
+
+    def on_start_mission_ack_callback(
+        self, client: Client, userdata: Any, message: MQTTMessage
+    ) -> None:
+        msg_json: str = message.payload.decode()
+        start_message: StartMessage = json.loads(msg_json, cls=StartMessageDecoder)
+        self.start_message_ack = start_message
+
+    def on_stop_mission_ack_callback(
+        self, client: Client, userdata: Any, message: MQTTMessage
+    ) -> None:
+        msg_json: str = message.payload.decode()
+        stop_message: StopMessage = json.loads(msg_json, cls=StopMessageDecoder)
+        self.stop_message_ack = stop_message
+
+    def wait_on_start_ack(self) -> StartMessage:
+        start_time: float = time.time()
+        while True:
+            if self.start_message_ack:
+                return self.start_message_ack
+            if time.time() - start_time > self.ack_timeout:
+                return StartMissionMessages.ack_timeout()
+            time.sleep(0.1)
+
+    def wait_on_stop_ack(self) -> StopMessage:
+        start_time: float = time.time()
+        while True:
+            if self.stop_message_ack:
+                return self.stop_message_ack
+            if time.time() - start_time > self.ack_timeout:
+                return StopMissionMessages.ack_timeout()
+            time.sleep(0.1)

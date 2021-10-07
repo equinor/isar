@@ -50,7 +50,7 @@ def test_collect_results(
     mock_collect_results,
     expected_state,
 ):
-    collect.state_machine.status.current_mission_step = current_mission_step
+    collect.state_machine.current_mission_step = current_mission_step
     mocker.patch.object(
         MockRobot,
         "get_inspection_references",

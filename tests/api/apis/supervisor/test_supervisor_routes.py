@@ -3,46 +3,24 @@ from http import HTTPStatus
 from typing import Optional, Tuple
 
 import pytest
+
+from isar.mission_planner.local_planner import LocalPlanner, MissionPlannerError
 from isar.models.communication.messages import (
     StartMessage,
     StartMissionMessages,
     StopMissionMessages,
 )
-from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
-from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+from tests.test_utilities.mock_models.mock_mission_definition import (
+    mock_mission_definition,
+)
 
-from tests.test_utilities.mock_models.mock_status import mock_status
 
-
-def mock_check_queue(was_mission_started, state_at_request):
-    mock_return_1 = mock_status(
-        mission_in_progress=was_mission_started, current_state=state_at_request
-    )
+def mock_wait_on_ack(was_mission_started, state_at_request):
     if was_mission_started or state_at_request != "idle":
-        mock_return_2 = StartMissionMessages.mission_in_progress()
+        return StartMissionMessages.mission_in_progress()
     else:
-        mock_return_2 = StartMissionMessages.success()
-
-    return [mock_return_1, mock_return_2]
-
-
-def mock_ready_to_start_mission(
-    status_code: int,
-) -> Tuple[bool, Optional[Tuple[StartMessage, int]]]:
-    if status_code == HTTPStatus.OK:
-        return True, None
-    elif status_code == HTTPStatus.REQUEST_TIMEOUT:
-        return (
-            False,
-            (StartMissionMessages.queue_timeout(), HTTPStatus.REQUEST_TIMEOUT),
-        )
-    elif status_code == HTTPStatus.CONFLICT:
-        return (
-            False,
-            (StartMissionMessages.mission_in_progress(), HTTPStatus.CONFLICT),
-        )
-    return True, None
+        return StartMissionMessages.success()
 
 
 def mock_start_mission(status_code: int) -> Tuple[StartMessage, int]:
@@ -50,7 +28,7 @@ def mock_start_mission(status_code: int) -> Tuple[StartMessage, int]:
         return StartMissionMessages.success(), HTTPStatus.OK
     elif status_code == HTTPStatus.REQUEST_TIMEOUT:
         return (
-            StartMissionMessages.queue_timeout(),
+            StartMissionMessages.ack_timeout(),
             HTTPStatus.REQUEST_TIMEOUT,
         )
     return StartMissionMessages.success(), HTTPStatus.OK
@@ -58,17 +36,86 @@ def mock_start_mission(status_code: int) -> Tuple[StartMessage, int]:
 
 class TestSupervisorRoutes:
     @pytest.mark.parametrize(
-        "should_stop, mock_return, expected_output, expected_status_code",
+        "mission_id, mock_get_mission_by_id, "
+        "expected_exception,"
+        "mock_start, expected_output, expected_status_code",
         [
             (
-                True,
-                QueueTimeoutError(),
-                StopMissionMessages.queue_timeout(),
-                HTTPStatus.REQUEST_TIMEOUT,
+                12345,
+                mock_mission_definition(),
+                MissionPlannerError,
+                mock_start_mission(HTTPStatus.OK),
+                StartMissionMessages.mission_not_found(),
+                HTTPStatus.NOT_FOUND,
             ),
             (
-                True,
-                [StopMissionMessages.success()],
+                None,
+                mock_mission_definition(),
+                None,
+                mock_start_mission(HTTPStatus.OK),
+                StartMissionMessages.bad_request(),
+                HTTPStatus.BAD_REQUEST,
+            ),
+            (
+                1,
+                None,
+                MissionPlannerError,
+                mock_start_mission(HTTPStatus.OK),
+                StartMissionMessages.mission_not_found(),
+                HTTPStatus.NOT_FOUND,
+            ),
+            (
+                1,
+                mock_mission_definition(),
+                None,
+                mock_start_mission(HTTPStatus.OK),
+                StartMissionMessages.success(),
+                HTTPStatus.OK,
+            ),
+        ],
+    )
+    def test_start_mission(
+        self,
+        client,
+        access_token,
+        mocker,
+        mission_id,
+        mock_get_mission_by_id,
+        expected_exception,
+        mock_start,
+        expected_output,
+        expected_status_code,
+    ):
+        mocker.patch.object(
+            LocalPlanner,
+            "get_mission",
+            return_value=mock_get_mission_by_id,
+            side_effect=expected_exception,
+        )
+        mocker.patch.object(
+            SchedulingUtilities,
+            "start_mission",
+            return_value=mock_start,
+        )
+
+        response = client.get(
+            "/schedule/start-mission",
+            headers={"Authorization": "Bearer {}".format(access_token)},
+            query_string={"mission_id": mission_id},
+        )
+        assert response.json == asdict(expected_output)
+        assert response.status_code == expected_status_code
+
+    @pytest.mark.parametrize(
+        "mock_return, expected_output, expected_status_code",
+        [
+            (
+                StopMissionMessages.ack_timeout(),
+                StopMissionMessages.ack_timeout(),
+                HTTPStatus.CONFLICT,
+            ),
+            (
+                StopMissionMessages.success(),
                 StopMissionMessages.success(),
                 HTTPStatus.OK,
             ),
@@ -79,12 +126,13 @@ class TestSupervisorRoutes:
         client,
         access_token,
         mocker,
-        should_stop,
         mock_return,
         expected_output,
         expected_status_code,
     ):
-        mocker.patch.object(QueueUtilities, "check_queue", side_effect=mock_return)
+        mocker.patch.object(
+            SchedulingUtilities, "wait_on_stop_ack", return_value=mock_return
+        )
 
         response = client.get(
             "/schedule/stop_mission",
@@ -109,7 +157,7 @@ class TestSupervisorRoutes:
         assert "id" in response_dict["missions"][0]
 
     @pytest.mark.parametrize(
-        "was_mission_started, state_at_request,expected_status_code,request_params",
+        "was_mission_started, state_at_request, expected_status_code,request_params",
         [
             (
                 False,
@@ -120,12 +168,6 @@ class TestSupervisorRoutes:
             (
                 True,
                 "idle",
-                HTTPStatus.CONFLICT,
-                {"x": 1, "y": 1, "z": 1, "orientation": "0,0,0,1"},
-            ),
-            (
-                False,
-                "get_mission",
                 HTTPStatus.CONFLICT,
                 {"x": 1, "y": 1, "z": 1, "orientation": "0,0,0,1"},
             ),
@@ -148,8 +190,10 @@ class TestSupervisorRoutes:
         expected_status_code,
         request_params,
     ):
-        mocker_return = mock_check_queue(was_mission_started, state_at_request)
-        mocker.patch.object(QueueUtilities, "check_queue", side_effect=mocker_return)
+        mocker_return = mock_wait_on_ack(was_mission_started, state_at_request)
+        mocker.patch.object(
+            SchedulingUtilities, "wait_on_start_ack", return_value=mocker_return
+        )
         response = client.get(
             "/schedule/drive-to",
             headers={"Authorization": "Bearer {}".format(access_token)},
@@ -158,31 +202,37 @@ class TestSupervisorRoutes:
         assert response.status_code == expected_status_code
 
     @pytest.mark.parametrize(
-        "mock_ready_to_start, mock_start, expected_status_code, request_params",
+        "was_mission_started, state_at_request, expected_status_code,request_params",
         [
             (
-                mock_ready_to_start_mission(HTTPStatus.REQUEST_TIMEOUT),
-                mock_start_mission(HTTPStatus.OK),
-                HTTPStatus.REQUEST_TIMEOUT,
-                {"x_target": 1, "y_target": 1, "z_target": 1},
-            ),
-            (
-                mock_ready_to_start_mission(HTTPStatus.CONFLICT),
-                mock_start_mission(HTTPStatus.OK),
-                HTTPStatus.CONFLICT,
-                {"x_target": 1, "y_target": 1, "z_target": 1},
-            ),
-            (
-                mock_ready_to_start_mission(HTTPStatus.OK),
-                mock_start_mission(HTTPStatus.OK),
+                False,
+                "idle",
                 HTTPStatus.OK,
                 {"x_target": 1, "y_target": 1, "z_target": 1},
             ),
             (
-                mock_ready_to_start_mission(HTTPStatus.OK),
-                mock_start_mission(HTTPStatus.REQUEST_TIMEOUT),
-                HTTPStatus.REQUEST_TIMEOUT,
+                False,
+                "send",
+                HTTPStatus.CONFLICT,
                 {"x_target": 1, "y_target": 1, "z_target": 1},
+            ),
+            (
+                False,
+                "idle",
+                HTTPStatus.BAD_REQUEST,
+                None,
+            ),
+            (
+                False,
+                "idle",
+                HTTPStatus.BAD_REQUEST,
+                {"x_target": "hei", "y_target": 1, "z_target": 1},
+            ),
+            (
+                False,
+                "idle",
+                HTTPStatus.OK,
+                {"x_target": "1", "y_target": "1", "z_target": "1"},
             ),
         ],
     )
@@ -190,21 +240,15 @@ class TestSupervisorRoutes:
         self,
         client,
         access_token,
-        mock_ready_to_start,
-        mock_start,
+        was_mission_started,
+        state_at_request,
         mocker,
         expected_status_code,
         request_params,
     ):
+        mocker_return = mock_wait_on_ack(was_mission_started, state_at_request)
         mocker.patch.object(
-            SchedulingUtilities,
-            "ready_to_start_mission",
-            return_value=mock_ready_to_start,
-        )
-        mocker.patch.object(
-            SchedulingUtilities,
-            "start_mission",
-            return_value=mock_start,
+            SchedulingUtilities, "wait_on_start_ack", return_value=mocker_return
         )
 
         response = client.get(

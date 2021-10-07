@@ -24,10 +24,6 @@ class StartMissionMessages:
         return StartMessage(started=False, message="Mission was not found")
 
     @staticmethod
-    def queue_not_empty() -> StartMessage:
-        return StartMessage(started=False, message="Mission queue is not empty")
-
-    @staticmethod
     def state_not_idle() -> StartMessage:
         return StartMessage(started=False, message="Mission is not in idle")
 
@@ -42,10 +38,8 @@ class StartMissionMessages:
         )
 
     @staticmethod
-    def queue_timeout() -> StartMessage:
-        return StartMessage(
-            started=False, message="Waiting for return message on queue timed out"
-        )
+    def ack_timeout() -> StartMessage:
+        return StartMessage(started=False, message="Acknowledgement timed out")
 
     @staticmethod
     def could_not_read_mission_id() -> StartMessage:

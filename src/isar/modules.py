@@ -10,10 +10,10 @@ from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
-from isar.models.communication.queues.queues import Queues
 from isar.models.map.map_config import MapConfig
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
+from isar.services.service_connections.mqtt.mqtt_service import MQTTService
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -32,13 +32,6 @@ class RobotModule(Module):
         robot_package_name: str = environ["ROBOT_DIRECTORY"]
         robot: ModuleType = import_module(robot_package_name)
         return robot.robotinterface.Robot()  # type: ignore
-
-
-class QueuesModule(Module):
-    @provider
-    @singleton
-    def provide_queues(self) -> Queues:
-        return Queues()
 
 
 class RequestHandlerModule(Module):
@@ -97,24 +90,26 @@ class StateMachineModule(Module):
     @singleton
     def provide_state_machine(
         self,
-        queues: Queues,
         robot: RobotInterface,
         storage_service: StorageService,
         transform: Transformation,
+        mqtt_service: MQTTService,
     ) -> StateMachine:
         return StateMachine(
-            queues=queues,
             robot=robot,
             storage_service=storage_service,
             transform=transform,
+            mqtt_service=mqtt_service,
         )
 
 
 class UtilitiesModule(Module):
     @provider
     @singleton
-    def provide_scheduling_utilities(self, queues: Queues) -> SchedulingUtilities:
-        return SchedulingUtilities(queues)
+    def provide_scheduling_utilities(
+        self, mqtt_service: MQTTService
+    ) -> SchedulingUtilities:
+        return SchedulingUtilities(mqtt_service)
 
 
 class ServiceModule(Module):
@@ -127,6 +122,10 @@ class ServiceModule(Module):
     @singleton
     def provide_stid_service(self, request_handler: RequestHandler) -> StidService:
         return StidService(request_handler=request_handler)
+
+    @provider
+    def provide_mqtt_service(self) -> MQTTService:
+        return MQTTService()
 
 
 class ReaderModule(Module):
@@ -148,7 +147,6 @@ class CoordinateModule(Module):
 
 modules: dict = {
     "coordinate": {"default": CoordinateModule},
-    "queues": {"default": QueuesModule},
     "reader": {"default": ReaderModule},
     "request_handler": {"default": RequestHandlerModule},
     "robot": {"default": RobotModule},

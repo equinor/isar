@@ -23,8 +23,8 @@ class Monitor(State):
         self.log_interval = 10
 
     def start(self):
-        self.state_machine.update_status()
-        self.logger.info(f"State: {self.state_machine.status.current_state}")
+        self.state_machine.update_state(States.Monitor)
+        self.logger.info(f"State: {self.state_machine.current_state}")
 
         self._run()
 
@@ -36,30 +36,27 @@ class Monitor(State):
             if self.state_machine.should_stop():
                 self.state_machine.stop_mission()
 
-            if not self.state_machine.status.mission_in_progress:
+            if not self.state_machine.mission_in_progress:
                 next_state = States.Cancel
                 break
 
             mission_status: MissionStatus = self.state_machine.robot.mission_status(
-                self.state_machine.status.current_mission_instance_id
+                self.state_machine.current_mission_instance_id
             )
-            self.state_machine.status.mission_status = mission_status
+            self.state_machine.mission_status = mission_status
             self._log_status(mission_status=mission_status)
 
             if self._mission_finished(
                 mission_status=mission_status,
-                instance_id=self.state_machine.status.current_mission_instance_id,
+                instance_id=self.state_machine.current_mission_instance_id,
             ):
-                if isinstance(
-                    self.state_machine.status.current_mission_step, DriveToPose
-                ):
+                if isinstance(self.state_machine.current_mission_step, DriveToPose):
                     next_state = States.Send
                 else:
                     next_state = States.Collect
                 break
 
-            if self.state_machine.should_send_status():
-                self.state_machine.send_status()
+            self.state_machine.send_status()
             time.sleep(self.state_machine.sleep_time)
 
         self.state_machine.to_next_state(next_state)
@@ -81,8 +78,8 @@ class Monitor(State):
     def _log_status(self, mission_status: MissionStatus):
         if self.iteration_counter % self.log_interval == 0:
             self.state_machine.robot.log_status(
-                mission_id=self.state_machine.status.current_mission_instance_id,
+                mission_id=self.state_machine.current_mission_instance_id,
                 mission_status=mission_status,
-                current_step=self.state_machine.status.current_mission_step,
+                current_step=self.state_machine.current_mission_step,
             )
         self.iteration_counter += 1

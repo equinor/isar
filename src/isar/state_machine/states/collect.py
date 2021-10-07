@@ -26,15 +26,15 @@ class Collect(State):
         self.transform = transform
 
     def start(self):
-        self.state_machine.update_status()
-        self.logger.info(f"State: {self.state_machine.status.current_state}")
+        self.state_machine.update_state(States.Collect)
+        self.logger.info(f"State: {self.state_machine.current_state}")
 
         next_state = self._collect_results()
         self.state_machine.to_next_state(next_state)
 
     def _collect_results(self) -> States:
-        instance_id = self.state_machine.status.current_mission_instance_id
-        current_step = self.state_machine.status.current_mission_step
+        instance_id = self.state_machine.current_mission_instance_id
+        current_step = self.state_machine.current_mission_step
 
         inspections: Sequence[
             Inspection
@@ -49,7 +49,7 @@ class Collect(State):
                 time_indexed_pose=inspection_ref.metadata.time_indexed_pose
             )
 
-        self.state_machine.status.mission_schedule.inspections.extend(inspections)
+        self.state_machine.mission_schedule.inspections.extend(inspections)
 
         return States.Send
 

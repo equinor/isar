@@ -61,10 +61,6 @@ class TakeImageOfObject(Resource):
             self.logger.error(f"{message} {e}")
             return message, HTTPStatus.BAD_REQUEST
 
-        ready, response = self.scheduling_utilities.ready_to_start_mission()
-        if not ready:
-            return response
-
         step: TakeImage = TakeImage(
             target=Position(x=x_target, y=y_target, z=z_target, frame=Frame.Robot)
         )

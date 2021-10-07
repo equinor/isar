@@ -35,13 +35,13 @@ def test_state_machine(injector, mocker):
     assert message.started
 
     time.sleep(1)
-    assert state_machine.status.current_state is States.Monitor
+    assert state_machine.current_state is States.Monitor
 
     mocker.patch.object(
         MockRobot, "mission_status", return_value=MissionStatus.Completed
     )
     time.sleep(1)
-    assert state_machine.status.current_state is States.Idle
+    assert state_machine.current_state is States.Idle
 
 
 def test_state_machine_with_unsuccessful_send(injector, mocker):
@@ -57,7 +57,7 @@ def test_state_machine_with_unsuccessful_send(injector, mocker):
     message, _ = scheduling_utilities.start_mission(mission=mission)
     time.sleep(1)
 
-    assert state_machine.status.current_state is States.Idle
+    assert state_machine.current_state is States.Idle
 
 
 def test_state_machine_with_delayed_successful_send(injector, mocker):
@@ -73,9 +73,10 @@ def test_state_machine_with_delayed_successful_send(injector, mocker):
     )
 
     message, _ = scheduling_utilities.start_mission(mission=mission)
+    print(message)
     time.sleep(1)
 
-    assert state_machine.status.current_state is States.Monitor
+    assert state_machine.current_state is States.Monitor
 
 
 def test_data_offload(injector, mocker):
@@ -97,8 +98,8 @@ def test_data_offload(injector, mocker):
     assert message.started
 
     time.sleep(1)
-    assert state_machine.status.current_state is States.Monitor
-    assert state_machine.status.current_mission_step == step_1
+    assert state_machine.current_state is States.Monitor
+    assert state_machine.current_mission_step == step_1
 
     mocker.patch.object(
         MockRobot,
@@ -106,8 +107,8 @@ def test_data_offload(injector, mocker):
         side_effect=[MissionStatus.Completed] + 10 * [MissionStatus.InProgress],
     )
     time.sleep(1)
-    assert state_machine.status.current_state is States.Monitor
-    assert state_machine.status.current_mission_step == step_2
+    assert state_machine.current_state is States.Monitor
+    assert state_machine.current_mission_step == step_2
 
     mocker.patch.object(
         MockRobot,
@@ -116,9 +117,9 @@ def test_data_offload(injector, mocker):
     )
 
     time.sleep(1)
-    assert state_machine.status.current_state is States.Monitor
-    assert state_machine.status.current_mission_step == step_3
-    assert len(state_machine.status.mission_schedule.inspections) == 1
+    assert state_machine.current_state is States.Monitor
+    assert state_machine.current_mission_step == step_3
+    assert len(state_machine.mission_schedule.inspections) == 1
 
     mocker.patch.object(
         MockRobot,
@@ -126,13 +127,13 @@ def test_data_offload(injector, mocker):
         side_effect=[MissionStatus.Completed] + 10 * [MissionStatus.InProgress],
     )
     time.sleep(1)
-    assert state_machine.status.current_state is States.Monitor
-    assert state_machine.status.current_mission_step == step_4
-    assert len(state_machine.status.mission_schedule.inspections) == 2
+    assert state_machine.current_state is States.Monitor
+    assert state_machine.current_mission_step == step_4
+    assert len(state_machine.mission_schedule.inspections) == 2
 
     mocker.patch.object(
         MockRobot, "mission_status", side_effect=[MissionStatus.Completed]
     )
     time.sleep(1)
 
-    assert state_machine.status.current_state is States.Idle
+    assert state_machine.current_state is States.Idle

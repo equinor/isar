@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 from isar.config import config
 
 
 @dataclass
 class RequiredMetadata:
-    mission_id: Optional[str] = None
+    mission_id: Union[int, str, None] = None
     data_scheme: str = config.get("metadata", "data_scheme")
     time_zone: str = config.get("metadata", "timezone")
     coordinate_reference_system: str = config.get(

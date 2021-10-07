@@ -72,10 +72,6 @@ class DriveTo(Resource):
             self.logger.error(f"{message} {e}")
             return message, HTTPStatus.BAD_REQUEST
 
-        ready, response = self.scheduling_utilities.ready_to_start_mission()
-        if not ready:
-            return response
-
         position: Position = Position(x=x, y=y, z=z, frame=Frame.Robot)
         orientation: Orientation = Orientation(
             x=q[0], y=q[1], z=q[2], w=q[3], frame=Frame.Robot

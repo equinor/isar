@@ -1,0 +1,55 @@
+{
+    "mission_steps": [
+        {
+            "pose": {
+                "position": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1,
+                    "frame": "robot"
+                },
+                "orientation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0.7071068,
+                    "w": 0.7071068,
+                    "frame": "robot"
+                },
+                "frame": "robot"
+            },
+            "step_name": "drive_to_pose"
+        }
+    ],
+    "mission_id": "KAAWILLIAM111020211508",
+    "inspections": [],
+    "mission_metadata": {
+        "required_metadata": {
+            "mission_id": "KAAWILLIAM111020211508",
+            "data_scheme": "DS0001",
+            "time_zone": "UTC+00:00",
+            "coordinate_reference_system": "K\u00e5rst\u00f8",
+            "vertical_reference_system": "K\u00e5rst\u00f8",
+            "sensor_carrier_orientation_reference_system": "quaternion",
+            "url": null,
+            "data_classification": "open"
+        },
+        "recommended_metadata": {
+            "date": "11.10.2021",
+            "sensor_carrier_id": "william",
+            "sensor_carrier_type": "robot",
+            "plant_code": "1320",
+            "plant_name": "K\u00e5rst\u00f8",
+            "country": "Norway",
+            "contractor": "equinor",
+            "mission_type": "inspection"
+        },
+        "additional_metadata": {
+            "camera_type": "",
+            "mission_name": "",
+            "mission_created_by": "",
+            "mission_created_at": "",
+            "mission_last_modified": "",
+            "robot_operator": ""
+        }
+    }
+}

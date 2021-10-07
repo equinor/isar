@@ -1,6 +1,7 @@
 from typing import Literal
 
 from isar.models.mission import Mission
+from tests.test_utilities.mock_models.mock_mission_metadata import mock_metadata
 from tests.test_utilities.mock_models.mock_step import MockStep
 
 default_mission = Mission(
@@ -25,6 +26,11 @@ long_mission = Mission(
     ],
 )
 
+base_mission = Mission(
+    mission_id="test",
+    mission_steps=[MockStep.drive_to()],
+    mission_metadata=mock_metadata,
+)
 
 empty_mission = Mission(mission_id=None, mission_steps=[])
 
@@ -41,3 +47,10 @@ def mock_mission_definition(
         return empty_mission
     elif mission_name == "long_mission":
         return long_mission
+
+
+def mock_mission_decoder(mission_name) -> Mission:
+    if mission_name == "base":
+        return base_mission
+    else:
+        return None

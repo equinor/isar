@@ -1,11 +1,34 @@
 version: "3"
 services:
-  api:
-    environment:
-      - ENVIRONMENT
-      - AZURE_CLIENT_ID
-      - AZURE_TENANT_ID
-      - AZURE_CLIENT_SECRET
-    build: .
+  mqtt_broker:
+    build: ./src/isar/broker/broker
+    image: mqtt_broker:latest
+    container_name: mqtt_broker
+    stdin_open: true
+    tty: true
     ports:
-      - "5000:5000"
+      - "8888:8888"
+      - "1883:1883"
+    networks:
+      - local
+    environment:
+      - VERNEMQ_USER=${VERNEMQ_USER}
+      - VERNEMQ_PASSWORD=${VERNEMQ_PASSWORD}
+
+  mqtt_subscriber:
+    build: ./src/isar/broker/subscriber
+    image: mqtt_subscriber:latest
+    container_name: mqtt_subscriber
+    stdin_open: true
+    tty: true
+    depends_on:
+      - mqtt_broker
+    networks:
+      - local
+    environment:
+      - VERNEMQ_USER=${VERNEMQ_USER}
+      - VERNEMQ_PASSWORD=${VERNEMQ_PASSWORD}
+
+networks:
+  local:
+    driver: bridge
