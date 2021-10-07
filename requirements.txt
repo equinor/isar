@@ -1,5 +1,5 @@
 Flask < 2.0.0
-Flask-Injector
+Flask-Injector < 2.0.0
 PyJWT
 PyYAML
 Werkzeug < 2.0.0
