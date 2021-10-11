@@ -31,7 +31,10 @@ class BaseReader:
 
     @staticmethod
     def dict_to_dataclass(
-        dataclass_dict: dict, target_dataclass: Any, cast_config: list = []
+        dataclass_dict: dict,
+        target_dataclass: Any,
+        cast_config: list = [],
+        strict_config: bool = False,
     ) -> Optional[Any]:
         if not is_dataclass(target_dataclass):
             logger.error(f"{target_dataclass} is not a dataclass")
@@ -40,7 +43,7 @@ class BaseReader:
             generated_dataclass = from_dict(
                 data_class=target_dataclass,
                 data=dataclass_dict,
-                config=Config(cast=cast_config),
+                config=Config(cast=cast_config, strict=strict_config),
             )
             return generated_dataclass
         except WrongTypeError as e:
