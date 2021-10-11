@@ -2,7 +2,7 @@
 
 predefined_measurement_types = {
     #
-    # Motor in compressor building
+    # Motor in compressor building K-lab
     #
     "313-PA-101A": ["ThermalImage", "Image"]
 }
