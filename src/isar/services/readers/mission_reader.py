@@ -27,6 +27,7 @@ class MissionReader(BaseReader):
             dataclass_dict=mission_dict,
             target_dataclass=Mission,
             cast_config=[Frame],
+            strict_config=True,
         )
         if mission is None:
             logger.error(f"Could not read mission from {mission_path.as_posix()} ")

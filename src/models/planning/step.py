@@ -42,6 +42,16 @@ class DriveToPose(MotionStep):
 
 
 @dataclass
+class DockingProcedure(MotionStep):
+    """
+    Step which causes the robot to dock or undock
+    """
+
+    behavior: Literal["dock, undock"]
+    step_name: Literal["docking_procedure"] = "docking_procedure"
+
+
+@dataclass
 class TakeImage(InspectionStep):
     """
     Step which causes the robot to take an image towards the given coordinate.
@@ -64,4 +74,4 @@ class TakeThermalImage(InspectionStep):
     tag_id: Optional[str] = None
 
 
-STEPS = Union[DriveToPose, TakeImage, TakeThermalImage]
+STEPS = Union[DriveToPose, DockingProcedure, TakeImage, TakeThermalImage]
