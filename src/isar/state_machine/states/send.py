@@ -1,9 +1,10 @@
 import logging
 from typing import TYPE_CHECKING
 
+from transitions import State
+
 from models.enums.states import States
 from models.planning.step import Step, TakeImage
-from transitions import State
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -26,7 +27,7 @@ class Send(State):
             if self.state_machine.should_stop():
                 self.state_machine.stop_mission()
             if not self.state_machine.status.mission_in_progress:
-                return States.Cancel
+                self.state_machine.to_next_state(States.Cancel)
 
             next_action = self.send_mission(
                 self.state_machine.status.current_mission_step
