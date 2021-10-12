@@ -22,11 +22,11 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
-        "Flask",
-        "Flask-Injector",
+        "Flask < 2.0.0",
+        "Flask-Injector < 2.0.0",
         "PyJWT",
         "PyYAML",
-        "Werkzeug",
+        "Werkzeug < 2.0.0",
         "alitra",
         "azure-identity",
         "azure-keyvault-secrets",
@@ -41,11 +41,16 @@ setup(
         "requests",
         "transitions",
     ],
+    extras_require={
+        "dev": [
+            "pytest",
+            "pytest-dotenv",
+            "pytest-mock",
+            "pytest-xdist",
+            "requests-mock",
+            "black",
+            "mypy",
+        ]
+    },
     python_requires=">=3.8",
-    tests_require=[
-        "pytest",
-        "pytest-dotenv",
-        "pytest-mock",
-        "requests-mock",
-    ],
 )
