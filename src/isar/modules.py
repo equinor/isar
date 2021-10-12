@@ -11,19 +11,17 @@ from isar.models.map.map_config import MapConfig
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
 from isar.services.readers.mission_reader import MissionReader
-from isar.services.service_connections.azure.blob_service import (
-    BlobService,
-    BlobServiceInterface,
-)
 from isar.services.service_connections.echo.echo_service import (
     EchoService,
     EchoServiceInterface,
 )
 from isar.services.service_connections.request_handler import RequestHandler
-from isar.services.service_connections.slimm.slimm_service import SlimmService
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
+from isar.storage.blob_storage import BlobStorage
+from isar.storage.storage_interface import StorageInterface
+from isar.storage.storage_service import StorageService
 from robot_interfaces.robot_interface import RobotInterface
 
 
@@ -50,6 +48,18 @@ class RequestHandlerModule(Module):
         return RequestHandler()
 
 
+class StorageModule(Module):
+    @provider
+    @singleton
+    def provide_storage(self, keyvault: Keyvault) -> StorageInterface:
+        return BlobStorage(keyvault)
+
+    @provider
+    @singleton
+    def provide_storage_service(self, storage: StorageInterface) -> StorageService:
+        return StorageService(storage=storage)
+
+
 class StateMachineModule(Module):
     @provider
     @singleton
@@ -57,13 +67,13 @@ class StateMachineModule(Module):
         self,
         queues: Queues,
         robot: RobotInterface,
-        slimm_service: SlimmService,
+        storage_service: StorageService,
         transform: Transformation,
     ) -> StateMachine:
         return StateMachine(
             queues=queues,
             robot=robot,
-            slimm_service=slimm_service,
+            storage_service=storage_service,
             transform=transform,
         )
 
@@ -99,16 +109,6 @@ class ServiceModule(Module):
             stid_service=stid_service,
             transform=transform,
         )
-
-    @provider
-    @singleton
-    def provide_slimm_service(self, blob_service: BlobServiceInterface) -> SlimmService:
-        return SlimmService(blob_service)
-
-    @provider
-    @singleton
-    def provide_blob_service(self, key_vault: Keyvault) -> BlobServiceInterface:
-        return BlobService(key_vault)
 
 
 class ReaderModule(Module):

@@ -14,20 +14,20 @@ from isar.modules import (
     RobotModule,
     ServiceModule,
     StateMachineModule,
+    StorageModule,
     UtilitiesModule,
 )
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
 from isar.services.readers.mission_reader import MissionReader
-from isar.services.service_connections.azure.blob_service import BlobService
 from isar.services.service_connections.echo.echo_service import EchoServiceInterface
 from isar.services.service_connections.request_handler import RequestHandler
-from isar.services.service_connections.slimm.slimm_service import SlimmService
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.path_service import PathService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states import Cancel, Collect, Idle, Monitor, Send
+from isar.storage.storage_service import StorageService
 from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 
 
@@ -35,14 +35,15 @@ from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 def injector():
     return Injector(
         [
+            CoordinateModule,
             QueuesModule,
-            StateMachineModule,
-            ServiceModule,
-            UtilitiesModule,
-            RobotModule,
             ReaderModule,
             RequestHandlerModule,
-            CoordinateModule,
+            RobotModule,
+            ServiceModule,
+            StateMachineModule,
+            StorageModule,
+            UtilitiesModule,
         ]
     )
 
@@ -77,12 +78,6 @@ def runner(app):
 
 
 @pytest.fixture()
-def blob_service(keyvault):
-    test_container_name: str = config.get("test", "test_azure_container_name")
-    return BlobService(keyvault=keyvault, container_name=test_container_name)
-
-
-@pytest.fixture()
 def path_service():
     return PathService()
 
@@ -98,7 +93,7 @@ def state_machine(injector, robot, transform):
         queues=injector.get(Queues),
         robot=robot,
         transform=transform,
-        slimm_service=injector.get(SlimmService),
+        storage_service=injector.get(StorageService),
     )
 
 

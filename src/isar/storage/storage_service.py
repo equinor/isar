@@ -9,7 +9,7 @@ from isar import EnhancedJSONEncoder
 from isar.config import config
 from isar.models.mission import Mission
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from isar.services.service_connections.azure.blob_service import BlobServiceInterface
+from isar.storage.storage_interface import StorageInterface
 from models.inspections.formats.audio import Audio
 from models.inspections.formats.image import Image, ThermalImage
 from models.inspections.formats.video import Video
@@ -24,12 +24,12 @@ from models.inspections.references.video_reference import VideoReference
 from models.metadata.inspection_metadata import InspectionMetadata
 
 
-class SlimmService:
+class StorageService:
     @inject
-    def __init__(self, blob_service: BlobServiceInterface):
-        self.blob_service: BlobServiceInterface = blob_service
+    def __init__(self, storage: StorageInterface):
+        self.storage: StorageInterface = storage
 
-    def upload(
+    def store(
         self, mission_id: Union[UUID, int, str, None], result: InspectionResult
     ) -> None:
         sensor_sub_folder_name: str = self.get_sensor_sub_folder_name(result=result)
@@ -42,11 +42,9 @@ class SlimmService:
             f"{mission_id}/sensor_data/{sensor_sub_folder_name}/{filename}"
         )
 
-        self.blob_service.upload_blob(
-            blob=result.data, path_to_destination=destination_path
-        )
+        self.storage.store(data=result.data, path=destination_path)
 
-    def upload_metadata(
+    def store_metadata(
         self,
         mission: Mission,
     ) -> None:
@@ -56,12 +54,12 @@ class SlimmService:
             AudioReference,
             VideoReference,
         ]:
-            self.upload_metadata_for_inspection_type(
+            self.store_metadata_for_inspection_type(
                 mission_id=mission.mission_id,
                 inspections=mission.inspections,
                 inspection_type=inspection_type,
             )
-        self.upload_metadata_for_mission(mission=mission)
+        self.store_metadata_for_mission(mission=mission)
 
     def get_sensor_sub_folder_name(
         self, result: Union[InspectionResult, Inspection]
@@ -89,7 +87,7 @@ class SlimmService:
     ) -> str:
         return f"{mission_id}_{sensor_sub_folder_name}_{inspection.id}.{inspection.metadata.file_type}"
 
-    def upload_metadata_for_inspection_type(
+    def store_metadata_for_inspection_type(
         self,
         mission_id: Union[UUID, int, str, None],
         inspections: List[Inspection],
@@ -122,7 +120,7 @@ class SlimmService:
             metadata_dicts, cls=EnhancedJSONEncoder, indent=4
         ).encode()
 
-        self.blob_service.upload_blob(metadata_as_bytes, destination_path)
+        self.storage.store(data=metadata_as_bytes, path=destination_path)
 
     def inspection_metadata_to_dicts(
         self,
@@ -165,7 +163,7 @@ class SlimmService:
                 }
             ]
 
-    def upload_metadata_for_mission(self, mission: Mission) -> None:
+    def store_metadata_for_mission(self, mission: Mission) -> None:
         mission_metadata: MissionMetadata = mission.mission_metadata
         mission_metadata.required_metadata.url = (
             f"{config.get('azure', 'storage_account_url')}/"
@@ -223,4 +221,4 @@ class SlimmService:
             metadata, cls=EnhancedJSONEncoder, indent=4
         ).encode()
 
-        self.blob_service.upload_blob(metadata_as_bytes, destination_path)
+        self.storage.store(data=metadata_as_bytes, path=destination_path)

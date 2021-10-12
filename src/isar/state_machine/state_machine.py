@@ -17,8 +17,8 @@ from isar.models.communication.queues.queues import Queues
 from isar.models.communication.status import Status
 from isar.models.mission import Mission
 from isar.services.coordinates.transformation import Transformation
-from isar.services.service_connections.slimm.slimm_service import SlimmService
 from isar.state_machine.states import Cancel, Collect, Idle, Monitor, Off, Send
+from isar.storage.storage_service import StorageService
 from models.enums.states import States
 from robot_interfaces.robot_interface import RobotInterface
 
@@ -29,7 +29,7 @@ class StateMachine(object):
         self,
         queues: Queues,
         robot: RobotInterface,
-        slimm_service: SlimmService,
+        storage_service: StorageService,
         transform: Transformation,
         mission_path: str = config.get("mission", "eqrobot_default_mission"),
         sleep_time: float = config.getfloat("mission", "eqrobot_state_machine_sleep"),
@@ -48,7 +48,7 @@ class StateMachine(object):
             Send(self),
             Monitor(self),
             Collect(self, transform),
-            Cancel(self, slimm_service),
+            Cancel(self, storage_service),
         ]
         self.machine = Machine(self, states=self.states, initial="off", queued=True)
 

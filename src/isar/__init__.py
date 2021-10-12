@@ -7,6 +7,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_injector import FlaskInjector
 from injector import Injector
+
 from isar.apis import api_blueprint
 from isar.config import config
 from isar.services.utilities.json_service import EnhancedJSONEncoder
