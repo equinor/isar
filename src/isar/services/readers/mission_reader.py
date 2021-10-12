@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from isar.config import config
 from isar.models.mission import Mission
-from isar.services.readers.base_reader import BaseReader
+from isar.services.readers.base_reader import BaseReader, BaseReaderError
 from robot_interface.models.geometry.frame import Frame
 
 logger = logging.getLogger("state_machine")
@@ -20,7 +20,7 @@ class MissionReader(BaseReader):
     ):
         self.predefined_mission_folder = predefined_mission_folder
 
-    def get_mission(self, mission_path: Path) -> Optional[Mission]:
+    def get_mission(self, mission_path: Path) -> Mission:
         mission_dict: dict = self.read_json(mission_path)
         mission: Mission = self.dict_to_dataclass(
             dataclass_dict=mission_dict,
@@ -28,12 +28,9 @@ class MissionReader(BaseReader):
             cast_config=[Frame],
             strict_config=True,
         )
-        if mission is None:
-            logger.error(f"Could not read mission from {mission_path.as_posix()} ")
-            return None
         return mission
 
-    def get_predefined_missions(self) -> Optional[dict]:
+    def get_predefined_missions(self) -> dict:
         missions: dict = {}
         invalid_mission_ids: list = []
         try:
@@ -41,12 +38,15 @@ class MissionReader(BaseReader):
             for file in json_files:
                 mission_name = file.stem
                 path_to_file = self.predefined_mission_folder.joinpath(file.name)
-                mission: Mission = self.get_mission(path_to_file)
-                if mission is None:
+                try:
+                    mission: Mission = self.get_mission(path_to_file)
+                except BaseReaderError:
                     logger.warning(
                         f"File {path_to_file.as_posix()} could not be parsed to a mission"
                     )
-                elif mission.mission_id in invalid_mission_ids:
+                    continue
+
+                if mission.mission_id in invalid_mission_ids:
                     logger.warning(
                         f"Duplicate mission_id {mission.mission_id} : {path_to_file.as_posix()}"
                     )
@@ -67,12 +67,10 @@ class MissionReader(BaseReader):
             return missions
         except Exception as e:
             logger.error(f"Error in reading of files {e}")
-            return None
+            raise MissionReaderError
 
     def list_predefined_missions(self) -> Optional[dict]:
         mission_list_dict = self.get_predefined_missions()
-        if mission_list_dict is None:
-            return None
         predefined_mission_list = []
         for mission_id, current_mission in mission_list_dict.items():
             predefined_mission_list.append(
@@ -89,18 +87,15 @@ class MissionReader(BaseReader):
 
     def get_mission_by_id(self, mission_id) -> Optional[Mission]:
         mission_list_dict = self.get_predefined_missions()
-        if mission_list_dict is None:
-            logger.error(f"Found no missions")
-            return None
         try:
             return mission_list_dict[mission_id]["mission"]
         except Exception as e:
             logger.error(f"Could not get mission : {mission_id} - does not exist {e}")
-            return None
+            raise MissionReaderError
 
     def mission_id_valid(self, mission_id: int) -> bool:
-        mission_list_dict = self.get_predefined_missions()
         try:
+            mission_list_dict = self.get_predefined_missions()
             if mission_id in mission_list_dict:
                 return True
             else:
@@ -109,3 +104,7 @@ class MissionReader(BaseReader):
         except Exception as e:
             logger.error(f"Mission ID: {mission_id} not readable {e}")
             return False
+
+
+class MissionReaderError(Exception):
+    pass

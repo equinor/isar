@@ -4,7 +4,7 @@ from typing import Optional
 
 from isar.config import config
 from isar.models.map.map_config import MapConfig
-from isar.services.readers.base_reader import BaseReader
+from isar.services.readers.base_reader import BaseReader, BaseReaderError
 from robot_interface.models.geometry.frame import Frame
 
 logger = logging.getLogger("state_machine")
@@ -26,8 +26,6 @@ class MapConfigReader(BaseReader):
             target_dataclass=MapConfig,
             cast_config=[Frame],
         )
-        if map_config is None:
-            logger.error(f"Could not read map config from {map_config_path.as_posix()}")
 
         return map_config
 
@@ -37,13 +35,14 @@ class MapConfigReader(BaseReader):
         json_files = self.predefined_map_config_folder.glob("*.json")
         for file in json_files:
             path_to_file = self.predefined_map_config_folder.joinpath(file.name)
-            map_config: MapConfig = self.get_map_config(path_to_file)
-            if map_config is None:
+            try:
+                map_config: MapConfig = self.get_map_config(path_to_file)
+            except BaseReaderError:
                 logger.warning(
                     f"File {path_to_file.as_posix()}"
                     f" could not be parsed to a map_config"
                 )
-            elif map_config.map_name in map_configs:
+            if map_config.map_name in map_configs:
                 logger.warning(
                     f"Map name {map_config.map_name} : {path_to_file.as_posix()}"
                     f" already exist. Skipping both original and duplicate ..."

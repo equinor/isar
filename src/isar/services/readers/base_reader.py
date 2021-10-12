@@ -37,8 +37,7 @@ class BaseReader:
         strict_config: bool = False,
     ) -> Optional[Any]:
         if not is_dataclass(target_dataclass):
-            logger.error(f"{target_dataclass} is not a dataclass")
-            return None
+            raise BaseReaderError("{target_dataclass} is not a dataclass")
         try:
             generated_dataclass = from_dict(
                 data_class=target_dataclass,
@@ -47,16 +46,17 @@ class BaseReader:
             )
             return generated_dataclass
         except WrongTypeError as e:
-            logger.error(
-                f"A type of a input value does not match with a type of a data class field {e}"
-            )
-            return None
+            raise BaseReaderError(
+                "A type of a input value does not"
+                "match with a type of a data class field"
+            ) from e
         except MissingValueError as e:
-            logger.error(f"A value for a required field is not provided {e}")
-            return None
+            raise BaseReaderError("A value for a required field is not provided") from e
         except ValueError as e:
-            logger.error({e})
-            return None
+            raise BaseReaderError from e
         except Exception as e:
-            logger.error(f"Datastruct does not match expected struct {e}")
-            return None
+            raise BaseReaderError("Datastruct does not match expected struct") from e
+
+
+class BaseReaderError(Exception):
+    pass
