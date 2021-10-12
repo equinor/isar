@@ -25,9 +25,6 @@ from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from robot_interfaces.robot_interface import RobotInterface
-from robot_interfaces.robot_scheduler_interface import RobotSchedulerInterface
-from robot_interfaces.robot_storage_interface import RobotStorageInterface
-from robot_interfaces.robot_telemetry_interface import RobotTelemetryInterface
 
 
 class RobotModule(Module):
@@ -39,29 +36,11 @@ class RobotModule(Module):
         return robot.robotinterface.Robot()  # type: ignore
 
 
-class TelemetryModule(Module):
-    @provider
-    @singleton
-    def provide_telemetry_interface(
-        self, robot_interface: RobotInterface
-    ) -> RobotTelemetryInterface:
-        return robot_interface.telemetry
-
-
 class QueuesModule(Module):
     @provider
     @singleton
     def provide_queues(self) -> Queues:
         return Queues()
-
-
-class SchedulerModule(Module):
-    @provider
-    @singleton
-    def provide_scheduler_interface(
-        self, robot_interface: RobotInterface
-    ) -> RobotSchedulerInterface:
-        return robot_interface.scheduler
 
 
 class RequestHandlerModule(Module):
@@ -71,28 +50,19 @@ class RequestHandlerModule(Module):
         return RequestHandler()
 
 
-class StorageModule(Module):
-    @provider
-    @singleton
-    def provide_storage(self, robot_interface: RobotInterface) -> RobotStorageInterface:
-        return robot_interface.storage
-
-
 class StateMachineModule(Module):
     @provider
     @singleton
     def provide_state_machine(
         self,
         queues: Queues,
-        scheduler: RobotSchedulerInterface,
-        storage: RobotStorageInterface,
+        robot: RobotInterface,
         slimm_service: SlimmService,
         transform: Transformation,
     ) -> StateMachine:
         return StateMachine(
             queues=queues,
-            scheduler=scheduler,
-            storage=storage,
+            robot=robot,
             slimm_service=slimm_service,
             transform=transform,
         )

@@ -7,7 +7,6 @@ from models.enums.states import States
 from models.geometry.frame import Frame
 from models.inspections.inspection import Inspection
 from models.metadata.inspection_metadata import TimeIndexedPose
-from robot_interfaces.robot_storage_interface import RobotStorageInterface
 from transitions import State
 
 if TYPE_CHECKING:
@@ -19,13 +18,11 @@ class Collect(State):
     def __init__(
         self,
         state_machine: "StateMachine",
-        storage: RobotStorageInterface,
         transform: Transformation,
     ):
         super().__init__(name="collect", on_enter=self.start)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
-        self.storage = storage
         self.transform = transform
 
     def start(self):
@@ -39,7 +36,9 @@ class Collect(State):
         instance_id = self.state_machine.status.current_mission_instance_id
         current_step = self.state_machine.status.current_mission_step
 
-        inspections: Sequence[Inspection] = self.storage.get_inspection_references(
+        inspections: Sequence[
+            Inspection
+        ] = self.state_machine.robot.get_inspection_references(
             vendor_mission_id=instance_id,
             current_step=current_step,
         )

@@ -3,7 +3,7 @@ from isar.state_machine.states import Monitor
 from models.enums.mission_status import MissionStatus
 from models.enums.states import States
 
-from tests.test_utilities.mock_interface.mock_scheduler_interface import MockScheduler
+from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 from tests.test_utilities.mock_models.mock_step import MockStep
 
 
@@ -24,7 +24,7 @@ def test_monitor_mission(
     expected_state,
 ):
     mocker.patch.object(
-        MockScheduler,
+        MockRobot,
         "mission_status",
         return_value=mock_mission_status,
     )

@@ -9,17 +9,17 @@ from models.enums.states import States
 from models.geometry.frame import Frame
 from models.geometry.position import Position
 from models.planning.step import DriveToPose, TakeImage
+from robot_interfaces.robot_interface import RobotInterface
 from tests.integration.state_machine.test_state_machine import (
     start_state_machine_in_thread,
 )
 from tests.mocks.blob_service import BlobServiceMock
-from tests.test_utilities.mock_interface.mock_scheduler_interface import MockScheduler
-from tests.test_utilities.mock_interface.utilities import mock_default_interfaces
+from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 from tests.test_utilities.mock_models.mock_robot_variables import mock_pose
 
 
 def test_data_offload(injector, mocker):
-    mock_default_interfaces(injector=injector)
+    injector.binder.bind(RobotInterface, to=MockRobot())
     blob_service_mock: BlobServiceMock = BlobServiceMock()
     injector.binder.bind(BlobServiceInterface, to=blob_service_mock)
 
@@ -42,7 +42,7 @@ def test_data_offload(injector, mocker):
     assert state_machine.status.current_mission_step == step_1
 
     mocker.patch.object(
-        MockScheduler,
+        MockRobot,
         "mission_status",
         side_effect=[MissionStatus.Completed] + 10 * [MissionStatus.InProgress],
     )
@@ -51,7 +51,7 @@ def test_data_offload(injector, mocker):
     assert state_machine.status.current_mission_step == step_2
 
     mocker.patch.object(
-        MockScheduler,
+        MockRobot,
         "mission_status",
         side_effect=[MissionStatus.Completed] + 10 * [MissionStatus.InProgress],
     )
@@ -62,7 +62,7 @@ def test_data_offload(injector, mocker):
     assert len(state_machine.status.mission_schedule.inspections) == 1
 
     mocker.patch.object(
-        MockScheduler,
+        MockRobot,
         "mission_status",
         side_effect=[MissionStatus.Completed] + 10 * [MissionStatus.InProgress],
     )
@@ -72,7 +72,7 @@ def test_data_offload(injector, mocker):
     assert len(state_machine.status.mission_schedule.inspections) == 2
 
     mocker.patch.object(
-        MockScheduler, "mission_status", side_effect=[MissionStatus.Completed]
+        MockRobot, "mission_status", side_effect=[MissionStatus.Completed]
     )
     time.sleep(1)
 

@@ -7,7 +7,7 @@ from injector import inject
 
 from models.geometry.joints import Joints
 from models.geometry.pose import Pose
-from robot_interfaces.robot_telemetry_interface import RobotTelemetryInterface
+from robot_interfaces.robot_interface import RobotInterface
 
 api = Namespace("telemetry", description="Retrieve robot telemetry")
 
@@ -59,16 +59,18 @@ success_pose = api.model(
 )
 class CurrentPose(Resource):
     @inject
-    def __init__(self, telemetry_service: RobotTelemetryInterface, *args, **kwargs):
+    def __init__(self, robot: RobotInterface, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("api")
-        self.telemetry_service = telemetry_service
+        self.robot = robot
 
     @api.response(HTTPStatus.OK, "Success", success_pose)
     @api.response(HTTPStatus.NOT_FOUND, "Not Found")
     def get(self):
-        current_pose: Pose = self.telemetry_service.robot_pose()
-        current_joints: Joints = self.telemetry_service.robot_joints()
+        current_pose: Pose = self.robot.robot_pose()
+        current_joints: Joints = (
+            self.robot.robot_joints()
+        )
 
         if current_pose is None or current_joints is None:
             return Response(

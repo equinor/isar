@@ -20,8 +20,7 @@ from isar.services.coordinates.transformation import Transformation
 from isar.services.service_connections.slimm.slimm_service import SlimmService
 from isar.state_machine.states import Cancel, Collect, Idle, Monitor, Off, Send
 from models.enums.states import States
-from robot_interfaces.robot_scheduler_interface import RobotSchedulerInterface
-from robot_interfaces.robot_storage_interface import RobotStorageInterface
+from robot_interfaces.robot_interface import RobotInterface
 
 
 class StateMachine(object):
@@ -29,8 +28,7 @@ class StateMachine(object):
     def __init__(
         self,
         queues: Queues,
-        scheduler: RobotSchedulerInterface,
-        storage: RobotStorageInterface,
+        robot: RobotInterface,
         slimm_service: SlimmService,
         transform: Transformation,
         mission_path: str = config.get("mission", "eqrobot_default_mission"),
@@ -40,17 +38,19 @@ class StateMachine(object):
         ),
     ):
         self.logger = logging.getLogger("state_machine")
+
+        self.queues = queues
+        self.robot = robot
+
         self.states = [
             Off(self),
             Idle(self),
             Send(self),
             Monitor(self),
-            Collect(self, storage, transform),
-            Cancel(self, storage, slimm_service),
+            Collect(self, transform),
+            Cancel(self, slimm_service),
         ]
         self.machine = Machine(self, states=self.states, initial="off", queued=True)
-        self.queues = queues
-        self.scheduler = scheduler
 
         self.sleep_time = sleep_time
         self.mission_path = mission_path

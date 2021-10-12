@@ -38,7 +38,7 @@ class Monitor(State):
             self.iteration_counter = 0
             return States.Cancel
 
-        mission_status: MissionStatus = self.state_machine.scheduler.mission_status(
+        mission_status: MissionStatus = self.state_machine.robot.mission_status(
             self.state_machine.status.current_mission_instance_id
         )
         self.state_machine.status.mission_status = mission_status
@@ -75,7 +75,7 @@ class Monitor(State):
 
     def log_status(self, mission_status: MissionStatus):
         if self.iteration_counter % self.log_interval == 0:
-            self.state_machine.scheduler.log_status(
+            self.state_machine.robot.log_status(
                 mission_id=self.state_machine.status.current_mission_instance_id,
                 mission_status=mission_status,
                 current_step=self.state_machine.status.current_mission_step,

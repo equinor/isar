@@ -2,7 +2,7 @@ import pytest
 from isar.state_machine.states import Send
 from models.enums.states import States
 
-from tests.test_utilities.mock_interface.mock_scheduler_interface import MockScheduler
+from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 from tests.test_utilities.mock_models.mock_step import MockStep
 
 
@@ -41,7 +41,7 @@ def test_send_mission(
     send.state_machine.status.current_mission_step = current_mission_step
 
     mocker.patch.object(
-        MockScheduler, "schedule_step", return_value=mock_return["schedule_step"]
+        MockRobot, "schedule_step", return_value=mock_return["schedule_step"]
     )
     mocker.patch.object(
         Send,
@@ -73,7 +73,7 @@ def test_handle_send_failure(
     send.send_failure_counter_limit = send_failure_counter_limit
     send.send_failure_counter = send_failure_counter
     mocker.patch.object(
-        MockScheduler,
+        MockRobot,
         "mission_scheduled",
         return_value=mock_return["mission_scheduled"],
     )
