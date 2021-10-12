@@ -1,3 +1,6 @@
+"""State machine object.
+"""
+
 import logging
 import queue
 from collections import deque
@@ -24,6 +27,20 @@ from robot_interface.robot_interface import RobotInterface
 
 
 class StateMachine(object):
+    """State machine class.
+
+    Handles state transitions for supervisory robot control.
+
+    Attributes:
+        queues: Queues for API communication.
+        robot: Instance of robot interface.
+        slimm_service: Instance of SLIMM service.
+        mission_path: Relative path to mission definition.
+        sleep_time: Time to sleep inbetween state machine iterations.
+        transitions_log_length: Length of state transition log list.
+
+    """
+
     @inject
     def __init__(
         self,
