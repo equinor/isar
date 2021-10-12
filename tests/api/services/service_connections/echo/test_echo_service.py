@@ -1,6 +1,5 @@
-from typing import Optional
-
 import pytest
+from requests import RequestException
 
 from isar.models.mission import Mission
 from isar.services.service_connections.echo.echo_service import EchoService
@@ -11,7 +10,7 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
 
 
 @pytest.mark.parametrize(
-    "id, mock_return, mock_stid, expected_return",
+    "id, mock_return, mock_stid_side_effect, mock_stid, expected_return",
     [
         (
             76,
@@ -26,6 +25,7 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                     },
                 ],
             },
+            None,
             Position(x=1, y=1, z=0, frame=Frame.Asset),
             {
                 "mission_steps": 3,
@@ -46,6 +46,7 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                     },
                 ],
             },
+            None,
             Position(x=1, y=1, z=0, frame=Frame.Asset),
             {
                 "mission_steps": 2,
@@ -54,39 +55,20 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
             },
         ),
         (
-            105,
+            76,
             {
                 "robotPlanId": 76,
                 "planItems": [
                     {
                         "planItemId": 1227,
-                        "tag": "334-LD-0225",
+                        "tag": "wrong_tag",
                         "sortingOrder": 0,
                         "robotPlanId": 76,
                     },
                 ],
             },
-            None,
-            {
-                "mission_steps": 0,
-                "mission_step_1_type": None,
-                "mission_step_2_type": None,
-            },
-        ),
-        (
-            125,
-            {
-                "robotPlanId": 76,
-                "planItems": [
-                    {
-                        "planItemId": 1227,
-                        "tag": "334-LD-0",
-                        "sortingOrder": 0,
-                        "robotPlanId": 76,
-                    },
-                ],
-            },
-            None,
+            RequestException,
+            Position(x=1, y=1, z=0, frame=Frame.Asset),
             {
                 "mission_steps": 0,
                 "mission_step_1_type": None,
@@ -96,11 +78,22 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
     ],
 )
 def test_get_echo_mission(
-    echo_service, mocker, id, mock_return, mock_stid, expected_return
+    echo_service,
+    mocker,
+    id,
+    mock_return,
+    mock_stid_side_effect,
+    mock_stid,
+    expected_return,
 ):
     mocker.patch.object(EchoService, "mission_plan", return_value=mock_return)
-    mocker.patch.object(StidService, "tag_position", return_value=mock_stid)
-    mission: Optional[Mission] = echo_service.get_mission(id)
+    mocker.patch.object(
+        StidService,
+        "tag_position",
+        return_value=mock_stid,
+        side_effect=mock_stid_side_effect,
+    )
+    mission: Mission = echo_service.get_mission(id)
     assert len(mission.mission_steps) == expected_return["mission_steps"]
     if not len(mission.mission_steps) == 0:
         assert isinstance(
