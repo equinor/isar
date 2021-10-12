@@ -1,10 +1,10 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional, Union
+from typing import List, Union
 
 from azure.identity import DefaultAzureCredential
 from injector import inject
-from requests import RequestException, Response
+from requests import Response
 
 from isar.config import config
 from isar.config.predefined_measurement_types.predefined_measurement_types import (
@@ -24,7 +24,7 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
 
 class EchoServiceInterface(ABC):
     @abstractmethod
-    def get_mission(self, mission_id: int) -> Optional[Mission]:
+    def get_mission(self, mission_id: int) -> Mission:
         pass
 
 
@@ -44,7 +44,7 @@ class EchoService(EchoServiceInterface):
         )
         self.logger = logging.getLogger("api")
 
-    def mission_plan(self, mission_id: int) -> Optional[dict]:
+    def mission_plan(self, mission_id: int) -> dict:
         """
         Get mission plan from echo planner.
         :param mission_id: Unique id of echo mission plan
@@ -53,27 +53,19 @@ class EchoService(EchoServiceInterface):
             config.get("echo", "echo_app_scope")
         ).token
         url: str = f"{config.get('echo', 'url')}/robots/robot-plan/{mission_id}"
-        try:
-            response: Response = self.request_handler.get(
-                url=url,
-                headers={"Authorization": f"Bearer {token}"},
-            )
-        except RequestException:
-            self.logger.exception("Failed to retrieve mission plan from echo GUI")
-            return None
+        response: Response = self.request_handler.get(
+            url=url,
+            headers={"Authorization": f"Bearer {token}"},
+        )
 
         return response.json()
 
-    def get_robot_pose(self, tag_name: str) -> Optional[Pose]:
+    def get_robot_pose(self, tag_name: str) -> Pose:
         """
         Retrieve robot pose corresponding to inspection of a given tag. For now, this is a temporary hard-coded
         solution.
         """
-        try:
-            predefined_pose: Pose = predefined_poses[tag_name]
-        except KeyError:
-            self.logger.exception(f"Tag not in predefined_poses. Tag: {tag_name}")
-            return None
+        predefined_pose: Pose = predefined_poses[tag_name]
 
         if predefined_pose.frame is Frame.Robot:
             return predefined_pose
@@ -84,31 +76,22 @@ class EchoService(EchoServiceInterface):
 
         return predefined_pose
 
-    def get_tag_position_robot(self, tag_name: str) -> Optional[Position]:
-        tag_position_asset: Optional[Position] = self.stid_service.tag_position(
-            tag_name
-        )
-
-        if tag_position_asset is None:
-            return None
-
+    def get_tag_position_robot(self, tag_name: str) -> Position:
+        tag_position_asset: Position = self.stid_service.tag_position(tag_name)
         tag_position_robot: Position = self.transform.transform_position(
             tag_position_asset, to_=Frame.Robot
         )
         return tag_position_robot
 
-    def create_drive_step(self, tag_name: str) -> Optional[DriveToPose]:
-        robot_pose: Optional[Pose] = self.get_robot_pose(tag_name=tag_name)
-
-        if robot_pose is None:
-            return None
+    def create_drive_step(self, tag_name: str) -> DriveToPose:
+        robot_pose: Pose = self.get_robot_pose(tag_name=tag_name)
 
         drive_step: DriveToPose = DriveToPose(pose=robot_pose)
         return drive_step
 
     def create_measurement_steps(
         self, tag_name: str
-    ) -> Optional[List[Union[TakeImage, TakeThermalImage]]]:
+    ) -> List[Union[TakeImage, TakeThermalImage]]:
         """
         Retrieve measurement type corresponding to inspection of a given tag. For now, this is a temporary hard-coded
         solution.
@@ -138,17 +121,12 @@ class EchoService(EchoServiceInterface):
                     f"Invalid measurement type in predefined_measurement_types. Tag: {tag_name}, measurement type: {measurement_type}"
                 )
 
-        measurement_steps = [step for step in measurement_steps if step is not None]
+        measurement_steps = [step for step in measurement_steps]
 
         return measurement_steps
 
-    def create_image_step(self, tag_name: str) -> Optional[TakeImage]:
-        tag_position_robot: Optional[Position] = self.get_tag_position_robot(
-            tag_name=tag_name
-        )
-
-        if tag_position_robot is None:
-            return None
+    def create_image_step(self, tag_name: str) -> TakeImage:
+        tag_position_robot: Position = self.get_tag_position_robot(tag_name=tag_name)
 
         image_step: TakeImage = TakeImage(
             target=tag_position_robot,
@@ -156,13 +134,8 @@ class EchoService(EchoServiceInterface):
         )
         return image_step
 
-    def create_thermal_image_step(self, tag_name: str) -> Optional[TakeThermalImage]:
-        tag_position_robot: Optional[Position] = self.get_tag_position_robot(
-            tag_name=tag_name
-        )
-
-        if tag_position_robot is None:
-            return None
+    def create_thermal_image_step(self, tag_name: str) -> TakeThermalImage:
+        tag_position_robot: Position = self.get_tag_position_robot(tag_name=tag_name)
 
         thermal_image_step: TakeThermalImage = TakeThermalImage(
             target=tag_position_robot,
@@ -171,31 +144,27 @@ class EchoService(EchoServiceInterface):
 
         return thermal_image_step
 
-    def get_mission(self, mission_id: int) -> Optional[Mission]:
+    def get_mission(self, mission_id: int) -> Mission:
         """
         Retrieve robot mission from echo mission planner with specified id.
         :param mission_id: Unique id of echo mission plan
         :return: Mission object
         """
-        mission_plan: Optional[dict] = self.mission_plan(mission_id)
+        mission_plan: dict = self.mission_plan(mission_id)
 
-        if mission_plan is None:
-            return None
         mission_tags: List[dict] = mission_plan["planItems"]
         mission: Mission = Mission(mission_steps=[])
 
         for tag in mission_tags:
             tag_name: str = tag["tag"]
 
-            drive_step: Optional[DriveToPose] = self.create_drive_step(
-                tag_name=tag_name
-            )
-
-            measurement_steps: Optional[
-                List[Union[TakeImage, TakeThermalImage]]
-            ] = self.create_measurement_steps(tag_name=tag_name)
-
-            if not measurement_steps or drive_step is None:
+            try:
+                drive_step: DriveToPose = self.create_drive_step(tag_name=tag_name)
+                measurement_steps: List[
+                    Union[TakeImage, TakeThermalImage]
+                ] = self.create_measurement_steps(tag_name=tag_name)
+            except Exception as e:
+                self.logger.error(e)
                 continue
 
             mission.mission_steps.append(drive_step)

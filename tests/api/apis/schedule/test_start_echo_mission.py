@@ -2,6 +2,7 @@ from dataclasses import asdict
 from http import HTTPStatus
 
 import pytest
+from requests import RequestException
 
 from isar.models.communication.messages import StartMissionMessages
 from isar.services.service_connections.echo.echo_service import EchoService
@@ -16,12 +17,13 @@ from tests.test_utilities.mock_models.mock_mission_definition import (
 
 
 @pytest.mark.parametrize(
-    "mission_id, mock_get_mission, "
+    "mission_id, mock_get_mission, mock_get_mission_side_effect,"
     "mock_ready_to_start, mock_start, expected_output, expected_status_code",
     [
         (
             12345,
             mock_mission_definition(),
+            None,
             mock_ready_to_start_mission(HTTPStatus.OK),
             mock_start_mission(HTTPStatus.OK),
             StartMissionMessages.success(),
@@ -30,6 +32,7 @@ from tests.test_utilities.mock_models.mock_mission_definition import (
         (
             12345,
             None,
+            RequestException,
             mock_ready_to_start_mission(HTTPStatus.OK),
             mock_start_mission(HTTPStatus.OK),
             StartMissionMessages.mission_not_found(),
@@ -43,12 +46,18 @@ def test_start_mission(
     mocker,
     mission_id,
     mock_get_mission,
+    mock_get_mission_side_effect,
     mock_ready_to_start,
     mock_start,
     expected_output,
     expected_status_code,
 ):
-    mocker.patch.object(EchoService, "get_mission", return_value=mock_get_mission)
+    mocker.patch.object(
+        EchoService,
+        "get_mission",
+        return_value=mock_get_mission,
+        side_effect=mock_get_mission_side_effect,
+    )
     mocker.patch.object(
         SchedulingUtilities,
         "ready_to_start_mission",

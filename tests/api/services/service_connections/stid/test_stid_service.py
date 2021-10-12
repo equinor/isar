@@ -22,17 +22,6 @@ from tests.mocks.token import MockToken
                 }
             ),
         ),
-        (
-            "DO-313-1021",
-            None,
-            MockRequests(
-                json_data={
-                    "xCoordinate": None,
-                    "yCoordinate": None,
-                    "zCoordinate": None,
-                }
-            ),
-        ),
     ],
 )
 def test_get_position(stid_service, mocker, tag, expected_position, mock_return):

@@ -60,9 +60,10 @@ class StartEchoMission(Resource):
             self.logger.error(f"{message} {e}")
             return message, HTTPStatus.BAD_REQUEST
 
-        mission: Mission = self.echo_service.get_mission(mission_id=mission_id)
-
-        if mission is None:
+        try:
+            mission: Mission = self.echo_service.get_mission(mission_id=mission_id)
+        except Exception as e:
+            self.logger.error(e)
             message: StartMessage = StartMissionMessages.mission_not_found()
             return message, HTTPStatus.NOT_FOUND
 

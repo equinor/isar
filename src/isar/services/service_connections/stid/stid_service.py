@@ -26,24 +26,15 @@ class StidService:
             config.get("stid", "stid_app_scope")
         ).token
         url: str = config.get("stid", "url")
-        try:
-            response: Response = self.request_handler.get(
-                url=url,
-                params={"tagNo": tag},
-                headers={"Authorization": f"Bearer {token}"},
-            )
-        except RequestException:
-            self.logger.exception(f"Could not get tag data from stid. Tag name: {tag}")
-            return None
-
+        response: Response = self.request_handler.get(
+            url=url,
+            params={"tagNo": tag},
+            headers={"Authorization": f"Bearer {token}"},
+        )
         tag_metadata: dict = response.json()
 
-        try:
-            x_coord: float = tag_metadata["xCoordinate"] / 1000
-            y_coord: float = tag_metadata["yCoordinate"] / 1000
-            z_coord: float = tag_metadata["zCoordinate"] / 1000
-        except TypeError:
-            self.logger.error(f"Could not get tag position data from stid. Tag: {tag}")
-            return None
+        x_coord: float = tag_metadata["xCoordinate"] / 1000
+        y_coord: float = tag_metadata["yCoordinate"] / 1000
+        z_coord: float = tag_metadata["zCoordinate"] / 1000
 
         return Position(x=x_coord, y=y_coord, z=z_coord, frame=Frame.Asset)
