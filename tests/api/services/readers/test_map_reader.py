@@ -4,6 +4,7 @@ from pathlib import Path
 from alitra.frame_dataclasses import Point, PointList
 
 from isar.models.map.map_config import MapConfig
+from isar.services.readers.base_reader import BaseReaderError
 
 logger = logging.getLogger("state_machine")
 
@@ -37,7 +38,10 @@ def test_map_config_reader(map_config_reader):
 
 def test_invalid_file_path(map_config_reader):
     map_config_path = Path("./tests/test_data/test_map_config/no_file.json")
-    map_config = map_config_reader.get_map_config(map_config_path)
+    try:
+        map_config = map_config_reader.get_map_config(map_config_path)
+    except BaseReaderError:
+        map_config = None
     assert map_config == None
 
 

@@ -8,7 +8,7 @@ from injector import inject
 from isar.config import config
 from isar.models.communication.messages import StartMissionMessages
 from isar.models.mission import Mission
-from isar.services.readers.mission_reader import MissionReader
+from isar.services.readers.mission_reader import MissionReader, MissionReaderError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 
 api = Namespace(
@@ -65,8 +65,9 @@ class StartMission(Resource):
             self.logger.error(message)
             return message, HTTPStatus.NOT_FOUND
 
-        mission: Mission = self.mission_reader.get_mission_by_id(mission_id)
-        if mission is None:
+        try:
+            mission: Mission = self.mission_reader.get_mission_by_id(mission_id)
+        except MissionReaderError:
             message = StartMissionMessages.mission_not_found()
             return message, HTTPStatus.NOT_FOUND
 

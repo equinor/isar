@@ -10,7 +10,8 @@ from isar.models.communication.messages import (
     StopMissionMessages,
 )
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
-from isar.services.readers.mission_reader import MissionReader
+from isar.services.readers.base_reader import BaseReaderError
+from isar.services.readers.mission_reader import MissionReader, MissionReaderError
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from tests.test_utilities.mock_models.mock_mission_definition import (
@@ -63,12 +64,14 @@ def mock_start_mission(status_code: int) -> Tuple[StartMessage, int]:
 class TestSupervisorRoutes:
     @pytest.mark.parametrize(
         "mission_id, mock_mission_id_valid, mock_get_mission_by_id, "
+        "expected_exception,"
         "mock_ready_to_start, mock_start, expected_output, expected_status_code",
         [
             (
                 12345,
                 False,
                 mock_mission_definition(),
+                None,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.OK),
                 StartMissionMessages.invalid_mission_id(12345),
@@ -78,6 +81,7 @@ class TestSupervisorRoutes:
                 None,
                 False,
                 mock_mission_definition(),
+                None,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.OK),
                 StartMissionMessages.bad_request(),
@@ -87,6 +91,7 @@ class TestSupervisorRoutes:
                 1,
                 True,
                 None,
+                MissionReaderError,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.OK),
                 StartMissionMessages.mission_not_found(),
@@ -96,6 +101,7 @@ class TestSupervisorRoutes:
                 1,
                 True,
                 mock_mission_definition(),
+                None,
                 mock_ready_to_start_mission(HTTPStatus.REQUEST_TIMEOUT),
                 mock_start_mission(HTTPStatus.OK),
                 StartMissionMessages.queue_timeout(),
@@ -105,6 +111,7 @@ class TestSupervisorRoutes:
                 1,
                 True,
                 mock_mission_definition(),
+                None,
                 mock_ready_to_start_mission(HTTPStatus.CONFLICT),
                 mock_start_mission(HTTPStatus.OK),
                 StartMissionMessages.mission_in_progress(),
@@ -114,6 +121,7 @@ class TestSupervisorRoutes:
                 1,
                 True,
                 mock_mission_definition(),
+                None,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.REQUEST_TIMEOUT),
                 StartMissionMessages.queue_timeout(),
@@ -123,6 +131,7 @@ class TestSupervisorRoutes:
                 1,
                 True,
                 mock_mission_definition(),
+                None,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.OK),
                 StartMissionMessages.success(),
@@ -138,6 +147,7 @@ class TestSupervisorRoutes:
         mission_id,
         mock_mission_id_valid,
         mock_get_mission_by_id,
+        expected_exception,
         mock_ready_to_start,
         mock_start,
         expected_output,
@@ -152,6 +162,7 @@ class TestSupervisorRoutes:
             MissionReader,
             "get_mission_by_id",
             return_value=mock_get_mission_by_id,
+            side_effect=expected_exception,
         )
         mocker.patch.object(
             SchedulingUtilities,
