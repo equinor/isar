@@ -1,7 +1,5 @@
 import logging
-from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Union
 
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
@@ -9,19 +7,10 @@ from injector import inject
 
 from isar.config import config
 from isar.config.keyvault.keyvault_service import Keyvault
+from isar.storage.storage_interface import StorageInterface
 
 
-class BlobServiceInterface(ABC):
-    @abstractmethod
-    def upload_blob(self, blob: Union[bytes, str], path_to_destination: Path) -> bool:
-        pass
-
-    @abstractmethod
-    def blob_exists(self, path_to_blob: Path) -> bool:
-        pass
-
-
-class BlobService(BlobServiceInterface):
+class BlobStorage(StorageInterface):
     @inject
     def __init__(
         self,
@@ -37,14 +26,14 @@ class BlobService(BlobServiceInterface):
         self.blob_service_client = self.get_blob_service_client()
         self.container_client = self.get_container_client()
 
-    def upload_blob(self, blob: Union[bytes, str], path_to_destination: Path) -> bool:
-        blob_client = self.get_blob_client(path_to_destination)
+    def store(self, data: bytes, path: Path) -> bool:
+        blob_client = self.get_blob_client(path)
         try:
-            blob_client.upload_blob(blob)
+            blob_client.upload_blob(data)
             return True
         except ResourceExistsError as e:
             logging.error(
-                f"Blob {path_to_destination.as_posix()} already exists in container. Error: {e}"
+                f"Blob {path.as_posix()} already exists in container. Error: {e}"
             )
             return False
         except Exception as e:

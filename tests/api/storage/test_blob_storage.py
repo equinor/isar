@@ -3,7 +3,7 @@ from pathlib import Path
 
 from isar.models.mission import Mission
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from isar.services.service_connections.slimm.slimm_service import SlimmService
+from isar.storage.storage_service import StorageService
 from models.geometry.frame import Frame
 from models.geometry.orientation import Orientation
 from models.geometry.pose import Pose
@@ -14,7 +14,7 @@ from models.inspections.inspection_result import InspectionResult
 from models.inspections.references.image_reference import ImageReference
 from models.metadata.inspection_metadata import TimeIndexedPose
 from models.metadata.inspections.image_metadata import ImageMetadata
-from tests.mocks.blob_service import BlobServiceMock
+from tests.mocks.blob_storage import BlobStorageMock
 
 MISSION_ID = "some-mission-id"
 INSPECTION_ID = "some-inspection-id"
@@ -32,27 +32,27 @@ ARBITRARY_IMAGE_METADATA = ImageMetadata(
 )
 
 
-def test_slimm_service_upload():
-    blob_service: BlobServiceMock = BlobServiceMock()
-    slimm_service: SlimmService = SlimmService(blob_service=blob_service)
+def test_blob_storage_store():
+    blob_storage: BlobStorageMock = BlobStorageMock()
+    storage_service: StorageService = StorageService(storage=blob_storage)
     data_bytes: bytes = b"Lets say this is some image data"
     inspection_result: InspectionResult = Image(
         id=INSPECTION_ID, metadata=ARBITRARY_IMAGE_METADATA, data=data_bytes
     )
 
-    slimm_service.upload(mission_id=MISSION_ID, result=inspection_result)
+    storage_service.store(mission_id=MISSION_ID, result=inspection_result)
     expected_path_to_image: Path = Path(
         f"{MISSION_ID}/sensor_data/image/{MISSION_ID}_image_{INSPECTION_ID}.jpg"
     )
 
-    assert blob_service.blob_exists(
+    assert blob_storage.blob_exists(
         path_to_blob=expected_path_to_image
     ), "Failed to upload result to SLIMM"
 
 
-def test_slimm_service_upload_metadata():
-    blob_service: BlobServiceMock = BlobServiceMock()
-    slimm_service: SlimmService = SlimmService(blob_service)
+def test_blob_storage_store_metadata():
+    blob_storage: BlobStorageMock = BlobStorageMock()
+    storage_service: StorageService = StorageService(storage=blob_storage)
     inspection: Inspection = ImageReference(INSPECTION_ID, ARBITRARY_IMAGE_METADATA)
     mission: Mission = Mission(
         mission_steps=[],
@@ -61,12 +61,12 @@ def test_slimm_service_upload_metadata():
         mission_metadata=MissionMetadata(MISSION_ID),
     )
 
-    slimm_service.upload_metadata(mission=mission)
+    storage_service.store_metadata(mission=mission)
 
-    assert blob_service.blob_exists(
+    assert blob_storage.blob_exists(
         path_to_blob=Path(f"{MISSION_ID}/{MISSION_ID}_META.json")
     ), "Failed to upload mission metadata to SLIMM"
-    assert blob_service.blob_exists(
+    assert blob_storage.blob_exists(
         path_to_blob=Path(
             f"{MISSION_ID}/sensor_data/image/{MISSION_ID}_image_NAVI.json"
         )

@@ -1,10 +1,11 @@
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from injector import inject
-from isar.services.service_connections.slimm.slimm_service import SlimmService
-from models.inspections.inspection_result import InspectionResult
 from transitions import State
+
+from isar.storage.storage_service import StorageService
+from models.inspections.inspection_result import InspectionResult
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -15,11 +16,11 @@ class Cancel(State):
     def __init__(
         self,
         state_machine: "StateMachine",
-        slimm_service: SlimmService,
+        storage_service: StorageService,
     ):
         super().__init__(name="cancel", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
-        self.slimm_service = slimm_service
+        self.storage_service = storage_service
         self.logger = logging.getLogger("state_machine")
 
     def start(self):
@@ -34,7 +35,7 @@ class Cancel(State):
                     InspectionResult
                 ] = self.state_machine.robot.download_inspection_result(inspection_ref)
                 if result:
-                    self.slimm_service.upload(
+                    self.storage_service.store(
                         self.state_machine.status.mission_schedule.mission_id,
                         result,
                     )
@@ -44,7 +45,7 @@ class Cancel(State):
                         + f"Inspection reference: {inspection_ref}"
                     )
 
-            self.slimm_service.upload_metadata(
+            self.storage_service.store_metadata(
                 self.state_machine.status.mission_schedule
             )
 

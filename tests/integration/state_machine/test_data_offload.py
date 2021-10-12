@@ -1,9 +1,9 @@
 import time
 
 from isar.models.mission import Mission
-from isar.services.service_connections.azure.blob_service import BlobServiceInterface
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
+from isar.storage.storage_interface import StorageInterface
 from models.enums.mission_status import MissionStatus
 from models.enums.states import States
 from models.geometry.frame import Frame
@@ -13,15 +13,14 @@ from robot_interfaces.robot_interface import RobotInterface
 from tests.integration.state_machine.test_state_machine import (
     start_state_machine_in_thread,
 )
-from tests.mocks.blob_service import BlobServiceMock
+from tests.mocks.blob_storage import BlobStorageMock
 from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 from tests.test_utilities.mock_models.mock_robot_variables import mock_pose
 
 
 def test_data_offload(injector, mocker):
     injector.binder.bind(RobotInterface, to=MockRobot())
-    blob_service_mock: BlobServiceMock = BlobServiceMock()
-    injector.binder.bind(BlobServiceInterface, to=blob_service_mock)
+    injector.binder.bind(StorageInterface, to=BlobStorageMock())
 
     state_machine: StateMachine = start_state_machine_in_thread(injector=injector)
 
