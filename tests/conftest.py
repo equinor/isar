@@ -12,11 +12,8 @@ from isar.modules import (
     ReaderModule,
     RequestHandlerModule,
     RobotModule,
-    SchedulerModule,
     ServiceModule,
     StateMachineModule,
-    StorageModule,
-    TelemetryModule,
     UtilitiesModule,
 )
 from isar.services.coordinates.transformation import Transformation
@@ -31,20 +28,15 @@ from isar.services.utilities.path_service import PathService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states import Cancel, Collect, Idle, Monitor, Send
-from tests.test_utilities.mock_interface.mock_scheduler_interface import MockScheduler
-from tests.test_utilities.mock_interface.mock_storage_interface import MockStorage
-from tests.test_utilities.mock_interface.mock_telemetry_interface import MockTelemetry
+from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 
 
 @pytest.fixture()
 def injector():
     return Injector(
         [
-            TelemetryModule,
             QueuesModule,
             StateMachineModule,
-            StorageModule,
-            SchedulerModule,
             ServiceModule,
             UtilitiesModule,
             RobotModule,
@@ -101,11 +93,10 @@ def keyvault(injector):
 
 
 @pytest.fixture()
-def state_machine(injector, scheduler_interface, storage_interface, transform):
+def state_machine(injector, robot, transform):
     return StateMachine(
         queues=injector.get(Queues),
-        scheduler=scheduler_interface,
-        storage=storage_interface,
+        robot=robot,
         transform=transform,
         slimm_service=injector.get(SlimmService),
     )
@@ -128,7 +119,7 @@ def monitor(state_machine):
 
 @pytest.fixture()
 def collect(state_machine, injector):
-    return Collect(state_machine, MockStorage(), injector.get(Transformation))
+    return Collect(state_machine, injector.get(Transformation))
 
 
 @pytest.fixture()
@@ -147,23 +138,8 @@ def echo_service(injector):
 
 
 @pytest.fixture()
-def cancel(state_machine):
-    return Cancel(state_machine, MockStorage())
-
-
-@pytest.fixture()
-def scheduler_interface():
-    return MockScheduler()
-
-
-@pytest.fixture()
-def telemetry_interface():
-    return MockTelemetry()
-
-
-@pytest.fixture()
-def storage_interface():
-    return MockStorage()
+def robot():
+    return MockRobot()
 
 
 @pytest.fixture()

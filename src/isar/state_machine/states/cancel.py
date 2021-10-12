@@ -4,7 +4,6 @@ from typing import Optional, TYPE_CHECKING
 from injector import inject
 from isar.services.service_connections.slimm.slimm_service import SlimmService
 from models.inspections.inspection_result import InspectionResult
-from robot_interfaces.robot_storage_interface import RobotStorageInterface
 from transitions import State
 
 if TYPE_CHECKING:
@@ -16,14 +15,12 @@ class Cancel(State):
     def __init__(
         self,
         state_machine: "StateMachine",
-        storage: RobotStorageInterface,
         slimm_service: SlimmService,
     ):
         super().__init__(name="cancel", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.slimm_service = slimm_service
         self.logger = logging.getLogger("state_machine")
-        self.storage = storage
 
     def start(self):
         self.state_machine.update_status()
@@ -35,7 +32,7 @@ class Cancel(State):
             ) in self.state_machine.status.mission_schedule.inspections:
                 result: Optional[
                     InspectionResult
-                ] = self.storage.download_inspection_result(inspection_ref)
+                ] = self.state_machine.robot.download_inspection_result(inspection_ref)
                 if result:
                     self.slimm_service.upload(
                         self.state_machine.status.mission_schedule.mission_id,

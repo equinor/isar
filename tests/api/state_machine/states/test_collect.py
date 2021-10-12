@@ -11,7 +11,7 @@ from models.inspections.inspection import Inspection
 from models.inspections.references.image_reference import ImageReference
 from models.metadata.inspection_metadata import TimeIndexedPose
 from models.metadata.inspections.image_metadata import ImageMetadata
-from tests.test_utilities.mock_interface.mock_storage_interface import MockStorage
+from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 from tests.test_utilities.mock_models.mock_step import MockStep
 
 
@@ -53,7 +53,7 @@ def test_collect_results(
 ):
     collect.state_machine.status.current_mission_step = current_mission_step
     mocker.patch.object(
-        MockStorage,
+        MockRobot,
         "get_inspection_references",
         return_value=mock_collect_results,
     )

@@ -43,7 +43,7 @@ class Send(State):
             send_success,
             mission_instance_id,
             computed_joints,
-        ) = self.state_machine.scheduler.schedule_step(current_mission_step)
+        ) = self.state_machine.robot.schedule_step(current_mission_step)
 
         if send_success:
             self.state_machine.status.current_mission_instance_id = mission_instance_id
@@ -69,7 +69,7 @@ class Send(State):
 
     def handle_send_failure(self, current_mission_step: Step) -> States:
         self.logger.info("sending failed #: " + str(self.send_failure_counter + 1))
-        if not self.state_machine.scheduler.mission_scheduled():
+        if not self.state_machine.robot.mission_scheduled():
             self.send_failure_counter += 1
             if self.send_failure_counter >= self.send_failure_counter_limit:
                 self.logger.error(
