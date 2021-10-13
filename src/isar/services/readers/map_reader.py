@@ -35,13 +35,7 @@ class MapConfigReader(BaseReader):
         json_files = self.predefined_map_config_folder.glob("*.json")
         for file in json_files:
             path_to_file = self.predefined_map_config_folder.joinpath(file.name)
-            try:
-                map_config: MapConfig = self.get_map_config(path_to_file)
-            except BaseReaderError:
-                logger.warning(
-                    f"File {path_to_file.as_posix()}"
-                    f" could not be parsed to a map_config"
-                )
+            map_config: MapConfig = self.get_map_config(path_to_file)
             if map_config.map_name in map_configs:
                 logger.warning(
                     f"Map name {map_config.map_name} : {path_to_file.as_posix()}"
