@@ -8,7 +8,8 @@ from azure.core.exceptions import (
 )
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
-from isar.config.keyvault import keyvault_error
+
+from isar.config.keyvault.keyvault_error import KeyvaultError
 
 
 class Keyvault:
@@ -32,13 +33,13 @@ class Keyvault:
         except ResourceNotFoundError:
             self.logger.error("Secret was not found in keyvault.")
             traceback.print_exc()
-            raise keyvault_error  # type: ignore
+            raise KeyvaultError  # type: ignore
         except HttpResponseError:
             self.logger.error(
                 "An error occurred while retrieving a secret from keyvault."
             )
             traceback.print_exc()
-            raise keyvault_error  # type: ignore
+            raise KeyvaultError  # type: ignore
 
         return secret
 
@@ -49,7 +50,7 @@ class Keyvault:
         except HttpResponseError:
             self.logger.error("An error occurred while setting a secret in keyvault.")
             traceback.print_exc()
-            raise keyvault_error  # type: ignore
+            raise KeyvaultError  # type: ignore
 
     def get_secret_client(self):
         try:
@@ -64,7 +65,7 @@ class Keyvault:
         except ClientAuthenticationError:
             self.logger.error("Failed to authenticate to Azure.")
             traceback.print_exc()
-            raise keyvault_error
+            raise KeyvaultError
 
         secret_client = SecretClient(vault_url=self.url, credential=credential)
         return secret_client
