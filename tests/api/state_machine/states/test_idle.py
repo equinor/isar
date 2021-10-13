@@ -28,5 +28,5 @@ def test_idle_iterate(
     mocker.patch.object(
         StateMachine, "should_start_mission", return_value=mock_should_start_mission
     )
-    next_state: States = idle_state.get_next_state()
+    next_state: States = idle_state._get_next_state()
     assert next_state == next_expected_state
