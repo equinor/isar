@@ -1,6 +1,5 @@
 import logging
 from abc import ABC, abstractmethod
-
 from typing import List, Optional, Union
 
 from azure.identity import DefaultAzureCredential
@@ -8,10 +7,10 @@ from injector import inject
 from requests import RequestException, Response
 
 from isar.config import config
-from isar.config.predefined_poses.predefined_poses import predefined_poses
 from isar.config.predefined_measurement_types.predefined_measurement_types import (
     predefined_measurement_types,
 )
+from isar.config.predefined_poses.predefined_poses import predefined_poses
 from isar.models.mission import Mission
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.coordinates.transformation import Transformation
@@ -119,7 +118,7 @@ class EchoService(EchoServiceInterface):
                 tag_name
             ]
         except KeyError:
-            self.logger.exception(
+            self.logger.warning(
                 f"Tag not in predefined_measurement_types, will use default. Tag: {tag_name}"
             )
             predefined_measurement_type = ["Image"]

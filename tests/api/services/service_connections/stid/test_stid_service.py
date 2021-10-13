@@ -1,9 +1,11 @@
 import pytest
+from azure.identity._credentials.default import DefaultAzureCredential
+
 from isar.services.service_connections.request_handler import RequestHandler
 from models.geometry.frame import Frame
 from models.geometry.position import Position
-
-from tests.utilities import MockRequests
+from tests.mocks.request import MockRequests
+from tests.mocks.token import MockToken
 
 
 @pytest.mark.parametrize(
@@ -34,6 +36,7 @@ from tests.utilities import MockRequests
     ],
 )
 def test_get_position(stid_service, mocker, tag, expected_position, mock_return):
+    mocker.patch.object(DefaultAzureCredential, "get_token", return_value=MockToken())
     mocker.patch.object(RequestHandler, "get", return_value=mock_return)
     position: Position = stid_service.tag_position(tag=tag)
     assert position == expected_position
