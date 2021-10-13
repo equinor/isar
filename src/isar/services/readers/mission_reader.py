@@ -33,41 +33,36 @@ class MissionReader(BaseReader):
     def get_predefined_missions(self) -> dict:
         missions: dict = {}
         invalid_mission_ids: list = []
-        try:
-            json_files = self.predefined_mission_folder.glob("*.json")
-            for file in json_files:
-                mission_name = file.stem
-                path_to_file = self.predefined_mission_folder.joinpath(file.name)
-                try:
-                    mission: Mission = self.get_mission(path_to_file)
-                except BaseReaderError:
-                    logger.warning(
-                        f"File {path_to_file.as_posix()} could not be parsed to a mission"
-                    )
-                    continue
-
-                if mission.mission_id in invalid_mission_ids:
-                    logger.warning(
-                        f"Duplicate mission_id {mission.mission_id} : {path_to_file.as_posix()}"
-                    )
-                elif mission.mission_id in missions:
-                    conflicting_file_path = missions[mission.mission_id]["file"]
-                    logger.warning(
-                        f"Duplicate mission_id {mission.mission_id} : {path_to_file.as_posix()}"
-                        + f" and {conflicting_file_path}"
-                    )
-                    invalid_mission_ids.append(mission.mission_id)
-                    missions.pop(mission.mission_id)
-                else:
-                    missions[mission.mission_id] = {
-                        "name": mission_name,
-                        "file": path_to_file.as_posix(),
-                        "mission": mission,
-                    }
-            return missions
-        except Exception as e:
-            logger.error(f"Error in reading of files {e}")
-            raise MissionReaderError
+        json_files = self.predefined_mission_folder.glob("*.json")
+        for file in json_files:
+            mission_name = file.stem
+            path_to_file = self.predefined_mission_folder.joinpath(file.name)
+            try:
+                mission: Mission = self.get_mission(path_to_file)
+            except BaseReaderError as e:
+                logger.warning(
+                    f"Failed to read predefined mission {path_to_file} \n {e}"
+                )
+                continue
+            if mission.mission_id in invalid_mission_ids:
+                logger.warning(
+                    f"Duplicate mission_id {mission.mission_id} : {path_to_file.as_posix()}"
+                )
+            elif mission.mission_id in missions:
+                conflicting_file_path = missions[mission.mission_id]["file"]
+                logger.warning(
+                    f"Duplicate mission_id {mission.mission_id} : {path_to_file.as_posix()}"
+                    + f" and {conflicting_file_path}"
+                )
+                invalid_mission_ids.append(mission.mission_id)
+                missions.pop(mission.mission_id)
+            else:
+                missions[mission.mission_id] = {
+                    "name": mission_name,
+                    "file": path_to_file.as_posix(),
+                    "mission": mission,
+                }
+        return missions
 
     def list_predefined_missions(self) -> Optional[dict]:
         mission_list_dict = self.get_predefined_missions()
@@ -86,12 +81,13 @@ class MissionReader(BaseReader):
         return {"missions": predefined_mission_list}
 
     def get_mission_by_id(self, mission_id) -> Optional[Mission]:
-        mission_list_dict = self.get_predefined_missions()
         try:
+            mission_list_dict = self.get_predefined_missions()
             return mission_list_dict[mission_id]["mission"]
         except Exception as e:
-            logger.error(f"Could not get mission : {mission_id} - does not exist {e}")
-            raise MissionReaderError
+            raise MissionReaderError(
+                "Could not get mission : {mission_id} - does not exist {e}"
+            )
 
     def mission_id_valid(self, mission_id: int) -> bool:
         try:
