@@ -53,3 +53,21 @@ def test_state_machine_with_unsuccessful_send(injector, mocker):
     time.sleep(1)
 
     assert state_machine.status.current_state is States.Idle
+
+
+def test_state_machine_with_delayed_successful_send(injector, mocker):
+    injector.binder.bind(RobotInterface, to=MockRobot())
+    state_machine: StateMachine = start_state_machine_in_thread(injector)
+
+    step: Step = DriveToPose(pose=mock_pose())
+    mission: Mission = Mission([step])
+    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+
+    mocker.patch.object(
+        MockRobot, "schedule_step", side_effect=([(False, 1, None), (True, 1, None)])
+    )
+
+    message, _ = scheduling_utilities.start_mission(mission=mission)
+    time.sleep(1)
+
+    assert state_machine.status.current_state is States.Monitor
