@@ -4,7 +4,7 @@ import pytest
 
 from isar.models.mission import Mission
 from isar.services.readers.mission_reader import MissionReader
-from models.enums.states import States
+from isar.state_machine.states_enum import States
 
 
 def get_mission():

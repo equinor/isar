@@ -16,10 +16,10 @@ from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.coordinates.transformation import Transformation
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
-from models.geometry.frame import Frame
-from models.geometry.pose import Pose
-from models.geometry.position import Position
-from models.planning.step import DriveToPose, TakeImage, TakeThermalImage
+from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.geometry.pose import Pose
+from robot_interface.models.geometry.position import Position
+from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalImage
 
 
 class EchoServiceInterface(ABC):

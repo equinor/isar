@@ -3,13 +3,12 @@ import time
 from isar.models.mission import Mission
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
+from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
-from models.enums.mission_status import MissionStatus
-from models.enums.states import States
-from models.geometry.frame import Frame
-from models.geometry.position import Position
-from models.planning.step import DriveToPose, TakeImage
-from robot_interfaces.robot_interface import RobotInterface
+from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.geometry.position import Position
+from robot_interface.models.mission import DriveToPose, MissionStatus, TakeImage
+from robot_interface.robot_interface import RobotInterface
 from tests.integration.state_machine.test_state_machine import (
     start_state_machine_in_thread,
 )

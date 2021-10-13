@@ -1,9 +1,9 @@
 from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
-from models.geometry.pose import Pose
+from robot_interface.models.geometry.pose import Pose
 
 
 @dataclass
@@ -19,3 +19,14 @@ class InspectionMetadata(ABC):
     file_type: str
     tag_id: Optional[str] = None
     additional: dict = None
+
+
+@dataclass
+class Inspection:
+    id: Any
+    metadata: InspectionMetadata
+
+
+@dataclass
+class InspectionResult(Inspection):
+    data: bytes

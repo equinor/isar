@@ -1,5 +1,6 @@
 import pytest
-from models.enums.states import States
+
+from isar.state_machine.states_enum import States
 
 
 @pytest.mark.parametrize(

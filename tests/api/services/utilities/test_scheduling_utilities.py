@@ -5,7 +5,7 @@ import pytest
 from isar.models.communication.messages import StartMissionMessages
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.services.utilities.queue_utilities import QueueUtilities
-from models.enums.states import States
+from isar.state_machine.states_enum import States
 from tests.test_utilities.mock_models.mock_status import (
     mock_mission_definition,
     mock_status,

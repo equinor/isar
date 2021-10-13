@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Literal, Optional, Union
 
-from models.geometry.joints import Joints
-from models.geometry.pose import Pose
-from models.geometry.position import Position
+from robot_interface.models.geometry.joints import Joints
+from robot_interface.models.geometry.pose import Pose
+from robot_interface.models.geometry.position import Position
 
 
 @dataclass

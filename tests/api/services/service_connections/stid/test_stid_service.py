@@ -2,8 +2,8 @@ import pytest
 from azure.identity._credentials.default import DefaultAzureCredential
 
 from isar.services.service_connections.request_handler import RequestHandler
-from models.geometry.frame import Frame
-from models.geometry.position import Position
+from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.geometry.position import Position
 from tests.mocks.request import MockRequests
 from tests.mocks.token import MockToken
 

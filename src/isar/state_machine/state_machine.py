@@ -18,9 +18,9 @@ from isar.models.communication.status import Status
 from isar.models.mission import Mission
 from isar.services.coordinates.transformation import Transformation
 from isar.state_machine.states import Cancel, Collect, Idle, Monitor, Off, Send
+from isar.state_machine.states_enum import States
 from isar.storage.storage_service import StorageService
-from models.enums.states import States
-from robot_interfaces.robot_interface import RobotInterface
+from robot_interface.robot_interface import RobotInterface
 
 
 class StateMachine(object):

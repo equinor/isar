@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 
-from models.geometry.frame import Frame
+from robot_interface.models.geometry.frame import Frame
 
 
 @dataclass

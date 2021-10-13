@@ -1,8 +1,8 @@
 import pytest
-from isar.state_machine.states import Monitor
-from models.enums.mission_status import MissionStatus
-from models.enums.states import States
 
+from isar.state_machine.states import Monitor
+from isar.state_machine.states_enum import States
+from robot_interface.models.mission import MissionStatus
 from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 from tests.test_utilities.mock_models.mock_step import MockStep
 

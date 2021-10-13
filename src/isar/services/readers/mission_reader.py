@@ -6,8 +6,7 @@ from typing import List, Optional
 from isar.config import config
 from isar.models.mission import Mission
 from isar.services.readers.base_reader import BaseReader
-from models.geometry.frame import Frame
-from models.planning.step import STEPS
+from robot_interface.models.geometry.frame import Frame
 
 logger = logging.getLogger("state_machine")
 

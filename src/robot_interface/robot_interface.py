@@ -1,13 +1,10 @@
-from abc import ABCMeta
-from abc import abstractmethod
-from typing import Any, Optional, Tuple, Sequence
+from abc import ABCMeta, abstractmethod
+from typing import Any, Optional, Sequence, Tuple
 
-from models.enums.mission_status import MissionStatus
-from models.geometry.joints import Joints
-from models.geometry.pose import Pose
-from models.inspections.inspection import Inspection
-from models.inspections.inspection_result import InspectionResult
-from models.planning.step import Step
+from robot_interface.models.geometry.joints import Joints
+from robot_interface.models.geometry.pose import Pose
+from robot_interface.models.inspection.inspection import Inspection, InspectionResult
+from robot_interface.models.mission import MissionStatus, Step
 
 
 class RobotInterface(metaclass=ABCMeta):

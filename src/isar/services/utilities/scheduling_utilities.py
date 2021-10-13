@@ -12,7 +12,7 @@ from isar.models.communication.queues.queues import Queues
 from isar.models.communication.status import Status
 from isar.models.mission import Mission
 from isar.services.utilities.queue_utilities import QueueUtilities
-from models.enums.states import States
+from isar.state_machine.states_enum import States
 
 
 class SchedulingUtilities:

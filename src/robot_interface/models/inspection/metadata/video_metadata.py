@@ -1,7 +1,10 @@
 from dataclasses import dataclass
 from typing import List
 
-from models.metadata.inspection_metadata import InspectionMetadata, TimeIndexedPose
+from robot_interface.models.inspection.inspection import (
+    InspectionMetadata,
+    TimeIndexedPose,
+)
 
 
 @dataclass

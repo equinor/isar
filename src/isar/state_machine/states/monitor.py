@@ -3,10 +3,10 @@ import time
 from typing import TYPE_CHECKING
 
 from injector import inject
-from models.enums.mission_status import MissionStatus
-from models.enums.states import States
-from models.planning.step import DriveToPose
 from transitions import State
+
+from isar.state_machine.states_enum import States
+from robot_interface.models.mission import DriveToPose, MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine

@@ -2,15 +2,14 @@ from datetime import datetime
 
 import pytest
 
-from models.enums.states import States
-from models.geometry.frame import Frame
-from models.geometry.orientation import Orientation
-from models.geometry.pose import Pose
-from models.geometry.position import Position
-from models.inspections.inspection import Inspection
-from models.inspections.references.image_reference import ImageReference
-from models.metadata.inspection_metadata import TimeIndexedPose
-from models.metadata.inspections.image_metadata import ImageMetadata
+from isar.state_machine.states_enum import States
+from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.geometry.orientation import Orientation
+from robot_interface.models.geometry.pose import Pose
+from robot_interface.models.geometry.position import Position
+from robot_interface.models.inspection.inspection import Inspection, TimeIndexedPose
+from robot_interface.models.inspection.metadata import ImageMetadata
+from robot_interface.models.inspection.references import ImageReference
 from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 from tests.test_utilities.mock_models.mock_step import MockStep
 

@@ -8,9 +8,8 @@ from requests import RequestException, Response
 from isar.config import config
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
-from models.geometry.frame import Frame
-from models.geometry.position import Position
-from requests import RequestException, Response
+from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.geometry.position import Position
 
 
 class StidService:

@@ -1,9 +1,8 @@
 import pytest
 
 from isar.models.mission import Mission
-from isar.state_machine.state_machine import StateMachine
-from models.enums.states import States
-from models.planning.step import DriveToPose
+from isar.state_machine.state_machine import StateMachine, States
+from robot_interface.models.mission import DriveToPose
 from tests.test_utilities.mock_models.mock_robot_variables import mock_pose
 
 

@@ -6,7 +6,7 @@ from uuid import UUID
 
 import numpy as np
 
-from models.geometry.orientation import Orientation
+from robot_interface.models.geometry.orientation import Orientation
 
 
 class JsonService:
