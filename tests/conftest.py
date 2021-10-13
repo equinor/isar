@@ -1,5 +1,4 @@
 import pytest
-from azure.identity import DefaultAzureCredential
 from injector import Injector
 
 from isar import create_app
@@ -28,6 +27,7 @@ from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states import Cancel, Collect, Idle, Monitor, Send
 from isar.storage.storage_service import StorageService
+from tests.test_modules import MockStorageModule
 from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 
 
@@ -42,7 +42,7 @@ def injector():
             RobotModule,
             ServiceModule,
             StateMachineModule,
-            StorageModule,
+            MockStorageModule,
             UtilitiesModule,
         ]
     )
@@ -61,15 +61,8 @@ def client(app):
 
 
 @pytest.fixture()
-def azure_credential():
-    return DefaultAzureCredential()
-
-
-@pytest.fixture()
-def access_token(azure_credential):
-    return azure_credential.get_token(
-        "api://b29bed99-7637-4fdc-8809-48c777a9b714/.default"
-    ).token
+def access_token():
+    return "DummyToken"
 
 
 @pytest.fixture()

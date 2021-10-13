@@ -1,6 +1,5 @@
 import inspect
 import typing
-from http import HTTPStatus
 
 
 class Utilities:
@@ -34,16 +33,3 @@ class Utilities:
             if not response_argument == expected_argument:
                 return False
         return True
-
-
-class MockRequests:
-    def __init__(self, json_data=None, content=None, status_code=HTTPStatus.OK):
-        self.status_code = status_code
-        self.json_data = json_data
-        self.content = content
-
-    def json(self):
-        return self.json_data
-
-    def content(self):
-        return self.content
