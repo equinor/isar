@@ -5,23 +5,23 @@ from uuid import UUID
 
 from injector import inject
 
-from isar import EnhancedJSONEncoder
 from isar.config import config
 from isar.models.mission import Mission
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.storage.storage_interface import StorageInterface
-from models.inspections.formats.audio import Audio
-from models.inspections.formats.image import Image, ThermalImage
-from models.inspections.formats.video import Video
-from models.inspections.inspection import Inspection
-from models.inspections.inspection_result import InspectionResult
-from models.inspections.references.audio_reference import AudioReference
-from models.inspections.references.image_reference import (
+from robot_interface.models.inspection.formats import Audio, Image, ThermalImage, Video
+from robot_interface.models.inspection.inspection import (
+    Inspection,
+    InspectionMetadata,
+    InspectionResult,
+)
+from robot_interface.models.inspection.references import (
+    AudioReference,
     ImageReference,
     ThermalImageReference,
+    VideoReference,
 )
-from models.inspections.references.video_reference import VideoReference
-from models.metadata.inspection_metadata import InspectionMetadata
 
 
 class StorageService:

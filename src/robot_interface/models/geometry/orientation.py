@@ -5,7 +5,7 @@ import numpy as np
 from alitra import Quaternion
 from alitra.convert import quaternion_to_euler
 
-from models.geometry.frame import Frame
+from robot_interface.models.geometry.frame import Frame
 
 
 @dataclass

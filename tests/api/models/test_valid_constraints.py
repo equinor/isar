@@ -1,6 +1,6 @@
 import pytest
 
-from models.geometry.joints import Joints
+from robot_interface.models.geometry.joints import Joints
 
 
 def test_get_mission():

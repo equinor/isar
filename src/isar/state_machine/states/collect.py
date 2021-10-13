@@ -2,12 +2,12 @@ import logging
 from typing import TYPE_CHECKING, List, Sequence, Union
 
 from injector import inject
-from isar.services.coordinates.transformation import Transformation
-from models.enums.states import States
-from models.geometry.frame import Frame
-from models.inspections.inspection import Inspection
-from models.metadata.inspection_metadata import TimeIndexedPose
 from transitions import State
+
+from isar.services.coordinates.transformation import Transformation
+from isar.state_machine.states_enum import States
+from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.inspection.inspection import Inspection, TimeIndexedPose
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine

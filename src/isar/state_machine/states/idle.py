@@ -2,8 +2,9 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
-from models.enums.states import States
 from transitions import State
+
+from isar.state_machine.states_enum import States
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine

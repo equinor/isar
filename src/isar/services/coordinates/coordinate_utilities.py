@@ -1,7 +1,7 @@
 from alitra import Quaternion
 
-from models.geometry.frame import Frame
-from models.geometry.orientation import Orientation
+from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.geometry.orientation import Orientation
 
 
 def orientation_from_quaternion(quaternion: Quaternion) -> Orientation:

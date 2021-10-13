@@ -1,7 +1,7 @@
 import pytest
-from isar.state_machine.states import Send
-from models.enums.states import States
 
+from isar.state_machine.states import Send
+from isar.state_machine.states_enum import States
 from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 from tests.test_utilities.mock_models.mock_step import MockStep
 

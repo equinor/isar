@@ -3,11 +3,9 @@ from threading import Thread
 
 from isar.models.mission import Mission
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from isar.state_machine.state_machine import StateMachine, main
-from models.enums.mission_status import MissionStatus
-from models.enums.states import States
-from models.planning.step import DriveToPose, Step
-from robot_interfaces.robot_interface import RobotInterface
+from isar.state_machine.state_machine import StateMachine, States, main
+from robot_interface.models.mission import DriveToPose, MissionStatus, Step
+from robot_interface.robot_interface import RobotInterface
 from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 from tests.test_utilities.mock_models.mock_robot_variables import mock_pose
 

@@ -1,14 +1,13 @@
-from typing import Optional, Union
+from typing import Optional
 
 import pytest
 
 from isar.models.mission import Mission
 from isar.services.service_connections.echo.echo_service import EchoService
-from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
-from models.geometry.frame import Frame
-from models.geometry.position import Position
-from models.planning.step import DriveToPose, TakeImage, TakeThermalImage
+from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.geometry.position import Position
+from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalImage
 
 
 @pytest.mark.parametrize(

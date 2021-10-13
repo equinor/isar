@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 
 from transitions import State
 
-from models.enums.states import States
-from models.planning.step import Step, TakeImage
+from isar.state_machine.states_enum import States
+from robot_interface.models.mission import Step, TakeImage
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine

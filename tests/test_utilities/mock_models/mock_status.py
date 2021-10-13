@@ -2,9 +2,8 @@ from typing import Literal
 
 from isar.models.communication.status import Status
 from isar.models.mission import Mission
-from models.enums.mission_status import MissionStatus
-from models.enums.states import States
-from models.planning.step import Step
+from isar.state_machine.states_enum import States
+from robot_interface.models.mission import MissionStatus, Step
 from tests.test_utilities.mock_models.mock_mission_definition import (
     mock_mission_definition,
 )

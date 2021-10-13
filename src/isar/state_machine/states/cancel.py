@@ -5,7 +5,7 @@ from injector import inject
 from transitions import State
 
 from isar.storage.storage_service import StorageService
-from models.inspections.inspection_result import InspectionResult
+from robot_interface.models.inspection.inspection import InspectionResult
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine

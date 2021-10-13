@@ -6,9 +6,9 @@ import pytest
 
 from isar.models.mission import Mission
 from isar.services.readers.base_reader import BaseReader
-from models.geometry.joints import Joints
-from models.geometry.pose import Pose
-from models.planning.step import Step
+from robot_interface.models.geometry.joints import Joints
+from robot_interface.models.geometry.pose import Pose
+from robot_interface.models.mission import Step
 from tests.test_utilities.mock_models.mock_mission_definition import (
     mock_mission_definition,
 )

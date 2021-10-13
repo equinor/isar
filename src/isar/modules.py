@@ -22,7 +22,7 @@ from isar.state_machine.state_machine import StateMachine
 from isar.storage.blob_storage import BlobStorage
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.storage_service import StorageService
-from robot_interfaces.robot_interface import RobotInterface
+from robot_interface.robot_interface import RobotInterface
 
 
 class RobotModule(Module):

@@ -1,7 +1,7 @@
-from models.geometry.frame import Frame
-from models.geometry.orientation import Orientation
-from models.geometry.pose import Pose
-from models.geometry.position import Position
+from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.geometry.orientation import Orientation
+from robot_interface.models.geometry.pose import Pose
+from robot_interface.models.geometry.position import Position
 
 predefined_poses = {
     #

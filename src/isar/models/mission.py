@@ -5,8 +5,8 @@ from uuid import UUID
 
 from isar.config import config
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from models.inspections.inspection import Inspection
-from models.planning.step import STEPS
+from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission import STEPS
 
 
 @dataclass

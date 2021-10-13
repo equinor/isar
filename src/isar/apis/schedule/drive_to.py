@@ -10,11 +10,11 @@ from isar.config import config
 from isar.models.communication.messages import StartMessage
 from isar.models.mission import Mission
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from models.geometry.frame import Frame
-from models.geometry.orientation import Orientation
-from models.geometry.pose import Pose
-from models.geometry.position import Position
-from models.planning.step import DriveToPose
+from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.geometry.orientation import Orientation
+from robot_interface.models.geometry.pose import Pose
+from robot_interface.models.geometry.position import Position
+from robot_interface.models.mission import DriveToPose
 
 api = Namespace(
     config.get("api_namespaces", "eqrobot_schedule_namespace"),

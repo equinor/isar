@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from models.inspections.inspection import Inspection
-from models.metadata.inspections.image_metadata import ImageMetadata
+from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.inspection.metadata import ImageMetadata
 
 
 @dataclass

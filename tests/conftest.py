@@ -2,7 +2,6 @@ import pytest
 from injector import Injector
 
 from isar import create_app
-from isar.config import config
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.models.communication.queues.queues import Queues
 from isar.modules import (
@@ -13,7 +12,6 @@ from isar.modules import (
     RobotModule,
     ServiceModule,
     StateMachineModule,
-    StorageModule,
     UtilitiesModule,
 )
 from isar.services.coordinates.transformation import Transformation
@@ -25,7 +23,7 @@ from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.path_service import PathService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
-from isar.state_machine.states import Cancel, Collect, Idle, Monitor, Send
+from isar.state_machine.states import Collect, Idle, Monitor, Send
 from isar.storage.storage_service import StorageService
 from tests.test_modules import MockStorageModule
 from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
