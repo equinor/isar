@@ -1,4 +1,4 @@
-# isar
+# ISAR
 
 ISAR - Integration and Supervisory control of Autonomous Robots - is a tool for
 integrating robot applications into Equinor systems. Through the ISAR API you can send command to a robot to do missions and collect results from the missions.
@@ -39,7 +39,7 @@ $ pip install git+https://github.com/equinor/isar.git@main
 
 Note, installation might require [wheel](https://pypi.org/project/wheel/).
 
-To run ISAR, run:
+To run ISAR:
 
 ```bash
 $ python -m flask run --no-reload
@@ -69,19 +69,22 @@ $ pytest .
 
 ## Robot integration
 
-To connect the statemachine to a robot in a seperate repository it is required that the seperate repository implements the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interfaces/robot_interface.py). Install the repo, i.e:
+To connect the state machine to a robot in a seperate repository, it is required that the seperate repository implements the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interfaces/robot_interface.py). Install the repo, i.e:
 
 ```bash
 $ pip install git+https://@github.com/equinor/isar-robot.git@main
 ```
 
-then set an environment variable to the name of the package you installed:
+Then, set an environment variable to the name of the package you installed:
 
 ```
 $ export ROBOT_DIRECTORY=isar_robot
 ```
 
-If you have the robot repository locally, you can simply install through `pip install -e /path/to/robot/repo/`
+If you have the robot repository locally, you can simply install through
+```bash
+$ pip install -e /path/to/robot/repo/
+```
 
 ## Running tests
 
