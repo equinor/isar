@@ -6,10 +6,12 @@ from flask_restx import Namespace, Resource, fields
 from injector import inject
 
 from isar.config import config
-from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
+from isar.mission_planner.mission_planner_interface import (
+    MissionPlannerError,
+    MissionPlannerInterface,
+)
 from isar.models.communication.messages import StartMissionMessages
 from isar.models.mission import Mission
-from isar.services.readers.mission_reader import MissionReader, MissionReaderError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 
 api = Namespace(
@@ -25,7 +27,7 @@ start_response = api.model(
 @api.route(
     "/start-mission",
     doc={
-        "description": "Start the predefined example mission in the State Machine.",
+        "description": "Start a mission",
         "params": {
             "mission_id": {
                 "description": "The id of the mission to be started",
@@ -62,18 +64,8 @@ class StartMission(Resource):
             return message, HTTPStatus.BAD_REQUEST
 
         try:
-            mission_id_valid = self.mission_reader.mission_id_valid(mission_id)
-            if not mission_id_valid:
-                message = StartMissionMessages.invalid_mission_id(mission_id)
-                self.logger.error(message)
-                return message, HTTPStatus.NOT_FOUND
-        except Exception as e:
-            self.logger.error(f"Mission ID: {mission_id} not readable {e}")
-            return False
-
-        try:
-            mission: Mission = self.mission_reader.get_mission_by_id(mission_id)
-        except MissionReaderError as e:
+            mission: Mission = self.mission_planner.get_mission(mission_id=mission_id)
+        except MissionPlannerError as e:
             self.logger.error(f"Failed to read mission\n {e}")
             message = StartMissionMessages.mission_not_found()
             return message, HTTPStatus.NOT_FOUND
