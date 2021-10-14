@@ -1,3 +1,4 @@
+import logging
 from importlib import import_module
 from os import environ
 from types import ModuleType
@@ -14,7 +15,7 @@ from isar.models.communication.queues.queues import Queues
 from isar.models.map.map_config import MapConfig
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
-from isar.services.readers.mission_reader import MissionReader
+from isar.services.readers.mission_reader import LocalPlanner
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -64,13 +65,27 @@ class MissionPlannerModule(Module):
     @provider
     @singleton
     def provide_mission_planner(
-        self, echo_service: EchoPlanner
+        self, echo_planner: EchoPlanner, local_planner: LocalPlanner
     ) -> MissionPlannerInterface:
-        return echo_service
+        mission_planner: str = config.get("DEFAULT", "mission_planner")
+        if mission_planner == "local":
+            return local_planner
+        elif mission_planner == "echo":
+            return echo_planner
+        else:
+            logging.info(
+                "An invalid mission planner was provided. Falling back to local mission planner by default."
+            )
+            return local_planner
 
     @provider
     @singleton
-    def provide_echo_service(
+    def provide_local_planner(self) -> LocalPlanner:
+        return LocalPlanner()
+
+    @provider
+    @singleton
+    def provide_echo_planner(
         self,
         request_handler: RequestHandler,
         stid_service: StidService,
@@ -121,11 +136,6 @@ class ServiceModule(Module):
 
 
 class ReaderModule(Module):
-    @provider
-    @singleton
-    def provide_mission_reader(self) -> MissionReader:
-        return MissionReader()
-
     @provider
     @singleton
     def provide_map_config_reader(self) -> MapConfigReader:

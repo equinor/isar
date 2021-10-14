@@ -3,13 +3,13 @@ from pathlib import Path
 import pytest
 
 from isar.models.mission import Mission
-from isar.services.readers.mission_reader import MissionReader
+from isar.services.readers.mission_reader import LocalPlanner
 from isar.state_machine.states_enum import States
 
 
 def get_mission():
-    mission_reader: MissionReader = MissionReader()
-    mission: Mission = mission_reader.get_mission(
+    mission_reader: LocalPlanner = LocalPlanner()
+    mission: Mission = mission_reader.read_mission_from_file(
         Path("./tests/test_data/test_mission_working.json")
     )
     return mission

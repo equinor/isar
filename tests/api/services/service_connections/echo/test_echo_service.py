@@ -93,7 +93,7 @@ def test_get_echo_mission(
         return_value=mock_stid,
         side_effect=mock_stid_side_effect,
     )
-    mission: Mission = echo_service.get_mission(id)
+    mission: Mission = echo_service.get_mission(mission_id=id)
     assert len(mission.mission_steps) == expected_return["mission_steps"]
     if not len(mission.mission_steps) == 0:
         assert isinstance(

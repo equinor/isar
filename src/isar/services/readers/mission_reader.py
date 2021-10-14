@@ -1,17 +1,18 @@
 import logging
 from dataclasses import asdict
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from isar.config import config
+from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.models.mission import Mission
 from isar.services.readers.base_reader import BaseReader, BaseReaderError
 from robot_interface.models.geometry.frame import Frame
 
-logger = logging.getLogger("state_machine")
+logger = logging.getLogger("api")
 
 
-class MissionReader(BaseReader):
+class LocalPlanner(MissionPlannerInterface):
     def __init__(
         self,
         predefined_mission_folder: Path = Path(
@@ -20,9 +21,21 @@ class MissionReader(BaseReader):
     ):
         self.predefined_mission_folder = predefined_mission_folder
 
-    def get_mission(self, mission_path: Path) -> Mission:
-        mission_dict: dict = self.read_json(mission_path)
-        mission: Mission = self.dict_to_dataclass(
+    def get_mission(self, mission_id) -> Optional[Mission]:
+        mission_list_dict = self.get_predefined_missions()
+        if mission_list_dict is None:
+            logger.error(f"Found no missions")
+            return None
+        try:
+            return mission_list_dict[mission_id]["mission"]
+        except Exception as e:
+            logger.error(f"Could not get mission : {mission_id} - does not exist {e}")
+            return None
+
+    @staticmethod
+    def read_mission_from_file(mission_path: Path) -> Optional[Mission]:
+        mission_dict: dict = BaseReader.read_json(location=mission_path)
+        mission: Mission = BaseReader.dict_to_dataclass(
             dataclass_dict=mission_dict,
             target_dataclass=Mission,
             cast_config=[Frame],
@@ -81,10 +94,6 @@ class MissionReader(BaseReader):
                 }
             )
         return {"missions": predefined_mission_list}
-
-    def get_mission_by_id(self, mission_id) -> Optional[Mission]:
-        mission_list_dict = self.get_predefined_missions()
-        return mission_list_dict[mission_id]["mission"]
 
     def mission_id_valid(self, mission_id: int) -> bool:
         mission_list_dict = self.get_predefined_missions()
