@@ -50,6 +50,7 @@ setup(
             "requests-mock",
             "black",
             "mypy",
+            "sphinx",
         ]
     },
     python_requires=">=3.8",
