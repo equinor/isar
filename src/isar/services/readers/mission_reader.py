@@ -28,6 +28,7 @@ class MissionReader(BaseReader):
             cast_config=[Frame],
             strict_config=True,
         )
+
         return mission
 
     def get_predefined_missions(self) -> dict:
@@ -38,6 +39,7 @@ class MissionReader(BaseReader):
             mission_name = file.stem
             path_to_file = self.predefined_mission_folder.joinpath(file.name)
             try:
+
                 mission: Mission = self.get_mission(path_to_file)
             except BaseReaderError as e:
                 logger.warning(
@@ -81,24 +83,15 @@ class MissionReader(BaseReader):
         return {"missions": predefined_mission_list}
 
     def get_mission_by_id(self, mission_id) -> Optional[Mission]:
-        try:
-            mission_list_dict = self.get_predefined_missions()
-            return mission_list_dict[mission_id]["mission"]
-        except Exception as e:
-            raise MissionReaderError(
-                "Could not get mission : {mission_id} - does not exist {e}"
-            )
+        mission_list_dict = self.get_predefined_missions()
+        return mission_list_dict[mission_id]["mission"]
 
     def mission_id_valid(self, mission_id: int) -> bool:
-        try:
-            mission_list_dict = self.get_predefined_missions()
-            if mission_id in mission_list_dict:
-                return True
-            else:
-                logger.error(f"Mission ID: {mission_id} does not exist")
-                return False
-        except Exception as e:
-            logger.error(f"Mission ID: {mission_id} not readable {e}")
+        mission_list_dict = self.get_predefined_missions()
+        if mission_id in mission_list_dict:
+            return True
+        else:
+            logger.error(f"Mission ID: {mission_id} does not exist")
             return False
 
 

@@ -5,7 +5,7 @@ from flask_restx import Namespace, Resource
 from injector import inject
 
 from isar.config import config
-from isar.services.readers.mission_reader import MissionReader, MissionReaderError
+from isar.services.readers.mission_reader import MissionReader
 
 api = Namespace(
     config.get("api_namespaces", "eqrobot_missions_namespace"),
@@ -29,7 +29,7 @@ class ListPredefinedMissions(Resource):
     def get(self):
         try:
             predefined_missions = self.mission_reader.list_predefined_missions()
-        except MissionReaderError:
+        except Exception:
             response = "Failed to reach predefined mission", HTTPStatus.NOT_FOUND
             self.logger.error(response)
             return response

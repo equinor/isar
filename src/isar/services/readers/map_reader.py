@@ -58,10 +58,12 @@ class MapConfigReader(BaseReader):
         return map_configs
 
     def get_map_config_by_name(self, map_name) -> Optional[MapConfig]:
-        predefined_map_configs = self.get_predefined_map_configs()
-        if predefined_map_configs is None:
+        try:
+            predefined_map_configs = self.get_predefined_map_configs()
+        except Exception as e:
             logger.error(f"Found no map configurations")
             return None
+
         try:
             return predefined_map_configs[map_name]["map_config"]
         except KeyError as e:
