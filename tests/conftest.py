@@ -17,7 +17,7 @@ from isar.modules import (
 )
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
-from isar.services.readers.mission_reader import MissionReader
+from isar.services.readers.mission_reader import LocalPlanner
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.path_service import PathService
@@ -136,7 +136,7 @@ def scheduling_utilities(app, injector):
 
 @pytest.fixture()
 def mission_reader(injector):
-    return injector.get(MissionReader)
+    return injector.get(LocalPlanner)
 
 
 @pytest.fixture()

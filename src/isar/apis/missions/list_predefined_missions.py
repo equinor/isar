@@ -5,7 +5,7 @@ from flask_restx import Namespace, Resource
 from injector import inject
 
 from isar.config import config
-from isar.services.readers.mission_reader import MissionReader
+from isar.services.readers.mission_reader import LocalPlanner
 
 api = Namespace(
     config.get("api_namespaces", "eqrobot_missions_namespace"),
@@ -19,7 +19,7 @@ api = Namespace(
 )
 class ListPredefinedMissions(Resource):
     @inject
-    def __init__(self, mission_reader: MissionReader, *args, **kwargs):
+    def __init__(self, mission_reader: LocalPlanner, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("api")
         self.mission_reader = mission_reader

@@ -11,7 +11,8 @@ from isar.models.communication.messages import (
 )
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.services.readers.base_reader import BaseReaderError
-from isar.services.readers.mission_reader import MissionReader, MissionReaderError
+from isar.services.readers.mission_reader import MissionReaderError
+from isar.services.readers.mission_reader import LocalPlanner
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from tests.test_utilities.mock_models.mock_mission_definition import (
@@ -154,13 +155,13 @@ class TestSupervisorRoutes:
         expected_status_code,
     ):
         mocker.patch.object(
-            MissionReader,
+            LocalPlanner,
             "mission_id_valid",
             return_value=mock_mission_id_valid,
         )
         mocker.patch.object(
-            MissionReader,
-            "get_mission_by_id",
+            LocalPlanner,
+            "get_mission",
             return_value=mock_get_mission_by_id,
             side_effect=expected_exception,
         )

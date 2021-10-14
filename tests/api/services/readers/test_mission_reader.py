@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -20,7 +19,7 @@ from tests.utilities import Utilities
     ],
 )
 def test_get_mission(mission_reader, mission_path, expected_output):
-    output = mission_reader.get_mission(mission_path)
+    output = mission_reader.read_mission_from_file(mission_path)
     assert Utilities.compare_two_arguments(output, expected_output)
 
 
@@ -41,7 +40,7 @@ def test_get_invalid_mission(mission_reader, mission_path):
     [(1, Mission), (2, Mission)],
 )
 def test_get_mission_by_id(mission_reader, mission_id, expected_output):
-    output = mission_reader.get_mission_by_id(mission_id)
+    output = mission_reader.get_mission(mission_id)
     assert Utilities.compare_two_arguments(output, expected_output)
 
 
@@ -83,5 +82,5 @@ def test_valid_predefined_missions_files(mission_reader):
     )
     for file in predefined_mission_folder.glob("*.json"):
         path_to_file = predefined_mission_folder.joinpath(file.name)
-        mission = mission_reader.get_mission(path_to_file)
+        mission = mission_reader.read_mission_from_file(path_to_file)
         assert mission is not None

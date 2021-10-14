@@ -6,6 +6,7 @@ from flask_restx import Namespace, Resource, fields
 from injector import inject
 
 from isar.config import config
+from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.models.communication.messages import StartMissionMessages
 from isar.models.mission import Mission
 from isar.services.readers.mission_reader import MissionReader, MissionReaderError
@@ -37,14 +38,14 @@ class StartMission(Resource):
     @inject
     def __init__(
         self,
-        mission_reader: MissionReader,
+        mission_planner: MissionPlannerInterface,
         scheduling_utilities: SchedulingUtilities,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("api")
-        self.mission_reader = mission_reader
+        self.mission_planner = mission_planner
         self.scheduling_utilities = scheduling_utilities
 
     @api.response(HTTPStatus.OK, "Success", start_response)
