@@ -56,5 +56,5 @@ def test_collect_results(
         "get_inspection_references",
         return_value=mock_collect_results,
     )
-    next_state = collect.collect_results()
+    next_state = collect._collect_results()
     assert next_state is expected_state

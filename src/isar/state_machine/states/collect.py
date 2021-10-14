@@ -29,10 +29,10 @@ class Collect(State):
         self.state_machine.update_status()
         self.logger.info(f"State: {self.state_machine.status.current_state}")
 
-        next_state = self.collect_results()
+        next_state = self._collect_results()
         self.state_machine.to_next_state(next_state)
 
-    def collect_results(self) -> States:
+    def _collect_results(self) -> States:
         instance_id = self.state_machine.status.current_mission_instance_id
         current_step = self.state_machine.status.current_mission_step
 
@@ -45,7 +45,7 @@ class Collect(State):
         for inspection_ref in inspections:
             inspection_ref.metadata.tag_id = current_step.tag_id  # type: ignore
 
-            self.transform_results_to_asset_frame(
+            self._transform_results_to_asset_frame(
                 time_indexed_pose=inspection_ref.metadata.time_indexed_pose
             )
 
@@ -53,7 +53,7 @@ class Collect(State):
 
         return States.Send
 
-    def transform_results_to_asset_frame(
+    def _transform_results_to_asset_frame(
         self, time_indexed_pose: Union[TimeIndexedPose, List[TimeIndexedPose]]
     ):
         if isinstance(time_indexed_pose, TimeIndexedPose):

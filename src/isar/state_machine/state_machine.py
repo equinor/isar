@@ -68,11 +68,11 @@ class StateMachine(object):
         self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
 
     def begin(self):
-        self.log_state_transition(States.Idle)
+        self._log_state_transition(States.Idle)
         self.to_idle()
 
     def to_next_state(self, next_state):
-        self.log_state_transition(next_state)
+        self._log_state_transition(next_state)
 
         if next_state == States.Idle:
             self.to_idle()
@@ -155,7 +155,7 @@ class StateMachine(object):
         self.queues.stop_mission.output.put(deepcopy(message))
         self.logger.info(message)
 
-    def log_state_transition(self, next_state):
+    def _log_state_transition(self, next_state):
         if next_state != self.status.current_state:
             self.transitions_list.append(next_state)
 
