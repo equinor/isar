@@ -135,6 +135,17 @@ After following the steps in [Development](#dev), you can run the tests:
 $ pytest -n 10
 ```
 
+## Documentation
+
+To build the project documentation, run the commands:
+
+```
+$ cd docs
+$ make html
+```
+
+The documentation can now be viewed at `docs/build/html/index.html`.
+
 ## Contributing
 
 We welcome all kinds of contributions, including code, bug reports, issues, feature requests, and documentation. The
