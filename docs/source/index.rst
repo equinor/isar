@@ -1,7 +1,7 @@
 Welcome to ISAR
 ===============
 
-ISAR (Intergration and Supervisory control of Autonomus Robots) is a tool for integrating robot applications into Equinor systems.
+ISAR (Integration and Supervisory control of Autonomous Robots) is a tool for integrating robot applications into Equinor systems.
 
 Features
 --------
@@ -19,8 +19,8 @@ Contents:
 
    Getting started <getting_started>
    state_machine
-   models
    robot_interface
+   models
    modules
 
 * :ref:`genindex`

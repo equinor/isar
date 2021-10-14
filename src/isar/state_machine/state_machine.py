@@ -1,6 +1,3 @@
-"""State machine object.
-"""
-
 import logging
 import queue
 from collections import deque

@@ -6,5 +6,5 @@ Robot interface
 RobotInterface
 **************
 
-.. automodule:: robot_interfaces.robot_interface
+.. automodule:: robot_interface.robot_interface
    :members:
