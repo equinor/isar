@@ -1,8 +1,10 @@
+import logging
 from configparser import ConfigParser
 from os import getenv
 from pathlib import Path
 
 from dotenv import load_dotenv
+
 from isar.config.configuration_error import ConfigurationError
 
 
@@ -10,8 +12,13 @@ class Config(object):
     def __init__(self):
         load_dotenv()
         env = getenv("ENVIRONMENT")
+
         if not env:
-            raise ConfigurationError(f"Environment not set")
+            env = "local"
+            logging.info(
+                "ENVIRONMENT has not been set.\n Defaulting to local environment."
+            )
+
         self.parser = ConfigParser()
 
         cwd: Path = Path.cwd()
