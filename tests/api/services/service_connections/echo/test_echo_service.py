@@ -1,8 +1,8 @@
 import pytest
 from requests import RequestException
 
+from isar.mission_planner.echo_planner import EchoPlanner
 from isar.models.mission import Mission
-from isar.services.service_connections.echo.echo_service import EchoService
 from isar.services.service_connections.stid.stid_service import StidService
 from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.geometry.position import Position
@@ -86,7 +86,7 @@ def test_get_echo_mission(
     mock_stid,
     expected_return,
 ):
-    mocker.patch.object(EchoService, "mission_plan", return_value=mock_return)
+    mocker.patch.object(EchoPlanner, "_mission_plan", return_value=mock_return)
     mocker.patch.object(
         StidService,
         "tag_position",

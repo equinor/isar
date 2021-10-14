@@ -6,15 +6,15 @@ from injector import Module, provider, singleton
 
 from isar.config import config
 from isar.config.keyvault.keyvault_service import Keyvault
+from isar.mission_planner.echo_planner import (
+    EchoPlanner,
+)
+from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.models.communication.queues.queues import Queues
 from isar.models.map.map_config import MapConfig
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
 from isar.services.readers.mission_reader import MissionReader
-from isar.services.service_connections.echo.echo_service import (
-    EchoService,
-    EchoServiceInterface,
-)
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -60,6 +60,29 @@ class StorageModule(Module):
         return StorageService(storage=storage)
 
 
+class MissionPlannerModule(Module):
+    @provider
+    @singleton
+    def provide_mission_planner(
+        self, echo_service: EchoPlanner
+    ) -> MissionPlannerInterface:
+        return echo_service
+
+    @provider
+    @singleton
+    def provide_echo_service(
+        self,
+        request_handler: RequestHandler,
+        stid_service: StidService,
+        transform: Transformation,
+    ) -> EchoPlanner:
+        return EchoPlanner(
+            request_handler=request_handler,
+            stid_service=stid_service,
+            transform=transform,
+        )
+
+
 class StateMachineModule(Module):
     @provider
     @singleton
@@ -95,20 +118,6 @@ class ServiceModule(Module):
     @singleton
     def provide_stid_service(self, request_handler: RequestHandler) -> StidService:
         return StidService(request_handler=request_handler)
-
-    @provider
-    @singleton
-    def provide_echo_service(
-        self,
-        request_handler: RequestHandler,
-        stid_service: StidService,
-        transform: Transformation,
-    ) -> EchoServiceInterface:
-        return EchoService(
-            request_handler=request_handler,
-            stid_service=stid_service,
-            transform=transform,
-        )
 
 
 class ReaderModule(Module):
