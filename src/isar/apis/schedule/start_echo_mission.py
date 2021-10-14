@@ -6,9 +6,9 @@ from flask_restx import Namespace, Resource, fields
 from injector import inject
 
 from isar.config import config
+from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.models.communication.messages import StartMessage, StartMissionMessages
 from isar.models.mission import Mission
-from isar.services.service_connections.echo.echo_service import EchoServiceInterface
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 
 api = Namespace(
@@ -37,7 +37,7 @@ class StartEchoMission(Resource):
     @inject
     def __init__(
         self,
-        echo_service: EchoServiceInterface,
+        echo_service: MissionPlannerInterface,
         scheduling_utilities: SchedulingUtilities,
         *args,
         **kwargs,

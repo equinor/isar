@@ -4,8 +4,8 @@ from http import HTTPStatus
 import pytest
 from requests import RequestException
 
+from isar.mission_planner.echo_planner import EchoPlanner
 from isar.models.communication.messages import StartMissionMessages
-from isar.services.service_connections.echo.echo_service import EchoService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from tests.api.apis.supervisor.test_supervisor_routes import (
     mock_ready_to_start_mission,
@@ -53,7 +53,7 @@ def test_start_mission(
     expected_status_code,
 ):
     mocker.patch.object(
-        EchoService,
+        EchoPlanner,
         "get_mission",
         return_value=mock_get_mission,
         side_effect=mock_get_mission_side_effect,

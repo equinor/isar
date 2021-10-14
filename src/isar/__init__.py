@@ -12,9 +12,9 @@ from isar.apis import api_blueprint
 from isar.config import config
 from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.state_machine.state_machine import main
-
 from .modules import (
     CoordinateModule,
+    MissionPlannerModule,
     QueuesModule,
     ReaderModule,
     RequestHandlerModule,
@@ -47,6 +47,7 @@ def create_app(test_config=False):
         [
             CoordinateModule,
             QueuesModule,
+            MissionPlannerModule,
             ReaderModule,
             RequestHandlerModule,
             RobotModule,
