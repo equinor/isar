@@ -60,14 +60,20 @@ class StartMission(Resource):
             self.logger.error(f"{message} {e}")
             return message, HTTPStatus.BAD_REQUEST
 
-        if not self.mission_reader.mission_id_valid(mission_id):
-            message = StartMissionMessages.invalid_mission_id(mission_id)
-            self.logger.error(message)
-            return message, HTTPStatus.NOT_FOUND
+        try:
+            mission_id_valid = self.mission_reader.mission_id_valid(mission_id)
+            if not mission_id_valid:
+                message = StartMissionMessages.invalid_mission_id(mission_id)
+                self.logger.error(message)
+                return message, HTTPStatus.NOT_FOUND
+        except Exception as e:
+            self.logger.error(f"Mission ID: {mission_id} not readable {e}")
+            return False
 
         try:
             mission: Mission = self.mission_reader.get_mission_by_id(mission_id)
-        except MissionReaderError:
+        except MissionReaderError as e:
+            self.logger.error(f"Failed to read mission\n {e}")
             message = StartMissionMessages.mission_not_found()
             return message, HTTPStatus.NOT_FOUND
 
