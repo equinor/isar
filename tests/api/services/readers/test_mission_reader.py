@@ -4,7 +4,6 @@ import pytest
 
 from isar.config import config
 from isar.models.mission import Mission
-from isar.services.readers.mission_reader import MissionReaderError
 from tests.utilities import Utilities
 
 
@@ -32,7 +31,7 @@ def test_get_mission(mission_reader, mission_path, expected_output):
 )
 def test_get_invalid_mission(mission_reader, mission_path):
     with pytest.raises(Exception):
-        mission_reader.get_mission(mission_path)
+        mission_reader.read_mission_from_file(mission_path)
 
 
 @pytest.mark.parametrize(

@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Optional
 
 from isar.config import config
-from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
+from isar.mission_planner.mission_planner_interface import (
+    MissionPlannerError,
+    MissionPlannerInterface,
+)
 from isar.models.mission import Mission
 from isar.services.readers.base_reader import BaseReader, BaseReaderError
 from robot_interface.models.geometry.frame import Frame
@@ -21,16 +24,16 @@ class LocalPlanner(MissionPlannerInterface):
     ):
         self.predefined_mission_folder = predefined_mission_folder
 
-    def get_mission(self, mission_id) -> Optional[Mission]:
-        mission_list_dict = self.get_predefined_missions()
-        if mission_list_dict is None:
-            logger.error(f"Found no missions")
-            return None
+    def get_mission(self, mission_id) -> Mission:
+        missions: dict = self.get_predefined_missions()
+        if missions is None:
+            raise MissionPlannerError("There were no predefined missions")
         try:
-            return mission_list_dict[mission_id]["mission"]
+            return missions[mission_id]["mission"]
         except Exception as e:
-            logger.error(f"Could not get mission : {mission_id} - does not exist {e}")
-            return None
+            raise MissionPlannerError(
+                f"Could not get mission : {mission_id} - does not exist {e}"
+            ) from e
 
     @staticmethod
     def read_mission_from_file(mission_path: Path) -> Optional[Mission]:
@@ -53,7 +56,7 @@ class LocalPlanner(MissionPlannerInterface):
             path_to_file = self.predefined_mission_folder.joinpath(file.name)
             try:
 
-                mission: Mission = self.get_mission(path_to_file)
+                mission: Mission = self.read_mission_from_file(path_to_file)
             except BaseReaderError as e:
                 logger.warning(
                     f"Failed to read predefined mission {path_to_file} \n {e}"
@@ -102,7 +105,3 @@ class LocalPlanner(MissionPlannerInterface):
         else:
             logger.error(f"Mission ID: {mission_id} does not exist")
             return False
-
-
-class MissionReaderError(Exception):
-    pass
