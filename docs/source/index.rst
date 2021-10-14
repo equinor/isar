@@ -12,12 +12,13 @@ Features
 
 The ISAR system consists of a state machine and Python Flask API.
 
-Contents:
+Contents
+--------
 
 .. toctree::
    :maxdepth: 4
 
-   Getting started <getting_started>
+   Getting started <readme_link>
    state_machine
    robot_interface
    models

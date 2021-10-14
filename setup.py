@@ -51,6 +51,7 @@ setup(
             "black",
             "mypy",
             "sphinx",
+            "myst-parser",
         ]
     },
     python_requires=">=3.8",
