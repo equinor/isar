@@ -121,9 +121,9 @@ $ pytest -n 10
 
 To build the project documentation, run the commands:
 
-```
+```bash
 $ cd docs
-$ make html
+$ make clean && make html
 ```
 
 The documentation can now be viewed at `docs/build/html/index.html`.

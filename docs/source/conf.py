@@ -34,6 +34,7 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
+    "myst_parser",
 ]
 
 autodoc_typehints = "none"
