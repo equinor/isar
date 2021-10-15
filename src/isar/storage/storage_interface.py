@@ -1,15 +1,16 @@
 from abc import ABCMeta, abstractmethod
+from pathlib import Path
 
 
 class StorageInterface(metaclass=ABCMeta):
     @abstractmethod
-    def store(self, data: bytes, path: str):
+    def store(self, data: bytes, path: Path):
         """
         Parameters
         ----------
         data : bytes
             The data to be stored.
-        path : str
+        path : pathlib.Path
             Path to destination, relative from root folder in storage.
         """
         pass
