@@ -109,6 +109,24 @@ If you have the robot repository locally, you can simply install through
 $ pip install -e /path/to/robot/repo/
 ```
 
+## Interchangeable mission planner
+
+The mission planner that is currently in use is defined by the `mission_planner` configuration variable. This can be set
+in the [default configuration](./src/isar/config/default.ini). The available options are
+
+```
+mission_planner = local
+mission_planner = echo
+```
+
+By default the `local` planner is used.
+
+### Implement your own planner
+
+You can create your own mission planner by implementing
+the [mission planner interface](./src/isar/mission_planner/mission_planner_interface.py) and adding your planner to the
+selection in the `MissionPlannerModule` which is [here](./src/isar/modules.py).
+
 ## Running tests
 
 After following the steps in [Development](#dev), you can run the tests:
