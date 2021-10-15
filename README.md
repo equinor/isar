@@ -137,7 +137,7 @@ $ pytest -n 10
 
 ## Documentation
 
-To build the project documentation, run the commands:
+To build the project documentation, run the following commands:
 
 ```bash
 $ cd docs

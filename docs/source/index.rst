@@ -19,9 +19,6 @@ Contents
    :maxdepth: 4
 
    Getting started <readme_link>
-   state_machine
-   robot_interface
-   models
    modules
 
 * :ref:`genindex`

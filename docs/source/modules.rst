@@ -1,4 +1,8 @@
-Project modules
-===============
+src
+===
 
-This page contains an overview of the modules of the ISAR project.
+.. toctree::
+   :maxdepth: 4
+
+   isar
+   robot_interface
