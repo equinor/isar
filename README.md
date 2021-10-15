@@ -141,7 +141,7 @@ To build the project documentation, run the following commands:
 
 ```bash
 $ cd docs
-$ make clean && make html
+$ make docs
 ```
 
 The documentation can now be viewed at `docs/build/html/index.html`.
