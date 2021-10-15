@@ -21,6 +21,7 @@ from .modules import (
     RobotModule,
     ServiceModule,
     StateMachineModule,
+    StorageModule,
     UtilitiesModule,
 )
 
@@ -44,14 +45,15 @@ def create_app(test_config=False):
 
     injector = Injector(
         [
+            CoordinateModule,
             QueuesModule,
-            StateMachineModule,
-            ServiceModule,
-            UtilitiesModule,
-            RobotModule,
             ReaderModule,
             RequestHandlerModule,
-            CoordinateModule,
+            RobotModule,
+            ServiceModule,
+            StateMachineModule,
+            StorageModule,
+            UtilitiesModule,
         ]
     )
 
