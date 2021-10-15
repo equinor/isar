@@ -2,11 +2,11 @@ from dataclasses import asdict
 from http import HTTPStatus
 
 import pytest
-
+from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.communication.messages import StartMissionMessages
-from isar.services.readers.mission_reader import LocalPlanner
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+
 from tests.api.apis.supervisor.test_supervisor_routes import (
     mock_ready_to_start_mission,
     mock_start_mission,

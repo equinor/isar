@@ -1,9 +1,8 @@
 from pathlib import Path
 
 import pytest
-
+from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.mission import Mission
-from isar.services.readers.mission_reader import LocalPlanner
 from isar.state_machine.states_enum import States
 
 

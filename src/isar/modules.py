@@ -4,18 +4,17 @@ from os import environ
 from types import ModuleType
 
 from injector import Module, provider, singleton
-
 from isar.config import config
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.echo_planner import (
     EchoPlanner,
 )
+from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.models.communication.queues.queues import Queues
 from isar.models.map.map_config import MapConfig
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
-from isar.services.readers.mission_reader import LocalPlanner
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
