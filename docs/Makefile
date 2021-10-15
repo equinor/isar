@@ -18,3 +18,10 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+docs:
+	sphinx-apidoc -fMe ../src -o source/api
+	python rst_processing.py
+	@echo "Auto-generation of API documentation complete. " \
+	"The generated files are available in 'api/'"
+	make clean html

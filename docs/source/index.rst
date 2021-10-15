@@ -19,7 +19,7 @@ Contents
    :maxdepth: 4
 
    Getting started <readme_link>
-   modules
+   api/modules
 
 * :ref:`genindex`
 * :ref:`search`
