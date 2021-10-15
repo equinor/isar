@@ -51,6 +51,20 @@ $ python -m flask run --no-reload
 Note, running the full system requires that an implementation of a robot has been installed. See
 this [section](#robot-integration) for installing a mocked robot.
 
+## Running a robot mission
+
+Once the application has been started the swagger site may be accessed at
+
+```
+http://localhost:3000/
+```
+
+Execute the `/schedule/start-mission` with `mission_id=1` to run a mission.
+
+In [this](./src/isar/config/pre_defined_missions) folder there are predefined default missions, for example the mission
+corresponding to `mission_id=1`. A new mission may be added by adding a new json-file with a mission description. Note,
+the mission IDs must be unique.
+
 ## <a name="dev"></a>Development
 
 For local development, please fork the repository. Then, clone and install in the repository root folder:
