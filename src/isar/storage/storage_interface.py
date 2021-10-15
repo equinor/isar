@@ -4,7 +4,7 @@ from pathlib import Path
 
 class StorageInterface(metaclass=ABCMeta):
     @abstractmethod
-    def store(self, data: bytes, path: Path):
+    def store(self, data: bytes, path: Path) -> bool:
         """
         Parameters
         ----------
