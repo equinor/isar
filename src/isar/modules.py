@@ -149,3 +149,16 @@ class CoordinateModule(Module):
             config.get("maps", "eq_robot_default_map_name")
         )
         return Transformation(map_config=map_config)
+
+
+modules: dict = {
+    "coordinate_module": {"default": CoordinateModule},
+    "queues_module": {"default": QueuesModule},
+    "reader_module": {"default": ReaderModule},
+    "request_handler_module": {"default": RequestHandlerModule},
+    "robot_module": {"default": RobotModule},
+    "service_module": {"local": ServiceModule, "echo": ServiceModule},
+    "state_machine_module": {"default": StateMachineModule},
+    "storage_module": {"local": StorageModule, "blob": StorageModule},
+    "utilities_module": {"default": UtilitiesModule},
+}

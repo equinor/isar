@@ -1,6 +1,5 @@
 import logging
 import logging.config
-from threading import Thread
 
 import yaml
 from flask import Flask
@@ -11,22 +10,9 @@ from injector import Injector
 from isar.apis import api_blueprint
 from isar.config import config
 from isar.services.utilities.json_service import EnhancedJSONEncoder
-from isar.state_machine.state_machine import main
-from .modules import (
-    CoordinateModule,
-    MissionPlannerModule,
-    QueuesModule,
-    ReaderModule,
-    RequestHandlerModule,
-    RobotModule,
-    ServiceModule,
-    StateMachineModule,
-    StorageModule,
-    UtilitiesModule,
-)
 
 
-def create_app(test_config=False):
+def create_app(injector: Injector):
     logging.config.dictConfig(yaml.safe_load(open(f"./src/isar/config/logging.conf")))
     logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(
         config.get("logging", "azure_storage_logging_level")
@@ -43,28 +29,9 @@ def create_app(test_config=False):
 
     app.register_blueprint(api_blueprint)
 
-    injector = Injector(
-        [
-            CoordinateModule,
-            QueuesModule,
-            MissionPlannerModule,
-            ReaderModule,
-            RequestHandlerModule,
-            RobotModule,
-            ServiceModule,
-            StateMachineModule,
-            StorageModule,
-            UtilitiesModule,
-        ]
-    )
-
     FlaskInjector(
         app=app,
         injector=injector,
     )
-
-    if not test_config:
-        state_machine_thread = Thread(target=main, args=[injector])
-        state_machine_thread.start()
 
     return app
