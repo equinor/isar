@@ -48,8 +48,8 @@ def injector():
 
 
 @pytest.fixture()
-def app():
-    app = create_app(test_config=True)
+def app(injector):
+    app = create_app(injector)
     with app.app_context():
         yield app
 
