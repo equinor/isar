@@ -45,7 +45,7 @@ Note, installation might require [wheel](https://pypi.org/project/wheel/).
 To run ISAR:
 
 ```bash
-$ python -m flask run --no-reload
+$ python main.py
 ```
 
 Note, running the full system requires that an implementation of a robot has been installed. See
