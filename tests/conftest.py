@@ -1,12 +1,14 @@
 import pytest
 from injector import Injector
-from isar import MissionPlannerModule, create_app
+
+from isar import create_app
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
 from isar.modules import (
     CoordinateModule,
+    LocalPlannerModule,
     QueuesModule,
     ReaderModule,
     RequestHandlerModule,
@@ -24,7 +26,6 @@ from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states import Collect, Idle, Monitor, Send
 from isar.storage.storage_service import StorageService
-
 from tests.test_modules import MockStorageModule
 from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 
@@ -40,7 +41,7 @@ def injector():
             RobotModule,
             ServiceModule,
             StateMachineModule,
-            MissionPlannerModule,
+            LocalPlannerModule,
             MockStorageModule,
             UtilitiesModule,
         ]
@@ -49,7 +50,7 @@ def injector():
 
 @pytest.fixture()
 def app(injector):
-    app = create_app(injector)
+    app = create_app(injector=injector)
     with app.app_context():
         yield app
 
@@ -122,6 +123,11 @@ def stid_service(injector):
 @pytest.fixture()
 def echo_service(injector):
     return injector.get(EchoPlanner)
+
+
+@pytest.fixture()
+def local_planner(injector):
+    return injector.get(LocalPlanner)
 
 
 @pytest.fixture()

@@ -2,13 +2,13 @@ import logging
 from importlib import import_module
 from os import environ
 from types import ModuleType
+from typing import List, Tuple
 
 from injector import Module, provider, singleton
+
 from isar.config import config
 from isar.config.keyvault.keyvault_service import Keyvault
-from isar.mission_planner.echo_planner import (
-    EchoPlanner,
-)
+from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.models.communication.queues.queues import Queues
@@ -60,28 +60,14 @@ class StorageModule(Module):
         return StorageService(storage=storage)
 
 
-class MissionPlannerModule(Module):
+class LocalPlannerModule(Module):
     @provider
     @singleton
-    def provide_mission_planner(
-        self, echo_planner: EchoPlanner, local_planner: LocalPlanner
-    ) -> MissionPlannerInterface:
-        mission_planner: str = config.get("DEFAULT", "mission_planner")
-        if mission_planner == "local":
-            return local_planner
-        elif mission_planner == "echo":
-            return echo_planner
-        else:
-            logging.info(
-                "An invalid mission planner was provided. Falling back to local mission planner by default."
-            )
-            return local_planner
-
-    @provider
-    @singleton
-    def provide_local_planner(self) -> LocalPlanner:
+    def provide_local_planner(self) -> MissionPlannerInterface:
         return LocalPlanner()
 
+
+class EchoPlannerModule(Module):
     @provider
     @singleton
     def provide_echo_planner(
@@ -89,7 +75,7 @@ class MissionPlannerModule(Module):
         request_handler: RequestHandler,
         stid_service: StidService,
         transform: Transformation,
-    ) -> EchoPlanner:
+    ) -> MissionPlannerInterface:
         return EchoPlanner(
             request_handler=request_handler,
             stid_service=stid_service,
@@ -152,13 +138,40 @@ class CoordinateModule(Module):
 
 
 modules: dict = {
-    "coordinate_module": {"default": CoordinateModule},
-    "queues_module": {"default": QueuesModule},
-    "reader_module": {"default": ReaderModule},
-    "request_handler_module": {"default": RequestHandlerModule},
-    "robot_module": {"default": RobotModule},
-    "service_module": {"local": ServiceModule, "echo": ServiceModule},
-    "state_machine_module": {"default": StateMachineModule},
-    "storage_module": {"local": StorageModule, "blob": StorageModule},
-    "utilities_module": {"default": UtilitiesModule},
+    "coordinate": {"default": CoordinateModule},
+    "queues": {"default": QueuesModule},
+    "reader": {"default": ReaderModule},
+    "request_handler": {"default": RequestHandlerModule},
+    "robot": {"default": RobotModule},
+    "mission_planner": {
+        "default": LocalPlannerModule,
+        "local": LocalPlannerModule,
+        "echo": EchoPlannerModule,
+    },
+    "service": {"default": ServiceModule},
+    "state_machine": {"default": StateMachineModule},
+    "storage": {
+        "default": StorageModule,
+        "local": StorageModule,
+        "blob": StorageModule,
+    },
+    "utilities": {"default": UtilitiesModule},
 }
+
+
+def get_injector_modules() -> Tuple[List[Module], List[str]]:
+    injector_modules: List[Module] = []
+    module_config_keys: List[str] = []
+
+    module_config: dict = dict(config.items("modules"))
+
+    for module_key, module in modules.items():
+
+        module_config_key = (
+            "default" if not module_key in module_config else module_config[module_key]
+        )
+
+        injector_modules.append(module[module_config_key])
+        module_config_keys.append(f"{module_key} : {module_config_key}")
+
+    return injector_modules, module_config_keys
