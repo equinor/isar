@@ -1,4 +1,3 @@
-import logging
 from importlib import import_module
 from os import environ
 from types import ModuleType
@@ -20,6 +19,7 @@ from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.storage.blob_storage import BlobStorage
+from isar.storage.local_storage import LocalStorage
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.storage_service import StorageService
 from robot_interface.robot_interface import RobotInterface
@@ -48,12 +48,21 @@ class RequestHandlerModule(Module):
         return RequestHandler()
 
 
-class StorageModule(Module):
+class BlobStorageModule(Module):
     @provider
     @singleton
-    def provide_storage(self, keyvault: Keyvault) -> StorageInterface:
+    def provide_blob_storage(self, keyvault: Keyvault) -> StorageInterface:
         return BlobStorage(keyvault)
 
+
+class LocalStorageModule(Module):
+    @provider
+    @singleton
+    def provide_local_storage(self) -> StorageInterface:
+        return LocalStorage()
+
+
+class StorageServiceModule(Module):
     @provider
     @singleton
     def provide_storage_service(self, storage: StorageInterface) -> StorageService:
@@ -150,10 +159,11 @@ modules: dict = {
     },
     "service": {"default": ServiceModule},
     "state_machine": {"default": StateMachineModule},
+    "storage_service": {"default": StorageServiceModule},
     "storage": {
-        "default": StorageModule,
-        "local": StorageModule,
-        "blob": StorageModule,
+        "default": LocalStorageModule,
+        "local": LocalStorageModule,
+        "blob": BlobStorageModule,
     },
     "utilities": {"default": UtilitiesModule},
 }
