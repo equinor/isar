@@ -9,13 +9,17 @@ from paho.mqtt.client import Client
 from isar.config import config
 from isar.models.communication.messages import StartMessage, StopMessage
 from isar.models.mission import Mission
+from isar.services.service_connections.mqtt.mqtt_service_interface import (
+    MQTTConnectionError,
+    MQTTServiceInterface,
+)
 from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus
 from robot_interface.models.mission.step import Step
 
 
-class MQTTService:
+class MQTTService(MQTTServiceInterface):
     def __init__(
         self,
         host: str = config.get("mqtt", "host"),
@@ -175,7 +179,3 @@ class MQTTService:
             self.mqtt_client.message_callback_add(
                 self.stop_mission_ack_topic, callback=callback
             )
-
-
-class MQTTConnectionError(Exception):
-    pass

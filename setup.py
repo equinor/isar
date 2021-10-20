@@ -40,6 +40,7 @@ setup(
         "python-dotenv",
         "requests",
         "transitions",
+        "paho-mqtt",
     ],
     extras_require={
         "dev": [

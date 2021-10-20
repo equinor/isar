@@ -17,7 +17,9 @@ from isar.models.communication.messages import (
     StopMissionMessages,
 )
 from isar.models.mission import Mission
-from isar.services.service_connections.mqtt.mqtt_service import MQTTService
+from isar.services.service_connections.mqtt.mqtt_service_interface import (
+    MQTTServiceInterface,
+)
 from isar.services.utilities.json_service import StartMessageDecoder, StopMessageDecoder
 
 
@@ -30,12 +32,12 @@ class SchedulingUtilities:
     @inject
     def __init__(
         self,
-        mqtt_service: MQTTService,
+        mqtt_service: MQTTServiceInterface,
         ack_timeout: float = config.getfloat("mqtt", "ack_timeout"),
     ):
         self.ack_timeout: float = ack_timeout
         self.logger: Logger = logging.getLogger("api")
-        self.mqtt_service: MQTTService = mqtt_service
+        self.mqtt_service: MQTTServiceInterface = mqtt_service
         self.mqtt_service.subscribe_start_mission_ack(
             self.on_start_mission_ack_callback
         )

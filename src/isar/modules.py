@@ -14,6 +14,9 @@ from isar.models.map.map_config import MapConfig
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
 from isar.services.service_connections.mqtt.mqtt_service import MQTTService
+from isar.services.service_connections.mqtt.mqtt_service_interface import (
+    MQTTServiceInterface,
+)
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -93,7 +96,7 @@ class StateMachineModule(Module):
         robot: RobotInterface,
         storage_service: StorageService,
         transform: Transformation,
-        mqtt_service: MQTTService,
+        mqtt_service: MQTTServiceInterface,
     ) -> StateMachine:
         return StateMachine(
             robot=robot,
@@ -107,7 +110,7 @@ class UtilitiesModule(Module):
     @provider
     @singleton
     def provide_scheduling_utilities(
-        self, mqtt_service: MQTTService
+        self, mqtt_service: MQTTServiceInterface
     ) -> SchedulingUtilities:
         return SchedulingUtilities(mqtt_service)
 
@@ -123,8 +126,10 @@ class ServiceModule(Module):
     def provide_stid_service(self, request_handler: RequestHandler) -> StidService:
         return StidService(request_handler=request_handler)
 
+
+class MQTTModule(Module):
     @provider
-    def provide_mqtt_service(self) -> MQTTService:
+    def provide_mqtt_service(self) -> MQTTServiceInterface:
         return MQTTService()
 
 
@@ -156,6 +161,7 @@ modules: dict = {
         "echo": EchoPlannerModule,
     },
     "service": {"default": ServiceModule},
+    "mqtt": {"default": MQTTModule},
     "state_machine": {"default": StateMachineModule},
     "storage_service": {"default": StorageServiceModule},
     "storage": {

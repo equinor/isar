@@ -4,6 +4,10 @@ from threading import Thread
 import pytest
 
 from isar.models.mission import Mission
+from isar.services.service_connections.mqtt.mqtt_service import MQTTService
+from isar.services.service_connections.mqtt.mqtt_service_interface import (
+    MQTTServiceInterface,
+)
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, States, main
 from isar.storage.storage_interface import StorageInterface
@@ -28,6 +32,7 @@ def start_state_machine_in_thread(injector) -> StateMachine:
 @pytest.mark.integration
 def test_state_machine(injector, mocker):
     injector.binder.bind(RobotInterface, to=MockRobot())
+    injector.binder.bind(MQTTServiceInterface, to=MQTTService())
     state_machine: StateMachine = start_state_machine_in_thread(injector)
 
     step: Step = DriveToPose(pose=mock_pose())
@@ -50,6 +55,7 @@ def test_state_machine(injector, mocker):
 @pytest.mark.integration
 def test_state_machine_with_unsuccessful_send(injector, mocker):
     injector.binder.bind(RobotInterface, to=MockRobot())
+    injector.binder.bind(MQTTServiceInterface, to=MQTTService())
     state_machine: StateMachine = start_state_machine_in_thread(injector)
 
     step: Step = DriveToPose(pose=mock_pose())
@@ -67,6 +73,7 @@ def test_state_machine_with_unsuccessful_send(injector, mocker):
 @pytest.mark.integration
 def test_state_machine_with_delayed_successful_send(injector, mocker):
     injector.binder.bind(RobotInterface, to=MockRobot())
+    injector.binder.bind(MQTTServiceInterface, to=MQTTService())
     state_machine: StateMachine = start_state_machine_in_thread(injector)
 
     step: Step = DriveToPose(pose=mock_pose())
@@ -88,6 +95,7 @@ def test_state_machine_with_delayed_successful_send(injector, mocker):
 def test_data_offload(injector, mocker):
     injector.binder.bind(RobotInterface, to=MockRobot())
     injector.binder.bind(StorageInterface, to=StorageMock())
+    injector.binder.bind(MQTTServiceInterface, to=MQTTService())
 
     state_machine: StateMachine = start_state_machine_in_thread(injector=injector)
 

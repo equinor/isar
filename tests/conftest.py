@@ -8,6 +8,7 @@ from isar.mission_planner.local_planner import LocalPlanner
 from isar.modules import (
     CoordinateModule,
     LocalPlannerModule,
+    MQTTModule,
     ReaderModule,
     RequestHandlerModule,
     RobotModule,
@@ -18,6 +19,9 @@ from isar.modules import (
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
 from isar.services.service_connections.mqtt.mqtt_service import MQTTService
+from isar.services.service_connections.mqtt.mqtt_service_interface import (
+    MQTTServiceInterface,
+)
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.path_service import PathService
@@ -25,7 +29,7 @@ from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states import Collect, Idle, Monitor, Send
 from isar.storage.storage_service import StorageService
-from tests.test_modules import MockStorageModule
+from tests.test_modules import MockMQTTServiceModule, MockStorageModule
 from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 
 
@@ -42,6 +46,7 @@ def injector():
             LocalPlannerModule,
             MockStorageModule,
             UtilitiesModule,
+            MockMQTTServiceModule,
         ]
     )
 
@@ -134,7 +139,7 @@ def robot():
 
 
 @pytest.fixture()
-def scheduling_utilities(app, injector):
+def scheduling_utilities(injector):
     return injector.get(SchedulingUtilities)
 
 
@@ -155,4 +160,4 @@ def transform(injector):
 
 @pytest.fixture()
 def mqtt_service(injector):
-    return injector.get(MQTTService)
+    return injector.get(MQTTServiceInterface)

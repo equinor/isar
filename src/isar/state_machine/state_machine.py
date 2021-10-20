@@ -17,7 +17,9 @@ from isar.models.communication.messages import (
 from isar.models.mission import Mission
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.base_reader import BaseReader, BaseReaderError
-from isar.services.service_connections.mqtt.mqtt_service import MQTTService
+from isar.services.service_connections.mqtt.mqtt_service_interface import (
+    MQTTServiceInterface,
+)
 from isar.state_machine.states import Cancel, Collect, Idle, Monitor, Off, Send
 from isar.state_machine.states_enum import States
 from isar.storage.storage_service import StorageService
@@ -36,7 +38,7 @@ class StateMachine(object):
         robot: RobotInterface,
         storage_service: StorageService,
         transform: Transformation,
-        mqtt_service: MQTTService,
+        mqtt_service: MQTTServiceInterface,
         mission_path: str = config.get("mission", "eqrobot_default_mission"),
         sleep_time: float = config.getfloat("mission", "eqrobot_state_machine_sleep"),
         transitions_log_length: int = config.getint(
@@ -90,7 +92,7 @@ class StateMachine(object):
         self.transitions_log_length: int = transitions_log_length
         self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
 
-        self.mqtt_service: MQTTService = mqtt_service
+        self.mqtt_service: MQTTServiceInterface = mqtt_service
         self.mqtt_service.subscribe_start_mission(
             callback=self.on_start_mission_callback
         )

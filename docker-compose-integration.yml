@@ -1,0 +1,20 @@
+version: "3"
+services:
+  mqtt_broker:
+    build: ./src/isar/broker/broker
+    image: mqtt_broker:latest
+    container_name: mqtt_broker
+    stdin_open: true
+    tty: true
+    ports:
+      - "8888:8888"
+      - "1883:1883"
+    networks:
+      - local
+    environment:
+      - VERNEMQ_USER=${VERNEMQ_USER}
+      - VERNEMQ_PASSWORD=${VERNEMQ_PASSWORD}
+
+networks:
+  local:
+    driver: bridge
