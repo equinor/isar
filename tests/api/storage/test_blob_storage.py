@@ -16,7 +16,7 @@ from robot_interface.models.inspection.inspection import (
 )
 from robot_interface.models.inspection.metadata import ImageMetadata
 from robot_interface.models.inspection.references import ImageReference
-from tests.mocks.blob_storage import BlobStorageMock
+from tests.mocks.blob_storage import StorageMock
 
 MISSION_ID = "some-mission-id"
 INSPECTION_ID = "some-inspection-id"
@@ -35,7 +35,7 @@ ARBITRARY_IMAGE_METADATA = ImageMetadata(
 
 
 def test_blob_storage_store():
-    blob_storage: BlobStorageMock = BlobStorageMock()
+    blob_storage: StorageMock = StorageMock()
     storage_service: StorageService = StorageService(storage=blob_storage)
     data_bytes: bytes = b"Lets say this is some image data"
     inspection_result: InspectionResult = Image(
@@ -48,12 +48,12 @@ def test_blob_storage_store():
     )
 
     assert blob_storage.blob_exists(
-        path_to_blob=expected_path_to_image
+        path=expected_path_to_image
     ), "Failed to upload result to SLIMM"
 
 
 def test_blob_storage_store_metadata():
-    blob_storage: BlobStorageMock = BlobStorageMock()
+    blob_storage: StorageMock = StorageMock()
     storage_service: StorageService = StorageService(storage=blob_storage)
     inspection: Inspection = ImageReference(INSPECTION_ID, ARBITRARY_IMAGE_METADATA)
     mission: Mission = Mission(
@@ -66,10 +66,8 @@ def test_blob_storage_store_metadata():
     storage_service.store_metadata(mission=mission)
 
     assert blob_storage.blob_exists(
-        path_to_blob=Path(f"{MISSION_ID}/{MISSION_ID}_META.json")
+        path=Path(f"{MISSION_ID}/{MISSION_ID}_META.json")
     ), "Failed to upload mission metadata to SLIMM"
     assert blob_storage.blob_exists(
-        path_to_blob=Path(
-            f"{MISSION_ID}/sensor_data/image/{MISSION_ID}_image_NAVI.json"
-        )
+        path=Path(f"{MISSION_ID}/sensor_data/image/{MISSION_ID}_image_NAVI.json")
     ), "Failed to upload image metadata to SLIMM"

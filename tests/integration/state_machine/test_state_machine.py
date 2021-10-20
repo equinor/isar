@@ -10,7 +10,7 @@ from robot_interface.models.geometry.position import Position
 from robot_interface.models.mission import DriveToPose, MissionStatus, Step
 from robot_interface.models.mission.step import TakeImage
 from robot_interface.robot_interface import RobotInterface
-from tests.mocks.blob_storage import BlobStorageMock
+from tests.mocks.blob_storage import StorageMock
 from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
 from tests.test_utilities.mock_models.mock_robot_variables import mock_pose
 
@@ -80,7 +80,7 @@ def test_state_machine_with_delayed_successful_send(injector, mocker):
 
 def test_data_offload(injector, mocker):
     injector.binder.bind(RobotInterface, to=MockRobot())
-    injector.binder.bind(StorageInterface, to=BlobStorageMock())
+    injector.binder.bind(StorageInterface, to=StorageMock())
 
     state_machine: StateMachine = start_state_machine_in_thread(injector=injector)
 
