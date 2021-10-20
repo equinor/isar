@@ -28,6 +28,7 @@ class TestBaseReader:
             (Path("./tests/test_data/test_json_file.json"), list),
         ],
     )
+    @pytest.mark.unittest
     def test_read_json(self, location, expected_output):
         try:
             content = BaseReader.read_json(location)
@@ -45,6 +46,7 @@ class TestBaseReader:
             (asdict(mock_joints()), Joints),
         ],
     )
+    @pytest.mark.unittest
     def test_dict_to_dataclass(self, dataclass_dict: dict, expected_dataclass: Any):
         content = BaseReader.dict_to_dataclass(dataclass_dict, expected_dataclass)
         assert type(content) is expected_dataclass

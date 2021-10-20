@@ -135,6 +135,18 @@ After following the steps in [Development](#dev), you can run the tests:
 $ pytest -n 10
 ```
 
+The tests are split into two groups: Unit tests and Integration tests. To run the unit tests, use the following command:
+
+```bash
+$ pytest -m unittest -n 10
+```
+
+Similarly to run the integration tests:
+
+```bash
+$ pytest -m integration -n 10
+```
+
 ## Documentation
 
 To build the project documentation, run the following commands:
@@ -145,6 +157,7 @@ $ make docs
 ```
 
 The documentation can now be viewed at `docs/build/html/index.html`.
+
 
 ## Contributing
 

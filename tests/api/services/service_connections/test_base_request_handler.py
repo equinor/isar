@@ -14,6 +14,7 @@ from isar.services.service_connections.request_handler import RequestHandler
 url = "http://10.0.0.1"
 
 
+@pytest.mark.unittest
 def test_request_handler_success(requests_mock):
     base_handler = RequestHandler()
     requests_mock.get(url, json=[{"Success": 1}], status_code=200)
@@ -39,6 +40,7 @@ def test_request_handler_success(requests_mock):
     assert delete_response.status_code == 200
 
 
+@pytest.mark.unittest
 def test_request_http_error(requests_mock):
     base_handler = RequestHandler()
     requests_mock.get(url, json=[], status_code=400)
@@ -59,6 +61,7 @@ def test_request_http_error(requests_mock):
     "exception",
     [Timeout(), ConnectionError(), KeyError(), ConnectTimeout()],
 )
+@pytest.mark.unittest
 def test_request_exception(mocker, exception):
     base_handler = RequestHandler()
     mocker.patch.object(requests, "request", side_effect=exception)
@@ -72,6 +75,7 @@ def test_request_exception(mocker, exception):
         base_handler.get(url)
 
 
+@pytest.mark.unittest
 def test_timeout_exception():
     base_handler = RequestHandler()
     with pytest.raises(RequestException):

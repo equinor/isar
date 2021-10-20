@@ -24,6 +24,7 @@ from tests.mocks.token import MockToken
         ),
     ],
 )
+@pytest.mark.unittest
 def test_get_position(stid_service, mocker, tag, expected_position, mock_return):
     mocker.patch.object(DefaultAzureCredential, "get_token", return_value=MockToken())
     mocker.patch.object(RequestHandler, "get", return_value=mock_return)

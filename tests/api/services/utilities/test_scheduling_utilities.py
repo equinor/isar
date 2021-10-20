@@ -30,6 +30,7 @@ class TestSchedulingUtilities:
             ),
         ],
     )
+    @pytest.mark.unittest
     def test_start_mission(
         self, mocker, scheduling_utilities, mock_return, mission, expected_output
     ):

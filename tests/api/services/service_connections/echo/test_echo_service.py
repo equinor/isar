@@ -77,6 +77,7 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
         ),
     ],
 )
+@pytest.mark.unittest
 def test_get_echo_mission(
     echo_service,
     mocker,

@@ -17,6 +17,7 @@ from tests.utilities import Utilities
         (Path("./tests/test_data/test_mission_working.json"), Mission),
     ],
 )
+@pytest.mark.unittest
 def test_get_mission(mission_reader, mission_path, expected_output):
     output = mission_reader.read_mission_from_file(mission_path)
     assert Utilities.compare_two_arguments(output, expected_output)
@@ -29,6 +30,7 @@ def test_get_mission(mission_reader, mission_path, expected_output):
         (Path("./tests/test_data/test_mission_not_working.json")),
     ],
 )
+@pytest.mark.unittest
 def test_get_invalid_mission(mission_reader, mission_path):
     with pytest.raises(Exception):
         mission_reader.read_mission_from_file(mission_path)
@@ -38,6 +40,7 @@ def test_get_invalid_mission(mission_reader, mission_path):
     "mission_id ,expected_output",
     [(1, Mission), (2, Mission)],
 )
+@pytest.mark.unittest
 def test_get_mission_by_id(mission_reader, mission_id, expected_output):
     output = mission_reader.get_mission(mission_id)
     assert Utilities.compare_two_arguments(output, expected_output)
@@ -47,6 +50,7 @@ def test_get_mission_by_id(mission_reader, mission_id, expected_output):
     "mission_id",
     [12345, None, config],
 )
+@pytest.mark.unittest
 def test_get_misison_by_invalid_id(mission_reader, mission_id):
     with pytest.raises(Exception):
         mission_reader.get_mission_by_id(mission_id)
@@ -56,6 +60,7 @@ def test_get_misison_by_invalid_id(mission_reader, mission_id):
     "mission_id ,expected_output",
     [(1, True), (12345, False), (None, False)],
 )
+@pytest.mark.unittest
 def test_is_mission_id_valid(mission_reader, mission_id, expected_output):
     output = mission_reader.mission_id_valid(mission_id)
     assert output == expected_output
@@ -65,11 +70,13 @@ def test_is_mission_id_valid(mission_reader, mission_id, expected_output):
     "mission_id",
     [config],
 )
+@pytest.mark.unittest
 def test_mission_id_is_invalid(mission_reader, mission_id):
     with pytest.raises(Exception):
         mission_reader.mission_id_valid(mission_id)
 
 
+@pytest.mark.unittest
 def test_valid_predefined_missions_files(mission_reader):
     # Checks that the predefined mission folder contains only valid missions!
     mission_list_dict = mission_reader.get_predefined_missions()

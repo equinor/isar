@@ -31,18 +31,21 @@ expected_map_config = MapConfig(
 )
 
 
+@pytest.mark.unittest
 def test_map_config_reader(map_config_reader):
     map_config_path = Path("./tests/test_data/test_map_config/test_map_config.json")
     map_config = map_config_reader.get_map_config(map_config_path)
     assert map_config == expected_map_config
 
 
+@pytest.mark.unittest
 def test_invalid_file_path(map_config_reader):
     map_config_path = Path("./tests/test_data/test_map_config/no_file.json")
     with pytest.raises(Exception):
         map_config_reader.get_map_config(map_config_path)
 
 
+@pytest.mark.unittest
 def test_get_map_config_by_name(map_config_reader):
     map_config_reader.predefined_map_config_folder = Path(
         "./tests/test_data/test_map_config"
@@ -51,6 +54,7 @@ def test_get_map_config_by_name(map_config_reader):
     assert map_config == expected_map_config
 
 
+@pytest.mark.unittest
 def test_handle_map_config_by_name_not_found(caplog, map_config_reader):
     map_config_reader.predefined_map_config_folder = Path(
         "./tests/test_data/test_map_config"

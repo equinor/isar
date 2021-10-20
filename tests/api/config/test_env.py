@@ -6,6 +6,7 @@ import pytest
 @pytest.mark.skip(
     reason="Environment variables currently not present in pytest in DevOps pipeline as environment variables"
 )
+@pytest.mark.unittest
 class TestEnvironmentVariablesPresent:
     def test_azure_credentials_present(self):
         assert os.getenv("AZURE_TENANT_ID") is not None

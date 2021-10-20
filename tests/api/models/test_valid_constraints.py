@@ -3,6 +3,7 @@ import pytest
 from robot_interface.models.geometry.joints import Joints
 
 
+@pytest.mark.unittest
 def test_get_mission():
     with pytest.raises(ValueError):
         Joints(j1=10, j2=1)

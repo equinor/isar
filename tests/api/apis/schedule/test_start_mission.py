@@ -35,6 +35,7 @@ from tests.test_utilities.mock_models.mock_mission_definition import (
         ),
     ],
 )
+@pytest.mark.unittest
 def test_start_mission(
     client,
     access_token,

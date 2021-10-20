@@ -74,6 +74,7 @@ class TestSupervisorRoutes:
             ),
         ],
     )
+    @pytest.mark.unittest
     def test_start_mission(
         self,
         client,
@@ -121,6 +122,7 @@ class TestSupervisorRoutes:
             ),
         ],
     )
+    @pytest.mark.unittest
     def test_stop_mission(
         self,
         client,
@@ -142,6 +144,7 @@ class TestSupervisorRoutes:
         assert response.json == asdict(expected_output)
         assert response.status_code == expected_status_code
 
+    @pytest.mark.unittest
     def test_list_predefined_missions(
         self,
         client,
@@ -180,6 +183,7 @@ class TestSupervisorRoutes:
             ),
         ],
     )
+    @pytest.mark.unittest
     def test_schedule_drive_to(
         self,
         client,
@@ -236,6 +240,7 @@ class TestSupervisorRoutes:
             ),
         ],
     )
+    @pytest.mark.unittest
     def test_take_image(
         self,
         client,

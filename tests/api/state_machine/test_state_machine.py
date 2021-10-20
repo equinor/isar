@@ -34,6 +34,7 @@ class TestStateMachine:
             (False, True),
         ],
     )
+    @pytest.mark.unittest
     def test_should_start_mission(
         self, state_machine, mission_in_progress, expected_output
     ):
@@ -53,6 +54,7 @@ class TestStateMachine:
             (None, True, False),
         ],
     )
+    @pytest.mark.unittest
     def test_should_stop(
         self, state_machine, should_stop, mission_in_progress, expected_output
     ):
@@ -62,6 +64,7 @@ class TestStateMachine:
 
         assert start is expected_output
 
+    @pytest.mark.unittest
     def test_stop_mission(self, state_machine):
         state_machine.stop_mission()
         assert not state_machine.mission_in_progress

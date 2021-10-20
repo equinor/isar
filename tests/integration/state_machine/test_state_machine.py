@@ -1,6 +1,8 @@
 import time
 from threading import Thread
 
+import pytest
+
 from isar.models.mission import Mission
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, States, main
@@ -23,6 +25,7 @@ def start_state_machine_in_thread(injector) -> StateMachine:
     return state_machine
 
 
+@pytest.mark.integration
 def test_state_machine(injector, mocker):
     injector.binder.bind(RobotInterface, to=MockRobot())
     state_machine: StateMachine = start_state_machine_in_thread(injector)
@@ -44,6 +47,7 @@ def test_state_machine(injector, mocker):
     assert state_machine.current_state is States.Idle
 
 
+@pytest.mark.integration
 def test_state_machine_with_unsuccessful_send(injector, mocker):
     injector.binder.bind(RobotInterface, to=MockRobot())
     state_machine: StateMachine = start_state_machine_in_thread(injector)
@@ -60,6 +64,7 @@ def test_state_machine_with_unsuccessful_send(injector, mocker):
     assert state_machine.current_state is States.Idle
 
 
+@pytest.mark.integration
 def test_state_machine_with_delayed_successful_send(injector, mocker):
     injector.binder.bind(RobotInterface, to=MockRobot())
     state_machine: StateMachine = start_state_machine_in_thread(injector)
@@ -79,6 +84,7 @@ def test_state_machine_with_delayed_successful_send(injector, mocker):
     assert state_machine.current_state is States.Monitor
 
 
+@pytest.mark.integration
 def test_data_offload(injector, mocker):
     injector.binder.bind(RobotInterface, to=MockRobot())
     injector.binder.bind(StorageInterface, to=StorageMock())

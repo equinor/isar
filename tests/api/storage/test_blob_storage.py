@@ -1,6 +1,8 @@
 from datetime import datetime
 from pathlib import Path
 
+import pytest
+
 from isar.models.mission import Mission
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_service import StorageService
@@ -34,6 +36,7 @@ ARBITRARY_IMAGE_METADATA = ImageMetadata(
 )
 
 
+@pytest.mark.unittest
 def test_blob_storage_store():
     blob_storage: StorageMock = StorageMock()
     storage_service: StorageService = StorageService(storage=blob_storage)
@@ -52,6 +55,7 @@ def test_blob_storage_store():
     ), "Failed to upload result to SLIMM"
 
 
+@pytest.mark.unittest
 def test_blob_storage_store_metadata():
     blob_storage: StorageMock = StorageMock()
     storage_service: StorageService = StorageService(storage=blob_storage)

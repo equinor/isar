@@ -16,6 +16,7 @@ from tests.test_utilities.mock_models.mock_step import MockStep
         (1, MissionStatus.Failed, True),
     ],
 )
+@pytest.mark.unittest
 def test_mission_finished(
     monitor, mocker, mission_instance_id, mock_status, expected_output
 ):

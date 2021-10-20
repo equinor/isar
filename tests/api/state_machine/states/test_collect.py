@@ -43,6 +43,7 @@ def mock_inspection() -> Inspection:
         (MockStep.take_image_in_coordinate_direction(), [], States.Send),
     ],
 )
+@pytest.mark.unittest
 def test_collect_results(
     collect,
     mocker,
