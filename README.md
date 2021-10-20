@@ -109,7 +109,7 @@ If you have the robot repository locally, you can simply install through
 $ pip install -e /path/to/robot/repo/
 ```
 
-## Interchangeable mission planner
+## Mission planner
 
 The mission planner that is currently in use is defined by the `mission_planner` configuration variable. This can be set
 in the [default configuration](./src/isar/config/default.ini). The available options are
@@ -119,13 +119,38 @@ mission_planner = local
 mission_planner = echo
 ```
 
-By default the `local` planner is used.
+By default, the `local` planner is used.
 
 ### Implement your own planner
 
 You can create your own mission planner by implementing
 the [mission planner interface](./src/isar/mission_planner/mission_planner_interface.py) and adding your planner to the
-selection in the `MissionPlannerModule` which is [here](./src/isar/modules.py).
+selection [here](./src/isar/modules.py). Note that you must add your module as an option in the dictionary.
+
+## Storage
+
+The storage module that is currently in use is defined by the `storage` configuration variable. This can be set in
+the [default configuration](./src/isar/config/default.ini). The available options are
+
+```
+storage = local
+storage = blob
+```
+
+By default, the `local` storage module is used. If using Azure Blob Storage the following environment variables must be
+available which gives access to an app registration that may use the storage account.
+
+```
+AZURE_CLIENT_ID
+AZURE_TENANT_ID
+AZURE_CLIENT_SECRET
+```
+
+### Implement your own storage module
+
+You can create your own storage module by implementing the [storage interface](./src/isar/storage/storage_interface.py)
+and adding your storage module to the selection in the [here](./src/isar/modules.py). Note that you must add your module
+as an option in the dictionary.
 
 ## Running tests
 
