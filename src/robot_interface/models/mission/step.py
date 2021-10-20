@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
@@ -11,6 +11,36 @@ class Step:
     """
     Base class for all Steps in a mission.
     """
+
+    def __str__(self):
+        def add_indent(text: str) -> str:
+            return "".join("  " + line for line in text.splitlines(True))
+
+        def robot_class_to_pretty_string(obj: Step) -> str:
+            log_message: str = ""
+            for attr in dir(obj):
+                if callable(getattr(obj, attr)) or attr.startswith("__"):
+                    continue
+
+                value: Any = getattr(obj, attr)
+                try:
+                    package_name: Optional[str] = (
+                        str(value.__class__).split("'")[1].split(".")[0]
+                    )
+                except (AttributeError, IndexError) as e:
+                    package_name = None
+
+                if package_name == "robot_interface":
+                    log_message += (
+                        "\n" + attr + ": " + robot_class_to_pretty_string(value)
+                    )
+                else:
+                    log_message += "\n" + str(attr) + ": " + str(value)
+
+            return add_indent(log_message)
+
+        class_name: str = type(self).__name__
+        return class_name + robot_class_to_pretty_string(self)
 
 
 @dataclass
