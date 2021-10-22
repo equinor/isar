@@ -91,7 +91,7 @@ $ pytest .
 ## Robot integration
 
 To connect the state machine to a robot in a separate repository, it is required that the separate repository implements
-the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interfaces/robot_interface.py). Install the
+the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interface/robot_interface.py). Install the
 repo, i.e:
 
 ```bash
@@ -161,7 +161,7 @@ After following the steps in [Development](#dev), you can run the tests:
 $ pytest -n 10
 ```
 
-To create an interface test in you robot repository, use the function interface_test from robot_interface. The argument should be an interface object from you robot spesific implementation. See [isar-robot](https://github.com/equinor/isar-robot/blob/main/tests/interfaces/test_robotinterface.py) for example
+To create an interface test in your robot repository, use the function `interface_test` from `robot_interface`. The argument should be an interface object from your robot specific implementation. See [isar-robot](https://github.com/equinor/isar-robot/blob/main/tests/interfaces/test_robotinterface.py) for example.
 
 ## Documentation
 
