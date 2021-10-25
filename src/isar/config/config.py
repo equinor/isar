@@ -1,8 +1,6 @@
-import logging
 import importlib.resources as pkg_resources
 from configparser import ConfigParser
 from os import getenv
-from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -12,13 +10,6 @@ from isar.config.configuration_error import ConfigurationError
 class Config(object):
     def __init__(self):
         load_dotenv()
-        env = getenv("ENVIRONMENT")
-
-        if not env:
-            env = "local"
-            logging.info(
-                "ENVIRONMENT has not been set.\n Defaulting to local environment."
-            )
 
         self.parser = ConfigParser()
 
@@ -29,6 +20,10 @@ class Config(object):
             raise ConfigurationError(
                 f"Failed to import configuration, default: {found_default}"
             )
+
+        robot_directory = getenv("ROBOT_DIRECTORY")
+        if robot_directory:
+            self.parser.set("DEFAULT", "robot_directory", robot_directory)
 
     def get(self, section, option):
         return self.parser.get(section, option)

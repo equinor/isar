@@ -29,7 +29,7 @@ class RobotModule(Module):
     @provider
     @singleton
     def provide_robot_interface(self) -> RobotInterface:
-        robot_package_name: str = environ["ROBOT_DIRECTORY"]
+        robot_package_name: str = config.get("DEFAULT", "robot_directory")
         robot: ModuleType = import_module(robot_package_name)
         return robot.robotinterface.Robot()  # type: ignore
 
