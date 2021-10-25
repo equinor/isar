@@ -31,7 +31,7 @@ jobs:
       - name: Lint
         run: |
           black --check .
-          mypy --ignore-missing-imports .
+          mypy .
       
       - name: Test with pytest
         run: |
