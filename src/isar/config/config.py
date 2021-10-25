@@ -25,12 +25,9 @@ class Config(object):
         with pkg_resources.path("isar.config", "default.ini") as filepath:
             found_default: bool = self.parser.read(filepath)
 
-        with pkg_resources.path("isar.config", f"{env}.ini") as filepath:
-            found_env: bool = self.parser.read(filepath)
-
-        if not found_default or not found_env:
+        if not found_default:
             raise ConfigurationError(
-                f"Failed to import configuration, default: {found_default}, env: {found_env}"
+                f"Failed to import configuration, default: {found_default}"
             )
 
     def get(self, section, option):

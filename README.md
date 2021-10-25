@@ -76,12 +76,6 @@ $ cd isar
 $ pip install -e ".[dev]"
 ```
 
-Set environment to local:
-
-```
-$ export ENVIRONMENT=local
-```
-
 Verify that you can run the tests:
 
 ```bash
