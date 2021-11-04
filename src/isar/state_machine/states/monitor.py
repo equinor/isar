@@ -5,6 +5,11 @@ from typing import TYPE_CHECKING
 from injector import inject
 from transitions import State
 
+from isar.services.utilities.threaded_request import (
+    ThreadedRequest,
+    ThreadedRequestNotFinishedError,
+    ThreadedRequestUnexpectedError,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission import DriveToPose, MissionStatus
 
@@ -22,6 +27,8 @@ class Monitor(State):
         self.iteration_counter: int = 0
         self.log_interval = 10
 
+        self.mission_status_thread = None
+
     def start(self):
         self.state_machine.update_status()
         self.logger.info(f"State: {self.state_machine.status.current_state}")
@@ -30,24 +37,42 @@ class Monitor(State):
 
     def stop(self):
         self.iteration_counter = 0
+        if self.mission_status_thread:
+            self.mission_status_thread.wait_for_thread()
+        self.mission_status_thread = None
 
     def _run(self):
         while True:
             if self.state_machine.should_stop():
                 self.state_machine.stop_mission()
-
-            if not self.state_machine.status.mission_in_progress:
                 next_state = States.Cancel
                 break
 
-            mission_status: MissionStatus = self.state_machine.robot.mission_status(
-                self.state_machine.status.current_mission_instance_id
-            )
+            if self.state_machine.should_send_status():
+                self.state_machine.send_status()
+
+            if not self.mission_status_thread:
+                self.mission_status_thread = ThreadedRequest(
+                    self.state_machine.robot.mission_status
+                )
+                self.mission_status_thread.start_thread(
+                    self.state_machine.status.current_mission_instance_id
+                )
+
+            try:
+                mission_status = self.mission_status_thread.get_output()
+            except ThreadedRequestNotFinishedError:
+                time.sleep(self.state_machine.sleep_time)
+                continue
+            except ThreadedRequestUnexpectedError:
+                mission_status = MissionStatus.Unexpected
+
             self.state_machine.status.mission_status = mission_status
-            self._log_status(mission_status=mission_status)
+
+            self._log_status(mission_status=self.state_machine.status.mission_status)
 
             if self._mission_finished(
-                mission_status=mission_status,
+                mission_status=self.state_machine.status.mission_status,
                 instance_id=self.state_machine.status.current_mission_instance_id,
             ):
                 if isinstance(
@@ -57,10 +82,8 @@ class Monitor(State):
                 else:
                     next_state = States.Collect
                 break
-
-            if self.state_machine.should_send_status():
-                self.state_machine.send_status()
-            time.sleep(self.state_machine.sleep_time)
+            else:
+                self.mission_status_thread = None
 
         self.state_machine.to_next_state(next_state)
 
