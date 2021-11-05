@@ -1,13 +1,20 @@
 import logging
-from typing import TYPE_CHECKING, List, Sequence, Union
+import time
+from typing import TYPE_CHECKING, Any, List, Sequence, Union
 
 from injector import inject
 from transitions import State
 
 from isar.services.coordinates.transformation import Transformation
+from isar.services.utilities.threaded_request import (
+    ThreadedRequest,
+    ThreadedRequestNotFinishedError,
+    ThreadedRequestUnexpectedError,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.inspection.inspection import Inspection, TimeIndexedPose
+from robot_interface.models.mission.step import Step
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -20,38 +27,62 @@ class Collect(State):
         state_machine: "StateMachine",
         transform: Transformation,
     ):
-        super().__init__(name="collect", on_enter=self.start)
+        super().__init__(name="collect", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
         self.transform = transform
+
+        self.collect_thread = None
 
     def start(self):
         self.state_machine.update_status()
         self.logger.info(f"State: {self.state_machine.status.current_state}")
 
-        next_state = self._collect_results()
+        self._run()
+
+    def stop(self):
+        if self.collect_thread:
+            self.collect_thread.wait_for_thread()
+        self.collect_thread = None
+
+    def _run(self):
+        while True:
+            if self.state_machine.should_stop():
+                self.state_machine.stop_mission()
+
+            if self.state_machine.should_send_status():
+                self.state_machine.send_status()
+
+            if not self.collect_thread:
+                instance_id: Any = self.state_machine.status.current_mission_instance_id
+                current_step: Step = self.state_machine.status.current_mission_step
+                self.collect_thread = ThreadedRequest(
+                    self.state_machine.robot.get_inspection_references
+                )
+                self.collect_thread.start_thread(instance_id, current_step)
+
+            try:
+                inspections: Sequence[Inspection] = self.collect_thread.get_output()
+            except ThreadedRequestNotFinishedError:
+                time.sleep(self.state_machine.sleep_time)
+                continue
+            except ThreadedRequestUnexpectedError:
+                inspections: Sequence[Inspection] = []
+
+            for inspection_ref in inspections:
+                inspection_ref.metadata.tag_id = current_step.tag_id  # type: ignore
+
+                self._transform_results_to_asset_frame(
+                    time_indexed_pose=inspection_ref.metadata.time_indexed_pose
+                )
+
+            self.state_machine.status.mission_schedule.inspections.extend(inspections)
+
+            next_state: States = States.Send
+            self.collect_thread = None
+            break
+
         self.state_machine.to_next_state(next_state)
-
-    def _collect_results(self) -> States:
-        instance_id = self.state_machine.status.current_mission_instance_id
-        current_step = self.state_machine.status.current_mission_step
-
-        inspections: Sequence[
-            Inspection
-        ] = self.state_machine.robot.get_inspection_references(
-            vendor_mission_id=instance_id,
-            current_step=current_step,
-        )
-        for inspection_ref in inspections:
-            inspection_ref.metadata.tag_id = current_step.tag_id  # type: ignore
-
-            self._transform_results_to_asset_frame(
-                time_indexed_pose=inspection_ref.metadata.time_indexed_pose
-            )
-
-        self.state_machine.status.mission_schedule.inspections.extend(inspections)
-
-        return States.Send
 
     def _transform_results_to_asset_frame(
         self, time_indexed_pose: Union[TimeIndexedPose, List[TimeIndexedPose]]
