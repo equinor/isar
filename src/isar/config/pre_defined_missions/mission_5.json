@@ -1,0 +1,42 @@
+{
+    "mission_id": 5,
+    "mission_steps": [
+        {
+            "step_name": "drive_to_pose",
+            "pose": {
+                "position": {
+                    "x": 5.083935625594567,
+                    "y": 3.8449702071191427,
+                    "z": 0.0,
+                    "frame": "robot"
+                },
+                "orientation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.6362046700865032,
+                    "w": 0.7715203288054849,
+                    "frame": "robot"
+                },
+                "frame": "robot"
+            }
+        },
+        {
+            "pose": {
+                "position": {
+                    "x": 1.25139214887638,
+                    "y": 2.229627786794252,
+                    "z": 0.0,
+                    "frame": "robot"
+                },
+                "orientation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": -0.3785433024506367,
+                    "w": 0.9255835824871602,
+                    "frame": "robot"
+                },
+                "frame": "robot"
+            }
+        }
+    ]
+}
