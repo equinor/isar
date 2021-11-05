@@ -1,0 +1,14 @@
+{
+  "mission_id": 7,
+  "mission_steps": [
+    {
+      "step_name": "take_image",
+      "target": {
+        "x": 2,
+        "y": 2,
+        "z": 0,
+        "frame": "robot"
+      }
+    }
+  ]
+}
