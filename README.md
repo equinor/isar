@@ -1,5 +1,7 @@
 # ISAR
 [![Python package](https://github.com/equinor/isar/actions/workflows/pythonpackage.yml/badge.svg)](https://github.com/equinor/isar/actions/workflows/pythonpackage.yml)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License](https://img.shields.io/badge/License-EPL_2.0-blue.svg)](https://opensource.org/licenses/EPL-2.0)
 
 ISAR - Integration and Supervisory control of Autonomous Robots - is a tool for integrating robot applications into
 Equinor systems. Through the ISAR API you can send command to a robot to do missions and collect results from the
