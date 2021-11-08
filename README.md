@@ -17,7 +17,7 @@ The system consists of two threads running in parallel.
 The state machine handles interaction with the robots API and monitors the execution of missions. It also enables
 interacting with the robot before, during and after missions.
 
-The state machine is based on the [transitions](https://github.com/pytransitions/transitions) package for Python. Its
+The state machine is based on the [transitions](https://github.com/pytransitions/transitions) package for Python. The
 main states are:
 
 - Idle: The robot is in an idle state and ready to perform new missions.
@@ -78,7 +78,7 @@ $ pip install -e ".[dev]"
 Verify that you can run the tests:
 
 ```bash
-$ pytest .
+$ pytest -n 10 .
 ```
 
 ## Robot integration
@@ -151,7 +151,7 @@ as an option in the dictionary.
 After following the steps in [Development](#dev), you can run the tests:
 
 ```bash
-$ pytest -n 10
+$ pytest -n 10 .
 ```
 
 To create an interface test in your robot repository, use the function `interface_test` from `robot_interface`. The argument should be an interface object from your robot specific implementation. See [isar-robot](https://github.com/equinor/isar-robot/blob/main/tests/interfaces/test_robotinterface.py) for example.
