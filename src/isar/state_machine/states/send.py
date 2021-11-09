@@ -104,6 +104,7 @@ class Send(State):
                     next_state: States = States.Cancel
                     break
                 self.send_thread = None
+                time.sleep(self.state_machine.sleep_time)
 
         self.state_machine.to_next_state(next_state)
 
