@@ -25,7 +25,7 @@ class Monitor(State):
         self.logger = logging.getLogger("state_machine")
 
         self.iteration_counter: int = 0
-        self.log_interval = 10
+        self.log_interval = 20
 
         self.mission_status_thread = None
 
@@ -86,6 +86,7 @@ class Monitor(State):
                 break
             else:
                 self.mission_status_thread = None
+                time.sleep(self.state_machine.sleep_time)
 
         self.state_machine.to_next_state(next_state)
 

@@ -55,7 +55,7 @@ def test_state_machine_with_unsuccessful_send(injector, mocker):
     mocker.patch.object(MockRobot, "schedule_step", return_value=(False, 1, None))
 
     message, _ = scheduling_utilities.start_mission(mission=mission)
-    time.sleep(1)
+    time.sleep(1.1)
 
     assert state_machine.status.current_state is States.Idle
 
