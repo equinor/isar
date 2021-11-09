@@ -42,6 +42,8 @@ class Send(State):
         while True:
             if self.state_machine.should_stop():
                 self.state_machine.stop_mission()
+
+            if not self.state_machine.status.mission_in_progress:
                 next_state: States = States.Cancel
                 break
 
