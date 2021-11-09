@@ -1,0 +1,49 @@
+{
+  "map_name": "default_map",
+  "robot_reference_points": {
+    "points": [
+      {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "frame": "robot"
+      },
+      {
+        "x": 50.0,
+        "y": 100.0,
+        "z": 0.0,
+        "frame": "robot"
+      },
+      {
+        "x": 100.0,
+        "y": 50.0,
+        "z": 0.0,
+        "frame": "robot"
+      }
+    ],
+    "frame": "robot"
+  },
+  "asset_reference_points": {
+    "points": [
+      {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "frame": "asset"
+      },
+      {
+        "x": 50.0,
+        "y": 100.0,
+        "z": 0.0,
+        "frame": "asset"
+      },
+      {
+        "x": 100.0,
+        "y": 50.0,
+        "z": 0.0,
+        "frame": "asset"
+      }
+    ],
+    "frame": "asset"
+  }
+}
