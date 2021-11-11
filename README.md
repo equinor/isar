@@ -39,10 +39,8 @@ FastAPI-framework is split into routers where the endpoint operations are define
 
 ## Installation
 ```bash
-$ pip install git+https://github.com/equinor/isar.git@main
+$ pip install isar
 ```
-
-Note, installation might require [wheel](https://pypi.org/project/wheel/).
 
 To run ISAR:
 
