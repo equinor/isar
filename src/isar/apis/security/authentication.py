@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
+from fastapi.security.base import SecurityBase
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt
 from passlib.context import CryptContext
@@ -14,9 +15,12 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
+    @staticmethod
+    def get_token():
+        should_authenticate = config.getboolean("fastapi", "authentication")
+        if should_authenticate:
+            return OAuth2PasswordBearer(tokenUrl="token")
+        return NoSecurity
 
 
 class User(BaseModel):
@@ -30,13 +34,9 @@ class UserInDB(User):
     hashed_password: str
 
 
-def get_token():
-    access_token_key = config.get("fastapi", "access_token_key")
-    if access_token_key:
-        token_scheme = OAuth2PasswordBearer(tokenUrl="token")
-    else:
-        token_scheme = None
-    return token_scheme
+class NoSecurity(SecurityBase):
+    def __init__(self) -> None:
+        self.scheme_name = "No Security"
 
 
 class Authenticator:

@@ -27,9 +27,11 @@ class Config(object):
             self.parser.set("DEFAULT", "robot_directory", robot_directory)
 
         access_token_key = getenv("ACCESS_TOKEN_KEY")
-        hashed_password = getenv("HASHED_PASSWORD")
-        if access_token_key and hashed_password:
+        if access_token_key:
             self.parser.set("fastapi", "access_token_key", access_token_key)
+
+        hashed_password = getenv("HASHED_PASSWORD")
+        if hashed_password:
             self.parser.set("fastapi", "hashed_password", hashed_password)
 
         if bool(access_token_key) ^ bool(hashed_password):

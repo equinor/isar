@@ -37,6 +37,9 @@ setup(
         "python-dotenv",
         "requests",
         "transitions",
+        "passlib[bcrypt]",
+        "python-jose[cryptography]",
+        "python-multipart",
     ],
     extras_require={
         "dev": [
