@@ -1,10 +1,11 @@
 import logging
 from dataclasses import asdict
-from typing import List
+from typing import List, Optional
 
-from fastapi import Query
+from fastapi import Query, Depends
 from injector import inject
 from starlette.responses import JSONResponse
+from isar.apis.security.authentication import get_token
 
 from isar.models.mission import Mission
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -43,6 +44,7 @@ class DriveTo:
             alias="quaternion",
             description="The target orientation as a quaternion (x,y,z,w)",
         ),
+        token: Optional[str] = Depends(get_token()),
     ):
 
         ready, response = self.scheduling_utilities.ready_to_start_mission()

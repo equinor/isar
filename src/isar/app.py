@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+
 from injector import Injector
 
 from isar.apis.schedule.router import create_scheduler_router

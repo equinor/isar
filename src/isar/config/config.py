@@ -26,6 +26,19 @@ class Config(object):
         if robot_directory:
             self.parser.set("DEFAULT", "robot_directory", robot_directory)
 
+        access_token_key = getenv("ACCESS_TOKEN_KEY")
+        hashed_password = getenv("HASHED_PASSWORD")
+        if access_token_key and hashed_password:
+            self.parser.set("fastapi", "access_token_key", access_token_key)
+            self.parser.set("fastapi", "hashed_password", hashed_password)
+
+        if bool(access_token_key) ^ bool(hashed_password):
+            raise ConfigurationError(f"Failed to provide token_key and password hash")
+
+        access_token_algorithm = getenv("ACCESS_TOKEN_ALGORITHM")
+        if access_token_algorithm:
+            self.parser.set("fastapi", "access_token_algorithm", access_token_algorithm)
+
     def get(self, section, option):
         return self.parser.get(section, option)
 

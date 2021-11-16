@@ -1,5 +1,4 @@
 from importlib import import_module
-from os import environ
 from types import ModuleType
 from typing import List, Tuple
 
@@ -8,6 +7,7 @@ from injector import Module, provider, singleton
 from isar.apis.schedule.drive_to import DriveTo
 from isar.apis.schedule.start_mission import StartMission
 from isar.apis.schedule.stop_mission import StopMission
+from isar.apis.security.authentication import Authenticator
 from isar.config import config
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.echo_planner import EchoPlanner
