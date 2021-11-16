@@ -1,10 +1,13 @@
 import logging
 from dataclasses import asdict
 from http import HTTPStatus
+from typing import Optional
 
-from fastapi.param_functions import Query
+
+from fastapi import Query, Depends
 from fastapi.responses import JSONResponse
 from injector import inject
+from isar.apis.security.authentication import get_token
 
 from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
@@ -34,6 +37,7 @@ class StartMission:
             title="Mission ID",
             description="ID-number for predefined mission",
         ),
+        token: Optional[str] = Depends(get_token()),
     ):
 
         try:
