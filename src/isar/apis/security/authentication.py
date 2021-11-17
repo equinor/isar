@@ -67,9 +67,6 @@ class Authenticator:
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
 
-    def get_password_hash(self, password):
-        return self.pwd_context.hash(password)
-
     def get_user(self, username: str):
         if username in self.user_data:
             user_dict = self.user_data[username]

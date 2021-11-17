@@ -131,20 +131,29 @@ storage = local
 storage = blob
 ```
 
-By default, the `local` storage module is used. If using Azure Blob Storage the following environment variables must be
-available which gives access to an app registration that may use the storage account.
+### Implement your own storage module
+
+You can create your own storage module by implementing the [storage interface](./src/isar/storage/storage_interface.py)
+and adding your storage module to the selection in the [here](./src/isar/modules.py). Note that you must add your module
+as an option in the dictionary.
+
+
+## API authentication
+The API has an option to inlcude user authentication. This can be set in the [default configuration](./src/isar/config/default.ini).
+
+
+```
+authentication_enabled = false
+authentication_enabled = true
+```
+
+By default, the `local` storage module is used and API authentication is disabled. If using Azure Blob Storage a set of environment variables must be available which gives access to an app registration that may use the storage account. Enabling API authentication also requires the same environment variables. The required variables are
 
 ```
 AZURE_CLIENT_ID
 AZURE_TENANT_ID
 AZURE_CLIENT_SECRET
 ```
-
-### Implement your own storage module
-
-You can create your own storage module by implementing the [storage interface](./src/isar/storage/storage_interface.py)
-and adding your storage module to the selection in the [here](./src/isar/modules.py). Note that you must add your module
-as an option in the dictionary.
 
 ## Running tests
 
