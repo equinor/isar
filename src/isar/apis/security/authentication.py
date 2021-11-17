@@ -4,11 +4,13 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security.base import SecurityBase
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from injector import inject
 from jose import jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
 from isar.config import config
+from isar.config.keyvault.keyvault_service import Keyvault
 
 
 class Token(BaseModel):
@@ -17,7 +19,7 @@ class Token(BaseModel):
 
     @staticmethod
     def get_token():
-        should_authenticate = config.getboolean("fastapi", "authentication")
+        should_authenticate = config.getboolean("fastapi", "authentication_enabled")
         if should_authenticate:
             return OAuth2PasswordBearer(tokenUrl="token")
         return NoSecurity
@@ -40,22 +42,26 @@ class NoSecurity(SecurityBase):
 
 
 class Authenticator:
+    @inject
     def __init__(
         self,
+        keyvault: Keyvault,
         username=config.get("fastapi", "username"),
-        hashed_password=config.get("fastapi", "hashed_password"),
-        access_token_key=config.get("fastapi", "access_token_key"),
-        access_token_algorithm=config.get("fastapi", "access_token_algorithm"),
-        access_token_expire_minutes=config.getint(
-            "fastapi", "access_token_expire_minutes"
-        ),
+        token_algorithm=config.get("fastapi", "token_algorithm"),
+        token_expire_minutes=config.getint("fastapi", "token_expire_minutes"),
     ) -> None:
+        self.keyvault = keyvault
+        self.token_key = self.keyvault.get_secret("ISAR-API-TOKEN-KEY").value
+        self.hashed_password = self.keyvault.get_secret(
+            "ISAR-API-HASHED-PASSWORD"
+        ).value
+
         self.user_data = {
-            username: {"username": username, "hashed_password": hashed_password}
+            username: {"username": username, "hashed_password": self.hashed_password}
         }
-        self.access_token_key = access_token_key
-        self.access_token_algorithm = access_token_algorithm
-        self.access_token_expire_minutes = access_token_expire_minutes
+
+        self.token_algorithm = token_algorithm
+        self.token_expire_minutes = token_expire_minutes
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     def verify_password(self, plain_password, hashed_password):
@@ -87,7 +93,7 @@ class Authenticator:
             expire = datetime.utcnow() + timedelta(minutes=15)
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(
-            to_encode, key=self.access_token_key, algorithm=self.access_token_algorithm
+            to_encode, key=self.token_key, algorithm=self.token_algorithm
         )
         return encoded_jwt
 
@@ -102,7 +108,7 @@ class Authenticator:
                 detail="Incorrect username or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        access_token_expires = timedelta(minutes=self.access_token_expire_minutes)
+        access_token_expires = timedelta(minutes=self.token_expire_minutes)
         access_token = self.create_access_token(
             data={"sub": user.username}, expires_delta=access_token_expires
         )
