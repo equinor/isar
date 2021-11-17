@@ -48,6 +48,11 @@ class APIModule(Module):
     def provide_stop_mission(self, queues: Queues) -> StopMission:
         return StopMission(queues)
 
+    @provider
+    @singleton
+    def provide_authenticator(self, keyvault: Keyvault) -> Authenticator:
+        return Authenticator(keyvault)
+
 
 class RobotModule(Module):
     @provider
