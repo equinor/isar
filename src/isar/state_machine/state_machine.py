@@ -70,8 +70,12 @@ class StateMachine(object):
             Collect(self, transform),
             Cancel(self, storage_service),
         ]
-        self.machine = Machine(self, states=self.states, initial="off", queued=True)
-
+        self.machine = Machine(
+            self,
+            states=self.states,
+            initial="off",
+            queued=True,
+        )
         self.sleep_time = sleep_time
         self.mission_path = mission_path
         self.status: Status = Status(

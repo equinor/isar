@@ -6,10 +6,7 @@ from isar.models.communication.messages import StartMissionMessages
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.state_machine.states_enum import States
-from tests.test_utilities.mock_models.mock_status import (
-    mock_mission_definition,
-    mock_status,
-)
+from tests.mocks.status import mock_mission_definition, mock_status
 
 
 class TestSchedulingUtilities:

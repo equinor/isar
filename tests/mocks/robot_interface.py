@@ -24,7 +24,7 @@ class MockRobot(RobotInterface):
         self,
         schedule_step: Tuple[bool, Optional[Any], Optional[Joints]] = (True, 1, None),
         mission_scheduled: bool = False,
-        mission_status: MissionStatus = MissionStatus.InProgress,
+        mission_status: MissionStatus = MissionStatus.Completed,
         abort_mission: bool = True,
         pose: Pose = Pose(
             position=Position(x=0, y=0, z=0, frame=Frame.Robot),

@@ -14,7 +14,6 @@ from isar.modules import (
     QueuesModule,
     ReaderModule,
     RequestHandlerModule,
-    RobotModule,
     ServiceModule,
     StateMachineModule,
     UtilitiesModule,
@@ -28,8 +27,8 @@ from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states import Collect, Idle, Monitor, Send
 from isar.storage.storage_service import StorageService
-from tests.test_modules import MockStorageModule
-from tests.test_utilities.mock_interface.mock_robot_interface import MockRobot
+from tests.mocks.robot_interface import MockRobot
+from tests.test_modules import MockRobotModule, MockStorageModule
 
 
 @pytest.fixture()
@@ -41,7 +40,7 @@ def injector():
             QueuesModule,
             ReaderModule,
             RequestHandlerModule,
-            RobotModule,
+            MockRobotModule,
             ServiceModule,
             StateMachineModule,
             LocalPlannerModule,

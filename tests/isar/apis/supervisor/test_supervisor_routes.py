@@ -15,10 +15,8 @@ from isar.models.communication.messages.stop_message import StopMessage
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from tests.test_utilities.mock_models.mock_mission_definition import (
-    mock_mission_definition,
-)
-from tests.test_utilities.mock_models.mock_status import mock_status
+from tests.mocks.mission_definition import mock_mission_definition
+from tests.mocks.status import mock_status
 
 
 def mock_check_queue(was_mission_started, state_at_request):
