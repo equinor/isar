@@ -1,7 +1,7 @@
 from typing import Literal
 
 from isar.models.mission import Mission
-from tests.test_utilities.mock_models.mock_step import MockStep
+from tests.mocks.step import MockStep
 
 default_mission = Mission(
     mission_id="default_mission",

@@ -9,11 +9,9 @@ from isar.services.readers.base_reader import BaseReader
 from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.mission import Step
-from tests.test_utilities.mock_models.mock_mission_definition import (
-    mock_mission_definition,
-)
-from tests.test_utilities.mock_models.mock_robot_variables import mock_joints, mock_pose
-from tests.test_utilities.mock_models.mock_step import MockStep
+from tests.mocks.mission_definition import mock_mission_definition
+from tests.mocks.robot_variables import mock_joints, mock_pose
+from tests.mocks.step import MockStep
 from tests.utilities import Utilities
 
 

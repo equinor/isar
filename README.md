@@ -1,4 +1,5 @@
 # ISAR
+
 [![Python package](https://github.com/equinor/isar/actions/workflows/pythonpackage.yml/badge.svg)](https://github.com/equinor/isar/actions/workflows/pythonpackage.yml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License](https://img.shields.io/badge/License-EPL_2.0-blue.svg)](https://opensource.org/licenses/EPL-2.0)
@@ -34,10 +35,11 @@ main states are:
 ### FastAPI
 
 The FastAPI establishes an interface to the state machine for the user. As the API and state machine are separate
-threads, they communicate through python queues. FastAPI runs on an ASGI-server, specifically uvicorn. The 
+threads, they communicate through python queues. FastAPI runs on an ASGI-server, specifically uvicorn. The
 FastAPI-framework is split into routers where the endpoint operations are defined.
 
 ## Installation
+
 ```bash
 $ pip install isar
 ```
@@ -72,8 +74,10 @@ For local development, please fork the repository. Then, clone and install in th
 ```
 $ git clone https://github.com/equinor/isar
 $ cd isar
-$ pip install -e ".[dev]"
+$ pip install -e .[dev]
 ```
+
+For `zsh` you might have to type `".[dev]"`
 
 Verify that you can run the tests:
 

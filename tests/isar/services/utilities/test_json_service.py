@@ -5,7 +5,7 @@ import pytest
 
 from isar.models.communication.messages import StartMessage, StopMessage
 from isar.services.utilities.json_service import EnhancedJSONEncoder, JsonService
-from tests.test_utilities.mock_models.mock_status import mock_status
+from tests.mocks.status import mock_status
 
 
 class TestJsonService:
