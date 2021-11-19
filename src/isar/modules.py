@@ -50,8 +50,8 @@ class APIModule(Module):
 
     @provider
     @singleton
-    def provide_authenticator(self, keyvault: Keyvault) -> Authenticator:
-        return Authenticator(keyvault)
+    def provide_authenticator(self) -> Authenticator:
+        return Authenticator()
 
 
 class RobotModule(Module):
