@@ -21,14 +21,14 @@ if __name__ == "__main__":
     state_machine_thread: Thread = Thread(target=main, args=[injector])
     state_machine_thread.start()
 
-    authentication_enabled: bool = config.getboolean(
-        "fastapi", "authentication_enabled"
-    )
-
-    app = create_app(injector=injector, authentication_enabled=authentication_enabled)
-
     host: str = config.get("fastapi", "run_host")
     port: int = config.getint("fastapi", "run_port")
+
+    app = create_app(
+        injector=injector,
+        host=host,
+        port=port,
+    )
 
     logger: Logger = logging.getLogger("api")
 

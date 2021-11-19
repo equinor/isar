@@ -1,13 +1,10 @@
 import logging
 from dataclasses import asdict
 from http import HTTPStatus
-from typing import Optional
 
 from injector import inject
 from starlette.responses import JSONResponse
 
-from fastapi import Security
-from isar.apis.security.authentication import Authenticator
 from isar.config import config
 from isar.models.communication.messages import StopMessage, StopMissionMessages
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
@@ -22,10 +19,7 @@ class StopMission:
         self.queues = queues
         self.queue_timeout: int = config.getint("mission", "eqrobot_queue_timeout")
 
-    def post(
-        self,
-        token: Optional[str] = Security(Authenticator.get_scheme()),
-    ):
+    def post(self):
 
         self.queues.stop_mission.input.put(True)
 

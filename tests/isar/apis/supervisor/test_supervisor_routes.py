@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 
 import pytest
 
+from isar.apis.security.authentication import Authenticator
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.communication.messages import (
@@ -142,6 +143,8 @@ class TestSupervisorRoutes:
             return_value=mock_start,
         )
 
+        mocker.patch.object(Authenticator, "should_authenticate", return_value=False)
+
         response = client.post(
             f"schedule/start-mission?ID={mission_id}",
             headers={"Authorization": "Bearer {}".format(access_token)},
@@ -182,6 +185,8 @@ class TestSupervisorRoutes:
         expected_status_code,
     ):
         mocker.patch.object(QueueUtilities, "check_queue", side_effect=mock_return)
+
+        mocker.patch.object(Authenticator, "should_authenticate", return_value=False)
 
         response = client.post(
             "/schedule/stop-mission",
@@ -237,6 +242,8 @@ class TestSupervisorRoutes:
     ):
         mocker_return = mock_check_queue(was_mission_started, state_at_request)
         mocker.patch.object(QueueUtilities, "check_queue", side_effect=mocker_return)
+
+        mocker.patch.object(Authenticator, "should_authenticate", return_value=False)
 
         query_string = (
             f"x-value={request_params['x']}&"
