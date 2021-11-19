@@ -1,14 +1,13 @@
 import logging
 from dataclasses import asdict
 from http import HTTPStatus
-from re import A
 from typing import Optional
 
 
 from fastapi import Query, Security
 from fastapi.responses import JSONResponse
 from injector import inject
-from isar.apis.security.authentication import Authenticator, Token
+from isar.apis.security.authentication import Authenticator
 
 from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,

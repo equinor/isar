@@ -1,18 +1,9 @@
-from datetime import datetime, timedelta
-from typing import Optional, Union
+from typing import Union
 
-from fastapi import Depends, HTTPException, status
 from fastapi.security.base import SecurityBase
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from injector import inject
-from jose import jwt
-from passlib.context import CryptContext
-from pydantic import BaseModel, BaseSettings, Field, AnyHttpUrl
-
-
+from pydantic import BaseModel, AnyHttpUrl
 from isar.config import config
-from isar.config.keyvault.keyvault_service import Keyvault
-
 from fastapi_azure_auth import SingleTenantAzureAuthorizationCodeBearer
 
 

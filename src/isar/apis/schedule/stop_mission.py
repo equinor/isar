@@ -7,7 +7,7 @@ from injector import inject
 from starlette.responses import JSONResponse
 
 from fastapi import Security
-from isar.apis.security.authentication import Authenticator, Token
+from isar.apis.security.authentication import Authenticator
 from isar.config import config
 from isar.models.communication.messages import StopMessage, StopMissionMessages
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
