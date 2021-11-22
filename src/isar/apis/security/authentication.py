@@ -2,7 +2,7 @@ import logging
 
 from fastapi.security.base import SecurityBase
 from fastapi_azure_auth import SingleTenantAzureAuthorizationCodeBearer
-from injector import inject
+
 from pydantic import BaseModel
 
 from isar.config import config
