@@ -1,6 +1,12 @@
+from fastapi.routing import APIRouter
+from fastapi_azure_auth.auth import (
+    AzureAuthorizationCodeBearerBase,
+    SingleTenantAzureAuthorizationCodeBearer,
+)
 import pytest
 from fastapi.testclient import TestClient
 from injector import Injector
+from isar.apis.security.authentication import Authenticator
 
 from isar.app import create_app
 from isar.config.keyvault.keyvault_service import Keyvault
@@ -9,6 +15,7 @@ from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
 from isar.modules import (
     APIModule,
+    AuthenticationModule,
     CoordinateModule,
     LocalPlannerModule,
     QueuesModule,
@@ -28,7 +35,12 @@ from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states import Collect, Idle, Monitor, Send
 from isar.storage.storage_service import StorageService
 from tests.mocks.robot_interface import MockRobot
-from tests.test_modules import MockRobotModule, MockStorageModule
+from tests.test_modules import (
+    MockAuthenticationModule,
+    MockNoAuthenticationModule,
+    MockRobotModule,
+    MockStorageModule,
+)
 
 
 @pytest.fixture()
@@ -36,6 +48,7 @@ def injector():
     return Injector(
         [
             APIModule,
+            MockNoAuthenticationModule,
             CoordinateModule,
             QueuesModule,
             ReaderModule,
@@ -51,15 +64,51 @@ def injector():
 
 
 @pytest.fixture()
+def injector_auth():
+    return Injector(
+        [
+            APIModule,
+            MockAuthenticationModule,
+            CoordinateModule,
+            QueuesModule,
+            ReaderModule,
+            RequestHandlerModule,
+            MockRobotModule,
+            ServiceModule,
+            StateMachineModule,
+            LocalPlannerModule,
+            MockStorageModule,
+            UtilitiesModule,
+        ]
+    )
+
+
+@pytest.fixture()
+def authenticator(injector_auth):
+    return injector_auth.get(Authenticator)
+
+
+@pytest.fixture()
 def app(injector):
     app = create_app(injector=injector)
     return app
 
 
 @pytest.fixture()
+def api_router():
+    return APIRouter
+
+
+@pytest.fixture()
 def client(app):
     client = TestClient(app)
     return client
+
+
+@pytest.fixture()
+def client_auth(injector_auth):
+    client_auth = TestClient(app=create_app(injector=injector_auth))
+    return client_auth
 
 
 @pytest.fixture()

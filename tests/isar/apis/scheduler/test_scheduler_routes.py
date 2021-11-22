@@ -61,7 +61,7 @@ def mock_start_mission(status_code: int) -> Tuple[StartMessage, int]:
     return StartMissionMessages.success(), HTTPStatus.OK
 
 
-class TestSupervisorRoutes:
+class TestSchedulerRoutes:
     @pytest.mark.parametrize(
         "mission_id, mock_get_mission, expected_exception,"
         "mock_ready_to_start, mock_start, expected_output, expected_status_code",
@@ -143,8 +143,6 @@ class TestSupervisorRoutes:
             return_value=mock_start,
         )
 
-        mocker.patch.object(Authenticator, "should_authenticate", return_value=False)
-
         response = client.post(
             f"schedule/start-mission?ID={mission_id}",
             headers={"Authorization": "Bearer {}".format(access_token)},
@@ -185,8 +183,6 @@ class TestSupervisorRoutes:
         expected_status_code,
     ):
         mocker.patch.object(QueueUtilities, "check_queue", side_effect=mock_return)
-
-        mocker.patch.object(Authenticator, "should_authenticate", return_value=False)
 
         response = client.post(
             "/schedule/stop-mission",

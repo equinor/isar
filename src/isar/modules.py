@@ -48,6 +48,8 @@ class APIModule(Module):
     def provide_stop_mission(self, queues: Queues) -> StopMission:
         return StopMission(queues)
 
+
+class AuthenticationModule(Module):
     @provider
     @singleton
     def provide_authenticator(self) -> Authenticator:
@@ -177,6 +179,7 @@ class CoordinateModule(Module):
 
 modules: dict = {
     "api": {"default": APIModule},
+    "authentication": {"default": AuthenticationModule},
     "coordinate": {"default": CoordinateModule},
     "queues": {"default": QueuesModule},
     "reader": {"default": ReaderModule},
