@@ -8,6 +8,7 @@ from isar.apis.schedule.drive_to import DriveTo
 from isar.apis.schedule.start_mission import StartMission
 from isar.apis.schedule.stop_mission import StopMission
 from isar.apis.security.authentication import Authenticator
+from isar.apis.api import API
 from isar.config import config
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.echo_planner import EchoPlanner
@@ -29,6 +30,17 @@ from robot_interface.robot_interface import RobotInterface
 
 
 class APIModule(Module):
+    @provider
+    @singleton
+    def provide_api(
+        self,
+        authenticator: Authenticator,
+        start_mission: StartMission,
+        stop_mission: StopMission,
+        drive_to: DriveTo,
+    ) -> API:
+        return API(authenticator, start_mission, stop_mission, drive_to)
+
     @provider
     @singleton
     def provide_drive_to(self, scheduling_utilities: SchedulingUtilities) -> DriveTo:
