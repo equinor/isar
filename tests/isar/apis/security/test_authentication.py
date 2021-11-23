@@ -6,16 +6,7 @@ from jose import jwt
 
 
 def mock_access_token():
-    claims = {
-        "iss": "ISAR",
-        "iat": 1637588872,
-        "exp": 1669124872,
-        "aud": "test_client@example.com",
-        "sub": "user_impersonation@example.com",
-    }
-
-    key = "qwertyuiopasdfghjklzxcvbnm123456"
-    token = jwt.encode(claims=claims, key=key)
+    token = jwt.encode(claims={}, key="some_key")
 
     return token
 

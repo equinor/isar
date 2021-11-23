@@ -1,21 +1,16 @@
 from fastapi.routing import APIRouter
-from fastapi_azure_auth.auth import (
-    AzureAuthorizationCodeBearerBase,
-    SingleTenantAzureAuthorizationCodeBearer,
-)
+
 import pytest
 from fastapi.testclient import TestClient
 from injector import Injector
-from isar.apis.security.authentication import Authenticator
 
-from isar.app import create_app
+from isar.apis.api import API
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
 from isar.modules import (
     APIModule,
-    AuthenticationModule,
     CoordinateModule,
     LocalPlannerModule,
     QueuesModule,
@@ -84,13 +79,8 @@ def injector_auth():
 
 
 @pytest.fixture()
-def authenticator(injector_auth):
-    return injector_auth.get(Authenticator)
-
-
-@pytest.fixture()
 def app(injector):
-    app = create_app(injector=injector)
+    app = injector.get(API).get_app()
     return app
 
 
@@ -107,7 +97,8 @@ def client(app):
 
 @pytest.fixture()
 def client_auth(injector_auth):
-    client_auth = TestClient(app=create_app(injector=injector_auth))
+    app = injector_auth.get(API).get_app()
+    client_auth = TestClient(app)
     return client_auth
 
 
