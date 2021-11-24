@@ -209,7 +209,6 @@ class StorageService:
             "additional_metadata": {
                 "camera_type": mission.mission_metadata.additional_metadata.camera_type,
                 "mission_name": mission.mission_metadata.additional_metadata.mission_name,
-                "mission_created_by": mission.mission_metadata.additional_metadata.mission_created_by,
                 "mission_created_at": mission.mission_metadata.additional_metadata.mission_created_at,
                 "mission_last_modified": mission.mission_metadata.additional_metadata.mission_last_modified,
                 "robot_operator": mission.mission_metadata.additional_metadata.robot_operator,
