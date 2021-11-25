@@ -29,7 +29,9 @@ class LocalPlanner(MissionPlannerInterface):
         if missions is None:
             raise MissionPlannerError("There were no predefined missions")
         try:
-            return missions[mission_id]["mission"]
+            mission: Mission = missions[mission_id]["mission"]
+            mission.set_unique_mission_id()
+            return mission
         except Exception as e:
             raise MissionPlannerError(
                 f"Could not get mission : {mission_id} - does not exist {e}"
