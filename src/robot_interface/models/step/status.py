@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class MissionStatus(str, Enum):
+class StepStatus(str, Enum):
 
     Completed: str = "completed"
     Scheduled: str = "scheduled"

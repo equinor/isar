@@ -1,146 +1,214 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any, Optional, Sequence, Tuple
+from typing import Optional, Sequence
+from uuid import UUID
 
-from robot_interface.models.geometry.joints import Joints
-from robot_interface.models.geometry.pose import Pose
-from robot_interface.models.inspection.inspection import Inspection, InspectionResult
-from robot_interface.models.mission import MissionStatus, Step
+from robot_interface.models.inspection.inspection import InspectionResult
+from robot_interface.models.sensor.status import SensorStatus
+from robot_interface.models.step.step import InspectionStep, Step
+from robot_interface.models.step.status import StepStatus
+from robot_interface.models.sensor.sensor import Sensor
 
 
 class RobotInterface(metaclass=ABCMeta):
     """Interface to communicate with robots."""
 
     @abstractmethod
-    def schedule_step(self, step: Step) -> Tuple[bool, Optional[Any], Optional[Joints]]:
-        """Schedules a Mission on the robot.
+    def stop(self) -> None:
+        """Stops the execution of the current scheduled step
+        and stops the movements of the robot.
 
-        The method must adapt the standard mission to the
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RobotException if function fails
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def dock(self) -> None:
+        """Orders to move back to the docking station and start
+        the docking procedure.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RobotException if function fails
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def schedule_step(self, step: Step) -> None:
+        """Schedules a step on the robot.
+
+        The method must adapt the standard step to the
         specific robots mission planning.
 
         Parameters
         ----------
         step : Step
-            Mission object describing the mission.
+            Step object that describes the intended task for the
+            robot to perform.
 
         Returns
         -------
-        bool
-            True if successful of scheduling a mission, false otherwise.
+        None
+
+        Raises
+        ------
+        RobotException if function fails
         """
         raise NotImplementedError
 
     @abstractmethod
-    def mission_scheduled(self) -> bool:
-        """Determines if a mission is scheduled on the robot.
-
-        If a mission is scheduled it may be that another mission
-        should not be scheduled.
-
-        Returns
-        -------
-        bool
-            True if a mission is already scheduled, false otherwise.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def mission_status(self, mission_id: Any) -> MissionStatus:
-        """Retrieves status of the current executing mission for the robot.
+    def step_status(self, step: Optional[Step] = None) -> StepStatus:
+        """Function that returns the status of the progress for
+        a given step.
 
         Parameters
         ----------
-        mission_id : Any
-            Unique identifier for the mission which the status should be checked for
+        step : Optional[Step]
+            Step object that indicate which step to check status for.
+            None indicates current step.
 
         Returns
         -------
-        MissionStatus
-            Enum member indicating the current mission status.
+        StepStatus
+            The status of the desired step
+
+        Raises
+        ------
+        RobotException if function fails
         """
         raise NotImplementedError
 
     @abstractmethod
-    def abort_mission(self) -> bool:
-        """Aborts the current mission for the robot.
+    def get_inspection_step_results(
+        self, inspection_step: InspectionStep
+    ) -> Sequence[InspectionResult]:
+        """Get the inspection result data from a scheduled inspection
+        step.
 
-        If another mission is queued, it should not start before a verification
-        is sent.
+        Parameters
+        ----------
+        inspection_step : InspectionStep
+            The Step that we want to get the inpection results for.
 
         Returns
         -------
-        bool
-            True on successful abort of mission, false otherwise.
+        Sequence[InspectionResult]
+            A list containing all the insepction results connected to
+            a the provided step.
+
+        Raises
+        ------
+        RobotException if function fails
         """
         raise NotImplementedError
 
     @abstractmethod
-    def log_status(
-        self, mission_id: Any, mission_status: MissionStatus, current_step: Step
+    def get_sensor_recordings(self, sensor: Sensor) -> Sequence[InspectionResult]:
+        """Get the recorded data from the given sensor.
+
+        Parameters
+        ----------
+        sensor : Sensor
+            The Sensor we want the recorded data from.
+
+        Returns
+        -------
+        Sequence[InspectionResult]
+            A list containing all the insepction results connected to
+            the given sensor.
+
+        Raises
+        ------
+        RobotException if function fails
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def start_sensor_recording(
+        self, id: UUID, sensor: Sensor, time: Optional[float] = None
     ) -> None:
-        """Logs the status of the executing mission that is being monitored.
+        """Starts a recording of the given sensors output
+        (video, audio etc). Does nothing if the sensor is already
+        recording
+
+        The recording lasts until a stop signal is given or the
+        desired time length is achived.
 
         Parameters
         ----------
-        mission_id : Any
-            Unique identifier for the current executing mission on the robot.
-        mission_status : MissionStatus
-            Current status of the mission.
-        current_step : Step
-            The current executing mission step.
+        sensor : Sensor
+            Sensor object that describes which sensor that should
+            be started.
 
+        time : Optional[float]
+            The desired time length of the recording. None
+            indicates that the sensor should record until
+            a stop signal is given.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RobotException if function fails
         """
         raise NotImplementedError
 
     @abstractmethod
-    def get_inspection_references(
-        self, vendor_mission_id: Any, current_step: Step
-    ) -> Sequence[Inspection]:
-        """Returns inspection references.
+    def stop_sensor_recording(self, sensor: Sensor) -> None:
+        """Stops recording for the given sensor. Does nothing
+        if the sensor is not recording.
 
         Parameters
         ----------
-        vendor_mission_id : Any
-            Indicates the vendor id of a mission.
-        current_step : Step
-            The current executing mission step.
+        sensor : Sensor
+            Sensor object that indicates which sensor to stop.
 
         Returns
         -------
-        Sequence[Inspection]
-            Returns a sequence of inspections.
+        None
 
+        Raises
+        ------
+        RobotException if function fails
         """
         raise NotImplementedError
 
     @abstractmethod
-    def download_inspection_result(
-        self, inspection: Inspection
-    ) -> Optional[InspectionResult]:
-        """Downloads inspection references.
+    def sensor_status(self, sensor: Sensor) -> SensorStatus:
+        """Gives the current status of the given sensor.
 
         Parameters
         ----------
-        inspection : Inspection
-            Inspection references to be downloaded.
+        sensor : Sensor
+            Sensor object that indicates which sensor to get status
+            for.
 
         Returns
         -------
-        Optional[InspectionResult]
-            Returns the downloaded inspection results.
+        SensorStatus
+            The status of the given sensor
 
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def robot_pose(self) -> Pose:
-        """Retrieves the current pose of the robot.
-
-        The pose is given as x, y, z coordinates and quaternion.
-
-        Returns
-        -------
-        Pose
-            Returns the representation of the robot's pose.
-
+        Raises
+        ------
+        RobotException if function fails
         """
         raise NotImplementedError

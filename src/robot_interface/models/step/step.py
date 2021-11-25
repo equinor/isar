@@ -1,9 +1,12 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal, Optional, Union
+from uuid import UUID
+import uuid
 
 from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.geometry.position import Position
+from robot_interface.models.sensor.sensor import Sensor
 
 
 @dataclass
@@ -11,6 +14,8 @@ class Step:
     """
     Base class for all Steps in a mission.
     """
+
+    id: UUID
 
     def __str__(self):
         def add_indent(text: str) -> str:
@@ -62,6 +67,18 @@ class MotionStep(Step):
 
 
 @dataclass
+class ContinousInspectionStep(Step):
+    """
+    Step that starts/stop a continous inspection for a given sensors
+    """
+
+    start: bool
+    sensor: Sensor
+    time: Optional[float] = None
+    step_name: Literal["continous_inspection"] = "continous_inspection"
+
+
+@dataclass
 class DriveToPose(MotionStep):
     """
     Step which causes the robot to move to the given pose.
@@ -104,4 +121,4 @@ class TakeThermalImage(InspectionStep):
     tag_id: Optional[str] = None
 
 
-STEPS = Union[DriveToPose, DockingProcedure, TakeImage, TakeThermalImage]
+STEPS = Union[ContinousInspectionStep, DockingProcedure, TakeImage, TakeThermalImage]

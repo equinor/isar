@@ -5,15 +5,13 @@ from uuid import UUID
 
 from isar.config import config
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from robot_interface.models.inspection.inspection import Inspection
-from robot_interface.models.mission import STEPS
+from robot_interface.models.step import Step
 
 
 @dataclass
 class Mission:
-    mission_steps: List[STEPS]
+    mission_steps: List[Step]
     mission_id: Union[UUID, int, str, None] = None
-    inspections: List[Inspection] = field(default_factory=list)
     mission_metadata: MissionMetadata = None
 
     def __post_init__(self) -> None:
