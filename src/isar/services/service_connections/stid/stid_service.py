@@ -25,9 +25,13 @@ class StidService:
         token: str = self.credentials.get_token(
             config.get("stid", "stid_app_scope")
         ).token
-        url: str = config.get("stid", "url")
+
+        stid_url: str = config.get("stid", "url")
+        plant_name: str = config.get("stid", "stid_plant_name")
+        request_url: str = f"{stid_url}/{plant_name}/tag"
+
         response: Response = self.request_handler.get(
-            url=url,
+            url=request_url,
             params={"tagNo": tag},
             headers={"Authorization": f"Bearer {token}"},
         )
