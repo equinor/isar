@@ -53,4 +53,16 @@ class Cancel(State):
         self.state_machine.to_next_state(next_state)
 
     def stop(self):
-        self.logger.info(f"State transitions: {self.state_machine.transitions_list}")
+        self._log_state_transitions()
+
+    def _log_state_transitions(self):
+        state_transitions: str = ", ".join(
+            [
+                f"\n  {transition}" if (i + 1) % 10 == 0 else f"{transition}"
+                for i, transition in enumerate(
+                    list(self.state_machine.transitions_list)
+                )
+            ]
+        )
+
+        self.logger.info(f"State transitions:\n  {state_transitions}")

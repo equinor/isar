@@ -9,3 +9,6 @@ class States(str, Enum):
     Monitor = "monitor"
     Collect = "collect"
     Cancel = "cancel"
+
+    def __repr__(self):
+        return self.value
