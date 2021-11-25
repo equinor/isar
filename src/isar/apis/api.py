@@ -1,15 +1,16 @@
 import logging
-from typing import Union
-import click
 from logging import Logger
+from typing import Union
+
+import click
+import uvicorn
 from fastapi import FastAPI, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRouter
 from injector import inject
 from pydantic import AnyHttpUrl
-import uvicorn
-from isar.apis.schedule.drive_to import DriveTo
 
+from isar.apis.schedule.drive_to import DriveTo
 from isar.apis.schedule.start_mission import StartMission
 from isar.apis.schedule.stop_mission import StopMission
 from isar.apis.security.authentication import Authenticator
@@ -24,8 +25,8 @@ class API:
         start_mission: StartMission,
         stop_mission: StopMission,
         drive_to: DriveTo,
-        host: str = config.get("fastapi", "run_host"),
-        port: int = config.getint("fastapi", "run_port"),
+        host: str = config.get("DEFAULT", "api_host"),
+        port: int = config.getint("DEFAULT", "api_port"),
     ) -> None:
 
         self.authenticator: Authenticator = authenticator

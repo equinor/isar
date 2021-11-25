@@ -22,12 +22,14 @@ class StidService:
         self.logger = logging.getLogger("api")
 
     def tag_position(self, tag: str) -> Optional[Position]:
-        token: str = self.credentials.get_token(
-            config.get("stid", "stid_app_scope")
-        ).token
+        client_id: str = config.get("service_connections", "stid_client_id")
+        scope: str = config.get("service_connections", "stid_app_scope")
+        request_scope: str = f"{client_id}/{scope}"
 
-        stid_url: str = config.get("stid", "url")
-        plant_name: str = config.get("stid", "stid_plant_name")
+        token: str = self.credentials.get_token(request_scope).token
+
+        stid_url: str = config.get("service_connections", "stid_api_url")
+        plant_name: str = config.get("service_connections", "stid_plant_name")
         request_url: str = f"{stid_url}/{plant_name}/tag"
 
         response: Response = self.request_handler.get(

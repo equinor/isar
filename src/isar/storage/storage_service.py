@@ -166,8 +166,8 @@ class StorageService:
     def store_metadata_for_mission(self, mission: Mission) -> None:
         mission_metadata: MissionMetadata = mission.mission_metadata
         mission_metadata.required_metadata.url = (
-            f"{config.get('azure', 'storage_account_url')}/"
-            f"{config.get('azure', 'azure_container_name')}/{mission.mission_id}"
+            f"{config.get('service_connections', 'blob_storage_account_url')}/"
+            f"{config.get('service_connections', 'blob_container')}/{mission.mission_id}"
         )
 
         filename: str = f"{mission.mission_id}_META.json"

@@ -15,7 +15,7 @@ class BlobStorage(StorageInterface):
     def __init__(
         self,
         keyvault: Keyvault,
-        container_name: str = config.get("azure", "azure_container_name"),
+        container_name: str = config.get("service_connections", "blob_container"),
     ):
         self.keyvault = keyvault
         self.storage_connection_string = self.keyvault.get_secret(

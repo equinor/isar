@@ -74,10 +74,13 @@ class EchoPlanner(MissionPlannerInterface):
         Get mission plan from echo planner.
         :param mission_id: Unique id of echo mission plan
         """
-        token: str = self.credentials.get_token(
-            config.get("echo", "echo_app_scope")
-        ).token
-        url: str = f"{config.get('echo', 'url')}/robots/robot-plan/{mission_id}"
+        client_id: str = config.get("service_connections", "echo_client_id")
+        scope: str = config.get("service_connections", "echo_app_scope")
+        request_scope: str = f"{client_id}/{scope}"
+
+        token: str = self.credentials.get_token(request_scope).token
+
+        url: str = f"{config.get('service_connections', 'echo_api_url')}/robots/robot-plan/{mission_id}"
         response: Response = self.request_handler.get(
             url=url,
             headers={"Authorization": f"Bearer {token}"},

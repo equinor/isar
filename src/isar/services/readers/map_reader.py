@@ -13,9 +13,7 @@ logger = logging.getLogger("state_machine")
 class MapConfigReader(BaseReader):
     def __init__(
         self,
-        predefined_map_config_folder: Path = Path(
-            config.get("maps", "eqrobot_maps_folder")
-        ),
+        predefined_map_config_folder: Path = Path(config.get("DEFAULT", "maps_folder")),
     ):
         self.predefined_map_config_folder = predefined_map_config_folder
 

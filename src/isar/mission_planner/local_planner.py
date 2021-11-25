@@ -19,7 +19,7 @@ class LocalPlanner(MissionPlannerInterface):
     def __init__(
         self,
         predefined_mission_folder: Path = Path(
-            config.get("mission", "eqrobot_pre_defined_missions_folder")
+            config.get("DEFAULT", "predefined_missions_folder")
         ),
     ):
         self.predefined_mission_folder = predefined_mission_folder

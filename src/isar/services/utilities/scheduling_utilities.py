@@ -25,7 +25,7 @@ class SchedulingUtilities:
     def __init__(
         self,
         queues: Queues,
-        queue_timeout: int = config.getint("mission", "eqrobot_queue_timeout"),
+        queue_timeout: int = config.getint("DEFAULT", "queue_timeout"),
     ):
         self.queues = queues
         self.queue_timeout: int = queue_timeout

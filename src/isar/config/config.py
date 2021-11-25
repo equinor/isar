@@ -21,9 +21,9 @@ class Config(object):
                 f"Failed to import configuration, default: {found_default}"
             )
 
-        robot_directory = getenv("ROBOT_DIRECTORY")
-        if robot_directory:
-            self.parser.set("DEFAULT", "robot_directory", robot_directory)
+        robot_package: str = getenv("ROBOT_PACKAGE")
+        if robot_package:
+            self.parser.set("DEFAULT", "robot_package", robot_package)
 
     def get(self, section, option):
         return self.parser.get(section, option)

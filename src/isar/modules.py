@@ -4,11 +4,11 @@ from typing import List, Tuple
 
 from injector import Module, provider, singleton
 
+from isar.apis.api import API
 from isar.apis.schedule.drive_to import DriveTo
 from isar.apis.schedule.start_mission import StartMission
 from isar.apis.schedule.stop_mission import StopMission
 from isar.apis.security.authentication import Authenticator
-from isar.apis.api import API
 from isar.config import config
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.echo_planner import EchoPlanner
@@ -72,7 +72,7 @@ class RobotModule(Module):
     @provider
     @singleton
     def provide_robot_interface(self) -> RobotInterface:
-        robot_package_name: str = config.get("DEFAULT", "robot_directory")
+        robot_package_name: str = config.get("DEFAULT", "robot_package")
         robot: ModuleType = import_module(robot_package_name)
         return robot.robotinterface.Robot()  # type: ignore
 
@@ -164,7 +164,7 @@ class ServiceModule(Module):
     @provider
     @singleton
     def provide_keyvault(self) -> Keyvault:
-        return Keyvault(config.get("azure", "keyvault"))
+        return Keyvault(config.get("service_connections", "keyvault"))
 
     @provider
     @singleton
@@ -184,7 +184,7 @@ class CoordinateModule(Module):
     @singleton
     def provide_transform(self, map_config_reader: MapConfigReader) -> Transformation:
         map_config: MapConfig = map_config_reader.get_map_config_by_name(
-            config.get("maps", "eq_robot_default_map_name")
+            config.get("DEFAULT", "default_map")
         )
         return Transformation(map_config=map_config)
 
