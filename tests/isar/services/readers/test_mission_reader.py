@@ -36,7 +36,7 @@ def test_get_invalid_mission(mission_reader, mission_path):
 
 @pytest.mark.parametrize(
     "mission_id ,expected_output",
-    [(1, Mission), (2, Mission)],
+    [(1, Mission)],
 )
 def test_get_mission_by_id(mission_reader, mission_id, expected_output):
     output = mission_reader.get_mission(mission_id)
