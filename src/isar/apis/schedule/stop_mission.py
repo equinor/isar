@@ -17,7 +17,7 @@ class StopMission:
     def __init__(self, queues: Queues):
         self.logger = logging.getLogger("api")
         self.queues = queues
-        self.queue_timeout: int = config.getint("mission", "eqrobot_queue_timeout")
+        self.queue_timeout: int = config.getint("DEFAULT", "queue_timeout")
 
     def post(self):
 

@@ -74,7 +74,7 @@ def test_valid_predefined_missions_files(mission_reader):
     # Checks that the predefined mission folder contains only valid missions!
     mission_list_dict = mission_reader.get_predefined_missions()
     predefined_mission_folder = Path(
-        config.get("mission", "eqrobot_pre_defined_missions_folder")
+        config.get("DEFAULT", "predefined_missions_folder")
     )
     assert len(list(predefined_mission_folder.glob("*.json"))) == len(
         list(mission_list_dict)

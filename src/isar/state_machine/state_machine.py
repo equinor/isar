@@ -33,10 +33,9 @@ class StateMachine(object):
         robot: RobotInterface,
         storage_service: StorageService,
         transform: Transformation,
-        mission_path: str = config.get("mission", "eqrobot_default_mission"),
-        sleep_time: float = config.getfloat("mission", "eqrobot_state_machine_sleep"),
+        sleep_time: float = config.getfloat("DEFAULT", "fsm_sleep_time"),
         transitions_log_length: int = config.getint(
-            "logging", "state_transitions_log_length"
+            "DEFAULT", "state_transitions_log_length"
         ),
     ):
         """Initializes the state machine.
@@ -49,8 +48,6 @@ class StateMachine(object):
             Instance of robot interface.
         slimm_service : SlimmService
             Instance of SLIMM service.
-        mission_path : str
-            Relative path to mission definition.
         sleep_time : float
             Time to sleep inbetween state machine iterations.
         transitions_log_length : int
@@ -77,7 +74,6 @@ class StateMachine(object):
             queued=True,
         )
         self.sleep_time = sleep_time
-        self.mission_path = mission_path
         self.status: Status = Status(
             mission_status=None,
             mission_in_progress=False,

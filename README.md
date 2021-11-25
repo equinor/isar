@@ -63,7 +63,7 @@ http://localhost:3000/docs
 
 Execute the `/schedule/start-mission` with `mission_id=1` to run a mission.
 
-In [this](./src/isar/config/pre_defined_missions) folder there are predefined default missions, for example the mission
+In [this](./src/isar/config/predefined_missions) folder there are predefined default missions, for example the mission
 corresponding to `mission_id=1`. A new mission may be added by adding a new json-file with a mission description. Note,
 the mission IDs must be unique.
 
@@ -98,7 +98,7 @@ $ pip install git+https://@github.com/equinor/isar-robot.git@main
 Then, set an environment variable to the name of the package you installed:
 
 ```
-$ export ROBOT_DIRECTORY=isar_robot
+$ export ROBOT_PACKAGE=isar_robot
 ```
 
 If you have the robot repository locally, you can simply install through

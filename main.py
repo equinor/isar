@@ -3,6 +3,7 @@ from logging import Logger
 from threading import Thread
 
 from injector import Injector
+
 from isar.apis.api import API
 from isar.config import config
 from isar.config.log import setup_logger
@@ -19,8 +20,8 @@ if __name__ == "__main__":
     state_machine_thread: Thread = Thread(target=main, args=[injector])
     state_machine_thread.start()
 
-    host: str = config.get("fastapi", "run_host")
-    port: int = config.getint("fastapi", "run_port")
+    host: str = config.get("DEFAULT", "api_host")
+    port: int = config.getint("DEFAULT", "api_port")
 
     logger: Logger = logging.getLogger("api")
 
