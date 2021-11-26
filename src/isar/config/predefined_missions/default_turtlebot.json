@@ -77,7 +77,7 @@
             }
         },
         {
-            "step_name": "take_image",
+            "step_name": "take_thermal_image",
             "target": {
                 "x": 1.9,
                 "y": 1.9,
