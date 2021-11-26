@@ -30,7 +30,7 @@ class LocalPlanner(MissionPlannerInterface):
             raise MissionPlannerError("There were no predefined missions")
         try:
             mission: Mission = missions[mission_id]["mission"]
-            mission.set_unique_mission_id()
+            mission.set_unique_mission_id_and_metadata()
             return mission
         except Exception as e:
             raise MissionPlannerError(
