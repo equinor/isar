@@ -3,26 +3,33 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Optional
 
+from injector import inject
+
 from isar.config import config
 from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
     MissionPlannerInterface,
 )
 from isar.models.mission import Mission
+from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.base_reader import BaseReader, BaseReaderError
 from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.mission.step import DriveToPose, TakeImage, TakeThermalImage
 
 logger = logging.getLogger("api")
 
 
 class LocalPlanner(MissionPlannerInterface):
+    @inject
     def __init__(
         self,
+        transform: Transformation,
         predefined_mission_folder: Path = Path(
             config.get("DEFAULT", "predefined_missions_folder")
         ),
     ):
         self.predefined_mission_folder = predefined_mission_folder
+        self.transform: Transformation = transform
 
     def get_mission(self, mission_id) -> Mission:
         missions: dict = self.get_predefined_missions()
@@ -31,6 +38,15 @@ class LocalPlanner(MissionPlannerInterface):
         try:
             mission: Mission = missions[mission_id]["mission"]
             mission.set_unique_mission_id_and_metadata()
+            for mission_step in mission.mission_steps:
+                if isinstance(mission_step, DriveToPose):
+                    mission_step.pose = self.transform.transform_pose(
+                        mission_step.pose, to_=Frame.Robot
+                    )
+                elif isinstance(mission_step, (TakeImage, TakeThermalImage)):
+                    mission_step.target = self.transform.transform_position(
+                        mission_step.target, to_=Frame.Robot
+                    )
             return mission
         except Exception as e:
             raise MissionPlannerError(
