@@ -1,0 +1,49 @@
+{
+  "map_name": "JSP1_weather_deck",
+  "robot_reference_points": {
+    "points": [
+      {
+        "x": 45.154266457,
+        "y": 29.50693,
+        "z": 0.0,
+        "frame": "robot"
+      },
+      {
+        "x": 30.80579,
+        "y": 18.344,
+        "z": 0.0,
+        "frame": "robot"
+      },
+      {
+        "x": 12.5288,
+        "y": 34.52378,
+        "z": 0.0,
+        "frame": "robot"
+      }
+    ],
+    "frame": "robot"
+  },
+  "asset_reference_points": {
+    "points": [
+      {
+        "x": 346.917,
+        "y": 102.185,
+        "z": 536.83,
+        "frame": "asset"
+      },
+      {
+        "x": 332.07,
+        "y": 91.847,
+        "z": 536.83,
+        "frame": "asset"
+      },
+      {
+        "x": 314.621,
+        "y": 108.972,
+        "z": 536.83,
+        "frame": "asset"
+      }
+    ],
+    "frame": "asset"
+  }
+}
