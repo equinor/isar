@@ -21,14 +21,14 @@ def joints_within_constraints(joints: Any) -> bool:
     is_valid = True
     if (
         joints.j1 is None
-        or joints.j1 <= Constraints.j1_lower.value
-        or joints.j1 >= Constraints.j1_upper.value
+        or joints.j1 < Constraints.j1_lower.value
+        or joints.j1 > Constraints.j1_upper.value
     ):
         raise ValueError(f"j1 = {joints.j1} is outside the valid range")
     if (
         joints.j2 is None
-        or joints.j2 <= Constraints.j2_lower.value
-        or joints.j2 >= Constraints.j2_upper.value
+        or joints.j2 < Constraints.j2_lower.value
+        or joints.j2 > Constraints.j2_upper.value
     ):
         raise ValueError(f"j2 = {joints.j2} is outside the valid range")
     return is_valid
