@@ -115,8 +115,10 @@ class StorageServiceModule(Module):
 class LocalPlannerModule(Module):
     @provider
     @singleton
-    def provide_local_planner(self) -> MissionPlannerInterface:
-        return LocalPlanner()
+    def provide_local_planner(
+        self, transform: Transformation
+    ) -> MissionPlannerInterface:
+        return LocalPlanner(transform=transform)
 
 
 class EchoPlannerModule(Module):
