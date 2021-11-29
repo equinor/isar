@@ -21,14 +21,10 @@ logger = logging.getLogger("api")
 
 class LocalPlanner(MissionPlannerInterface):
     @inject
-    def __init__(
-        self,
-        transform: Transformation,
-        predefined_mission_folder: Path = Path(
+    def __init__(self, transform: Transformation):
+        self.predefined_mission_folder = Path(
             config.get("DEFAULT", "predefined_missions_folder")
-        ),
-    ):
-        self.predefined_mission_folder = predefined_mission_folder
+        )
         self.transform: Transformation = transform
 
     def get_mission(self, mission_id) -> Mission:
