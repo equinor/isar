@@ -9,3 +9,8 @@ from robot_interface.models.inspection.inspection import (
 @dataclass
 class ImageMetadata(InspectionMetadata):
     time_indexed_pose: TimeIndexedPose
+
+
+@dataclass
+class ThermalImageMetadata(InspectionMetadata):
+    time_indexed_pose: TimeIndexedPose
