@@ -4,6 +4,7 @@ import pytest
 
 from isar.config import config
 from isar.models.mission import Mission
+from robot_interface.models.mission import TakeThermalImage
 from tests.utilities import Utilities
 
 
@@ -83,3 +84,16 @@ def test_valid_predefined_missions_files(mission_reader):
         path_to_file = predefined_mission_folder.joinpath(file.name)
         mission = mission_reader.read_mission_from_file(path_to_file)
         assert mission is not None
+
+
+def test_thermal_image_step(mission_reader):
+    mission_path = Path("./tests/test_data/test_thermal_image_mission.json")
+    output = mission_reader.read_mission_from_file(mission_path)
+
+    step = output.mission_steps[0]
+
+    assert isinstance(step, TakeThermalImage)
+    assert hasattr(step, "target")
+    assert step.step_name == "take_thermal_image"
+    assert hasattr(step, "computed_joints")
+    assert hasattr(step, "tag_id")

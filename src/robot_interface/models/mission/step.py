@@ -101,6 +101,7 @@ class TakeThermalImage(InspectionStep):
 
     target: Position
     step_name: Literal["take_thermal_image"] = "take_thermal_image"
+    computed_joints: Optional[Joints] = None
     tag_id: Optional[str] = None
 
 
