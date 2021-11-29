@@ -10,7 +10,7 @@ from isar.services.utilities.threaded_request import (
     ThreadedRequestUnexpectedError,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission import Step, TakeImage
+from robot_interface.models.mission import Step, TakeImage, TakeThermalImage
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -84,7 +84,7 @@ class Send(State):
                 )
                 if isinstance(
                     self.state_machine.status.current_mission_step,
-                    TakeImage,
+                    (TakeImage, TakeThermalImage),
                 ):
                     self.state_machine.status.current_mission_step.computed_joints = (
                         computed_joints
