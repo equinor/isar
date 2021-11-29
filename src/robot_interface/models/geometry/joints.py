@@ -35,7 +35,7 @@ def joints_within_constraints(joints: Any) -> bool:
 
 
 class Constraints(Enum):
-    j1_upper: float = 5.819
-    j1_lower: float = 0.021
-    j2_lower: float = 0.021
-    j2_upper: float = 3.349
+    j1_upper: float = 5.818
+    j1_lower: float = 0.022
+    j2_lower: float = 0.022
+    j2_upper: float = 3.348
