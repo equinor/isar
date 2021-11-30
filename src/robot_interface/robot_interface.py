@@ -2,7 +2,6 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional, Sequence, Tuple
 from uuid import UUID
 
-from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.inspection.inspection import Inspection, InspectionResult
 from robot_interface.models.mission import Task, TaskStatus
@@ -12,7 +11,7 @@ class RobotInterface(metaclass=ABCMeta):
     """Interface to communicate with robots."""
 
     @abstractmethod
-    def schedule_task(self, task: Task) -> Tuple[bool, Optional[Joints]]:
+    def schedule_task(self, task: Task) -> bool:
         """Schedules a Task on the robot.
 
         The method must adapt the standard mission to the

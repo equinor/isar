@@ -3,7 +3,6 @@ from typing import Any, List, Optional, Sequence, Tuple
 from uuid import UUID
 
 from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.orientation import Orientation
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.geometry.position import Position
@@ -22,7 +21,7 @@ from robot_interface.robot_interface import RobotInterface
 class MockRobot(RobotInterface):
     def __init__(
         self,
-        schedule_task: Tuple[bool, Optional[Joints]] = (True, None),
+        schedule_task: bool = True,
         mission_scheduled: bool = False,
         task_status: TaskStatus = TaskStatus.Completed,
         abort_mission: bool = True,
@@ -32,13 +31,13 @@ class MockRobot(RobotInterface):
             frame=Frame.Robot,
         ),
     ):
-        self.schedule_task_return_value: Tuple[bool, Optional[Joints]] = schedule_task
+        self.schedule_task_return_value: bool = schedule_task
         self.mission_scheduled_return_value: bool = mission_scheduled
         self.task_status_return_value: TaskStatus = task_status
         self.abort_mission_return_value: bool = abort_mission
         self.robot_pose_return_value: Pose = pose
 
-    def schedule_task(self, task: Task) -> Tuple[bool, Optional[Joints]]:
+    def schedule_task(self, task: Task) -> bool:
         return self.schedule_task_return_value
 
     def mission_scheduled(self) -> bool:

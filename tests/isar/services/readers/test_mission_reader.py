@@ -79,7 +79,6 @@ def test_thermal_image_task(mission_reader):
     assert hasattr(task, "target")
     assert task.name == "take_thermal_image"
     assert hasattr(task, "id")
-    assert hasattr(task, "computed_joints")
     assert hasattr(task, "tag_id")
 
 
