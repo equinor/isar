@@ -76,25 +76,15 @@ class Send(State):
                 self.send_thread.start_thread(self.state_machine.current_task)
 
             try:
-                (
-                    send_success,
-                    computed_joints,
-                ) = self.send_thread.get_output()
+                send_success: bool = self.send_thread.get_output()
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
             except ThreadedRequestUnexpectedError:
                 send_success = False
-                computed_joints = None
 
             if send_success:
                 self.state_machine.current_task.status = TaskStatus.Scheduled
-                if isinstance(
-                    self.state_machine.current_task,
-                    (TakeImage, TakeThermalImage),
-                ):
-                    self.state_machine.current_task.computed_joints = computed_joints
-
                 next_state = States.Monitor
                 break
             else:

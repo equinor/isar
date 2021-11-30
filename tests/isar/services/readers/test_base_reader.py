@@ -6,11 +6,10 @@ import pytest
 
 from isar.models.mission import Mission
 from isar.services.readers.base_reader import BaseReader
-from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.mission import Task
 from tests.mocks.mission_definition import mock_mission_definition
-from tests.mocks.robot_variables import mock_joints, mock_pose
+from tests.mocks.robot_variables import mock_pose
 from tests.mocks.task import MockTask
 from tests.utilities import Utilities
 
@@ -40,7 +39,6 @@ class TestBaseReader:
             (asdict(MockTask.drive_to()), Task),
             (asdict(MockTask.take_image_in_coordinate_direction()), Task),
             (asdict(mock_pose()), Pose),
-            (asdict(mock_joints()), Joints),
         ],
     )
     def test_dict_to_dataclass(self, dataclass_dict: dict, expected_dataclass: Any):

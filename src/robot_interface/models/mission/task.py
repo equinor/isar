@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from typing import Any, List, Literal, Optional, Union
 from uuid import UUID, uuid4
 
-from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.geometry.position import Position
 from robot_interface.models.mission.status import TaskStatus
@@ -95,7 +94,6 @@ class TakeImage(InspectionTask):
 
     target: Position
     name: Literal["take_image"] = "take_image"
-    computed_joints: Optional[Joints] = None
     tag_id: Optional[str] = None
     depends_on: Optional[List[int]] = None
 
@@ -108,7 +106,6 @@ class TakeThermalImage(InspectionTask):
 
     target: Position
     name: Literal["take_thermal_image"] = "take_thermal_image"
-    computed_joints: Optional[Joints] = None
     tag_id: Optional[str] = None
     depends_on: Optional[List[int]] = None
 
