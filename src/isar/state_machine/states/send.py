@@ -10,7 +10,7 @@ from isar.services.utilities.threaded_request import (
     ThreadedRequestUnexpectedError,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission import Step, TakeImage, TakeThermalImage
+from robot_interface.models.mission import TakeImage, TakeThermalImage, Task
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -47,7 +47,7 @@ class Send(State):
                 next_state: States = States.Cancel
                 break
 
-            if not self.state_machine.status.mission_schedule.mission_steps:
+            if not self.state_machine.status.mission_schedule.mission_tasks:
                 next_state: States = States.Cancel
                 break
 
@@ -55,14 +55,14 @@ class Send(State):
                 self.state_machine.send_status()
 
             if not self.send_thread:
-                self.state_machine.status.current_mission_step = (
+                self.state_machine.status.current_mission_task = (
                     self._get_current_mission()
                 )
                 self.send_thread = ThreadedRequest(
-                    self.state_machine.robot.schedule_step
+                    self.state_machine.robot.schedule_task
                 )
                 self.send_thread.start_thread(
-                    self.state_machine.status.current_mission_step
+                    self.state_machine.status.current_mission_task
                 )
             try:
                 (
@@ -83,13 +83,13 @@ class Send(State):
                     mission_instance_id
                 )
                 if isinstance(
-                    self.state_machine.status.current_mission_step,
+                    self.state_machine.status.current_mission_task,
                     (TakeImage, TakeThermalImage),
                 ):
-                    self.state_machine.status.current_mission_step.computed_joints = (
+                    self.state_machine.status.current_mission_task.computed_joints = (
                         computed_joints
                     )
-                self.state_machine.status.mission_schedule.mission_steps.pop(0)
+                self.state_machine.status.mission_schedule.mission_tasks.pop(0)
                 next_state = States.Monitor
                 break
             else:
@@ -108,5 +108,5 @@ class Send(State):
 
         self.state_machine.to_next_state(next_state)
 
-    def _get_current_mission(self) -> Step:
-        return self.state_machine.status.mission_schedule.mission_steps[0]
+    def _get_current_mission(self) -> Task:
+        return self.state_machine.status.mission_schedule.mission_tasks[0]

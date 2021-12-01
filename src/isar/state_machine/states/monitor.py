@@ -78,7 +78,7 @@ class Monitor(State):
                 instance_id=self.state_machine.status.current_mission_instance_id,
             ):
                 if isinstance(
-                    self.state_machine.status.current_mission_step, DriveToPose
+                    self.state_machine.status.current_mission_task, DriveToPose
                 ):
                     next_state = States.Send
                 else:
@@ -95,7 +95,7 @@ class Monitor(State):
     ) -> bool:
         if mission_status == MissionStatus.Unexpected:
             self.logger.error(
-                f"Mission status on step {instance_id} returned and unexpected status string"
+                f"Mission status on task {instance_id} returned and unexpected status string"
             )
         elif mission_status == MissionStatus.Failed:
             self.logger.warning(f"Mission instance {instance_id} failed...")
@@ -109,6 +109,6 @@ class Monitor(State):
             self.state_machine.robot.log_status(
                 mission_id=self.state_machine.status.current_mission_instance_id,
                 mission_status=mission_status,
-                current_step=self.state_machine.status.current_mission_step,
+                current_task=self.state_machine.status.current_mission_task,
             )
         self.iteration_counter += 1

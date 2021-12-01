@@ -4,14 +4,14 @@ from typing import Any, Optional, Sequence, Tuple
 from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.inspection.inspection import Inspection, InspectionResult
-from robot_interface.models.mission import MissionStatus, Step
+from robot_interface.models.mission import MissionStatus, Task
 
 
 class RobotInterface(metaclass=ABCMeta):
     """Interface to communicate with robots."""
 
     @abstractmethod
-    def schedule_step(self, step: Step) -> Tuple[bool, Optional[Any], Optional[Joints]]:
+    def schedule_task(self, task: Task) -> Tuple[bool, Optional[Any], Optional[Joints]]:
         """Schedules a Mission on the robot.
 
         The method must adapt the standard mission to the
@@ -19,7 +19,7 @@ class RobotInterface(metaclass=ABCMeta):
 
         Parameters
         ----------
-        step : Step
+        task : Task
             Mission object describing the mission.
 
         Returns
@@ -75,7 +75,7 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def log_status(
-        self, mission_id: Any, mission_status: MissionStatus, current_step: Step
+        self, mission_id: Any, mission_status: MissionStatus, current_task: Task
     ) -> None:
         """Logs the status of the executing mission that is being monitored.
 
@@ -85,15 +85,15 @@ class RobotInterface(metaclass=ABCMeta):
             Unique identifier for the current executing mission on the robot.
         mission_status : MissionStatus
             Current status of the mission.
-        current_step : Step
-            The current executing mission step.
+        current_task : Task
+            The current executing mission task.
 
         """
         raise NotImplementedError
 
     @abstractmethod
     def get_inspection_references(
-        self, vendor_mission_id: Any, current_step: Step
+        self, vendor_mission_id: Any, current_task: Task
     ) -> Sequence[Inspection]:
         """Returns inspection references.
 
@@ -101,8 +101,8 @@ class RobotInterface(metaclass=ABCMeta):
         ----------
         vendor_mission_id : Any
             Indicates the vendor id of a mission.
-        current_step : Step
-            The current executing mission step.
+        current_task : Task
+            The current executing mission task.
 
         Returns
         -------

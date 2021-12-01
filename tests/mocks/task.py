@@ -5,7 +5,7 @@ from robot_interface.models.geometry.position import Position
 from robot_interface.models.mission import DriveToPose, TakeImage
 
 
-class MockStep:
+class MockTask:
     @staticmethod
     def drive_to(
         position: Position = Position(x=1, y=1, z=1, frame=Frame.Robot),

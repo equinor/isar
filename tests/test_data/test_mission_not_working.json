@@ -1,6 +1,6 @@
 {
   "mission_id": 1,
-  "mission_steps": [
+  "mission_tasks": [
     {
       "action_name": "drive_to",
       "action_message": {

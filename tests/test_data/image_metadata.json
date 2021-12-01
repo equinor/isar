@@ -1,6 +1,6 @@
 {
   "mission_id": "11109",
-  "step_id": "301",
+  "task_id": "301",
   "base_pose": "{\"x\": 5.0, \"y\": 5.0, \"theta\": 5.0, \"floor\": \"floor_1\"}",
   "arm_pose": "{\"arm_joint_1\": 3.7, \"arm_joint_2\": 1.576, \"arm_joint_3\": 1.234, \"arm_joint_4\": 3.155}",
   "camera_position": "{\"x\":4.87825003457475,\"y\":4.64518849824804,\"z\":1.3309735408097227}",

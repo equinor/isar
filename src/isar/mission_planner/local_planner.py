@@ -14,7 +14,7 @@ from isar.models.mission import Mission
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.base_reader import BaseReader, BaseReaderError
 from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.mission.step import DriveToPose, TakeImage, TakeThermalImage
+from robot_interface.models.mission.task import DriveToPose, TakeImage, TakeThermalImage
 
 logger = logging.getLogger("api")
 
@@ -34,14 +34,14 @@ class LocalPlanner(MissionPlannerInterface):
         try:
             mission: Mission = missions[mission_id]["mission"]
             mission.set_unique_mission_id_and_metadata()
-            for mission_step in mission.mission_steps:
-                if isinstance(mission_step, DriveToPose):
-                    mission_step.pose = self.transform.transform_pose(
-                        mission_step.pose, to_=Frame.Robot
+            for mission_task in mission.mission_tasks:
+                if isinstance(mission_task, DriveToPose):
+                    mission_task.pose = self.transform.transform_pose(
+                        mission_task.pose, to_=Frame.Robot
                     )
-                elif isinstance(mission_step, (TakeImage, TakeThermalImage)):
-                    mission_step.target = self.transform.transform_position(
-                        mission_step.target, to_=Frame.Robot
+                elif isinstance(mission_task, (TakeImage, TakeThermalImage)):
+                    mission_task.target = self.transform.transform_position(
+                        mission_task.target, to_=Frame.Robot
                     )
             return mission
         except Exception as e:
@@ -105,8 +105,8 @@ class LocalPlanner(MissionPlannerInterface):
                     "id": mission_id,
                     "name": current_mission["name"],
                     "file": current_mission["file"],
-                    "mission_steps": asdict(current_mission["mission"])[
-                        "mission_steps"
+                    "mission_tasks": asdict(current_mission["mission"])[
+                        "mission_tasks"
                     ],
                 }
             )

@@ -11,10 +11,10 @@ from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, States, main
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
-from robot_interface.models.mission import DriveToPose, Step
+from robot_interface.models.mission import DriveToPose, Task
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.robot_variables import mock_pose
-from tests.mocks.step import MockStep
+from tests.mocks.task import MockTask
 
 
 class StateMachineThread(object):
@@ -63,8 +63,8 @@ def test_reset_state_machine(state_machine):
 
     assert not state_machine.status.mission_in_progress
     assert state_machine.status.current_mission_instance_id is None
-    assert state_machine.status.current_mission_step is None
-    assert state_machine.status.mission_schedule.mission_steps == []
+    assert state_machine.status.current_mission_task is None
+    assert state_machine.status.mission_schedule.mission_tasks == []
     assert next_state is States.Idle
 
 
@@ -121,8 +121,8 @@ def test_stop_mission(state_machine):
 
 
 def test_state_machine_transitions(injector, state_machine_thread):
-    step: Step = DriveToPose(pose=mock_pose())
-    mission: Mission = Mission([step])
+    task: Task = DriveToPose(pose=mock_pose())
+    mission: Mission = Mission([task])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     message, _ = scheduling_utilities.start_mission(mission=mission)
@@ -147,8 +147,8 @@ def test_state_machine_transitions(injector, state_machine_thread):
 def test_state_machine_with_successful_collection(injector, state_machine_thread):
     storage_mock: StorageInterface = injector.get(StorageInterface)
 
-    step: Step = MockStep.take_image_in_coordinate_direction()
-    mission: Mission = Mission([step])
+    task: Task = MockTask.take_image_in_coordinate_direction()
+    mission: Mission = Mission([task])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     message, _ = scheduling_utilities.start_mission(mission=mission)
@@ -177,8 +177,8 @@ def test_state_machine_with_unsuccessful_collection(
 ):
     storage_mock: StorageInterface = injector.get(StorageInterface)
 
-    step: Step = MockStep.take_image_in_coordinate_direction()
-    mission: Mission = Mission([step])
+    task: Task = MockTask.take_image_in_coordinate_direction()
+    mission: Mission = Mission([task])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     mocker.patch.object(MockRobot, "get_inspection_references", return_value=None)

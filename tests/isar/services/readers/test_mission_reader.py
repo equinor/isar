@@ -12,7 +12,7 @@ from tests.utilities import Utilities
     "mission_path ,expected_output",
     [
         (
-            Path("./tests/test_data/test_mission_working_nosteps.json"),
+            Path("./tests/test_data/test_mission_working_notasks.json"),
             Mission,
         ),
         (Path("./tests/test_data/test_mission_working.json"), Mission),
@@ -86,14 +86,14 @@ def test_valid_predefined_missions_files(mission_reader):
         assert mission is not None
 
 
-def test_thermal_image_step(mission_reader):
+def test_thermal_image_task(mission_reader):
     mission_path = Path("./tests/test_data/test_thermal_image_mission.json")
     output = mission_reader.read_mission_from_file(mission_path)
 
-    step = output.mission_steps[0]
+    task = output.mission_tasks[0]
 
-    assert isinstance(step, TakeThermalImage)
-    assert hasattr(step, "target")
-    assert step.step_name == "take_thermal_image"
-    assert hasattr(step, "computed_joints")
-    assert hasattr(step, "tag_id")
+    assert isinstance(task, TakeThermalImage)
+    assert hasattr(task, "target")
+    assert task.task_name == "take_thermal_image"
+    assert hasattr(task, "computed_joints")
+    assert hasattr(task, "tag_id")
