@@ -46,10 +46,10 @@ class StateMachine(object):
             Queues used for API communication.
         robot : RobotInterface
             Instance of robot interface.
-        slimm_service : SlimmService
-            Instance of SLIMM service.
+        storage_service : StorageService
+            Instance of StorageService.
         sleep_time : float
-            Time to sleep inbetween state machine iterations.
+            Time to sleep in between state machine iterations.
         transitions_log_length : int
             Length of state transition log list.
 
