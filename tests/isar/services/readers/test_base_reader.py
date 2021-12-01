@@ -8,10 +8,10 @@ from isar.models.mission import Mission
 from isar.services.readers.base_reader import BaseReader
 from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
-from robot_interface.models.mission import Step
+from robot_interface.models.mission import Task
 from tests.mocks.mission_definition import mock_mission_definition
 from tests.mocks.robot_variables import mock_joints, mock_pose
-from tests.mocks.step import MockStep
+from tests.mocks.task import MockTask
 from tests.utilities import Utilities
 
 
@@ -20,7 +20,7 @@ class TestBaseReader:
         "location, expected_output",
         [
             (Path("./tests/test_data/test_mission_nofile.json"), None),
-            (Path("./tests/test_data/test_mission_working_nosteps.json"), dict),
+            (Path("./tests/test_data/test_mission_working_notasks.json"), dict),
             (Path("./tests/test_data/test_mission_working.json"), dict),
             (Path("./tests/test_data/test_mission_not_working.json"), dict),
             (Path("./tests/test_data/test_json_file.json"), list),
@@ -37,8 +37,8 @@ class TestBaseReader:
         "dataclass_dict, expected_dataclass",
         [
             (asdict(mock_mission_definition("long_mission")), Mission),
-            (asdict(MockStep.drive_to()), Step),
-            (asdict(MockStep.take_image_in_coordinate_direction()), Step),
+            (asdict(MockTask.drive_to()), Task),
+            (asdict(MockTask.take_image_in_coordinate_direction()), Task),
             (asdict(mock_pose()), Pose),
             (asdict(mock_joints()), Joints),
         ],

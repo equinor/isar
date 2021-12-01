@@ -47,23 +47,23 @@ class EchoPlanner(MissionPlannerInterface):
         mission_plan: dict = self._mission_plan(mission_id)
 
         mission_tags: List[dict] = mission_plan["planItems"]
-        mission: Mission = Mission(mission_steps=[])
+        mission: Mission = Mission(mission_tasks=[])
 
         for tag in mission_tags:
             tag_name: str = tag["tag"]
 
             try:
-                drive_step: DriveToPose = self._create_drive_step(tag_name=tag_name)
-                measurement_steps: List[
+                drive_task: DriveToPose = self._create_drive_task(tag_name=tag_name)
+                measurement_tasks: List[
                     Union[TakeImage, TakeThermalImage]
-                ] = self._create_measurement_steps(tag_name=tag_name)
+                ] = self._create_measurement_tasks(tag_name=tag_name)
             except Exception as e:
                 self.logger.error(e)
                 continue
 
-            mission.mission_steps.append(drive_step)
-            for measurement_step in measurement_steps:
-                mission.mission_steps.append(measurement_step)
+            mission.mission_tasks.append(drive_task)
+            for measurement_task in measurement_tasks:
+                mission.mission_tasks.append(measurement_task)
 
         mission.mission_metadata.update_metadata(mission_plan)
 
@@ -111,13 +111,13 @@ class EchoPlanner(MissionPlannerInterface):
         )
         return tag_position_robot
 
-    def _create_drive_step(self, tag_name: str) -> DriveToPose:
+    def _create_drive_task(self, tag_name: str) -> DriveToPose:
         robot_pose: Pose = self._get_robot_pose(tag_name=tag_name)
 
-        drive_step: DriveToPose = DriveToPose(pose=robot_pose)
-        return drive_step
+        drive_task: DriveToPose = DriveToPose(pose=robot_pose)
+        return drive_task
 
-    def _create_measurement_steps(
+    def _create_measurement_tasks(
         self, tag_name: str
     ) -> List[Union[TakeImage, TakeThermalImage]]:
         """
@@ -134,40 +134,40 @@ class EchoPlanner(MissionPlannerInterface):
             )
             predefined_measurement_type = ["Image"]
 
-        measurement_steps: List[Union[TakeImage, TakeThermalImage]] = []
+        measurement_tasks: List[Union[TakeImage, TakeThermalImage]] = []
         for measurement_type in predefined_measurement_type:
             if measurement_type == "ThermalImage":
-                measurement_steps.append(
-                    self._create_thermal_image_step(tag_name=tag_name)
+                measurement_tasks.append(
+                    self._create_thermal_image_task(tag_name=tag_name)
                 )
 
             elif measurement_type == "Image":
-                measurement_steps.append(self._create_image_step(tag_name=tag_name))
+                measurement_tasks.append(self._create_image_task(tag_name=tag_name))
 
             else:
                 self.logger.exception(
                     f"Invalid measurement type in predefined_measurement_types. Tag: {tag_name}, measurement type: {measurement_type}"
                 )
 
-        measurement_steps = [step for step in measurement_steps]
+        measurement_tasks = [task for task in measurement_tasks]
 
-        return measurement_steps
+        return measurement_tasks
 
-    def _create_image_step(self, tag_name: str) -> TakeImage:
+    def _create_image_task(self, tag_name: str) -> TakeImage:
         tag_position_robot: Position = self._get_tag_position_robot(tag_name=tag_name)
 
-        image_step: TakeImage = TakeImage(
+        image_task: TakeImage = TakeImage(
             target=tag_position_robot,
             tag_id=tag_name,
         )
-        return image_step
+        return image_task
 
-    def _create_thermal_image_step(self, tag_name: str) -> TakeThermalImage:
+    def _create_thermal_image_task(self, tag_name: str) -> TakeThermalImage:
         tag_position_robot: Position = self._get_tag_position_robot(tag_name=tag_name)
 
-        thermal_image_step: TakeThermalImage = TakeThermalImage(
+        thermal_image_task: TakeThermalImage = TakeThermalImage(
             target=tag_position_robot,
             tag_id=tag_name,
         )
 
-        return thermal_image_step
+        return thermal_image_task

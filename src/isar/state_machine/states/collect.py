@@ -14,7 +14,7 @@ from isar.services.utilities.threaded_request import (
 from isar.state_machine.states_enum import States
 from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.inspection.inspection import Inspection, TimeIndexedPose
-from robot_interface.models.mission.step import Step
+from robot_interface.models.mission.task import Task
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -55,11 +55,11 @@ class Collect(State):
 
             if not self.collect_thread:
                 instance_id: Any = self.state_machine.status.current_mission_instance_id
-                current_step: Step = self.state_machine.status.current_mission_step
+                current_task: Task = self.state_machine.status.current_mission_task
                 self.collect_thread = ThreadedRequest(
                     self.state_machine.robot.get_inspection_references
                 )
-                self.collect_thread.start_thread(instance_id, current_step)
+                self.collect_thread.start_thread(instance_id, current_task)
 
             try:
                 inspections: Sequence[Inspection] = self.collect_thread.get_output()
@@ -70,7 +70,7 @@ class Collect(State):
                 inspections: Sequence[Inspection] = []
 
             for inspection_ref in inspections:
-                inspection_ref.metadata.tag_id = current_step.tag_id  # type: ignore
+                inspection_ref.metadata.tag_id = current_task.tag_id  # type: ignore
 
                 self._transform_results_to_asset_frame(
                     time_indexed_pose=inspection_ref.metadata.time_indexed_pose

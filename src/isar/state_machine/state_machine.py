@@ -78,8 +78,8 @@ class StateMachine(object):
             mission_status=None,
             mission_in_progress=False,
             current_mission_instance_id=None,
-            current_mission_step=None,
-            mission_schedule=Mission(mission_steps=[]),
+            current_mission_task=None,
+            mission_schedule=Mission(mission_tasks=[]),
             current_state=States(self.state),  # type: ignore
         )
         self.predefined_mission_id: Optional[int] = None
@@ -134,8 +134,8 @@ class StateMachine(object):
         self.status.mission_status = None
         self.status.mission_in_progress = False
         self.status.current_mission_instance_id = None
-        self.status.current_mission_step = None
-        self.status.mission_schedule = Mission(mission_steps=[])
+        self.status.current_mission_task = None
+        self.status.mission_schedule = Mission(mission_tasks=[])
 
         return States.Idle
 

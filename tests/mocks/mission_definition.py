@@ -1,32 +1,32 @@
 from typing import Literal
 
 from isar.models.mission import Mission
-from tests.mocks.step import MockStep
+from tests.mocks.task import MockTask
 
 default_mission = Mission(
     mission_id="default_mission",
-    mission_steps=[
-        MockStep.take_image_in_coordinate_direction(),
-        MockStep.drive_to(),
-        MockStep.take_image_in_coordinate_direction(),
-        MockStep.take_image_in_coordinate_direction(),
+    mission_tasks=[
+        MockTask.take_image_in_coordinate_direction(),
+        MockTask.drive_to(),
+        MockTask.take_image_in_coordinate_direction(),
+        MockTask.take_image_in_coordinate_direction(),
     ],
 )
 
 long_mission = Mission(
     mission_id="long_mission",
-    mission_steps=[
-        MockStep.take_image_in_coordinate_direction(),
-        MockStep.take_image_in_coordinate_direction(),
-        MockStep.drive_to(),
-        MockStep.drive_to(),
-        MockStep.take_image_in_coordinate_direction(),
-        MockStep.take_image_in_coordinate_direction(),
+    mission_tasks=[
+        MockTask.take_image_in_coordinate_direction(),
+        MockTask.take_image_in_coordinate_direction(),
+        MockTask.drive_to(),
+        MockTask.drive_to(),
+        MockTask.take_image_in_coordinate_direction(),
+        MockTask.take_image_in_coordinate_direction(),
     ],
 )
 
 
-empty_mission = Mission(mission_id=None, mission_steps=[])
+empty_mission = Mission(mission_id=None, mission_tasks=[])
 
 
 mission_name_typehints = Literal["default_mission", "empty_mission", "long_mission"]
