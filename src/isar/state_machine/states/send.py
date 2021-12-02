@@ -58,15 +58,11 @@ class Send(State):
                 self.state_machine.send_status()
 
             if not self.send_thread:
-                self.state_machine.status.current_mission_task = (
-                    self._get_current_mission()
-                )
+                self.state_machine.status.current_task = self._get_current_mission()
                 self.send_thread = ThreadedRequest(
                     self.state_machine.robot.schedule_task
                 )
-                self.send_thread.start_thread(
-                    self.state_machine.status.current_mission_task
-                )
+                self.send_thread.start_thread(self.state_machine.status.current_task)
             try:
                 (
                     send_success,
@@ -81,10 +77,10 @@ class Send(State):
 
             if send_success:
                 if isinstance(
-                    self.state_machine.status.current_mission_task,
+                    self.state_machine.status.current_task,
                     (TakeImage, TakeThermalImage),
                 ):
-                    self.state_machine.status.current_mission_task.computed_joints = (
+                    self.state_machine.status.current_task.computed_joints = (
                         computed_joints
                     )
                 self.state_machine.status.mission_schedule.mission_tasks.pop(0)

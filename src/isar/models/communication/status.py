@@ -10,6 +10,6 @@ from robot_interface.models.mission import MissionStatus, Task
 class Status:
     mission_status: Optional[MissionStatus]
     mission_in_progress: bool
-    current_mission_task: Optional[Task]
+    current_task: Optional[Task]
     mission_schedule: Mission
     current_state: States

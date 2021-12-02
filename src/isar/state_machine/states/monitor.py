@@ -57,7 +57,7 @@ class Monitor(State):
                     self.state_machine.robot.mission_status
                 )
                 self.mission_status_thread.start_thread(
-                    self.state_machine.status.current_mission_task.id
+                    self.state_machine.status.current_task.id
                 )
 
             try:
@@ -75,9 +75,7 @@ class Monitor(State):
             if self._mission_finished(
                 mission_status=self.state_machine.status.mission_status,
             ):
-                if isinstance(
-                    self.state_machine.status.current_mission_task, DriveToPose
-                ):
+                if isinstance(self.state_machine.status.current_task, DriveToPose):
                     next_state = States.Send
                 else:
                     next_state = States.Collect
@@ -102,6 +100,6 @@ class Monitor(State):
         if self.iteration_counter % self.log_interval == 0:
             self.state_machine.robot.log_status(
                 mission_status=mission_status,
-                current_task=self.state_machine.status.current_mission_task,
+                current_task=self.state_machine.status.current_task,
             )
         self.iteration_counter += 1
