@@ -11,7 +11,7 @@ from isar.services.utilities.threaded_request import (
     ThreadedRequestUnexpectedError,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission import DriveToPose, MissionStatus
+from robot_interface.models.mission import DriveToPose, TaskStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -27,7 +27,7 @@ class Monitor(State):
         self.iteration_counter: int = 0
         self.log_interval = 20
 
-        self.mission_status_thread = None
+        self.task_status_thread = None
 
     def start(self):
         self.state_machine.update_status()
@@ -37,9 +37,9 @@ class Monitor(State):
 
     def stop(self):
         self.iteration_counter = 0
-        if self.mission_status_thread:
-            self.mission_status_thread.wait_for_thread()
-        self.mission_status_thread = None
+        if self.task_status_thread:
+            self.task_status_thread.wait_for_thread()
+        self.task_status_thread = None
 
     def _run(self):
         while True:
@@ -52,28 +52,28 @@ class Monitor(State):
 
             if self.state_machine.should_send_status():
                 self.state_machine.send_status()
-            if not self.mission_status_thread:
-                self.mission_status_thread = ThreadedRequest(
-                    self.state_machine.robot.mission_status
+            if not self.task_status_thread:
+                self.task_status_thread = ThreadedRequest(
+                    self.state_machine.robot.task_status
                 )
-                self.mission_status_thread.start_thread(
+                self.task_status_thread.start_thread(
                     self.state_machine.status.current_task.id
                 )
 
             try:
-                mission_status = self.mission_status_thread.get_output()
+                task_status = self.task_status_thread.get_output()
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
             except ThreadedRequestUnexpectedError:
-                mission_status = MissionStatus.Unexpected
+                task_status = TaskStatus.Unexpected
 
-            self.state_machine.status.mission_status = mission_status
+            self.state_machine.status.task_status = task_status
 
-            self._log_status(mission_status=self.state_machine.status.mission_status)
+            self._log_status(task_status=self.state_machine.status.task_status)
 
-            if self._mission_finished(
-                mission_status=self.state_machine.status.mission_status,
+            if self._task_completed(
+                task_status=self.state_machine.status.task_status,
             ):
                 if isinstance(self.state_machine.status.current_task, DriveToPose):
                     next_state = States.Send
@@ -81,25 +81,25 @@ class Monitor(State):
                     next_state = States.Collect
                 break
             else:
-                self.mission_status_thread = None
+                self.task_status_thread = None
                 time.sleep(self.state_machine.sleep_time)
 
         self.state_machine.to_next_state(next_state)
 
-    def _mission_finished(self, mission_status: MissionStatus) -> bool:
-        if mission_status == MissionStatus.Unexpected:
-            self.logger.error("Mission status returned an unexpected status string")
-        elif mission_status == MissionStatus.Failed:
-            self.logger.warning("Mission failed...")
+    def _task_completed(self, task_status: TaskStatus) -> bool:
+        if task_status == TaskStatus.Unexpected:
+            self.logger.error("Task status returned an unexpected status string")
+        elif task_status == TaskStatus.Failed:
+            self.logger.warning("Task failed...")
             return True
-        elif mission_status == MissionStatus.Completed:
+        elif task_status == TaskStatus.Completed:
             return True
         return False
 
-    def _log_status(self, mission_status: MissionStatus):
+    def _log_status(self, task_status: TaskStatus):
         if self.iteration_counter % self.log_interval == 0:
             self.state_machine.robot.log_status(
-                mission_status=mission_status,
+                task_status=task_status,
                 current_task=self.state_machine.status.current_task,
             )
         self.iteration_counter += 1

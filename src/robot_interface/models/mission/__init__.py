@@ -1,4 +1,4 @@
-from .status import MissionStatus
+from .status import TaskStatus
 from .task import (
     TASKS,
     DriveToPose,

@@ -1,20 +1,20 @@
 import pytest
 
-from robot_interface.models.mission import MissionStatus
+from robot_interface.models.mission import TaskStatus
 
 
 @pytest.mark.parametrize(
     "mock_status, expected_output",
     [
-        (MissionStatus.Completed, True),
-        (MissionStatus.Completed, True),
-        (MissionStatus.Unexpected, False),
-        (MissionStatus.Failed, True),
+        (TaskStatus.Completed, True),
+        (TaskStatus.Completed, True),
+        (TaskStatus.Unexpected, False),
+        (TaskStatus.Failed, True),
     ],
 )
-def test_mission_finished(monitor, mock_status, expected_output):
-    mission_finished: bool = monitor._mission_finished(
-        mission_status=mock_status,
+def test_task_completed(monitor, mock_status, expected_output):
+    task_completed: bool = monitor._task_completed(
+        task_status=mock_status,
     )
 
-    assert mission_finished == expected_output
+    assert task_completed == expected_output

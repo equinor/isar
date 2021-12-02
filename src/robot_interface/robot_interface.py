@@ -1,10 +1,11 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any, Optional, Sequence, Tuple
+from typing import Optional, Sequence, Tuple
+from uuid import UUID
 
 from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.inspection.inspection import Inspection, InspectionResult
-from robot_interface.models.mission import MissionStatus, Task
+from robot_interface.models.mission import Task, TaskStatus
 
 
 class RobotInterface(metaclass=ABCMeta):
@@ -44,17 +45,17 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def mission_status(self, mission_id: Any) -> MissionStatus:
+    def task_status(self, task_id: UUID) -> TaskStatus:
         """Retrieves status of the current executing mission task for the robot.
 
         Parameters
         ----------
-        mission_id : Any
+        task_id : UUID
             Unique identifier for the mission task which the status should be checked for.
 
         Returns
         -------
-        MissionStatus
+        TaskStatus
             Enum member indicating the current mission status.
         """
         raise NotImplementedError
@@ -74,13 +75,13 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def log_status(self, mission_status: MissionStatus, current_task: Task) -> None:
-        """Logs the status of the executing mission that is being monitored.
+    def log_status(self, task_status: TaskStatus, current_task: Task) -> None:
+        """Logs the status of the executing task that is being monitored.
 
         Parameters
         ----------
-        mission_status : MissionStatus
-            Current status of the mission.
+        task_status : TaskStatus
+            Status of the mission task.
         current_task : Task
             The current executing mission task.
 
