@@ -2,7 +2,7 @@
   "mission_id": 1,
   "mission_tasks": [
     {
-      "task_name": "take_thermal_image",
+      "name": "take_thermal_image",
       "target": {
         "x": 2,
         "y": 2,
