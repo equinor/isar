@@ -327,7 +327,7 @@ predefined_poses = {
         frame=Frame.Asset,
     ),
     #
-    #
+    # AP520 & AP530
     #
     # A-VB20-0292 Car seal valve 180 degrees
     "A-VB20-0292": Pose(
@@ -435,6 +435,39 @@ predefined_poses = {
     "A-VB23-0183": Pose(
         position=Position(x=341.412, y=83.433, z=536.850, frame=Frame.Asset),
         orientation=Orientation(x=0, y=0, z=0.707, w=0.707, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    #
+    # AP430
+    #
+    # A-VB20-0039 Car seal valve East
+    "A-VB20-0039": Pose(
+        position=Position(x=328.343, y=83.986, z=531.850, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # A-VG23-0104 Car seal valve South
+    "A-VG23-0104": Pose(
+        position=Position(x=323.073, y=101.064, z=531.850, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=-0.707, w=0.707, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # A-VG40-0367 Car seal valve North
+    "A-VG40-0367": Pose(
+        position=Position(x=332.231, y=92.935, z=531.850, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.707, w=0.707, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # A-VM23-0399 Car seal valve South
+    "A-VM23-0399": Pose(
+        position=Position(x=344.574, y=88.770, z=531.850, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=-0.707, w=0.707, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # A-VB24-0032 Car seal valve South
+    "A-VB24-0032": Pose(
+        position=Position(x=341.830, y=90.141, z=531.850, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=-0.707, w=0.707, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
 }
