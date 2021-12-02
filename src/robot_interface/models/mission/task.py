@@ -68,7 +68,7 @@ class DriveToPose(MotionTask):
     """
 
     pose: Pose
-    task_name: Literal["drive_to_pose"] = "drive_to_pose"
+    name: Literal["drive_to_pose"] = "drive_to_pose"
 
 
 @dataclass
@@ -78,7 +78,7 @@ class DockingProcedure(MotionTask):
     """
 
     behavior: Literal["dock, undock"]
-    task_name: Literal["docking_procedure"] = "docking_procedure"
+    name: Literal["docking_procedure"] = "docking_procedure"
 
 
 @dataclass
@@ -88,7 +88,7 @@ class TakeImage(InspectionTask):
     """
 
     target: Position
-    task_name: Literal["take_image"] = "take_image"
+    name: Literal["take_image"] = "take_image"
     computed_joints: Optional[Joints] = None
     tag_id: Optional[str] = None
 
@@ -100,7 +100,7 @@ class TakeThermalImage(InspectionTask):
     """
 
     target: Position
-    task_name: Literal["take_thermal_image"] = "take_thermal_image"
+    name: Literal["take_thermal_image"] = "take_thermal_image"
     computed_joints: Optional[Joints] = None
     tag_id: Optional[str] = None
 

@@ -2,7 +2,7 @@
   "mission_id": 1,
   "mission_tasks": [
     {
-      "task_name": "drive_to_pose",
+      "name": "drive_to_pose",
       "pose": {
         "position": {
           "x": -2,
@@ -21,7 +21,7 @@
       }
     },
     {
-      "task_name": "take_image",
+      "name": "take_image",
       "target": {
         "x": 2,
         "y": 2,
@@ -30,7 +30,7 @@
       }
     },
     {
-      "task_name": "drive_to_pose",
+      "name": "drive_to_pose",
       "pose": {
         "position": {
           "x": -2,
@@ -49,7 +49,7 @@
       }
     },
     {
-      "task_name": "take_thermal_image",
+      "name": "take_thermal_image",
       "target": {
         "x": 2,
         "y": 2,
@@ -58,7 +58,7 @@
       }
     },
     {
-      "task_name": "drive_to_pose",
+      "name": "drive_to_pose",
       "pose": {
         "position": {
           "x": 2,
