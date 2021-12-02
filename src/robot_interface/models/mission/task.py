@@ -1,5 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal, Optional, Union
+from uuid import UUID, uuid4
 
 from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
@@ -11,6 +12,8 @@ class Task:
     """
     Base class for all tasks in a mission.
     """
+
+    id: UUID = field(default_factory=uuid4, init=False)
 
     def __str__(self):
         def add_indent(text: str) -> str:
