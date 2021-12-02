@@ -52,13 +52,12 @@ class Monitor(State):
 
             if self.state_machine.should_send_status():
                 self.state_machine.send_status()
-
             if not self.mission_status_thread:
                 self.mission_status_thread = ThreadedRequest(
                     self.state_machine.robot.mission_status
                 )
                 self.mission_status_thread.start_thread(
-                    self.state_machine.status.current_mission_instance_id
+                    self.state_machine.status.current_mission_task.id
                 )
 
             try:
@@ -75,7 +74,6 @@ class Monitor(State):
 
             if self._mission_finished(
                 mission_status=self.state_machine.status.mission_status,
-                instance_id=self.state_machine.status.current_mission_instance_id,
             ):
                 if isinstance(
                     self.state_machine.status.current_mission_task, DriveToPose
@@ -90,15 +88,11 @@ class Monitor(State):
 
         self.state_machine.to_next_state(next_state)
 
-    def _mission_finished(
-        self, mission_status: MissionStatus, instance_id: int
-    ) -> bool:
+    def _mission_finished(self, mission_status: MissionStatus) -> bool:
         if mission_status == MissionStatus.Unexpected:
-            self.logger.error(
-                f"Mission status on task {instance_id} returned and unexpected status string"
-            )
+            self.logger.error("Mission status returned an unexpected status string")
         elif mission_status == MissionStatus.Failed:
-            self.logger.warning(f"Mission instance {instance_id} failed...")
+            self.logger.warning("Mission failed...")
             return True
         elif mission_status == MissionStatus.Completed:
             return True
@@ -107,7 +101,6 @@ class Monitor(State):
     def _log_status(self, mission_status: MissionStatus):
         if self.iteration_counter % self.log_interval == 0:
             self.state_machine.robot.log_status(
-                mission_id=self.state_machine.status.current_mission_instance_id,
                 mission_status=mission_status,
                 current_task=self.state_machine.status.current_mission_task,
             )

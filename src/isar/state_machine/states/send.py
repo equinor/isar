@@ -70,7 +70,6 @@ class Send(State):
             try:
                 (
                     send_success,
-                    mission_instance_id,
                     computed_joints,
                 ) = self.send_thread.get_output()
             except ThreadedRequestNotFinishedError:
@@ -78,13 +77,9 @@ class Send(State):
                 continue
             except ThreadedRequestUnexpectedError:
                 send_success = False
-                mission_instance_id = None
                 computed_joints = None
 
             if send_success:
-                self.state_machine.status.current_mission_instance_id = (
-                    mission_instance_id
-                )
                 if isinstance(
                     self.state_machine.status.current_mission_task,
                     (TakeImage, TakeThermalImage),

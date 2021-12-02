@@ -54,12 +54,11 @@ class Collect(State):
                 self.state_machine.send_status()
 
             if not self.collect_thread:
-                instance_id: Any = self.state_machine.status.current_mission_instance_id
                 current_task: Task = self.state_machine.status.current_mission_task
                 self.collect_thread = ThreadedRequest(
                     self.state_machine.robot.get_inspection_references
                 )
-                self.collect_thread.start_thread(instance_id, current_task)
+                self.collect_thread.start_thread(current_task)
 
             try:
                 inspections: Sequence[Inspection] = self.collect_thread.get_output()
