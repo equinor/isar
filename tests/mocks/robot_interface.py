@@ -14,7 +14,7 @@ from robot_interface.models.inspection.inspection import (
 )
 from robot_interface.models.inspection.metadata import ImageMetadata
 from robot_interface.models.inspection.references import ImageReference
-from robot_interface.models.mission import MissionStatus, Task
+from robot_interface.models.mission import TaskStatus, Task
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -23,7 +23,7 @@ class MockRobot(RobotInterface):
         self,
         schedule_task: Tuple[bool, Optional[Joints]] = (True, None),
         mission_scheduled: bool = False,
-        mission_status: MissionStatus = MissionStatus.Completed,
+        task_status: TaskStatus = TaskStatus.Completed,
         abort_mission: bool = True,
         pose: Pose = Pose(
             position=Position(x=0, y=0, z=0, frame=Frame.Robot),
@@ -33,7 +33,7 @@ class MockRobot(RobotInterface):
     ):
         self.schedule_task_return_value: Tuple[bool, Optional[Joints]] = schedule_task
         self.mission_scheduled_return_value: bool = mission_scheduled
-        self.mission_status_return_value: MissionStatus = mission_status
+        self.task_status_return_value: TaskStatus = task_status
         self.abort_mission_return_value: bool = abort_mission
         self.robot_pose_return_value: Pose = pose
 
@@ -43,13 +43,13 @@ class MockRobot(RobotInterface):
     def mission_scheduled(self) -> bool:
         return self.mission_scheduled_return_value
 
-    def mission_status(self, mission_id: Any) -> MissionStatus:
-        return self.mission_status_return_value
+    def task_status(self, mission_id: Any) -> TaskStatus:
+        return self.task_status_return_value
 
     def abort_mission(self) -> bool:
         return self.abort_mission_return_value
 
-    def log_status(self, mission_status: MissionStatus, current_task: Task):
+    def log_status(self, task_status: TaskStatus, current_task: Task):
         pass
 
     def get_inspection_references(self, current_task: Task) -> Sequence[Inspection]:
