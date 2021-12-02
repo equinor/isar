@@ -8,7 +8,7 @@ from tests.mocks.task import MockTask
 
 def mock_status(
     mission_in_progress: bool = True,
-    current_mission_task: Task = MockTask.take_image_in_coordinate_direction(),
+    current_task: Task = MockTask.take_image_in_coordinate_direction(),
     mission_status: MissionStatus = MissionStatus.Scheduled,
     current_state: States = States.Idle,
     mission_schedule: Mission = mock_mission_definition(),
@@ -16,7 +16,7 @@ def mock_status(
     scheduled_status = Status(
         mission_status=mission_status,
         mission_in_progress=mission_in_progress,
-        current_mission_task=current_mission_task,
+        current_task=current_task,
         mission_schedule=mission_schedule,
         current_state=current_state,
     )

@@ -54,7 +54,7 @@ class Collect(State):
                 self.state_machine.send_status()
 
             if not self.collect_thread:
-                current_task: Task = self.state_machine.status.current_mission_task
+                current_task: Task = self.state_machine.status.current_task
                 self.collect_thread = ThreadedRequest(
                     self.state_machine.robot.get_inspection_references
                 )
