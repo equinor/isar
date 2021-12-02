@@ -1,6 +1,5 @@
-import logging
 from datetime import datetime
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Sequence, Tuple
 
 from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.geometry.joints import Joints
@@ -22,7 +21,7 @@ from robot_interface.robot_interface import RobotInterface
 class MockRobot(RobotInterface):
     def __init__(
         self,
-        schedule_task: Tuple[bool, Optional[Any], Optional[Joints]] = (True, 1, None),
+        schedule_task: Tuple[bool, Optional[Joints]] = (True, None),
         mission_scheduled: bool = False,
         mission_status: MissionStatus = MissionStatus.Completed,
         abort_mission: bool = True,
@@ -32,15 +31,13 @@ class MockRobot(RobotInterface):
             frame=Frame.Robot,
         ),
     ):
-        self.schedule_task_return_value: Tuple[
-            bool, Optional[Any], Optional[Joints]
-        ] = schedule_task
+        self.schedule_task_return_value: Tuple[bool, Optional[Joints]] = schedule_task
         self.mission_scheduled_return_value: bool = mission_scheduled
         self.mission_status_return_value: MissionStatus = mission_status
         self.abort_mission_return_value: bool = abort_mission
         self.robot_pose_return_value: Pose = pose
 
-    def schedule_task(self, task: Task) -> Tuple[bool, Optional[Any], Optional[Joints]]:
+    def schedule_task(self, task: Task) -> Tuple[bool, Optional[Joints]]:
         return self.schedule_task_return_value
 
     def mission_scheduled(self) -> bool:
@@ -52,15 +49,11 @@ class MockRobot(RobotInterface):
     def abort_mission(self) -> bool:
         return self.abort_mission_return_value
 
-    def log_status(
-        self, mission_id: Any, mission_status: MissionStatus, current_task: Task
-    ):
+    def log_status(self, mission_status: MissionStatus, current_task: Task):
         pass
 
-    def get_inspection_references(
-        self, vendor_mission_id: Any, current_task: Task
-    ) -> List[Inspection]:
-        return [ImageReference(vendor_mission_id, mock_image_metadata())]
+    def get_inspection_references(self, current_task: Task) -> Sequence[Inspection]:
+        return [ImageReference(id=current_task.id, metadata=mock_image_metadata())]  # type: ignore
 
     def download_inspection_result(self, inspection: Inspection) -> InspectionResult:
         return Image(

@@ -1,5 +1,6 @@
+from typing import Tuple
+
 from robot_interface.robot_interface import RobotInterface
-from typing import Tuple, List
 
 
 def interface_test(Robot: RobotInterface) -> None:

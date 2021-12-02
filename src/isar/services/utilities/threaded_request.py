@@ -1,4 +1,3 @@
-import time
 from threading import Lock, Thread
 from typing import Any, Optional
 

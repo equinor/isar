@@ -11,8 +11,8 @@ class RobotInterface(metaclass=ABCMeta):
     """Interface to communicate with robots."""
 
     @abstractmethod
-    def schedule_task(self, task: Task) -> Tuple[bool, Optional[Any], Optional[Joints]]:
-        """Schedules a Mission on the robot.
+    def schedule_task(self, task: Task) -> Tuple[bool, Optional[Joints]]:
+        """Schedules a Task on the robot.
 
         The method must adapt the standard mission to the
         specific robots mission planning.
@@ -20,12 +20,12 @@ class RobotInterface(metaclass=ABCMeta):
         Parameters
         ----------
         task : Task
-            Mission object describing the mission.
+            Task object describing the mission task.
 
         Returns
         -------
         bool
-            True if successful of scheduling a mission, false otherwise.
+            True if successful of scheduling a task, false otherwise.
         """
         raise NotImplementedError
 
@@ -45,12 +45,12 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def mission_status(self, mission_id: Any) -> MissionStatus:
-        """Retrieves status of the current executing mission for the robot.
+        """Retrieves status of the current executing mission task for the robot.
 
         Parameters
         ----------
         mission_id : Any
-            Unique identifier for the mission which the status should be checked for
+            Unique identifier for the mission task which the status should be checked for.
 
         Returns
         -------
@@ -74,15 +74,11 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def log_status(
-        self, mission_id: Any, mission_status: MissionStatus, current_task: Task
-    ) -> None:
+    def log_status(self, mission_status: MissionStatus, current_task: Task) -> None:
         """Logs the status of the executing mission that is being monitored.
 
         Parameters
         ----------
-        mission_id : Any
-            Unique identifier for the current executing mission on the robot.
         mission_status : MissionStatus
             Current status of the mission.
         current_task : Task
@@ -92,15 +88,11 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_inspection_references(
-        self, vendor_mission_id: Any, current_task: Task
-    ) -> Sequence[Inspection]:
-        """Returns inspection references.
+    def get_inspection_references(self, current_task: Task) -> Sequence[Inspection]:
+        """Returns inspection references of the inspections in the given task.
 
         Parameters
         ----------
-        vendor_mission_id : Any
-            Indicates the vendor id of a mission.
         current_task : Task
             The current executing mission task.
 
