@@ -483,4 +483,11 @@ predefined_poses = {
         orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Robot),
         frame=Frame.Robot,
     ),
+    # Home on JS intermediate deck
+    #  Fire extinguisher east heading
+    "A-72SP102": Pose(
+        position=Position(x=17, y=10.9, z=0, frame=Frame.Robot),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Robot),
+        frame=Frame.Robot,
+    ),
 }

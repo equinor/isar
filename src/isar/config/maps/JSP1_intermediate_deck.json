@@ -1,0 +1,49 @@
+{
+  "map_name": "JSP1_intermediate_deck",
+  "robot_reference_points": {
+    "points": [
+      {
+        "x": 40.1748,
+        "y": 8.6264,
+        "z": 0.0,
+        "frame": "robot"
+      },
+      {
+        "x": 8.1671,
+        "y": 8.6014,
+        "z": 0.0,
+        "frame": "robot"
+      },
+      {
+        "x": 26.77935,
+        "y": 46.61769,
+        "z": 0.0,
+        "frame": "robot"
+      }
+    ],
+    "frame": "robot"
+  },
+  "asset_reference_points": {
+    "points": [
+      {
+        "x": 353.737,
+        "y": 81.021,
+        "z": 531.8,
+        "frame": "asset"
+      },
+      {
+        "x": 321.683,
+        "y": 80.934,
+        "z": 531.8,
+        "frame": "asset"
+      },
+      {
+        "x": 340.197,
+        "y": 118.986,
+        "z": 531.8,
+        "frame": "asset"
+      }
+    ],
+    "frame": "asset"
+  }
+}
