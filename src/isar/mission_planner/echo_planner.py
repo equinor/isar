@@ -47,7 +47,7 @@ class EchoPlanner(MissionPlannerInterface):
         mission_plan: dict = self._mission_plan(mission_id)
 
         mission_tags: List[dict] = mission_plan["planItems"]
-        mission: Mission = Mission(mission_tasks=[])
+        mission: Mission = Mission(tasks=[])
 
         for tag in mission_tags:
             tag_name: str = tag["tag"]
@@ -61,9 +61,9 @@ class EchoPlanner(MissionPlannerInterface):
                 self.logger.error(e)
                 continue
 
-            mission.mission_tasks.append(drive_task)
+            mission.tasks.append(drive_task)
             for measurement_task in measurement_tasks:
-                mission.mission_tasks.append(measurement_task)
+                mission.tasks.append(measurement_task)
 
         mission.mission_metadata.update_metadata(mission_plan)
 

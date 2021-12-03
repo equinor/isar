@@ -28,9 +28,9 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
             None,
             Position(x=1, y=1, z=0, frame=Frame.Asset),
             {
-                "mission_tasks": 3,
-                "mission_task_1_type": DriveToPose,
-                "mission_task_2_type": TakeThermalImage,
+                "tasks": 3,
+                "task_1_type": DriveToPose,
+                "task_2_type": TakeThermalImage,
             },
         ),
         (
@@ -49,9 +49,9 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
             None,
             Position(x=1, y=1, z=0, frame=Frame.Asset),
             {
-                "mission_tasks": 2,
-                "mission_task_1_type": DriveToPose,
-                "mission_task_2_type": TakeImage,
+                "tasks": 2,
+                "task_1_type": DriveToPose,
+                "task_2_type": TakeImage,
             },
         ),
         (
@@ -70,9 +70,9 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
             RequestException,
             Position(x=1, y=1, z=0, frame=Frame.Asset),
             {
-                "mission_tasks": 0,
-                "mission_task_1_type": None,
-                "mission_task_2_type": None,
+                "tasks": 0,
+                "task_1_type": None,
+                "task_2_type": None,
             },
         ),
     ],
@@ -94,11 +94,7 @@ def test_get_echo_mission(
         side_effect=mock_stid_side_effect,
     )
     mission: Mission = echo_service.get_mission(mission_id=id)
-    assert len(mission.mission_tasks) == expected_return["mission_tasks"]
-    if not len(mission.mission_tasks) == 0:
-        assert isinstance(
-            mission.mission_tasks[0], expected_return["mission_task_1_type"]
-        )
-        assert isinstance(
-            mission.mission_tasks[1], expected_return["mission_task_2_type"]
-        )
+    assert len(mission.tasks) == expected_return["tasks"]
+    if not len(mission.tasks) == 0:
+        assert isinstance(mission.tasks[0], expected_return["task_1_type"])
+        assert isinstance(mission.tasks[1], expected_return["task_2_type"])

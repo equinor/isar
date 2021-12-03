@@ -1,6 +1,6 @@
 {
   "id": 1,
-  "mission_tasks": [
+  "tasks": [
     {
       "name": "take_thermal_image",
       "target": {
