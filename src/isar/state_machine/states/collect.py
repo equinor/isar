@@ -75,7 +75,7 @@ class Collect(State):
                     time_indexed_pose=inspection_ref.metadata.time_indexed_pose
                 )
 
-            self.state_machine.status.mission_schedule.inspections.extend(inspections)
+            self.state_machine.status.scheduled_mission.inspections.extend(inspections)
 
             next_state: States = States.Send
             self.collect_thread = None

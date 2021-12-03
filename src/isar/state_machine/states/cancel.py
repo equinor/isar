@@ -27,16 +27,16 @@ class Cancel(State):
         self.state_machine.update_status()
         self.logger.info(f"State: {self.state_machine.status.current_state}")
 
-        if self.state_machine.status.mission_schedule.inspections:
+        if self.state_machine.status.scheduled_mission.inspections:
             for (
                 inspection_ref
-            ) in self.state_machine.status.mission_schedule.inspections:
+            ) in self.state_machine.status.scheduled_mission.inspections:
                 result: Optional[
                     InspectionResult
                 ] = self.state_machine.robot.download_inspection_result(inspection_ref)
                 if result:
                     self.storage_service.store(
-                        self.state_machine.status.mission_schedule.id,
+                        self.state_machine.status.scheduled_mission.id,
                         result,
                     )
                 else:
@@ -46,7 +46,7 @@ class Cancel(State):
                     )
 
             self.storage_service.store_metadata(
-                self.state_machine.status.mission_schedule
+                self.state_machine.status.scheduled_mission
             )
 
         next_state = self.state_machine.reset_state_machine()
