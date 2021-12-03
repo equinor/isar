@@ -30,7 +30,7 @@ class Idle(State):
     def _run(self):
         while True:
             time.sleep(self.state_machine.sleep_time)
-            if self.state_machine.should_stop():
+            if self.state_machine.should_stop_mission():
                 self.state_machine.stop_mission()
 
             next_state: States = self._get_next_state()

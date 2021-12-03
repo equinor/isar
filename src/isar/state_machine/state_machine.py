@@ -188,13 +188,13 @@ class StateMachine(object):
         self.queues.start_mission.output.put(deepcopy(StartMissionMessages.success()))
         self.logger.info(StartMissionMessages.success())
 
-    def should_stop(self) -> bool:
-        """Determines if state machine should be stopped.
+    def should_stop_mission(self) -> bool:
+        """Determines if the running mission should be stopped.
 
         Returns
         -------
         bool
-            True if stop signal sent and mission in progress, false otherwise.
+            True if stop signal is sent and mission is in progress, false otherwise.
 
         """
         try:
