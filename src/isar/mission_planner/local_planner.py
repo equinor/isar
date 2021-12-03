@@ -109,11 +109,3 @@ class LocalPlanner(MissionPlannerInterface):
                 }
             )
         return {"missions": predefined_missions}
-
-    def mission_id_valid(self, mission_id: int) -> bool:
-        mission_list_dict = self.get_predefined_missions()
-        if mission_id in mission_list_dict:
-            return True
-        else:
-            logger.error(f"Mission ID: {mission_id} does not exist")
-            return False

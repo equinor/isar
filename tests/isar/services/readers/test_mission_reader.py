@@ -49,27 +49,9 @@ def test_get_mission_by_id(mission_reader, mission_id, expected_output):
     "mission_id",
     [12345, None, config],
 )
-def test_get_misison_by_invalid_id(mission_reader, mission_id):
+def test_get_mission_by_invalid_id(mission_reader, mission_id):
     with pytest.raises(Exception):
         mission_reader.get_mission_by_id(mission_id)
-
-
-@pytest.mark.parametrize(
-    "mission_id ,expected_output",
-    [(1, True), (12345, False), (None, False)],
-)
-def test_is_mission_id_valid(mission_reader, mission_id, expected_output):
-    output = mission_reader.mission_id_valid(mission_id)
-    assert output == expected_output
-
-
-@pytest.mark.parametrize(
-    "mission_id",
-    [config],
-)
-def test_mission_id_is_invalid(mission_reader, mission_id):
-    with pytest.raises(Exception):
-        mission_reader.mission_id_valid(mission_id)
 
 
 def test_valid_predefined_missions_files(mission_reader):
