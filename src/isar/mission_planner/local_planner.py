@@ -50,7 +50,7 @@ class LocalPlanner(MissionPlannerInterface):
             ) from e
 
     @staticmethod
-    def read_mission_from_file(mission_path: Path) -> Optional[Mission]:
+    def read_mission_from_file(mission_path: Path) -> Mission:
         mission_dict: dict = BaseReader.read_json(location=mission_path)
         mission: Mission = BaseReader.dict_to_dataclass(
             dataclass_dict=mission_dict,
@@ -96,19 +96,19 @@ class LocalPlanner(MissionPlannerInterface):
                 }
         return missions
 
-    def list_predefined_missions(self) -> Optional[dict]:
-        mission_list_dict = self.get_predefined_missions()
-        predefined_mission_list = []
-        for mission_id, current_mission in mission_list_dict.items():
-            predefined_mission_list.append(
+    def list_predefined_missions(self) -> dict:
+        missions: dict = self.get_predefined_missions()
+        predefined_missions: list = []
+        for id, mission in missions.items():
+            predefined_missions.append(
                 {
-                    "id": mission_id,
-                    "name": current_mission["name"],
-                    "file": current_mission["file"],
+                    "id": id,
+                    "name": mission["name"],
+                    "file": mission["file"],
                     "tasks": asdict(mission["mission"])["tasks"],
                 }
             )
-        return {"missions": predefined_mission_list}
+        return {"missions": predefined_missions}
 
     def mission_id_valid(self, mission_id: int) -> bool:
         mission_list_dict = self.get_predefined_missions()
