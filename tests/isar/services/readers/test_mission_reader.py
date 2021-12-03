@@ -20,7 +20,7 @@ from tests.utilities import Utilities
     ],
 )
 def test_get_mission(mission_reader, mission_path, expected_output):
-    output = mission_reader.read_mission_from_file(mission_path)
+    output: Mission = mission_reader.read_mission_from_file(mission_path)
     assert Utilities.compare_two_arguments(output, expected_output)
 
 
@@ -83,7 +83,7 @@ def test_valid_predefined_missions_files(mission_reader):
     )
     for file in predefined_mission_folder.glob("*.json"):
         path_to_file = predefined_mission_folder.joinpath(file.name)
-        mission = mission_reader.read_mission_from_file(path_to_file)
+        mission: Mission = mission_reader.read_mission_from_file(path_to_file)
         assert mission is not None
 
 
