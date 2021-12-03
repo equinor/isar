@@ -83,7 +83,7 @@ class Send(State):
                     self.state_machine.status.current_task.computed_joints = (
                         computed_joints
                     )
-                self.state_machine.status.mission_schedule.mission_tasks.pop(0)
+                self.state_machine.status.mission_schedule.tasks.pop(0)
                 next_state = States.Monitor
                 break
             else:
@@ -103,4 +103,4 @@ class Send(State):
         self.state_machine.to_next_state(next_state)
 
     def _get_current_mission(self) -> Task:
-        return self.state_machine.status.mission_schedule.mission_tasks[0]
+        return self.state_machine.status.mission_schedule.tasks[0]

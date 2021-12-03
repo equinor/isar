@@ -34,14 +34,14 @@ class LocalPlanner(MissionPlannerInterface):
         try:
             mission: Mission = missions[mission_id]["mission"]
             mission.set_unique_id_and_metadata()
-            for mission_task in mission.mission_tasks:
-                if isinstance(mission_task, DriveToPose):
-                    mission_task.pose = self.transform.transform_pose(
-                        mission_task.pose, to_=Frame.Robot
+            for task in mission.tasks:
+                if isinstance(task, DriveToPose):
+                    task.pose = self.transform.transform_pose(
+                        task.pose, to_=Frame.Robot
                     )
-                elif isinstance(mission_task, (TakeImage, TakeThermalImage)):
-                    mission_task.target = self.transform.transform_position(
-                        mission_task.target, to_=Frame.Robot
+                elif isinstance(task, (TakeImage, TakeThermalImage)):
+                    task.target = self.transform.transform_position(
+                        task.target, to_=Frame.Robot
                     )
             return mission
         except Exception as e:
@@ -105,9 +105,7 @@ class LocalPlanner(MissionPlannerInterface):
                     "id": mission_id,
                     "name": current_mission["name"],
                     "file": current_mission["file"],
-                    "mission_tasks": asdict(current_mission["mission"])[
-                        "mission_tasks"
-                    ],
+                    "tasks": asdict(mission["mission"])["tasks"],
                 }
             )
         return {"missions": predefined_mission_list}

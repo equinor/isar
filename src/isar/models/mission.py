@@ -11,7 +11,7 @@ from robot_interface.models.mission import TASKS
 
 @dataclass
 class Mission:
-    mission_tasks: List[TASKS]
+    tasks: List[TASKS]
     id: Union[UUID, int, str, None] = None
     inspections: List[Inspection] = field(default_factory=list)
     mission_metadata: MissionMetadata = None

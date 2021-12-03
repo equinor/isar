@@ -5,7 +5,7 @@ from tests.mocks.task import MockTask
 
 default_mission = Mission(
     id="default_mission",
-    mission_tasks=[
+    tasks=[
         MockTask.take_image_in_coordinate_direction(),
         MockTask.drive_to(),
         MockTask.take_image_in_coordinate_direction(),
@@ -15,7 +15,7 @@ default_mission = Mission(
 
 long_mission = Mission(
     id="long_mission",
-    mission_tasks=[
+    tasks=[
         MockTask.take_image_in_coordinate_direction(),
         MockTask.take_image_in_coordinate_direction(),
         MockTask.drive_to(),
@@ -26,7 +26,7 @@ long_mission = Mission(
 )
 
 
-empty_mission = Mission(id=None, mission_tasks=[])
+empty_mission = Mission(id=None, tasks=[])
 
 
 mission_name_typehints = Literal["default_mission", "empty_mission", "long_mission"]
