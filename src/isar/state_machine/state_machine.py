@@ -78,7 +78,7 @@ class StateMachine(object):
             task_status=None,
             mission_in_progress=False,
             current_task=None,
-            mission_schedule=Mission(tasks=[]),
+            scheduled_mission=Mission(tasks=[]),
             current_state=States(self.state),  # type: ignore
         )
 
@@ -132,7 +132,7 @@ class StateMachine(object):
         self.status.task_status = None
         self.status.mission_in_progress = False
         self.status.current_task = None
-        self.status.mission_schedule = Mission(tasks=[])
+        self.status.scheduled_mission = Mission(tasks=[])
 
         return States.Idle
 
@@ -184,7 +184,7 @@ class StateMachine(object):
     def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
         self.status.mission_in_progress = True
-        self.status.mission_schedule = mission
+        self.status.scheduled_mission = mission
         self.queues.start_mission.output.put(deepcopy(StartMissionMessages.success()))
         self.logger.info(StartMissionMessages.success())
 

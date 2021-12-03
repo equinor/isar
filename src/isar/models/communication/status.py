@@ -11,5 +11,5 @@ class Status:
     task_status: Optional[TaskStatus]
     mission_in_progress: bool
     current_task: Optional[Task]
-    mission_schedule: Mission
+    scheduled_mission: Mission
     current_state: States
