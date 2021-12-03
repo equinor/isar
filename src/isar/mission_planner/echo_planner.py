@@ -65,7 +65,7 @@ class EchoPlanner(MissionPlannerInterface):
             for measurement_task in measurement_tasks:
                 mission.tasks.append(measurement_task)
 
-        mission.mission_metadata.update_metadata(mission_plan)
+        mission.metadata.update_metadata(mission_plan)
 
         return mission
 

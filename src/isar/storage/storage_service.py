@@ -164,7 +164,7 @@ class StorageService:
             ]
 
     def store_metadata_for_mission(self, mission: Mission) -> None:
-        mission_metadata: MissionMetadata = mission.mission_metadata
+        mission_metadata: MissionMetadata = mission.metadata
         mission_metadata.required_metadata.url = (
             f"{config.get('service_connections', 'blob_storage_account_url')}/"
             f"{config.get('service_connections', 'blob_container')}/{mission.id}"
@@ -207,11 +207,11 @@ class StorageService:
                 "mission_type": mission_metadata.recommended_metadata.mission_type,
             },
             "additional_metadata": {
-                "camera_type": mission.mission_metadata.additional_metadata.camera_type,
-                "mission_name": mission.mission_metadata.additional_metadata.mission_name,
-                "mission_created_at": mission.mission_metadata.additional_metadata.mission_created_at,
-                "mission_last_modified": mission.mission_metadata.additional_metadata.mission_last_modified,
-                "robot_operator": mission.mission_metadata.additional_metadata.robot_operator,
+                "camera_type": mission.metadata.additional_metadata.camera_type,
+                "mission_name": mission.metadata.additional_metadata.mission_name,
+                "mission_created_at": mission.metadata.additional_metadata.mission_created_at,
+                "mission_last_modified": mission.metadata.additional_metadata.mission_last_modified,
+                "robot_operator": mission.metadata.additional_metadata.robot_operator,
             },
             "data": data_structure_dicts,
         }
