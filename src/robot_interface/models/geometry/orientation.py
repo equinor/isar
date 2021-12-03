@@ -36,7 +36,11 @@ class Orientation:
             return True
         return False
 
-    def as_euler(self, degrees: bool = False) -> list:
+    def as_euler(
+        self,
+        degrees: bool = False,
+        wrap_angles: bool = False,
+    ) -> list:
         """
         Retrieve the orientation as yaw, pitch, roll Euler coordinates. This function uses the ZYX intrinsic rotations
         as standard convention.
@@ -55,10 +59,15 @@ class Orientation:
             .as_np_array()
             .tolist()
         )
+
+        if wrap_angles:
+            base = 360.0 if degrees else 2 * np.pi
+            euler = list(map(lambda angle: ((angle + base) % (base)), euler))
+
         return euler
 
-    def yaw(self, degrees: bool = False) -> float:
-        euler_angles: list = self.as_euler(degrees=degrees)
+    def yaw(self, degrees: bool = False, wrap_angles: bool = False) -> float:
+        euler_angles: list = self.as_euler(degrees=degrees, wrap_angles=wrap_angles)
         return euler_angles[0]
 
     def to_list(self) -> List[float]:
