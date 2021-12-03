@@ -55,7 +55,7 @@ class StorageService:
             VideoReference,
         ]:
             self.store_metadata_for_inspection_type(
-                mission_id=mission.mission_id,
+                mission_id=mission.id,
                 inspections=mission.inspections,
                 inspection_type=inspection_type,
             )
@@ -167,11 +167,11 @@ class StorageService:
         mission_metadata: MissionMetadata = mission.mission_metadata
         mission_metadata.required_metadata.url = (
             f"{config.get('service_connections', 'blob_storage_account_url')}/"
-            f"{config.get('service_connections', 'blob_container')}/{mission.mission_id}"
+            f"{config.get('service_connections', 'blob_container')}/{mission.id}"
         )
 
-        filename: str = f"{mission.mission_id}_META.json"
-        destination_path: Path = Path(f"{mission.mission_id}/{filename}")
+        filename: str = f"{mission.id}_META.json"
+        destination_path: Path = Path(f"{mission.id}/{filename}")
 
         inspection_types_used = set()
         for inspection in mission.inspections:
@@ -181,7 +181,7 @@ class StorageService:
         data_structure_dicts: List[dict] = [
             {
                 "folder": f"/sensor_data/{inspection_type_str}",
-                "navigation": f"/sensor_data/{inspection_type_str}/{mission.mission_id}_{inspection_type_str}_NAVI.json",
+                "navigation": f"/sensor_data/{inspection_type_str}/{mission.id}_{inspection_type_str}_NAVI.json",
             }
             for inspection_type_str in inspection_types_used
         ]

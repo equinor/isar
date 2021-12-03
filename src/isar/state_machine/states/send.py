@@ -50,7 +50,7 @@ class Send(State):
                 next_state: States = States.Cancel
                 break
 
-            if not self.state_machine.status.mission_schedule.mission_tasks:
+            if not self.state_machine.status.mission_schedule.tasks:
                 next_state: States = States.Cancel
                 break
 

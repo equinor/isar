@@ -58,7 +58,7 @@ def test_blob_storage_store_metadata():
     inspection: Inspection = ImageReference(INSPECTION_ID, ARBITRARY_IMAGE_METADATA)
     mission: Mission = Mission(
         mission_tasks=[],
-        mission_id=MISSION_ID,
+        id=MISSION_ID,
         inspections=[inspection],
         mission_metadata=MissionMetadata(MISSION_ID),
     )
