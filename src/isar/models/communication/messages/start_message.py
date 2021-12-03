@@ -50,11 +50,11 @@ class StartMissionMessages:
     @staticmethod
     def could_not_read_mission_id() -> StartMessage:
         return StartMessage(
-            started=False, message="Could not read mission_id parameter"
+            started=False, message="Could not read mission id parameter"
         )
 
     @staticmethod
     def invalid_mission_id(mission_id: int) -> StartMessage:
         return StartMessage(
-            started=False, message=f"No missions with mission_id {mission_id}"
+            started=False, message=f"No missions with mission id {mission_id}"
         )

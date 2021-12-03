@@ -33,7 +33,7 @@ class LocalPlanner(MissionPlannerInterface):
             raise MissionPlannerError("There were no predefined missions")
         try:
             mission: Mission = missions[mission_id]["mission"]
-            mission.set_unique_mission_id_and_metadata()
+            mission.set_unique_id_and_metadata()
             for mission_task in mission.mission_tasks:
                 if isinstance(mission_task, DriveToPose):
                     mission_task.pose = self.transform.transform_pose(
@@ -76,20 +76,20 @@ class LocalPlanner(MissionPlannerInterface):
                     f"Failed to read predefined mission {path_to_file} \n {e}"
                 )
                 continue
-            if mission.mission_id in invalid_mission_ids:
+            if mission.id in invalid_mission_ids:
                 logger.warning(
-                    f"Duplicate mission_id {mission.mission_id} : {path_to_file.as_posix()}"
+                    f"Duplicate mission id {mission.id} : {path_to_file.as_posix()}"
                 )
-            elif mission.mission_id in missions:
-                conflicting_file_path = missions[mission.mission_id]["file"]
+            elif mission.id in missions:
+                conflicting_file_path = missions[mission.id]["file"]
                 logger.warning(
-                    f"Duplicate mission_id {mission.mission_id} : {path_to_file.as_posix()}"
+                    f"Duplicate mission id {mission.id} : {path_to_file.as_posix()}"
                     + f" and {conflicting_file_path}"
                 )
-                invalid_mission_ids.append(mission.mission_id)
-                missions.pop(mission.mission_id)
+                invalid_mission_ids.append(mission.id)
+                missions.pop(mission.id)
             else:
-                missions[mission.mission_id] = {
+                missions[mission.id] = {
                     "name": mission_name,
                     "file": path_to_file.as_posix(),
                     "mission": mission,

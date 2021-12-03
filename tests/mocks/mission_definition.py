@@ -4,7 +4,7 @@ from isar.models.mission import Mission
 from tests.mocks.task import MockTask
 
 default_mission = Mission(
-    mission_id="default_mission",
+    id="default_mission",
     mission_tasks=[
         MockTask.take_image_in_coordinate_direction(),
         MockTask.drive_to(),
@@ -14,7 +14,7 @@ default_mission = Mission(
 )
 
 long_mission = Mission(
-    mission_id="long_mission",
+    id="long_mission",
     mission_tasks=[
         MockTask.take_image_in_coordinate_direction(),
         MockTask.take_image_in_coordinate_direction(),
@@ -26,7 +26,7 @@ long_mission = Mission(
 )
 
 
-empty_mission = Mission(mission_id=None, mission_tasks=[])
+empty_mission = Mission(id=None, mission_tasks=[])
 
 
 mission_name_typehints = Literal["default_mission", "empty_mission", "long_mission"]

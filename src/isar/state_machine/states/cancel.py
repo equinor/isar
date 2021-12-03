@@ -36,7 +36,7 @@ class Cancel(State):
                 ] = self.state_machine.robot.download_inspection_result(inspection_ref)
                 if result:
                     self.storage_service.store(
-                        self.state_machine.status.mission_schedule.mission_id,
+                        self.state_machine.status.mission_schedule.id,
                         result,
                     )
                 else:
