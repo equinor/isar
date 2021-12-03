@@ -43,7 +43,7 @@ class Send(State):
 
     def _run(self):
         while True:
-            if self.state_machine.should_stop():
+            if self.state_machine.should_stop_mission():
                 self.state_machine.stop_mission()
 
             if not self.state_machine.status.mission_in_progress:

@@ -103,11 +103,13 @@ def test_start_mission(state_machine):
         (None, True, False),
     ],
 )
-def test_should_stop(state_machine, should_stop, mission_in_progress, expected_output):
+def test_should_stop_mission(
+    state_machine, should_stop, mission_in_progress, expected_output
+):
     if should_stop is not None:
         state_machine.queues.stop_mission.input.put(should_stop)
     state_machine.status.mission_in_progress = mission_in_progress
-    start: bool = state_machine.should_stop()
+    start: bool = state_machine.should_stop_mission()
 
     assert start is expected_output
 
