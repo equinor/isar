@@ -1,6 +1,5 @@
-from fastapi.routing import APIRouter
-
 import pytest
+from fastapi.routing import APIRouter
 from fastapi.testclient import TestClient
 from injector import Injector
 
@@ -24,7 +23,6 @@ from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
-from isar.services.utilities.path_service import PathService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states import Collect, Idle, Monitor, Send
@@ -110,11 +108,6 @@ def access_token():
 @pytest.fixture()
 def runner(app):
     return app.test_cli_runner()
-
-
-@pytest.fixture()
-def path_service():
-    return PathService()
 
 
 @pytest.fixture()
