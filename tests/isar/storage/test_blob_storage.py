@@ -60,7 +60,7 @@ def test_blob_storage_store_metadata():
         tasks=[],
         id=MISSION_ID,
         inspections=[inspection],
-        mission_metadata=MissionMetadata(MISSION_ID),
+        metadata=MissionMetadata(MISSION_ID),
     )
 
     storage_service.store_metadata(mission=mission)

@@ -14,11 +14,11 @@ class Mission:
     tasks: List[TASKS]
     id: Union[UUID, int, str, None] = None
     inspections: List[Inspection] = field(default_factory=list)
-    mission_metadata: MissionMetadata = None
+    metadata: MissionMetadata = None
 
     def set_unique_id_and_metadata(self) -> None:
         self._set_unique_id()
-        self.mission_metadata = MissionMetadata(mission_id=self.id)
+        self.metadata = MissionMetadata(mission_id=self.id)
 
     def _set_unique_id(self) -> None:
         plant_short_name: str = config.get("metadata", "plant_short_name")
@@ -32,5 +32,5 @@ class Mission:
         if self.id is None:
             self._set_unique_id()
 
-        if self.mission_metadata is None:
-            self.mission_metadata = MissionMetadata(mission_id=self.id)
+        if self.metadata is None:
+            self.metadata = MissionMetadata(mission_id=self.id)
