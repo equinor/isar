@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any, List, Optional, Sequence, Tuple
+from uuid import UUID
 
 from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.geometry.joints import Joints
@@ -14,7 +15,7 @@ from robot_interface.models.inspection.inspection import (
 )
 from robot_interface.models.inspection.metadata import ImageMetadata
 from robot_interface.models.inspection.references import ImageReference
-from robot_interface.models.mission import TaskStatus, Task
+from robot_interface.models.mission import Task, TaskStatus
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -43,7 +44,7 @@ class MockRobot(RobotInterface):
     def mission_scheduled(self) -> bool:
         return self.mission_scheduled_return_value
 
-    def task_status(self, mission_id: Any) -> TaskStatus:
+    def task_status(self, task_id: Optional[UUID]) -> TaskStatus:
         return self.task_status_return_value
 
     def abort_mission(self) -> bool:
