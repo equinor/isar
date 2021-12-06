@@ -45,8 +45,9 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def task_status(self, task_id: UUID) -> TaskStatus:
-        """Retrieves status of the current executing mission task for the robot.
+    def task_status(self, task_id: Optional[UUID]) -> TaskStatus:
+        """Retrieves status of the task with the given id. If task id is not specified,
+        the status of the current executing mission task is returned.
 
         Parameters
         ----------
