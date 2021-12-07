@@ -191,7 +191,6 @@ def test_state_machine_with_successful_collection(injector, state_machine_thread
             States.Idle,
             States.Send,
             States.Monitor,
-            States.Collect,
             States.Send,
             States.Cancel,
             States.Idle,
@@ -209,11 +208,11 @@ def test_state_machine_with_unsuccessful_collection(
 ):
     storage_mock: StorageInterface = injector.get(StorageInterface)
 
+    mocker.patch.object(MockRobot, "get_inspections", return_value=[])
+
     task: TakeImage = MockTask.take_image_in_coordinate_direction()
     mission: Mission = Mission([task])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-
-    mocker.patch.object(MockRobot, "get_inspection_references", return_value=None)
 
     message, _ = scheduling_utilities.start_mission(mission=mission)
     assert message.started
@@ -223,7 +222,6 @@ def test_state_machine_with_unsuccessful_collection(
             States.Idle,
             States.Send,
             States.Monitor,
-            States.Collect,
             States.Send,
             States.Cancel,
             States.Idle,

@@ -54,7 +54,7 @@ class StorageService:
             return "thermal"
         else:
             raise TypeError(
-                "Inspection must be either Audio, Image, Video or a Reference to one of them"
+                f"Inspection must be either Audio, Image, Video or a Reference to one of them. Got {type(result)}"
             )
 
     def get_inspection_filename(

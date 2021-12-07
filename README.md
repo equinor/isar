@@ -27,7 +27,6 @@ main states are:
 - Send: The state machine has received a mission and is sending the mission to the robot.
 - Monitor: The robot has received a mission from the state machine, and the state machine is monitoring the current
   mission.
-- Collect: The state collects data during a mission.
 - Cancel: The state machine has received a request to abort, or an event has occurred which requires the mission to be
   canceled. The cancel state also functions as a wrap-up state when a mission is finished, prior to the state machine
   returning to idle.

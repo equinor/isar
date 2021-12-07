@@ -19,49 +19,33 @@ from robot_interface.robot_interface import RobotInterface
 class MockRobot(RobotInterface):
     def __init__(
         self,
-        schedule_task: bool = True,
-        mission_scheduled: bool = False,
+        initiate_task: bool = True,
         task_status: TaskStatus = TaskStatus.Completed,
-        abort_mission: bool = True,
+        stop: bool = True,
         pose: Pose = Pose(
             position=Position(x=0, y=0, z=0, frame=Frame.Robot),
             orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Robot),
             frame=Frame.Robot,
         ),
     ):
-        self.schedule_task_return_value: bool = schedule_task
-        self.mission_scheduled_return_value: bool = mission_scheduled
+        self.initiate_task_return_value: bool = initiate_task
         self.task_status_return_value: TaskStatus = task_status
-        self.abort_mission_return_value: bool = abort_mission
+        self.stop_return_value: bool = stop
         self.robot_pose_return_value: Pose = pose
 
-    def schedule_task(self, task: Task) -> bool:
-        return self.schedule_task_return_value
+    def initiate_task(self, task: Task) -> None:
+        return
 
-    def mission_scheduled(self) -> bool:
-        return self.mission_scheduled_return_value
-
-    def task_status(self, task_id: Optional[UUID]) -> TaskStatus:
+    def task_status(self) -> TaskStatus:
         return self.task_status_return_value
 
-    def abort_mission(self) -> bool:
-        return self.abort_mission_return_value
+    def stop(self) -> None:
+        return
 
-    def log_status(self, task_status: TaskStatus, current_task: Task):
-        pass
-
-    def get_inspection_references(
-        self, inspection_task: InspectionTask
-    ) -> Sequence[Inspection]:
-        return [Image(metadata=mock_image_metadata())]
-
-    def download_inspection_result(self, inspection: Inspection) -> Inspection:
+    def get_inspections(self, task: InspectionTask) -> Sequence[Inspection]:
         image: Image = Image(mock_image_metadata())
         image.data = b"Some binary image data"
-        return image
-
-    def robot_pose(self) -> Pose:
-        return self.robot_pose_return_value
+        return [image]
 
 
 def mock_image_metadata() -> ImageMetadata:
