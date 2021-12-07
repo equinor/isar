@@ -25,7 +25,7 @@ from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
-from isar.state_machine.states import Collect, Idle, Monitor, Send
+from isar.state_machine.states import Idle, Monitor, Send
 from isar.storage.storage_service import StorageService
 from tests.mocks.robot_interface import MockRobot
 from tests.test_modules import (
@@ -138,11 +138,6 @@ def send(state_machine):
 @pytest.fixture()
 def monitor(state_machine):
     return Monitor(state_machine)
-
-
-@pytest.fixture()
-def collect(state_machine, injector):
-    return Collect(state_machine, injector.get(Transformation))
 
 
 @pytest.fixture()

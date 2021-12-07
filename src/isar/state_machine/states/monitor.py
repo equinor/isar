@@ -8,10 +8,10 @@ from transitions import State
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
-    ThreadedRequestUnexpectedError,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission import DriveToPose, TaskStatus
+from robot_interface.models.mission import TaskStatus
+from robot_interface.models.exceptions import RobotException
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -56,26 +56,20 @@ class Monitor(State):
                 self.task_status_thread = ThreadedRequest(
                     self.state_machine.robot.task_status
                 )
-                self.task_status_thread.start_thread(self.state_machine.current_task.id)
+                self.task_status_thread.start_thread()
 
             try:
                 task_status = self.task_status_thread.get_output()
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
-            except ThreadedRequestUnexpectedError:
+            except RobotException:
                 task_status = TaskStatus.Unexpected
 
             self.state_machine.current_task.status = task_status
 
-            self._log_status()
-
             if self._task_completed(task_status=self.state_machine.current_task.status):
-                if isinstance(self.state_machine.current_task, DriveToPose):
-
-                    next_state = States.Send
-                else:
-                    next_state = States.Collect
+                next_state = States.Send
                 break
             else:
                 self.task_status_thread = None
@@ -93,11 +87,3 @@ class Monitor(State):
         elif task_status == TaskStatus.Completed:
             return True
         return False
-
-    def _log_status(self):
-        if self.iteration_counter % self.log_interval == 0:
-            self.state_machine.robot.log_status(
-                task_status=self.state_machine.current_task.status,
-                current_task=self.state_machine.current_task,
-            )
-        self.iteration_counter += 1

@@ -2,7 +2,7 @@ import logging
 import queue
 from collections import deque
 from copy import deepcopy
-from typing import Any, Deque, Optional, Tuple
+from typing import Deque, Optional, Tuple
 
 from injector import Injector, inject
 from transitions import Machine
@@ -18,12 +18,13 @@ from isar.models.communication.queues.queues import Queues
 from isar.models.communication.status import Status
 from isar.models.mission import Mission
 from isar.services.coordinates.transformation import Transformation
-from isar.state_machine.states import Cancel, Collect, Idle, Monitor, Off, Send
+from isar.state_machine.states import Cancel, Idle, Monitor, Off, Send
 from isar.state_machine.states_enum import States
 from isar.storage.storage_service import StorageService
 from robot_interface.models.mission.status import TaskStatus
 from robot_interface.models.mission.task import Task
 from robot_interface.robot_interface import RobotInterface
+from robot_interface.models.exceptions import RobotException
 
 
 class StateMachine(object):
@@ -37,6 +38,9 @@ class StateMachine(object):
         storage_service: StorageService,
         transform: Transformation,
         sleep_time: float = config.getfloat("DEFAULT", "fsm_sleep_time"),
+        stop_robot_attempts_limit: int = config.getint(
+            "DEFAULT", "stop_robot_attempts_limit"
+        ),
         transitions_log_length: int = config.getint(
             "DEFAULT", "state_transitions_log_length"
         ),
@@ -53,6 +57,8 @@ class StateMachine(object):
             Instance of StorageService.
         sleep_time : float
             Time to sleep in between state machine iterations.
+        stop_robot_attempts_limit : int
+            Maximum attempts to stop the robot when stop command is received
         transitions_log_length : int
             Length of state transition log list.
 
@@ -67,8 +73,7 @@ class StateMachine(object):
             Idle(self),
             Send(self),
             Monitor(self),
-            Collect(self, transform),
-            Cancel(self, storage_service),
+            Cancel(self, transform, storage_service),
         ]
         self.machine = Machine(
             self,
@@ -76,6 +81,7 @@ class StateMachine(object):
             initial="off",
             queued=True,
         )
+        self.stop_robot_attempts_limit = stop_robot_attempts_limit
         self.sleep_time = sleep_time
 
         self.mission_in_progress: bool = False
@@ -111,8 +117,6 @@ class StateMachine(object):
             self.to_monitor()
         elif next_state == States.Cancel:
             self.to_cancel()
-        elif next_state == States.Collect:
-            self.to_collect()
         else:
             self.logger.error("Not valid state direction.")
 
@@ -233,6 +237,18 @@ class StateMachine(object):
 
     def stop_mission(self):
         """Stops a mission in progress."""
+        stop_attempts = 0
+        while True:
+            try:
+                self.robot.stop()
+                break
+            except RobotException:
+                stop_attempts += 1
+                if stop_attempts < self.stop_robot_attempts_limit:
+                    continue
+                self.logger.warning("Failed to stop the robot within maximum attempts!")
+                break
+
         self.mission_in_progress = False
         message: StopMessage = StopMissionMessages.success()
         self.queues.stop_mission.output.put(deepcopy(message))

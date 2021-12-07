@@ -69,6 +69,15 @@ class MotionTask(Task):
 
 
 @dataclass
+class ContinousInspectionTask(Task):
+    """
+    Base class for all continous inspection tasks which produce a result to be uploaded.
+    """
+
+    pass
+
+
+@dataclass
 class DriveToPose(MotionTask):
     """
     Task which causes the robot to move to the given pose.

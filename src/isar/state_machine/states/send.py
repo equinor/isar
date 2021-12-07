@@ -8,10 +8,10 @@ from isar.config import config
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
-    ThreadedRequestUnexpectedError,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import TaskStatus
+from robot_interface.models.exceptions import RobotException
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -70,16 +70,17 @@ class Send(State):
 
             if not self.send_thread:
                 self.send_thread = ThreadedRequest(
-                    self.state_machine.robot.schedule_task
+                    self.state_machine.robot.initiate_task
                 )
                 self.send_thread.start_thread(self.state_machine.current_task)
 
             try:
-                send_success: bool = self.send_thread.get_output()
+                self.send_thread.get_output()
+                send_success = True
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
-            except ThreadedRequestUnexpectedError:
+            except RobotException:
                 send_success = False
 
             if send_success:

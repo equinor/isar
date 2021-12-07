@@ -7,7 +7,6 @@ class States(str, Enum):
     Idle = "idle"
     Send = "send"
     Monitor = "monitor"
-    Collect = "collect"
     Cancel = "cancel"
 
     def __repr__(self):
