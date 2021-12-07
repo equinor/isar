@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field
-from typing import Any, Literal, Optional, Union
+from typing import Any, List, Literal, Optional, Union
 from uuid import UUID, uuid4
 
 from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.geometry.position import Position
+from robot_interface.models.mission.status import MissionStatus
 
 
 @dataclass
@@ -14,6 +15,7 @@ class Task:
     """
 
     id: UUID = field(default_factory=uuid4, init=False)
+    status: MissionStatus = field(default=MissionStatus.NotStarted, init=False)
 
     def __str__(self):
         def add_indent(text: str) -> str:
@@ -72,6 +74,7 @@ class DriveToPose(MotionTask):
 
     pose: Pose
     name: Literal["drive_to_pose"] = "drive_to_pose"
+    depends_on: Optional[List[int]] = None
 
 
 @dataclass
@@ -94,6 +97,7 @@ class TakeImage(InspectionTask):
     name: Literal["take_image"] = "take_image"
     computed_joints: Optional[Joints] = None
     tag_id: Optional[str] = None
+    depends_on: Optional[List[int]] = None
 
 
 @dataclass
@@ -106,6 +110,7 @@ class TakeThermalImage(InspectionTask):
     name: Literal["take_thermal_image"] = "take_thermal_image"
     computed_joints: Optional[Joints] = None
     tag_id: Optional[str] = None
+    depends_on: Optional[List[int]] = None
 
 
 TASKS = Union[DriveToPose, DockingProcedure, TakeImage, TakeThermalImage]

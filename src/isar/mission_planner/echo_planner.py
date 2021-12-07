@@ -66,6 +66,7 @@ class EchoPlanner(MissionPlannerInterface):
                 mission.tasks.append(measurement_task)
 
         mission.metadata.update_metadata(mission_plan)
+        mission.set_task_dependencies()
 
         return mission
 

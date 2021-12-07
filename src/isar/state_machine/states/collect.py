@@ -36,7 +36,7 @@ class Collect(State):
 
     def start(self):
         self.state_machine.update_status()
-        self.logger.info(f"State: {self.state_machine.status.current_state}")
+        self.logger.info(f"State: {self.state_machine.current_state}")
 
         self._run()
 
@@ -54,7 +54,7 @@ class Collect(State):
                 self.state_machine.send_status()
 
             if not self.collect_thread:
-                current_task: Task = self.state_machine.status.current_task
+                current_task: Task = self.state_machine.current_task
                 self.collect_thread = ThreadedRequest(
                     self.state_machine.robot.get_inspection_references
                 )
@@ -75,7 +75,7 @@ class Collect(State):
                     time_indexed_pose=inspection_ref.metadata.time_indexed_pose
                 )
 
-            self.state_machine.status.scheduled_mission.inspections.extend(inspections)
+            self.state_machine.current_mission.inspections.extend(inspections)
 
             next_state: States = States.Send
             self.collect_thread = None

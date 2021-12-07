@@ -31,7 +31,7 @@ class Monitor(State):
 
     def start(self):
         self.state_machine.update_status()
-        self.logger.info(f"State: {self.state_machine.status.current_state}")
+        self.logger.info(f"State: {self.state_machine.current_state}")
 
         self._run()
 
@@ -46,7 +46,7 @@ class Monitor(State):
             if self.state_machine.should_stop_mission():
                 self.state_machine.stop_mission()
 
-            if not self.state_machine.status.mission_in_progress:
+            if not self.state_machine.mission_in_progress:
                 next_state = States.Cancel
                 break
 
@@ -56,8 +56,8 @@ class Monitor(State):
                 self.task_status_thread = ThreadedRequest(
                     self.state_machine.robot.task_status
                 )
-                self.task_status_thread.start_thread(
-                    self.state_machine.status.current_task.id
+                self.mission_status_thread.start_thread(
+                    self.state_machine.current_task.id
                 )
 
             try:
@@ -68,14 +68,13 @@ class Monitor(State):
             except ThreadedRequestUnexpectedError:
                 task_status = TaskStatus.Unexpected
 
-            self.state_machine.status.task_status = task_status
+            self.state_machine.current_task.status = task_status
 
-            self._log_status(task_status=self.state_machine.status.task_status)
+            self._log_status()
 
-            if self._task_completed(
-                task_status=self.state_machine.status.task_status,
-            ):
-                if isinstance(self.state_machine.status.current_task, DriveToPose):
+            if self._task_completed():
+                if isinstance(self.state_machine.current_task, DriveToPose):
+
                     next_state = States.Send
                 else:
                     next_state = States.Collect
@@ -86,7 +85,8 @@ class Monitor(State):
 
         self.state_machine.to_next_state(next_state)
 
-    def _task_completed(self, task_status: TaskStatus) -> bool:
+    def _task_completed(self) -> bool:
+        task_status = self.state_machine.current_task.status
         if task_status == TaskStatus.Unexpected:
             self.logger.error("Task status returned an unexpected status string")
         elif task_status == TaskStatus.Failed:
@@ -96,10 +96,9 @@ class Monitor(State):
             return True
         return False
 
-    def _log_status(self, task_status: TaskStatus):
+    def _log_status(self):
         if self.iteration_counter % self.log_interval == 0:
             self.state_machine.robot.log_status(
-                task_status=task_status,
-                current_task=self.state_machine.status.current_task,
+                current_task=self.state_machine.current_task,
             )
         self.iteration_counter += 1

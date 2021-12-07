@@ -43,6 +43,7 @@ class LocalPlanner(MissionPlannerInterface):
                     task.target = self.transform.transform_position(
                         task.target, to_=Frame.Robot
                     )
+            mission.set_task_dependencies()
             return mission
         except Exception as e:
             raise MissionPlannerError(

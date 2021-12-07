@@ -15,4 +15,4 @@ class Off(State):
 
     def start(self):
         self.state_machine.update_status()
-        self.logger.info(f"State: {self.state_machine.status.current_state}")
+        self.logger.info(f"State: {self.state_machine.current_state}")

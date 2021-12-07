@@ -7,6 +7,7 @@ from isar.config import config
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission import TASKS
+from robot_interface.models.mission.task import DriveToPose, TakeImage, TakeThermalImage
 
 
 @dataclass
@@ -19,6 +20,15 @@ class Mission:
     def set_unique_id_and_metadata(self) -> None:
         self._set_unique_id()
         self.metadata = MissionMetadata(mission_id=self.id)
+
+    def set_task_dependencies(self):
+        last_drive_to_task = None
+        for task_index, mission_task in enumerate(self.mission_tasks):
+            if isinstance(mission_task, DriveToPose):
+                last_drive_to_task = task_index
+            elif isinstance(mission_task, (TakeImage, TakeThermalImage)):
+                if mission_task.depends_on is None:
+                    mission_task.depends_on = [last_drive_to_task]
 
     def _set_unique_id(self) -> None:
         plant_short_name: str = config.get("metadata", "plant_short_name")

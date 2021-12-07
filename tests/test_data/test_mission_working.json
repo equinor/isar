@@ -74,7 +74,10 @@
         "y": 2,
         "z": 0,
         "frame": "robot"
-      }
+      },
+      "depends_on": [
+        0
+      ]
     },
     {
       "name": "drive_to_pose",
@@ -93,7 +96,11 @@
           "frame": "asset"
         },
         "frame": "asset"
-      }
+      },
+      "depends_on": [
+        1,
+        2
+      ]
     }
   ]
 }

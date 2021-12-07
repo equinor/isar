@@ -20,7 +20,7 @@ class Idle(State):
         time.sleep(self.state_machine.sleep_time)
 
         self.state_machine.update_status()
-        self.logger.info(f"State: {self.state_machine.status.current_state}")
+        self.logger.info(f"State: {self.state_machine.current_state}")
 
         self._run()
 

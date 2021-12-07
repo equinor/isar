@@ -12,6 +12,7 @@ from isar.services.utilities.threaded_request import (
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission import TakeImage, TakeThermalImage, Task
+from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -31,7 +32,8 @@ class Send(State):
 
     def start(self):
         self.state_machine.update_status()
-        self.logger.info(f"State: {self.state_machine.status.current_state}")
+        self.state_machine.update_current_task()
+        self.logger.info(f"State: {self.state_machine.current_state}")
 
         self._run()
 
@@ -46,23 +48,31 @@ class Send(State):
             if self.state_machine.should_stop_mission():
                 self.state_machine.stop_mission()
 
-            if not self.state_machine.status.mission_in_progress:
+            if not self.state_machine.mission_in_progress:
                 next_state: States = States.Cancel
                 break
 
-            if not self.state_machine.status.scheduled_mission.tasks:
+            if not self.state_machine.current_task:
                 next_state: States = States.Cancel
                 break
 
             if self.state_machine.should_send_status():
                 self.state_machine.send_status()
 
+            if not self.state_machine._check_dependencies():
+                self.state_machine.current_task.status = MissionStatus.Failed
+                self.logger.info(
+                    f"Dependancy for {type(self.state_machine.current_task)} not fulfilled, skipping to next task"
+                )
+                next_state: States = States.Send
+                break
+
             if not self.send_thread:
-                self.state_machine.status.current_task = self._get_current_mission()
                 self.send_thread = ThreadedRequest(
                     self.state_machine.robot.schedule_task
                 )
-                self.send_thread.start_thread(self.state_machine.status.current_task)
+                self.send_thread.start_thread(self.state_machine.current_task)
+
             try:
                 (
                     send_success,
@@ -76,6 +86,7 @@ class Send(State):
                 computed_joints = None
 
             if send_success:
+
                 if isinstance(
                     self.state_machine.status.current_task,
                     (TakeImage, TakeThermalImage),
@@ -83,7 +94,14 @@ class Send(State):
                     self.state_machine.status.current_task.computed_joints = (
                         computed_joints
                     )
-                self.state_machine.status.scheduled_mission.tasks.pop(0)
+
+                self.state_machine.current_task.status = MissionStatus.Scheduled
+                if isinstance(
+                    self.state_machine.current_task,
+                    (TakeImage, TakeThermalImage),
+                ):
+                    self.state_machine.current_task.computed_joints = computed_joints
+
                 next_state = States.Monitor
                 break
             else:
@@ -101,6 +119,3 @@ class Send(State):
                 time.sleep(self.state_machine.sleep_time)
 
         self.state_machine.to_next_state(next_state)
-
-    def _get_current_mission(self) -> Task:
-        return self.state_machine.status.scheduled_mission.tasks[0]
