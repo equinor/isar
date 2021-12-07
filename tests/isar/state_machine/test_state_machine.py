@@ -12,6 +12,7 @@ from isar.state_machine.state_machine import StateMachine, States, main
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from robot_interface.models.mission import DriveToPose, Task
+from robot_interface.models.mission.status import MissionStatus
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.robot_variables import mock_pose
 from tests.mocks.task import MockTask
@@ -62,8 +63,8 @@ def test_reset_state_machine(state_machine):
     next_state = state_machine.reset_state_machine()
 
     assert not state_machine.status.mission_in_progress
-    assert state_machine.status.current_task is None
-    assert state_machine.status.scheduled_mission.tasks == []
+    assert state_machine.current_task is None
+    assert state_machine.current_mission.mission_tasks == []
     assert next_state is States.Idle
 
 
@@ -79,7 +80,7 @@ def test_should_start_mission(
     state_machine, mission, mission_in_progress, expected_output
 ):
     state_machine.queues.start_mission.input.put(mission)
-    state_machine.status.mission_in_progress = mission_in_progress
+    state_machine.mission_in_progress = mission_in_progress
     output = state_machine.should_start_mission()
 
     assert output == expected_output
@@ -88,7 +89,7 @@ def test_should_start_mission(
 def test_start_mission(state_machine):
     state_machine.start_mission(1)
     message = state_machine.queues.start_mission.output.get()
-    assert state_machine.status.mission_in_progress
+    assert state_machine.mission_in_progress
     assert message
 
 
@@ -108,7 +109,8 @@ def test_should_stop_mission(
 ):
     if should_stop is not None:
         state_machine.queues.stop_mission.input.put(should_stop)
-    state_machine.status.mission_in_progress = mission_in_progress
+
+    state_machine.mission_in_progress = mission_in_progress
     start: bool = state_machine.should_stop_mission()
 
     assert start is expected_output
@@ -117,13 +119,41 @@ def test_should_stop_mission(
 def test_stop_mission(state_machine):
     state_machine.stop_mission()
     message = state_machine.queues.stop_mission.output.get()
-    assert not state_machine.status.mission_in_progress
+    assert not state_machine.mission_in_progress
     assert message
 
 
 def test_state_machine_transitions(injector, state_machine_thread):
     task: Task = DriveToPose(pose=mock_pose())
     mission: Mission = Mission([task])
+
+    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+    message, _ = scheduling_utilities.start_mission(mission=mission)
+    assert message.started
+
+    time.sleep(1)
+    expected_transitions_list = deque(
+        [
+            States.Idle,
+            States.Send,
+            States.Monitor,
+            States.Send,
+            States.Cancel,
+            States.Idle,
+        ]
+    )
+    assert (
+        state_machine_thread.state_machine.transitions_list == expected_transitions_list
+    )
+
+
+def test_state_machine_failed_dependency(injector, state_machine_thread, mocker):
+    driveto_task: Task = DriveToPose(pose=mock_pose())
+    inspection_task: Task = MockTask.take_image_in_coordinate_direction()
+    mission: Mission = Mission([driveto_task, inspection_task])
+    mission.set_task_dependencies()
+
+    mocker.patch.object(MockRobot, "mission_status", return_value=MissionStatus.Failed)
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     message, _ = scheduling_utilities.start_mission(mission=mission)

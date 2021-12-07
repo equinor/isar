@@ -2,10 +2,11 @@ import logging
 import queue
 from collections import deque
 from copy import deepcopy
-from typing import Deque, Optional, Tuple
+from typing import Any, Deque, Optional, Tuple
 
 from injector import Injector, inject
 from transitions import Machine
+from transitions.core import State
 
 from isar.config import config
 from isar.models.communication.messages import (
@@ -20,6 +21,8 @@ from isar.services.coordinates.transformation import Transformation
 from isar.state_machine.states import Cancel, Collect, Idle, Monitor, Off, Send
 from isar.state_machine.states_enum import States
 from isar.storage.storage_service import StorageService
+from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.task import Task
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -74,13 +77,16 @@ class StateMachine(object):
             queued=True,
         )
         self.sleep_time = sleep_time
-        self.status: Status = Status(
-            task_status=None,
-            mission_in_progress=False,
-            current_task=None,
-            scheduled_mission=Mission(tasks=[]),
-            current_state=States(self.state),  # type: ignore
-        )
+
+        self.mission_in_progress: bool = False
+        self.current_mission_instance_id: Optional[Any] = None
+        self.current_mission: Mission = Mission(mission_tasks=[])
+        self.current_task: Optional[Task] = None
+        self.current_task_index: int = -1
+
+        self.current_state: State = States(self.state)  # type: ignore
+
+        self.predefined_mission_id: Optional[int] = None
 
         self.transitions_log_length = transitions_log_length
         self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
@@ -111,9 +117,18 @@ class StateMachine(object):
         else:
             self.logger.error("Not valid state direction.")
 
+    def update_current_task(self):
+        self.current_task_index += 1
+        if len(self.current_mission.mission_tasks) > (self.current_task_index):
+            self.current_task = self.current_mission.mission_tasks[
+                self.current_task_index
+            ]
+        else:
+            self.current_task = None
+
     def update_status(self):
         """Updates the current state of the state machine."""
-        self.status.current_state = States(self.state)
+        self.current_state = States(self.state)
 
     def reset_state_machine(self) -> States:
         """Resets the state machine.
@@ -129,17 +144,26 @@ class StateMachine(object):
             Idle state.
 
         """
-        self.status.task_status = None
-        self.status.mission_in_progress = False
-        self.status.current_task = None
-        self.status.scheduled_mission = Mission(tasks=[])
+
+        self.mission_in_progress = False
+        self.current_mission_instance_id = None
+        self.current_task = None
+        self.current_task_index = -1
+        self.current_mission = Mission(mission_tasks=[])
 
         return States.Idle
 
     def send_status(self):
         """Communicates state machine status."""
-        self.queues.mission_status.output.put(deepcopy(self.status))
-        self.logger.info(self.status)
+        status = Status(
+            mission_in_progress=self.mission_in_progress,
+            current_mission_instance_id=self.current_mission_instance_id,
+            current_task=self.current_task,
+            current_mission=self.current_mission,
+            current_state=self.current_state,
+        )
+        self.queues.mission_status.output.put(deepcopy(status))
+        self.logger.info(status)
 
     def should_send_status(self) -> bool:
         """Determines if mission status should be sent.
@@ -170,9 +194,9 @@ class StateMachine(object):
         except queue.Empty:
             return False, None
 
-        if not self.status.mission_in_progress and mission is not None:
+        if not self.mission_in_progress and mission is not None:
             return True, mission
-        elif self.status.mission_in_progress:
+        elif self.mission_in_progress:
             self.queues.start_mission.output.put(
                 deepcopy(StartMissionMessages.mission_in_progress())
             )
@@ -183,8 +207,8 @@ class StateMachine(object):
 
     def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
-        self.status.mission_in_progress = True
-        self.status.scheduled_mission = mission
+        self.mission_in_progress = True
+        self.current_mission = mission
         self.queues.start_mission.output.put(deepcopy(StartMissionMessages.success()))
         self.logger.info(StartMissionMessages.success())
 
@@ -202,9 +226,9 @@ class StateMachine(object):
         except queue.Empty:
             return False
 
-        if stop and self.status.mission_in_progress:
+        if stop and self.mission_in_progress:
             return True
-        elif stop and not self.status.mission_in_progress:
+        elif stop and not self.mission_in_progress:
             message: StopMessage = StopMissionMessages.no_active_missions()
             self.queues.stop_mission.output.put(deepcopy(message))
             self.logger.info(message)
@@ -214,15 +238,26 @@ class StateMachine(object):
 
     def stop_mission(self):
         """Stops a mission in progress."""
-        self.status.mission_in_progress = False
+        self.mission_in_progress = False
         message: StopMessage = StopMissionMessages.success()
         self.queues.stop_mission.output.put(deepcopy(message))
         self.logger.info(message)
 
     def _log_state_transition(self, next_state):
         """Logs all state transitions that are not self-transitions."""
-        if next_state != self.status.current_state:
+        if next_state != self.current_state:
             self.transitions_list.append(next_state)
+
+    def _check_dependencies(self):
+        """Check dependencies of previous tasks"""
+        if self.current_task and self.current_task.depends_on:
+            for task_index in self.current_task.depends_on:
+                if (
+                    self.current_mission.mission_tasks[task_index].status
+                    is not MissionStatus.Completed
+                ):
+                    return False
+        return True
 
 
 def main(injector: Injector):
