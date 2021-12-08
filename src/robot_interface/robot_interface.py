@@ -3,7 +3,7 @@ from typing import Optional, Sequence, Tuple
 from uuid import UUID
 
 from robot_interface.models.geometry.pose import Pose
-from robot_interface.models.inspection.inspection import Inspection, InspectionResult
+from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission import Task, TaskStatus
 
 
@@ -106,9 +106,7 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def download_inspection_result(
-        self, inspection: Inspection
-    ) -> Optional[InspectionResult]:
+    def download_inspection_result(self, inspection: Inspection) -> Inspection:
         """Downloads inspection references.
 
         Parameters
@@ -118,8 +116,8 @@ class RobotInterface(metaclass=ABCMeta):
 
         Returns
         -------
-        Optional[InspectionResult]
-            Returns the downloaded inspection results.
+        Inspection
+            Returns the downloaded inspection with data attached as bytes.
 
         """
         raise NotImplementedError

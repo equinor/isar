@@ -8,14 +8,12 @@ from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.geometry.orientation import Orientation
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.geometry.position import Position
-from robot_interface.models.inspection.formats import Image
 from robot_interface.models.inspection.inspection import (
+    Image,
+    ImageMetadata,
     Inspection,
-    InspectionResult,
     TimeIndexedPose,
 )
-from robot_interface.models.inspection.metadata import ImageMetadata
-from robot_interface.models.inspection.references import ImageReference
 from tests.mocks.blob_storage import StorageMock
 
 MISSION_ID = "some-mission-id"
@@ -32,17 +30,16 @@ ARBITRARY_IMAGE_METADATA = ImageMetadata(
     ),
     file_type="jpg",
 )
+DATA_BYTES: bytes = b"Lets say this is some image data"
 
 
 def test_blob_storage_store():
     blob_storage: StorageMock = StorageMock()
     storage_service: StorageService = StorageService(storage=blob_storage)
-    data_bytes: bytes = b"Lets say this is some image data"
-    inspection_result: InspectionResult = Image(
-        id=INSPECTION_ID, metadata=ARBITRARY_IMAGE_METADATA, data=data_bytes
-    )
+    inspection: Inspection = Image(id=INSPECTION_ID, metadata=ARBITRARY_IMAGE_METADATA)
+    inspection.data = DATA_BYTES
 
-    storage_service.store(mission_id=MISSION_ID, result=inspection_result)
+    storage_service.store(mission_id=MISSION_ID, result=inspection)
     expected_path_to_image: Path = Path(
         f"{MISSION_ID}/sensor_data/image/{MISSION_ID}_image_{INSPECTION_ID}.jpg"
     )
@@ -55,7 +52,9 @@ def test_blob_storage_store():
 def test_blob_storage_store_metadata():
     blob_storage: StorageMock = StorageMock()
     storage_service: StorageService = StorageService(storage=blob_storage)
-    inspection: Inspection = ImageReference(INSPECTION_ID, ARBITRARY_IMAGE_METADATA)
+    inspection: Inspection = Image(INSPECTION_ID, ARBITRARY_IMAGE_METADATA)
+    inspection.data = DATA_BYTES
+
     mission: Mission = Mission(
         tasks=[],
         id=MISSION_ID,

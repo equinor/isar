@@ -10,17 +10,13 @@ from isar.models.mission import Mission
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.storage.storage_interface import StorageInterface
-from robot_interface.models.inspection.formats import Audio, Image, ThermalImage, Video
 from robot_interface.models.inspection.inspection import (
+    Audio,
+    Image,
     Inspection,
     InspectionMetadata,
-    InspectionResult,
-)
-from robot_interface.models.inspection.references import (
-    AudioReference,
-    ImageReference,
-    ThermalImageReference,
-    VideoReference,
+    ThermalImage,
+    Video,
 )
 
 
@@ -30,7 +26,7 @@ class StorageService:
         self.storage: StorageInterface = storage
 
     def store(
-        self, mission_id: Union[UUID, int, str, None], result: InspectionResult
+        self, mission_id: Union[UUID, int, str, None], result: Inspection
     ) -> None:
         sensor_sub_folder_name: str = self.get_sensor_sub_folder_name(result=result)
         filename: str = self.get_inspection_filename(
@@ -49,10 +45,10 @@ class StorageService:
         mission: Mission,
     ) -> None:
         for inspection_type in [
-            ImageReference,
-            ThermalImageReference,
-            AudioReference,
-            VideoReference,
+            Image,
+            ThermalImage,
+            Audio,
+            Video,
         ]:
             self.store_metadata_for_inspection_type(
                 mission_id=mission.id,
@@ -61,18 +57,14 @@ class StorageService:
             )
         self.store_metadata_for_mission(mission=mission)
 
-    def get_sensor_sub_folder_name(
-        self, result: Union[InspectionResult, Inspection]
-    ) -> str:
-        if isinstance(result, Audio) or isinstance(result, AudioReference):
+    def get_sensor_sub_folder_name(self, result: Inspection) -> str:
+        if isinstance(result, Audio):
             return "audio"
-        elif isinstance(result, Image) or isinstance(result, ImageReference):
+        elif isinstance(result, Image):
             return "image"
-        elif isinstance(result, ThermalImage) or isinstance(
-            result, ThermalImageReference
-        ):
+        elif isinstance(result, ThermalImage):
             return "thermal"
-        elif isinstance(result, Video) or isinstance(result, VideoReference):
+        elif isinstance(result, Video):
             return "video"
         else:
             raise TypeError(
