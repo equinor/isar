@@ -54,11 +54,6 @@ class TestSchedulingUtilities:
                 mock_mission_definition(),
                 HTTPStatus.REQUEST_TIMEOUT,
             ),
-            (
-                [StartMissionMessages.failed_to_create_mission()],
-                mock_mission_definition(),
-                HTTPStatus.CONFLICT,
-            ),
         ],
     )
     def test_start_mission(
