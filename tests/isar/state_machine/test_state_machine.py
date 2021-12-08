@@ -12,7 +12,7 @@ from isar.state_machine.state_machine import StateMachine, States, main
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from robot_interface.models.mission import DriveToPose, Task
-from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.status import TaskStatus
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.robot_variables import mock_pose
 from tests.mocks.task import MockTask
@@ -62,9 +62,9 @@ def test_send_status(state_machine):
 def test_reset_state_machine(state_machine):
     next_state = state_machine.reset_state_machine()
 
-    assert not state_machine.status.mission_in_progress
+    assert not state_machine.mission_in_progress
     assert state_machine.current_task is None
-    assert state_machine.current_mission.mission_tasks == []
+    assert state_machine.current_mission.tasks == []
     assert next_state is States.Idle
 
 
@@ -153,7 +153,7 @@ def test_state_machine_failed_dependency(injector, state_machine_thread, mocker)
     mission: Mission = Mission([driveto_task, inspection_task])
     mission.set_task_dependencies()
 
-    mocker.patch.object(MockRobot, "mission_status", return_value=MissionStatus.Failed)
+    mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.Failed)
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     message, _ = scheduling_utilities.start_mission(mission=mission)

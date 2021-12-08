@@ -21,7 +21,7 @@ from isar.services.coordinates.transformation import Transformation
 from isar.state_machine.states import Cancel, Collect, Idle, Monitor, Off, Send
 from isar.state_machine.states_enum import States
 from isar.storage.storage_service import StorageService
-from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.status import TaskStatus
 from robot_interface.models.mission.task import Task
 from robot_interface.robot_interface import RobotInterface
 
@@ -79,8 +79,7 @@ class StateMachine(object):
         self.sleep_time = sleep_time
 
         self.mission_in_progress: bool = False
-        self.current_mission_instance_id: Optional[Any] = None
-        self.current_mission: Mission = Mission(mission_tasks=[])
+        self.current_mission: Mission = Mission(tasks=[])
         self.current_task: Optional[Task] = None
         self.current_task_index: int = -1
 
@@ -119,10 +118,8 @@ class StateMachine(object):
 
     def update_current_task(self):
         self.current_task_index += 1
-        if len(self.current_mission.mission_tasks) > (self.current_task_index):
-            self.current_task = self.current_mission.mission_tasks[
-                self.current_task_index
-            ]
+        if len(self.current_mission.tasks) > (self.current_task_index):
+            self.current_task = self.current_mission.tasks[self.current_task_index]
         else:
             self.current_task = None
 
@@ -146,10 +143,9 @@ class StateMachine(object):
         """
 
         self.mission_in_progress = False
-        self.current_mission_instance_id = None
         self.current_task = None
         self.current_task_index = -1
-        self.current_mission = Mission(mission_tasks=[])
+        self.current_mission = Mission(tasks=[])
 
         return States.Idle
 
@@ -157,7 +153,6 @@ class StateMachine(object):
         """Communicates state machine status."""
         status = Status(
             mission_in_progress=self.mission_in_progress,
-            current_mission_instance_id=self.current_mission_instance_id,
             current_task=self.current_task,
             current_mission=self.current_mission,
             current_state=self.current_state,
@@ -253,8 +248,8 @@ class StateMachine(object):
         if self.current_task and self.current_task.depends_on:
             for task_index in self.current_task.depends_on:
                 if (
-                    self.current_mission.mission_tasks[task_index].status
-                    is not MissionStatus.Completed
+                    self.current_mission.tasks[task_index].status
+                    is not TaskStatus.Completed
                 ):
                     return False
         return True

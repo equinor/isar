@@ -90,5 +90,5 @@ def test_mission_dependencies(mission_reader):
 
     task_dependencies = [None, None, [1], None, [0], [1, 2]]
 
-    for index, mission_task in enumerate(mission.mission_tasks):
-        assert mission_task.depends_on == task_dependencies[index]
+    for index, tasks in enumerate(mission.tasks):
+        assert tasks.depends_on == task_dependencies[index]

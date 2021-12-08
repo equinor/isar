@@ -56,9 +56,7 @@ class Monitor(State):
                 self.task_status_thread = ThreadedRequest(
                     self.state_machine.robot.task_status
                 )
-                self.mission_status_thread.start_thread(
-                    self.state_machine.current_task.id
-                )
+                self.task_status_thread.start_thread(self.state_machine.current_task.id)
 
             try:
                 task_status = self.task_status_thread.get_output()
@@ -72,7 +70,7 @@ class Monitor(State):
 
             self._log_status()
 
-            if self._task_completed():
+            if self._task_completed(task_status=self.state_machine.current_task.status):
                 if isinstance(self.state_machine.current_task, DriveToPose):
 
                     next_state = States.Send
@@ -85,8 +83,8 @@ class Monitor(State):
 
         self.state_machine.to_next_state(next_state)
 
-    def _task_completed(self) -> bool:
-        task_status = self.state_machine.current_task.status
+    def _task_completed(self, task_status: TaskStatus) -> bool:
+
         if task_status == TaskStatus.Unexpected:
             self.logger.error("Task status returned an unexpected status string")
         elif task_status == TaskStatus.Failed:
@@ -99,6 +97,7 @@ class Monitor(State):
     def _log_status(self):
         if self.iteration_counter % self.log_interval == 0:
             self.state_machine.robot.log_status(
+                task_status=self.state_machine.current_task.status,
                 current_task=self.state_machine.current_task,
             )
         self.iteration_counter += 1

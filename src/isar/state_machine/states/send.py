@@ -12,7 +12,7 @@ from isar.services.utilities.threaded_request import (
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission import TakeImage, TakeThermalImage, Task
-from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.status import TaskStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -60,9 +60,11 @@ class Send(State):
                 self.state_machine.send_status()
 
             if not self.state_machine._check_dependencies():
-                self.state_machine.current_task.status = MissionStatus.Failed
-                self.logger.info(
-                    f"Dependancy for {type(self.state_machine.current_task)} not fulfilled, skipping to next task"
+                self.state_machine.current_task.status = TaskStatus.Failed
+                self.logger.warning(
+                    f"Dependancy for task {self.state_machine.current_task_index}: "
+                    f"{self.state_machine.current_task.name}, not fulfilled, "
+                    "skipping to next task"
                 )
                 next_state: States = States.Send
                 break
@@ -86,16 +88,7 @@ class Send(State):
                 computed_joints = None
 
             if send_success:
-
-                if isinstance(
-                    self.state_machine.status.current_task,
-                    (TakeImage, TakeThermalImage),
-                ):
-                    self.state_machine.status.current_task.computed_joints = (
-                        computed_joints
-                    )
-
-                self.state_machine.current_task.status = MissionStatus.Scheduled
+                self.state_machine.current_task.status = TaskStatus.Scheduled
                 if isinstance(
                     self.state_machine.current_task,
                     (TakeImage, TakeThermalImage),
