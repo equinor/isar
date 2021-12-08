@@ -1,19 +1,17 @@
 from datetime import datetime
-from typing import Any, List, Optional, Sequence, Tuple
+from typing import Optional, Sequence, Tuple
 from uuid import UUID
 
 from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.geometry.orientation import Orientation
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.geometry.position import Position
-from robot_interface.models.inspection.formats import Image
 from robot_interface.models.inspection.inspection import (
+    Image,
+    ImageMetadata,
     Inspection,
-    InspectionResult,
     TimeIndexedPose,
 )
-from robot_interface.models.inspection.metadata import ImageMetadata
-from robot_interface.models.inspection.references import ImageReference
 from robot_interface.models.mission import Task, TaskStatus
 from robot_interface.robot_interface import RobotInterface
 
@@ -53,14 +51,12 @@ class MockRobot(RobotInterface):
         pass
 
     def get_inspection_references(self, current_task: Task) -> Sequence[Inspection]:
-        return [ImageReference(id=current_task.id, metadata=mock_image_metadata())]  # type: ignore
+        return [Image(id=current_task.id, metadata=mock_image_metadata())]
 
-    def download_inspection_result(self, inspection: Inspection) -> InspectionResult:
-        return Image(
-            inspection.id,
-            mock_image_metadata(),
-            b"Some binary image data",
-        )
+    def download_inspection_result(self, inspection: Inspection) -> Inspection:
+        image: Image = Image(inspection.id, mock_image_metadata())
+        image.data = b"Some binary image data"
+        return image
 
     def robot_pose(self) -> Pose:
         return self.robot_pose_return_value

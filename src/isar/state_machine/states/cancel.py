@@ -1,11 +1,11 @@
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from injector import inject
 from transitions import State
 
 from isar.storage.storage_service import StorageService
-from robot_interface.models.inspection.inspection import InspectionResult
+from robot_interface.models.inspection.inspection import Inspection
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -28,10 +28,10 @@ class Cancel(State):
         self.logger.info(f"State: {self.state_machine.current_state}")
 
         if self.state_machine.current_mission.inspections:
-            for inspection_ref in self.state_machine.current_mission.inspections:
-                result: Optional[
-                    InspectionResult
-                ] = self.state_machine.robot.download_inspection_result(inspection_ref)
+            for inspection in self.state_machine.current_mission.inspections:
+                result: Inspection = (
+                    self.state_machine.robot.download_inspection_result(inspection)
+                )
                 if result:
                     self.storage_service.store(
                         self.state_machine.current_mission.id,
@@ -40,7 +40,7 @@ class Cancel(State):
                 else:
                     self.logger.warning(
                         f"Failed to upload inspection result as no result was received. "
-                        + f"Inspection reference: {inspection_ref}"
+                        + f"Inspection reference: {inspection}"
                     )
 
             self.storage_service.store_metadata(self.state_machine.current_mission)
