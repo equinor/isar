@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from robot_interface.models.geometry.joints import Joints
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.geometry.position import Position
-from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.status import TaskStatus
 
 
 @dataclass
@@ -15,7 +15,7 @@ class Task:
     """
 
     id: UUID = field(default_factory=uuid4, init=False)
-    status: MissionStatus = field(default=MissionStatus.NotStarted, init=False)
+    status: TaskStatus = field(default=TaskStatus.NotStarted, init=False)
 
     def __str__(self):
         def add_indent(text: str) -> str:

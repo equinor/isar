@@ -13,9 +13,10 @@ def mock_status(
     current_state: States = States.Idle,
     current_mission: Mission = mock_mission_definition(),
 ) -> Status:
+
+    current_task.status = task_status
     scheduled_status = Status(
         mission_in_progress=mission_in_progress,
-        task_status=task_status,
         current_task=current_task,
         current_state=current_state,
         current_mission=current_mission,
