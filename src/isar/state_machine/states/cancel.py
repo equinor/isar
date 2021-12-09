@@ -45,6 +45,7 @@ class Cancel(State):
 
             self.storage_service.store_metadata(self.state_machine.current_mission)
 
+        self._log_task_status()
         next_state = self.state_machine.reset_state_machine()
         self.state_machine.to_next_state(next_state)
 
@@ -62,3 +63,12 @@ class Cancel(State):
         )
 
         self.logger.info(f"State transitions:\n  {state_transitions}")
+
+    def _log_task_status(self):
+        task_status: str = "\n".join(
+            [
+                f"{i:>3}  {task.name:<25}" f" -- {task.status} "
+                for i, task in enumerate(self.state_machine.current_mission.tasks)
+            ]
+        )
+        self.logger.info(f"Mission task status:\n{task_status}")

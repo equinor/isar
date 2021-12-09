@@ -7,7 +7,7 @@ from isar.config import config
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission import TASKS
-from robot_interface.models.mission.task import DriveToPose, TakeImage, TakeThermalImage
+from robot_interface.models.mission.task import DriveToPose, InspectionTask
 
 
 @dataclass
@@ -26,7 +26,7 @@ class Mission:
         for task_index, task in enumerate(self.tasks):
             if isinstance(task, DriveToPose):
                 last_drive_to_task = task_index
-            elif isinstance(task, (TakeImage, TakeThermalImage)):
+            elif isinstance(task, InspectionTask):
                 if task.depends_on is None:
                     task.depends_on = [last_drive_to_task]
 
