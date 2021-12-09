@@ -20,6 +20,10 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                     {
                         "planItemId": 1227,
                         "tag": "313-PA-101A",
+                        "sensorTypes": [
+                            {"sensorTypeKey": "ThermicPicture"},
+                            {"sensorTypeKey": "Picture"},
+                        ],
                         "sortingOrder": 0,
                         "robotPlanId": 76,
                     },
@@ -41,6 +45,7 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                     {
                         "planItemId": 1227,
                         "tag": "314-LD-1001",
+                        "sensorTypes": [{"sensorTypeKey": "Picture"}],
                         "sortingOrder": 0,
                         "robotPlanId": 76,
                     },
@@ -62,6 +67,7 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                     {
                         "planItemId": 1227,
                         "tag": "wrong_tag",
+                        "senorTypes": [{"sensorTypeKey": "Picture"}],
                         "sortingOrder": 0,
                         "robotPlanId": 76,
                     },
