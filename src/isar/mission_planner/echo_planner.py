@@ -1,16 +1,16 @@
 import logging
-from typing import List, Union
+from typing import Dict, List, Union
 
 from azure.identity import DefaultAzureCredential
 from injector import inject
 from requests import Response
 
 from isar.config import config
-from isar.config.predefined_measurement_types.predefined_measurement_types import (
-    predefined_measurement_types,
-)
 from isar.config.predefined_poses.predefined_poses import predefined_poses
-from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
+from isar.mission_planner.mission_planner_interface import (
+    MissionPlannerError,
+    MissionPlannerInterface,
+)
 from isar.models.mission import Mission
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.coordinates.transformation import Transformation
@@ -46,28 +46,41 @@ class EchoPlanner(MissionPlannerInterface):
         """
         mission_plan: dict = self._mission_plan(mission_id)
 
-        mission_tags: List[dict] = mission_plan["planItems"]
+        try:
+            plan_items: List[dict] = mission_plan["planItems"]
+        except KeyError as e:
+            self.logger.error("Echo request body don't contain expected keys")
+            raise MissionPlannerError from e
+
         mission: Mission = Mission(tasks=[])
 
-        for tag in mission_tags:
-            tag_name: str = tag["tag"]
+        for plan_item in plan_items:
+            try:
+                tag_name: str = plan_item["tag"]
+                sensors: List[str] = [
+                    sensor_item["sensorTypeKey"]
+                    for sensor_item in plan_item["sensorTypes"]
+                ]
+            except KeyError:
+                self.logger.error("Echo request body don't contain expected keys")
+                continue
 
             try:
                 drive_task: DriveToPose = self._create_drive_task(tag_name=tag_name)
-                measurement_tasks: List[
+                inspection_tasks: List[
                     Union[TakeImage, TakeThermalImage]
-                ] = self._create_measurement_tasks(tag_name=tag_name)
+                ] = self._create_inspection_tasks_from_sensor_types(
+                    tag_name=tag_name, sensors=sensors
+                )
             except Exception as e:
                 self.logger.error(e)
                 continue
 
             mission.tasks.append(drive_task)
-            for measurement_task in measurement_tasks:
-                mission.tasks.append(measurement_task)
+            mission.tasks.extend(inspection_tasks)
 
         mission.metadata.update_metadata(mission_plan)
         mission.set_task_dependencies()
-
         return mission
 
     def _mission_plan(self, mission_id: int) -> dict:
@@ -88,6 +101,20 @@ class EchoPlanner(MissionPlannerInterface):
         )
 
         return response.json()
+
+    def _create_inspection_tasks_from_sensor_types(
+        self, tag_name: str, sensors: List[str]
+    ) -> List[Union[TakeImage, TakeThermalImage]]:
+        tag_position_robot: Position = self._get_tag_position_robot(tag_name=tag_name)
+        inspection_tasks: List[Union[TakeImage, TakeThermalImage]] = []
+        for sensor in sensors:
+            inspection: Union[
+                TakeImage, TakeThermalImage
+            ] = self._echo_sensor_type_to_isar_inspection_task(sensor_type=sensor)
+            inspection.target = tag_position_robot
+            inspection.tag_id = tag_name
+            inspection_tasks.append(inspection)
+        return inspection_tasks
 
     def _get_robot_pose(self, tag_name: str) -> Pose:
         """
@@ -118,57 +145,12 @@ class EchoPlanner(MissionPlannerInterface):
         drive_task: DriveToPose = DriveToPose(pose=robot_pose)
         return drive_task
 
-    def _create_measurement_tasks(
-        self, tag_name: str
-    ) -> List[Union[TakeImage, TakeThermalImage]]:
-        """
-        Retrieve measurement type corresponding to inspection of a given tag. For now, this is a temporary hard-coded
-        solution.
-        """
-        try:
-            predefined_measurement_type: List[str] = predefined_measurement_types[
-                tag_name
-            ]
-        except KeyError:
-            self.logger.warning(
-                f"Tag not in predefined_measurement_types, will use default. Tag: {tag_name}"
-            )
-            predefined_measurement_type = ["Image"]
-
-        measurement_tasks: List[Union[TakeImage, TakeThermalImage]] = []
-        for measurement_type in predefined_measurement_type:
-            if measurement_type == "ThermalImage":
-                measurement_tasks.append(
-                    self._create_thermal_image_task(tag_name=tag_name)
-                )
-
-            elif measurement_type == "Image":
-                measurement_tasks.append(self._create_image_task(tag_name=tag_name))
-
-            else:
-                self.logger.exception(
-                    f"Invalid measurement type in predefined_measurement_types. Tag: {tag_name}, measurement type: {measurement_type}"
-                )
-
-        measurement_tasks = [task for task in measurement_tasks]
-
-        return measurement_tasks
-
-    def _create_image_task(self, tag_name: str) -> TakeImage:
-        tag_position_robot: Position = self._get_tag_position_robot(tag_name=tag_name)
-
-        image_task: TakeImage = TakeImage(
-            target=tag_position_robot,
-            tag_id=tag_name,
-        )
-        return image_task
-
-    def _create_thermal_image_task(self, tag_name: str) -> TakeThermalImage:
-        tag_position_robot: Position = self._get_tag_position_robot(tag_name=tag_name)
-
-        thermal_image_task: TakeThermalImage = TakeThermalImage(
-            target=tag_position_robot,
-            tag_id=tag_name,
-        )
-
-        return thermal_image_task
+    @staticmethod
+    def _echo_sensor_type_to_isar_inspection_task(
+        sensor_type: str,
+    ) -> Union[TakeImage, TakeThermalImage]:
+        mapping: Dict[str, Union[TakeImage, TakeThermalImage]] = {
+            "Picture": TakeImage(target=None),
+            "ThermicPicture": TakeThermalImage(target=None),
+        }
+        return mapping[sensor_type]
