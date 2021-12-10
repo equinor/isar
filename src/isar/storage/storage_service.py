@@ -40,10 +40,7 @@ class StorageService:
 
         self.storage.store(data=result.data, path=destination_path)
 
-    def store_metadata(
-        self,
-        mission: Mission,
-    ) -> None:
+    def store_metadata(self, mission: Mission, inspections: List[Inspection]) -> None:
         for inspection_type in [
             Image,
             ThermalImage,
@@ -52,10 +49,10 @@ class StorageService:
         ]:
             self.store_metadata_for_inspection_type(
                 mission_id=mission.id,
-                inspections=mission.inspections,
+                inspections=inspections,
                 inspection_type=inspection_type,
             )
-        self.store_metadata_for_mission(mission=mission)
+        self.store_metadata_for_mission(mission=mission, inspections=inspections)
 
     def get_sensor_sub_folder_name(self, result: Inspection) -> str:
         if isinstance(result, Audio):
@@ -155,7 +152,9 @@ class StorageService:
                 }
             ]
 
-    def store_metadata_for_mission(self, mission: Mission) -> None:
+    def store_metadata_for_mission(
+        self, mission: Mission, inspections: List[Inspection]
+    ) -> None:
         mission_metadata: MissionMetadata = mission.metadata
         mission_metadata.required_metadata.url = (
             f"{config.get('service_connections', 'blob_storage_account_url')}/"
@@ -166,7 +165,7 @@ class StorageService:
         destination_path: Path = Path(f"{mission.id}/{filename}")
 
         inspection_types_used = set()
-        for inspection in mission.inspections:
+        for inspection in inspections:
             sensor_sub_folder_name: str = self.get_sensor_sub_folder_name(inspection)
             inspection_types_used.add(sensor_sub_folder_name)
 

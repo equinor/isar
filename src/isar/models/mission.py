@@ -1,11 +1,10 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Union
 from uuid import UUID
 
 from isar.config import config
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission import TASKS
 from robot_interface.models.mission.task import DriveToPose, InspectionTask
 
@@ -14,7 +13,6 @@ from robot_interface.models.mission.task import DriveToPose, InspectionTask
 class Mission:
     tasks: List[TASKS]
     id: Union[UUID, int, str, None] = None
-    inspections: List[Inspection] = field(default_factory=list)
     metadata: MissionMetadata = None
 
     def set_unique_id_and_metadata(self) -> None:

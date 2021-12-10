@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Any, List, Sequence, Union
+from typing import List, Sequence, TYPE_CHECKING, Union
 
 from injector import inject
 from transitions import State
@@ -75,7 +75,7 @@ class Collect(State):
                     time_indexed_pose=inspection_ref.metadata.time_indexed_pose
                 )
 
-            self.state_machine.current_mission.inspections.extend(inspections)
+            self.state_machine.current_task.inspections.extend(inspections)
 
             next_state: States = States.Send
             self.collect_thread = None

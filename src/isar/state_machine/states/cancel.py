@@ -1,11 +1,12 @@
 import logging
-from typing import TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from injector import inject
 from transitions import State
 
 from isar.storage.storage_service import StorageService
 from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission import InspectionTask
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -27,12 +28,20 @@ class Cancel(State):
         self.state_machine.update_status()
         self.logger.info(f"State: {self.state_machine.current_state}")
 
-        if self.state_machine.current_mission.inspections:
-            for inspection in self.state_machine.current_mission.inspections:
+        inspection_tasks: List[InspectionTask] = [
+            task
+            for task in self.state_machine.current_mission.tasks
+            if isinstance(task, InspectionTask)
+        ]
+
+        inspections: List[Inspection] = []
+        for task in inspection_tasks:
+            for inspection in task.inspections:
                 result: Inspection = (
                     self.state_machine.robot.download_inspection_result(inspection)
                 )
                 if result:
+                    inspections.append(result)
                     self.storage_service.store(
                         self.state_machine.current_mission.id,
                         result,
@@ -43,7 +52,10 @@ class Cancel(State):
                         + f"Inspection reference: {inspection}"
                     )
 
-            self.storage_service.store_metadata(self.state_machine.current_mission)
+        if inspections:
+            self.storage_service.store_metadata(
+                mission=self.state_machine.current_mission, inspections=inspections
+            )
 
         self._log_task_status()
         next_state = self.state_machine.reset_state_machine()
