@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.geometry.position import Position
+from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.status import TaskStatus
 
 
@@ -50,8 +51,10 @@ class Task:
 @dataclass
 class InspectionTask(Task):
     """
-    Base class for all inspection tasks which produce a result to be uploaded.
+    Base class for all inspection tasks which produce results to be uploaded.
     """
+
+    inspections: List[Inspection] = field(default_factory=list, init=False)
 
     pass
 
