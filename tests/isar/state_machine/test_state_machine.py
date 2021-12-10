@@ -208,7 +208,7 @@ def test_state_machine_with_unsuccessful_collection(
 ):
     storage_mock: StorageInterface = injector.get(StorageInterface)
 
-    task: Task = MockTask.take_image_in_coordinate_direction()
+    task: TakeImage = MockTask.take_image_in_coordinate_direction()
     mission: Mission = Mission([task])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 

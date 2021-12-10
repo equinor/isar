@@ -55,13 +55,10 @@ def test_blob_storage_store_metadata():
     inspection.data = DATA_BYTES
 
     mission: Mission = Mission(
-        tasks=[],
-        id=MISSION_ID,
-        inspections=[inspection],
-        metadata=MissionMetadata(MISSION_ID),
+        tasks=[], id=MISSION_ID, metadata=MissionMetadata(MISSION_ID)
     )
 
-    storage_service.store_metadata(mission=mission)
+    storage_service.store_metadata(mission=mission, inspections=[inspection])
 
     assert blob_storage.blob_exists(
         path=Path(f"{MISSION_ID}/{MISSION_ID}_META.json")
