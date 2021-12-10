@@ -34,9 +34,7 @@ class Mission:
         plant_short_name: str = config.get("metadata", "plant_short_name")
         robot_id: str = config.get("metadata", "robot_id")
         now: datetime = datetime.utcnow()
-        self.id = (
-            f"{plant_short_name.upper()}{robot_id.upper()}{now.strftime('%d%m%Y%H%M')}"
-        )
+        self.id = f"{plant_short_name.upper()}{robot_id.upper()}{now.strftime('%d%m%Y%H%M%S%f')[:-3]}"
 
     def __post_init__(self) -> None:
         if self.id is None:
