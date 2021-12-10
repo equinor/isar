@@ -12,7 +12,7 @@ from robot_interface.models.inspection.inspection import (
     Inspection,
     TimeIndexedPose,
 )
-from robot_interface.models.mission import Task, TaskStatus
+from robot_interface.models.mission import InspectionTask, Task, TaskStatus
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -50,7 +50,9 @@ class MockRobot(RobotInterface):
     def log_status(self, task_status: TaskStatus, current_task: Task):
         pass
 
-    def get_inspection_references(self, current_task: Task) -> Sequence[Inspection]:
+    def get_inspection_references(
+        self, inspection_task: InspectionTask
+    ) -> Sequence[Inspection]:
         return [Image(metadata=mock_image_metadata())]
 
     def download_inspection_result(self, inspection: Inspection) -> Inspection:

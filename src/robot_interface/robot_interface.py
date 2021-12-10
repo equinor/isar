@@ -1,10 +1,10 @@
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Sequence
 from uuid import UUID
 
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.inspection.inspection import Inspection
-from robot_interface.models.mission import Task, TaskStatus
+from robot_interface.models.mission import InspectionTask, Task, TaskStatus
 
 
 class RobotInterface(metaclass=ABCMeta):
@@ -89,12 +89,14 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_inspection_references(self, current_task: Task) -> Sequence[Inspection]:
+    def get_inspection_references(
+        self, inspection_task: InspectionTask
+    ) -> Sequence[Inspection]:
         """Returns inspection references of the inspections in the given task.
 
         Parameters
         ----------
-        current_task : Task
+        inspection_task : InspectionTask
             The current executing mission task.
 
         Returns
