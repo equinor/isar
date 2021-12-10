@@ -17,7 +17,6 @@ from robot_interface.models.inspection.inspection import (
 from tests.mocks.blob_storage import StorageMock
 
 MISSION_ID = "some-mission-id"
-INSPECTION_ID = "some-inspection-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(
     datetime.now(),
     TimeIndexedPose(
@@ -36,12 +35,12 @@ DATA_BYTES: bytes = b"Lets say this is some image data"
 def test_blob_storage_store():
     blob_storage: StorageMock = StorageMock()
     storage_service: StorageService = StorageService(storage=blob_storage)
-    inspection: Inspection = Image(id=INSPECTION_ID, metadata=ARBITRARY_IMAGE_METADATA)
+    inspection: Inspection = Image(metadata=ARBITRARY_IMAGE_METADATA)
     inspection.data = DATA_BYTES
 
     storage_service.store(mission_id=MISSION_ID, result=inspection)
     expected_path_to_image: Path = Path(
-        f"{MISSION_ID}/sensor_data/image/{MISSION_ID}_image_{INSPECTION_ID}.jpg"
+        f"{MISSION_ID}/sensor_data/image/{MISSION_ID}_image_{inspection.id}.jpg"
     )
 
     assert blob_storage.blob_exists(
@@ -52,7 +51,7 @@ def test_blob_storage_store():
 def test_blob_storage_store_metadata():
     blob_storage: StorageMock = StorageMock()
     storage_service: StorageService = StorageService(storage=blob_storage)
-    inspection: Inspection = Image(INSPECTION_ID, ARBITRARY_IMAGE_METADATA)
+    inspection: Inspection = Image(ARBITRARY_IMAGE_METADATA)
     inspection.data = DATA_BYTES
 
     mission: Mission = Mission(

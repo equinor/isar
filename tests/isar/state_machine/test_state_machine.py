@@ -8,10 +8,10 @@ import pytest
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.mission import Mission
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from isar.state_machine.state_machine import StateMachine, States, main
+from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
-from robot_interface.models.mission import DriveToPose, Task
+from robot_interface.models.mission import DriveToPose, TakeImage, Task
 from robot_interface.models.mission.status import TaskStatus
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.robot_variables import mock_pose
@@ -178,7 +178,7 @@ def test_state_machine_failed_dependency(injector, state_machine_thread, mocker)
 def test_state_machine_with_successful_collection(injector, state_machine_thread):
     storage_mock: StorageInterface = injector.get(StorageInterface)
 
-    task: Task = MockTask.take_image_in_coordinate_direction()
+    task: TakeImage = MockTask.take_image_in_coordinate_direction()
     mission: Mission = Mission([task])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 

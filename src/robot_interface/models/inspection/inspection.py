@@ -1,7 +1,8 @@
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, List, Optional, Union
+from typing import List, Optional, Union
+from uuid import UUID, uuid4
 
 from robot_interface.models.geometry.pose import Pose
 
@@ -43,7 +44,7 @@ class VideoMetadata(InspectionMetadata):
 
 @dataclass
 class Inspection:
-    id: Any
+    id: UUID = field(default_factory=uuid4, init=False)
     metadata: InspectionMetadata
     data: Optional[bytes] = field(default=None, init=False)
 

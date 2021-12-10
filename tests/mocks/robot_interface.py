@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Sequence
 from uuid import UUID
 
 from robot_interface.models.geometry.frame import Frame
@@ -51,10 +51,10 @@ class MockRobot(RobotInterface):
         pass
 
     def get_inspection_references(self, current_task: Task) -> Sequence[Inspection]:
-        return [Image(id=current_task.id, metadata=mock_image_metadata())]
+        return [Image(metadata=mock_image_metadata())]
 
     def download_inspection_result(self, inspection: Inspection) -> Inspection:
-        image: Image = Image(inspection.id, mock_image_metadata())
+        image: Image = Image(mock_image_metadata())
         image.data = b"Some binary image data"
         return image
 
