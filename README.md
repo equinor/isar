@@ -41,13 +41,13 @@ FastAPI-framework is split into routers where the endpoint operations are define
 ## Installation
 
 ```bash
-$ pip install isar
+pip install isar
 ```
 
 To run ISAR:
 
 ```bash
-$ python main.py
+python main.py
 ```
 
 Note, running the full system requires that an implementation of a robot has been installed. See
@@ -72,9 +72,9 @@ the mission IDs must be unique.
 For local development, please fork the repository. Then, clone and install in the repository root folder:
 
 ```
-$ git clone https://github.com/equinor/isar
-$ cd isar
-$ pip install -e .[dev]
+git clone https://github.com/equinor/isar
+cd isar
+pip install -e .[dev]
 ```
 
 For `zsh` you might have to type `".[dev]"`
@@ -82,7 +82,7 @@ For `zsh` you might have to type `".[dev]"`
 Verify that you can run the tests:
 
 ```bash
-$ pytest -n 10 .
+pytest -n 10 .
 ```
 
 ## Robot integration
@@ -92,19 +92,19 @@ the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interf
 repo, i.e:
 
 ```bash
-$ pip install git+https://@github.com/equinor/isar-robot.git@main
+pip install git+https://@github.com/equinor/isar-robot.git@main
 ```
 
 Then, set an environment variable to the name of the package you installed:
 
 ```
-$ export ROBOT_PACKAGE=isar_robot
+export ROBOT_PACKAGE=isar_robot
 ```
 
 If you have the robot repository locally, you can simply install through
 
 ```bash
-$ pip install -e /path/to/robot/repo/
+pip install -e /path/to/robot/repo/
 ```
 
 ## Mission planner
@@ -164,7 +164,7 @@ AZURE_CLIENT_SECRET
 After following the steps in [Development](#dev), you can run the tests:
 
 ```bash
-$ pytest -n 10 .
+pytest -n 10 .
 ```
 
 To create an interface test in your robot repository, use the function `interface_test` from `robot_interface`. The argument should be an interface object from your robot specific implementation. See [isar-robot](https://github.com/equinor/isar-robot/blob/main/tests/interfaces/test_robotinterface.py) for example.
@@ -174,8 +174,8 @@ To create an interface test in your robot repository, use the function `interfac
 To build the project documentation, run the following commands:
 
 ```bash
-$ cd docs
-$ make docs
+cd docs
+make docs
 ```
 
 The documentation can now be viewed at `docs/build/html/index.html`.
