@@ -11,12 +11,10 @@ from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.storage.storage_interface import StorageInterface
 from robot_interface.models.inspection.inspection import (
-    Audio,
     Image,
     Inspection,
     InspectionMetadata,
     ThermalImage,
-    Video,
 )
 
 
@@ -41,12 +39,7 @@ class StorageService:
         self.storage.store(data=result.data, path=destination_path)
 
     def store_metadata(self, mission: Mission, inspections: List[Inspection]) -> None:
-        for inspection_type in [
-            Image,
-            ThermalImage,
-            Audio,
-            Video,
-        ]:
+        for inspection_type in [Image, ThermalImage]:
             self.store_metadata_for_inspection_type(
                 mission_id=mission.id,
                 inspections=inspections,
@@ -55,14 +48,10 @@ class StorageService:
         self.store_metadata_for_mission(mission=mission, inspections=inspections)
 
     def get_sensor_sub_folder_name(self, result: Inspection) -> str:
-        if isinstance(result, Audio):
-            return "audio"
-        elif isinstance(result, Image):
+        if isinstance(result, Image):
             return "image"
         elif isinstance(result, ThermalImage):
             return "thermal"
-        elif isinstance(result, Video):
-            return "video"
         else:
             raise TypeError(
                 "Inspection must be either Audio, Image, Video or a Reference to one of them"

@@ -11,7 +11,6 @@ from isar.services.utilities.threaded_request import (
     ThreadedRequestUnexpectedError,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission import TakeImage, TakeThermalImage, Task
 from robot_interface.models.mission.status import TaskStatus
 
 if TYPE_CHECKING:
@@ -62,7 +61,7 @@ class Send(State):
             if not self.state_machine._check_dependencies():
                 self.state_machine.current_task.status = TaskStatus.Failed
                 self.logger.warning(
-                    f"Dependancy for task {self.state_machine.current_task_index}: "
+                    f"Dependency for task {self.state_machine.current_task_index}: "
                     f"{self.state_machine.current_task.name}, not fulfilled, "
                     "skipping to next task"
                 )

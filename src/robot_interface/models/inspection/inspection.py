@@ -23,11 +23,6 @@ class InspectionMetadata(ABC):
 
 
 @dataclass
-class AudioMetadata(InspectionMetadata):
-    time_indexed_pose: List[TimeIndexedPose]
-
-
-@dataclass
 class ImageMetadata(InspectionMetadata):
     time_indexed_pose: TimeIndexedPose
 
@@ -38,20 +33,10 @@ class ThermalImageMetadata(InspectionMetadata):
 
 
 @dataclass
-class VideoMetadata(InspectionMetadata):
-    time_indexed_pose: List[TimeIndexedPose]
-
-
-@dataclass
 class Inspection:
     id: UUID = field(default_factory=uuid4, init=False)
     metadata: InspectionMetadata
     data: Optional[bytes] = field(default=None, init=False)
-
-
-@dataclass
-class Audio(Inspection):
-    metadata: AudioMetadata
 
 
 @dataclass
@@ -62,8 +47,3 @@ class Image(Inspection):
 @dataclass
 class ThermalImage(Inspection):
     metadata: ThermalImageMetadata
-
-
-@dataclass
-class Video(Inspection):
-    metadata: VideoMetadata
