@@ -24,6 +24,8 @@ setup(
     install_requires=[
         "fastapi",
         "uvicorn",
+        "click",
+        "pydantic",
         "fastapi-azure-auth",
         "PyJWT",
         "PyYAML",
