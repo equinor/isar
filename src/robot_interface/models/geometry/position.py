@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import List
 
@@ -25,3 +27,7 @@ class Position:
 
     def to_list(self) -> List[float]:
         return [self.x, self.y, self.z]
+
+    @staticmethod
+    def from_list(input_list: List, frame: Frame) -> Position:
+        return Position(x=input_list[0], y=input_list[1], z=input_list[2], frame=frame)

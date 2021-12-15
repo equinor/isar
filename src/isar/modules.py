@@ -225,7 +225,7 @@ def get_injector_modules() -> Tuple[List[Module], List[str]]:
     for module_key, module in modules.items():
 
         module_config_key = (
-            "default" if not module_key in module_config else module_config[module_key]
+            "default" if module_key not in module_config else module_config[module_key]
         )
 
         injector_modules.append(module[module_config_key])

@@ -4,6 +4,7 @@ from pathlib import Path
 from threading import Thread
 
 import pytest
+from injector import Injector
 
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.mission import Mission
@@ -20,9 +21,9 @@ from tests.mocks.task import MockTask
 
 class StateMachineThread(object):
     def __init__(self, injector) -> None:
-        self.injector = injector
-        self.state_machine = injector.get(StateMachine)
-        self._thread = Thread(target=main, args=[injector])
+        self.injector: Injector = injector
+        self.state_machine: StateMachine = injector.get(StateMachine)
+        self._thread: Thread = Thread(target=main, args=[injector])
         self._thread.daemon = True
         self._thread.start()
 
