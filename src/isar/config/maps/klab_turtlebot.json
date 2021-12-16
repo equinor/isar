@@ -1,0 +1,49 @@
+{
+  "map_name": "klab_turtlebot",
+  "robot_reference_points": {
+    "points": [
+      {
+        "x": -3.32535,
+        "y": 7.68465,
+        "z": 0,
+        "frame": "robot"
+      },
+      {
+        "x": -5.38357,
+        "y": 4.13757,
+        "z": 0,
+        "frame": "robot"
+      },
+      {
+        "x": 1.07685,
+        "y": 1.49371,
+        "z": 0,
+        "frame": "robot"
+      }
+    ],
+    "frame": "robot"
+  },
+  "asset_reference_points": {
+    "points": [
+      {
+        "x": 20258.894,
+        "y": 5244.558,
+        "z": 14.5,
+        "frame": "asset"
+      },
+      {
+        "x": 20260.792,
+        "y": 5248.469,
+        "z": 14.5,
+        "frame": "asset"
+      },
+      {
+        "x": 20254.044,
+        "y": 5250.635,
+        "z": 14.5,
+        "frame": "asset"
+      }
+    ],
+    "frame": "asset"
+  }
+}
