@@ -28,6 +28,7 @@ from isar.modules import (
     UtilitiesModule,
 )
 from isar.services.readers.base_reader import BaseReader
+from isar.state_machine.states_enum import States
 from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.geometry.position import Position
 from robot_interface.models.mission import DriveToPose
@@ -77,7 +78,8 @@ def run_before_and_after_tests():
     yield
 
     print("Removing temporary results folder for testing")
-    shutil.rmtree(results_folder)
+    if results_folder.exists():
+        shutil.rmtree(results_folder)
     print("Cleanup finished")
 
 
@@ -100,7 +102,7 @@ def test_successful_mission(
     mission: Mission = deepcopy(state_machine_thread.state_machine.current_mission)
 
     start_time: datetime = datetime.utcnow()
-    while state_machine_thread.state_machine.current_state != "idle":
+    while state_machine_thread.state_machine.current_state != States.Idle:
         if (datetime.utcnow() - start_time) > integration_test_timeout:
             raise TimeoutError
         time.sleep(5)
