@@ -43,16 +43,12 @@ def test_invalid_file_path(map_config_reader):
 
 
 def test_get_map_config_by_name(map_config_reader):
-    map_config_reader.predefined_map_config_folder = Path(
-        "./tests/test_data/test_map_config"
-    )
+    map_config_reader.map_config_folder = Path("./tests/test_data/test_map_config")
     map_config = map_config_reader.get_map_config_by_name("test_map")
     assert map_config == expected_map_config
 
 
 def test_handle_map_config_by_name_not_found(caplog, map_config_reader):
-    map_config_reader.predefined_map_config_folder = Path(
-        "./tests/test_data/test_map_config"
-    )
+    map_config_reader.map_config_folder = Path("./tests/test_data/test_map_config")
     map_config = map_config_reader.get_map_config_by_name("non_existing_test_map")
     assert map_config == None

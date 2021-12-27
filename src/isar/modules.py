@@ -186,7 +186,7 @@ class CoordinateModule(Module):
     @singleton
     def provide_transform(self, map_config_reader: MapConfigReader) -> Transformation:
         map_config: MapConfig = map_config_reader.get_map_config_by_name(
-            config.get("DEFAULT", "default_map")
+            config.get("DEFAULT", "map")
         )
         return Transformation(map_config=map_config)
 
