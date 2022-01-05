@@ -42,6 +42,16 @@ class BlobStorage(StorageInterface):
             )
             return False
 
+    def retrieve(self, data_path: Path, path: Path) -> None:
+        blob_client = self.get_blob_client(path)
+        try:
+            blob_data = blob_client.download_blob()
+        except ResourceNotFoundError as e:
+            logging.error(f"Blob not found in container. Error: {e}")
+
+        with open(data_path, "wb") as blob:
+            blob_data.readinto(blob)
+
     def blob_exists(self, path_to_blob: Path) -> bool:
         blob_client = self.get_blob_client(path_to_blob)
         try:

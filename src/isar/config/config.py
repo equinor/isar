@@ -1,13 +1,26 @@
 import importlib.resources as pkg_resources
+from argparse import ArgumentParser
 from configparser import ConfigParser
 from os import getenv
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 from isar.config.configuration_error import ConfigurationError
 
 
-class Config(object):
+class Args:
+    def __init__(self):
+        self.parser = ArgumentParser()
+
+        self.parser.add_argument("-s", "--settings-file", default="")
+        self.args = self.parser.parse_args()
+
+
+args = Args().args
+
+
+class Config:
     def __init__(self):
         load_dotenv()
 
@@ -24,6 +37,19 @@ class Config(object):
         robot_package: str = getenv("ROBOT_PACKAGE")
         if robot_package:
             self.parser.set("DEFAULT", "robot_package", robot_package)
+
+        setting_files: list[str] = [
+            "settings.ini",
+            args.settings_file,
+        ]
+
+        self._read_settings(setting_files)
+
+    def _read_settings(self, filepaths: list[str]) -> list[str]:
+        filepaths: list[Path] = [Path(filepath) for filepath in filepaths]
+        read_paths: list[str] = self.parser.read(filepaths)
+
+        return read_paths
 
     def get(self, section, option):
         return self.parser.get(section, option)
