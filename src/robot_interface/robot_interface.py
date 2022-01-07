@@ -45,7 +45,7 @@ class RobotInterface(metaclass=ABCMeta):
         Raises:
         ------
         RobotException
-            If the task status can't be retrived.
+            If the task status can't be retrieved.
 
         """
         raise NotImplementedError
@@ -72,7 +72,7 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def get_inspections(self, task: InspectionTask) -> Sequence[Inspection]:
-        """Return the inspecitons connected to the given task.
+        """Return the inspections connected to the given task.
 
         Parameters
         ----------
@@ -80,13 +80,13 @@ class RobotInterface(metaclass=ABCMeta):
 
         Returns
         -------
-        Sequence[InpsectionResult]
+        Sequence[InspectionResult]
             List containing all the inspection results connected to the given task.
 
         Raises
         ------
         RobotException
-            If the inspection results can't be retrived.
+            If the inspection results can't be retrieved.
 
         """
         raise NotImplementedError
