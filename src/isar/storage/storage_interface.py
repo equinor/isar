@@ -1,16 +1,18 @@
 from abc import ABCMeta, abstractmethod
-from pathlib import Path
+
+from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from robot_interface.models.inspection.inspection import Inspection
 
 
 class StorageInterface(metaclass=ABCMeta):
     @abstractmethod
-    def store(self, data: bytes, path: Path) -> bool:
+    def store(self, inspection: Inspection, metadata: MissionMetadata) -> bool:
         """
         Parameters
         ----------
-        data : bytes
-            The data to be stored.
-        path : pathlib.Path
-            Path to destination, relative from root folder in storage.
+        metadata : MissionMetadata
+            Metadata for the mission the inspection is a part of.
+        inspection : Inspection
+            The inspection object to be stored.
         """
         pass
