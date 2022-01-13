@@ -79,7 +79,6 @@ class EchoPlanner(MissionPlannerInterface):
             mission.tasks.append(drive_task)
             mission.tasks.extend(inspection_tasks)
 
-        mission.metadata.update_metadata(mission_plan)
         mission.set_task_dependencies()
         return mission
 

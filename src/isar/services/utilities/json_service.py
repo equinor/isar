@@ -1,6 +1,6 @@
 import json
 from dataclasses import asdict, is_dataclass
-from datetime import datetime
+from datetime import date, datetime
 from types import SimpleNamespace
 from uuid import UUID
 
@@ -34,5 +34,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         if isinstance(o, np.ndarray):
             return o.tolist()
         if isinstance(o, datetime):
+            return o.isoformat()
+        if isinstance(o, date):
             return o.isoformat()
         return super().default(o)

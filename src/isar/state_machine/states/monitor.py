@@ -1,17 +1,21 @@
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import List, Sequence, TYPE_CHECKING, Tuple, Union
 
 from injector import inject
 from transitions import State
 
+from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from isar.services.coordinates.transformation import Transformation
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission import TaskStatus
 from robot_interface.models.exceptions import RobotException
+from robot_interface.models.geometry.frame import Frame
+from robot_interface.models.inspection.inspection import Inspection, TimeIndexedPose
+from robot_interface.models.mission import InspectionTask, TaskStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -19,9 +23,11 @@ if TYPE_CHECKING:
 
 class Monitor(State):
     @inject
-    def __init__(self, state_machine: "StateMachine"):
+    def __init__(self, state_machine: "StateMachine", transform: Transformation):
         super().__init__(name="monitor", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
+        self.transform: Transformation = transform
+
         self.logger = logging.getLogger("state_machine")
 
         self.iteration_counter: int = 0
@@ -69,6 +75,30 @@ class Monitor(State):
             self.state_machine.current_task.status = task_status
 
             if self._task_completed(task_status=self.state_machine.current_task.status):
+                if isinstance(self.state_machine.current_task, InspectionTask):
+                    inspections: Sequence[
+                        Inspection
+                    ] = self.state_machine.robot.get_inspections(
+                        task=self.state_machine.current_task
+                    )
+
+                    mission_metadata: MissionMetadata = (
+                        self.state_machine.current_mission.metadata
+                    )
+                    for inspection in inspections:
+                        inspection.metadata.tag_id = (
+                            self.state_machine.current_task.tag_id
+                        )
+                        self._transform_poses_to_asset_frame(
+                            time_indexed_pose=inspection.metadata.time_indexed_pose
+                        )
+
+                        message: Tuple[Inspection, MissionMetadata] = (
+                            inspection,
+                            mission_metadata,
+                        )
+                        self.state_machine.queues.upload_queue.put(message)
+
                 next_state = States.Send
                 break
             else:
@@ -87,3 +117,15 @@ class Monitor(State):
         elif task_status == TaskStatus.Completed:
             return True
         return False
+
+    def _transform_poses_to_asset_frame(
+        self, time_indexed_pose: Union[TimeIndexedPose, List[TimeIndexedPose]]
+    ):
+        if isinstance(time_indexed_pose, TimeIndexedPose):
+            time_indexed_pose = [time_indexed_pose]
+
+        for indexed_pose in time_indexed_pose:
+            indexed_pose.pose = self.transform.transform_pose(
+                pose=indexed_pose.pose,
+                to_=Frame.Asset,
+            )

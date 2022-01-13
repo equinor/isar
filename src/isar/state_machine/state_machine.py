@@ -20,7 +20,6 @@ from isar.models.mission import Mission
 from isar.services.coordinates.transformation import Transformation
 from isar.state_machine.states import Cancel, Idle, Monitor, Off, Send
 from isar.state_machine.states_enum import States
-from isar.storage.storage_service import StorageService
 from robot_interface.models.exceptions import RobotException
 from robot_interface.models.mission.status import TaskStatus
 from robot_interface.models.mission.task import Task
@@ -35,7 +34,6 @@ class StateMachine(object):
         self,
         queues: Queues,
         robot: RobotInterface,
-        storage_service: StorageService,
         transform: Transformation,
         sleep_time: float = config.getfloat("DEFAULT", "fsm_sleep_time"),
         stop_robot_attempts_limit: int = config.getint(
@@ -53,8 +51,6 @@ class StateMachine(object):
             Queues used for API communication.
         robot : RobotInterface
             Instance of robot interface.
-        storage_service : StorageService
-            Instance of StorageService.
         sleep_time : float
             Time to sleep in between state machine iterations.
         stop_robot_attempts_limit : int
@@ -72,8 +68,8 @@ class StateMachine(object):
             Off(self),
             Idle(self),
             Send(self),
-            Monitor(self),
-            Cancel(self, transform, storage_service),
+            Monitor(self, transform=transform),
+            Cancel(self),
         ]
         self.machine = Machine(
             self,
