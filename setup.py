@@ -38,6 +38,7 @@ setup(
         "numpy",
         "python-dotenv",
         "requests",
+        "requests-toolbelt",
         "transitions",
     ],
     extras_require={

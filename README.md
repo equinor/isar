@@ -139,13 +139,15 @@ selection [here](./src/isar/modules.py). Note that you must add your module as a
 
 ## Storage
 
-The storage module that is currently in use is defined by the `storage` configuration variable. This can be set in
-the [default configuration](./src/isar/config/default.ini). The available options are
+The storage modules that are used is defined by the `storage` configuration variable. This can be set in
+the [default configuration](./src/isar/config/default.ini). It accepts a comma separated string and will use each
+element in the list to retrieve the corresponding handler. The current options are
 
 ```
-storage = local
-storage = blob
+storage = local, blob, slimm
 ```
+
+Note that the `blob` and `slimm` options require special configuration to authenticate to these endpoints.
 
 ### Implement your own storage module
 

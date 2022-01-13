@@ -26,7 +26,6 @@ from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states import Idle, Monitor, Send
-from isar.storage.storage_service import StorageService
 from tests.mocks.robot_interface import MockRobot
 from tests.test_modules import (
     MockAuthenticationModule,
@@ -117,12 +116,7 @@ def keyvault(injector):
 
 @pytest.fixture()
 def state_machine(injector, robot, transform):
-    return StateMachine(
-        queues=injector.get(Queues),
-        robot=robot,
-        transform=transform,
-        storage_service=injector.get(StorageService),
-    )
+    return StateMachine(queues=injector.get(Queues), robot=robot, transform=transform)
 
 
 @pytest.fixture()
@@ -136,8 +130,8 @@ def send(state_machine):
 
 
 @pytest.fixture()
-def monitor(state_machine):
-    return Monitor(state_machine)
+def monitor(state_machine, transform):
+    return Monitor(state_machine=state_machine, transform=transform)
 
 
 @pytest.fixture()

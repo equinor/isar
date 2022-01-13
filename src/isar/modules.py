@@ -2,7 +2,7 @@ from importlib import import_module
 from types import ModuleType
 from typing import List, Tuple
 
-from injector import Module, provider, singleton
+from injector import Module, multiprovider, provider, singleton
 
 from isar.apis.api import API
 from isar.apis.schedule.drive_to import DriveTo
@@ -24,8 +24,8 @@ from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.storage.blob_storage import BlobStorage
 from isar.storage.local_storage import LocalStorage
+from isar.storage.slimm_storage import SlimmStorage
 from isar.storage.storage_interface import StorageInterface
-from isar.storage.storage_service import StorageService
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -92,24 +92,26 @@ class RequestHandlerModule(Module):
 
 
 class BlobStorageModule(Module):
-    @provider
+    @multiprovider
     @singleton
-    def provide_blob_storage(self, keyvault: Keyvault) -> StorageInterface:
-        return BlobStorage(keyvault)
+    def provide_blob_storage(self, keyvault: Keyvault) -> List[StorageInterface]:
+        return [BlobStorage(keyvault)]
 
 
 class LocalStorageModule(Module):
-    @provider
+    @multiprovider
     @singleton
-    def provide_local_storage(self) -> StorageInterface:
-        return LocalStorage()
+    def provide_local_storage(self) -> List[StorageInterface]:
+        return [LocalStorage()]
 
 
-class StorageServiceModule(Module):
-    @provider
+class SlimmStorageModule(Module):
+    @multiprovider
     @singleton
-    def provide_storage_service(self, storage: StorageInterface) -> StorageService:
-        return StorageService(storage=storage)
+    def provide_slimm_storage(
+        self, request_handler: RequestHandler
+    ) -> List[StorageInterface]:
+        return [SlimmStorage(request_handler=request_handler)]
 
 
 class LocalPlannerModule(Module):
@@ -144,13 +146,11 @@ class StateMachineModule(Module):
         self,
         queues: Queues,
         robot: RobotInterface,
-        storage_service: StorageService,
         transform: Transformation,
     ) -> StateMachine:
         return StateMachine(
             queues=queues,
             robot=robot,
-            storage_service=storage_service,
             transform=transform,
         )
 
@@ -206,11 +206,11 @@ modules: dict = {
     },
     "service": {"default": ServiceModule},
     "state_machine": {"default": StateMachineModule},
-    "storage_service": {"default": StorageServiceModule},
     "storage": {
         "default": LocalStorageModule,
         "local": LocalStorageModule,
         "blob": BlobStorageModule,
+        "slimm": SlimmStorageModule,
     },
     "utilities": {"default": UtilitiesModule},
 }
@@ -223,12 +223,17 @@ def get_injector_modules() -> Tuple[List[Module], List[str]]:
     module_config: dict = dict(config.items("modules"))
 
     for module_key, module in modules.items():
+        if module_key not in module_config:
+            injector_modules.append(module["default"])
+            module_config_keys.append(f"{module_key} : default")
 
-        module_config_key = (
-            "default" if module_key not in module_config else module_config[module_key]
-        )
+        else:
+            config_list: List[str] = [
+                x.strip() for x in module_config[module_key].split(",")
+            ]
 
-        injector_modules.append(module[module_config_key])
-        module_config_keys.append(f"{module_key} : {module_config_key}")
+            for module_config_key in config_list:
+                injector_modules.append(module[module_config_key])
+                module_config_keys.append(f"{module_key} : {module_config_key}")
 
     return injector_modules, module_config_keys

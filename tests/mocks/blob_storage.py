@@ -1,16 +1,16 @@
-from pathlib import Path
 from typing import List
 
+from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageInterface
+from robot_interface.models.inspection.inspection import Inspection
 
 
 class StorageMock(StorageInterface):
     def __init__(self) -> None:
-        self.paths: List[Path] = []
+        self.stored_inspections: List[Inspection] = []
 
-    def store(self, data: bytes, path: Path) -> bool:
-        self.paths.append(path)
-        return True
+    def store(self, inspection: Inspection, metadata: MissionMetadata):
+        self.stored_inspections.append(inspection)
 
-    def blob_exists(self, path: Path) -> bool:
-        return path in self.paths
+    def blob_exists(self, inspection: Inspection) -> bool:
+        return inspection in self.stored_inspections

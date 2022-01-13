@@ -55,6 +55,7 @@ class InspectionTask(Task):
     """
 
     inspections: List[Inspection] = field(default_factory=list, init=False)
+    tag_id: Optional[str] = field(default=None, init=False)
 
     pass
 
@@ -106,7 +107,6 @@ class TakeImage(InspectionTask):
 
     target: Position
     name: Literal["take_image"] = "take_image"
-    tag_id: Optional[str] = None
     depends_on: Optional[List[int]] = None
 
 
@@ -118,7 +118,6 @@ class TakeThermalImage(InspectionTask):
 
     target: Position
     name: Literal["take_thermal_image"] = "take_thermal_image"
-    tag_id: Optional[str] = None
     depends_on: Optional[List[int]] = None
 
 

@@ -1,7 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import Optional
 from uuid import UUID, uuid4
 
 from robot_interface.models.geometry.pose import Pose
@@ -16,7 +16,7 @@ class TimeIndexedPose:
 @dataclass
 class InspectionMetadata(ABC):
     start_time: datetime
-    time_indexed_pose: Union[TimeIndexedPose, List[TimeIndexedPose]]
+    time_indexed_pose: TimeIndexedPose
     file_type: str
     tag_id: Optional[str] = field(default=None, init=False)
     additional: Optional[dict] = field(default=None, init=False)
@@ -24,12 +24,12 @@ class InspectionMetadata(ABC):
 
 @dataclass
 class ImageMetadata(InspectionMetadata):
-    time_indexed_pose: TimeIndexedPose
+    pass
 
 
 @dataclass
 class ThermalImageMetadata(InspectionMetadata):
-    time_indexed_pose: TimeIndexedPose
+    pass
 
 
 @dataclass
