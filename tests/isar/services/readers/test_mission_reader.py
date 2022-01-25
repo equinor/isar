@@ -87,7 +87,14 @@ def test_mission_dependencies(mission_reader):
     mission: Mission = mission_reader.read_mission_from_file(mission_path)
     mission.set_task_dependencies()
 
-    task_dependencies = [None, None, [1], None, [0], [1, 2]]
+    task_dependencies = [
+        None,
+        None,
+        [mission.tasks[1].id],
+        None,
+        [mission.tasks[0].id],
+        [mission.tasks[1].id, mission.tasks[2].id],
+    ]
 
-    for index, tasks in enumerate(mission.tasks):
-        assert tasks.depends_on == task_dependencies[index]
+    for task, dependencies in zip(mission.tasks, task_dependencies):
+        assert task.depends_on == dependencies
