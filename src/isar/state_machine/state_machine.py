@@ -21,10 +21,10 @@ from isar.services.coordinates.transformation import Transformation
 from isar.state_machine.states import Cancel, Idle, Monitor, Off, Send
 from isar.state_machine.states_enum import States
 from isar.storage.storage_service import StorageService
+from robot_interface.models.exceptions import RobotException
 from robot_interface.models.mission.status import TaskStatus
 from robot_interface.models.mission.task import Task
 from robot_interface.robot_interface import RobotInterface
-from robot_interface.models.exceptions import RobotException
 
 
 class StateMachine(object):
@@ -262,12 +262,15 @@ class StateMachine(object):
     def _check_dependencies(self):
         """Check dependencies of previous tasks"""
         if self.current_task and self.current_task.depends_on:
-            for task_index in self.current_task.depends_on:
-                if (
-                    self.current_mission.tasks[task_index].status
-                    is not TaskStatus.Completed
-                ):
-                    return False
+            dependency_tasks = [
+                task
+                for task in self.current_mission.tasks
+                if task.id in self.current_task.depends_on
+            ]
+            if not all(
+                [task.status == TaskStatus.Completed for task in dependency_tasks]
+            ):
+                return False
         return True
 
 

@@ -21,12 +21,16 @@ class Mission:
 
     def set_task_dependencies(self):
         last_drive_to_task = None
-        for task_index, task in enumerate(self.tasks):
+        for task in self.tasks:
             if isinstance(task, DriveToPose):
-                last_drive_to_task = task_index
+                last_drive_to_task = task
+                if task.depends_on:
+                    task.depends_on = [self.tasks[ind].id for ind in task.depends_on]
             elif isinstance(task, InspectionTask):
                 if task.depends_on is None:
-                    task.depends_on = [last_drive_to_task]
+                    task.depends_on = [last_drive_to_task.id]
+                else:
+                    task.depends_on = [self.tasks[ind].id for ind in task.depends_on]
 
     def _set_unique_id(self) -> None:
         plant_short_name: str = config.get("metadata", "plant_short_name")
