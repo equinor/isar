@@ -1,4 +1,5 @@
 import logging
+from http import HTTPStatus
 from logging import Logger
 from typing import Union
 
@@ -10,6 +11,7 @@ from fastapi.routing import APIRouter
 from injector import inject
 from pydantic import AnyHttpUrl
 
+from isar.apis.models.models import StartResponse, StopResponse
 from isar.apis.schedule.drive_to import DriveTo
 from isar.apis.schedule.start_mission import StartMission
 from isar.apis.schedule.stop_mission import StopMission
@@ -97,6 +99,24 @@ class API:
             self.start_mission.post,
             methods=["POST"],
             dependencies=[authentication_dependency],
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Mission succesfully started",
+                    "model": StartResponse,
+                },
+                HTTPStatus.NOT_FOUND.value: {
+                    "description": "Not found - Mission not found",
+                    "model": StartResponse,
+                },
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Mission already ongoing",
+                    "model": StartResponse,
+                },
+                HTTPStatus.REQUEST_TIMEOUT.value: {
+                    "description": "Timeout - Could not contact state machine",
+                    "model": StartResponse,
+                },
+            },
         )
 
         router.add_api_route(
@@ -104,6 +124,16 @@ class API:
             self.stop_mission.post,
             methods=["POST"],
             dependencies=[authentication_dependency],
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Mission succesfully stopped",
+                    "model": StopResponse,
+                },
+                HTTPStatus.REQUEST_TIMEOUT.value: {
+                    "description": "Timeout - Could not contact state machine",
+                    "model": StopResponse,
+                },
+            },
         )
         router.add_api_route(
             "/schedule/drive-to",
