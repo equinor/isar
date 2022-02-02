@@ -1,10 +1,10 @@
 import logging
-from dataclasses import asdict
 from http import HTTPStatus
 
+from fastapi import Response
 from injector import inject
-from starlette.responses import JSONResponse
 
+from isar.apis.models import StopResponse
 from isar.config import config
 from isar.models.communication.messages import StopMessage, StopMissionMessages
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
@@ -19,7 +19,7 @@ class StopMission:
         self.queues = queues
         self.queue_timeout: int = config.getint("DEFAULT", "queue_timeout")
 
-    def post(self):
+    def post(self, response: Response):
 
         self.queues.stop_mission.input.put(True)
 
@@ -30,9 +30,8 @@ class StopMission:
             )
         except QueueTimeoutError:
             message = StopMissionMessages.queue_timeout()
-            status_code = HTTPStatus.REQUEST_TIMEOUT
-            self.logger.error((message, status_code))
-            return JSONResponse(content=asdict(message), status_code=status_code)
-        response = message, HTTPStatus.OK
+            self.logger.error((message, HTTPStatus.REQUEST_TIMEOUT))
+            response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
+            return StopResponse(message=message.message, stopped=message.stopped)
         self.logger.info(response)
-        return JSONResponse(content=asdict(message), status_code=HTTPStatus.OK)
+        return StopResponse(message=message.message, stopped=message.stopped)

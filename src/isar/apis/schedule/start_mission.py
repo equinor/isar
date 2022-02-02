@@ -1,11 +1,10 @@
 import logging
-from dataclasses import asdict
 from http import HTTPStatus
 
-from fastapi import Query
-from fastapi.responses import JSONResponse
+from fastapi import Query, Response
 from injector import inject
 
+from isar.apis.models import StartResponse
 from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
     MissionPlannerInterface,
@@ -28,6 +27,7 @@ class StartMission:
 
     def post(
         self,
+        response: Response,
         mission_id: int = Query(
             ...,
             alias="ID",
@@ -41,14 +41,22 @@ class StartMission:
         except MissionPlannerError as e:
             message = StartMissionMessages.mission_not_found()
             self.logger.error(e)
-            return JSONResponse(
-                content=asdict(message), status_code=HTTPStatus.NOT_FOUND
-            )
+            response.status_code = HTTPStatus.NOT_FOUND.value
+            return StartResponse(message=message.message, started=message.started)
 
-        ready, response = self.scheduling_utilities.ready_to_start_mission()
-        if ready:
-            response = self.scheduling_utilities.start_mission(mission=mission)
-            self.logger.info(response)
+        ready, response_ready_start = self.scheduling_utilities.ready_to_start_mission()
+        if not ready:
+            message, status_code_ready_start = response_ready_start
+            response.status_code = status_code_ready_start.value
+            return StartResponse(message=message.message, started=message.started)
 
-        message, status_code = response
-        return JSONResponse(content=asdict(message), status_code=status_code)
+        response_scheduler = self.scheduling_utilities.start_mission(mission=mission)
+        self.logger.info(response_scheduler)
+
+        message_scheduler, status_code_scheduler = response_scheduler
+        response.status_code = status_code_scheduler.value
+        return StartResponse(
+            message=message_scheduler.message,
+            started=message_scheduler.started,
+            mission_id=str(mission.id),
+        )

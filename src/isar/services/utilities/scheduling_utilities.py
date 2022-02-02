@@ -31,7 +31,9 @@ class SchedulingUtilities:
         self.queue_timeout: int = queue_timeout
         self.logger = logging.getLogger("api")
 
-    def ready_to_start_mission(self) -> Tuple[bool, Optional[Tuple[StartMessage, int]]]:
+    def ready_to_start_mission(
+        self,
+    ) -> Tuple[bool, Optional[Tuple[StartMessage, HTTPStatus]]]:
         """
         Checks the current mission status by communicating with the state machine thread through queues.
         :return: (True, None) if the mission may be started. Otherwise (False, response) with a relevant response
@@ -56,7 +58,7 @@ class SchedulingUtilities:
             return False, error_message
         return True, None
 
-    def start_mission(self, mission: Mission) -> Tuple[StartMessage, int]:
+    def start_mission(self, mission: Mission) -> Tuple[StartMessage, HTTPStatus]:
         """
         Starts a mission by communicating with the state machine thread through queues.
         :param mission: A Mission containing the mission tasks to be started.
