@@ -1,3 +1,4 @@
+import configparser
 import importlib.resources as pkg_resources
 from configparser import ConfigParser
 from os import getenv
@@ -11,7 +12,7 @@ class Config(object):
     def __init__(self):
         load_dotenv()
 
-        self.parser = ConfigParser()
+        self.parser = ConfigParser(interpolation=configparser.ExtendedInterpolation())
 
         with pkg_resources.path("isar.config", "default.ini") as filepath:
             found_default: bool = self.parser.read(filepath)

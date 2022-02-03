@@ -10,8 +10,8 @@ from isar.services.utilities.threaded_request import (
     ThreadedRequestNotFinishedError,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission.status import TaskStatus
 from robot_interface.models.exceptions import RobotException
+from robot_interface.models.mission.status import TaskStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -30,13 +30,21 @@ class Send(State):
         self.send_thread = None
 
     def start(self):
-        self.state_machine.update_status()
+        self.state_machine.update_state()
         self.state_machine.update_current_task()
         self.logger.info(f"State: {self.state_machine.current_state}")
+
+        if self.state_machine.mqtt_client:
+            self.state_machine.publish_task_status()
+            self.state_machine.publish_mission()
 
         self._run()
 
     def stop(self):
+        if self.state_machine.mqtt_client:
+            self.state_machine.publish_task_status()
+            self.state_machine.publish_mission()
+
         self.send_failure_counter = 0
         if self.send_thread:
             self.send_thread.wait_for_thread()
@@ -65,6 +73,7 @@ class Send(State):
                     f"{self.state_machine.current_task.name}, not fulfilled, "
                     "skipping to next task"
                 )
+
                 next_state: States = States.Send
                 break
 

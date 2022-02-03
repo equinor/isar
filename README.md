@@ -175,6 +175,22 @@ AZURE_TENANT_ID
 AZURE_CLIENT_SECRET
 ```
 
+## MQTT communication
+ISAR is able to publish parts of its internal state to topics on an MQTT broker whenever they change. This is by 
+default turned off but may be activated by setting
+```
+mqtt_enabled = true
+```
+in [default.ini](./src/isar/config/default.ini). The connection to the broker will be determined by the following 
+configuration values in [default.ini](./src/isar/config/default.ini).
+```
+mqtt_username
+mqtt_host
+mqtt_port
+```
+In addition, the `MQTT_PASSWORD` environment variable should be available for connection to the broker. If username 
+and password is not specified both will default to empty strings.
+
 ## Running tests
 
 After following the steps in [Development](#dev), you can run the tests:

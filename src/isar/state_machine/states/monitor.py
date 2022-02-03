@@ -36,12 +36,16 @@ class Monitor(State):
         self.task_status_thread = None
 
     def start(self):
-        self.state_machine.update_status()
+        self.state_machine.update_state()
         self.logger.info(f"State: {self.state_machine.current_state}")
 
         self._run()
 
     def stop(self):
+        if self.state_machine.mqtt_client:
+            self.state_machine.publish_task_status()
+            self.state_machine.publish_mission()
+
         self.iteration_counter = 0
         if self.task_status_thread:
             self.task_status_thread.wait_for_thread()
@@ -65,7 +69,7 @@ class Monitor(State):
                 self.task_status_thread.start_thread()
 
             try:
-                task_status = self.task_status_thread.get_output()
+                task_status: TaskStatus = self.task_status_thread.get_output()
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
