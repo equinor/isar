@@ -1,3 +1,4 @@
+import json
 import logging
 import queue
 from collections import deque
@@ -18,6 +19,10 @@ from isar.models.communication.queues.queues import Queues
 from isar.models.communication.status import Status
 from isar.models.mission import Mission
 from isar.services.coordinates.transformation import Transformation
+from isar.services.service_connections.mqtt.mqtt_client import (
+    MqttClientInterface,
+)
+from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.state_machine.states import Cancel, Idle, Monitor, Off, Send
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions import RobotException
@@ -35,6 +40,7 @@ class StateMachine(object):
         queues: Queues,
         robot: RobotInterface,
         transform: Transformation,
+        mqtt_client: MqttClientInterface,
         sleep_time: float = config.getfloat("DEFAULT", "fsm_sleep_time"),
         stop_robot_attempts_limit: int = config.getint(
             "DEFAULT", "stop_robot_attempts_limit"
@@ -63,6 +69,7 @@ class StateMachine(object):
 
         self.queues = queues
         self.robot = robot
+        self.mqtt_client: Optional[MqttClientInterface] = mqtt_client
 
         self.states = [
             Off(self),
@@ -118,14 +125,23 @@ class StateMachine(object):
 
     def update_current_task(self):
         self.current_task_index += 1
-        if len(self.current_mission.tasks) > (self.current_task_index):
+        if len(self.current_mission.tasks) > self.current_task_index:
             self.current_task = self.current_mission.tasks[self.current_task_index]
         else:
             self.current_task = None
 
-    def update_status(self):
+    def update_state(self):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)
+
+        payload: str = json.dumps({"state": self.current_state})
+
+        if self.mqtt_client:
+            self.mqtt_client.publish(
+                topic=config.get("mqtt_topics", "isar_state"),
+                payload=payload,
+                retain=True,
+            )
 
     def reset_state_machine(self) -> States:
         """Resets the state machine.
@@ -249,6 +265,33 @@ class StateMachine(object):
         message: StopMessage = StopMissionMessages.success()
         self.queues.stop_mission.output.put(deepcopy(message))
         self.logger.info(message)
+
+    def publish_task_status(self) -> None:
+        """Publishes the current task status to the MQTT Broker"""
+        payload: str = json.dumps(
+            {
+                "task_id": self.current_task.id if self.current_task else None,
+                "task_status": self.current_task.status if self.current_task else None,
+            },
+            cls=EnhancedJSONEncoder,
+        )
+
+        self.mqtt_client.publish(
+            topic=config.get("mqtt_topics", "isar_task_status"),
+            payload=payload,
+            retain=True,
+        )
+
+    def publish_mission(self) -> None:
+        payload: str = json.dumps(
+            {"mission": self.current_mission}, cls=EnhancedJSONEncoder
+        )
+
+        self.mqtt_client.publish(
+            topic=config.get("mqtt_topics", "isar_mission"),
+            payload=payload,
+            retain=True,
+        )
 
     def _log_state_transition(self, next_state):
         """Logs all state transitions that are not self-transitions."""

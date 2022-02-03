@@ -37,4 +37,6 @@ class EnhancedJSONEncoder(json.JSONEncoder):
             return o.isoformat()
         if isinstance(o, date):
             return o.isoformat()
+        if isinstance(o, bytes):
+            return "<<non-serializable: bytes>>"
         return super().default(o)

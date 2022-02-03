@@ -18,6 +18,10 @@ from isar.models.communication.queues.queues import Queues
 from isar.models.map.map_config import MapConfig
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
+from isar.services.service_connections.mqtt.mqtt_client import (
+    MqttClient,
+    MqttClientInterface,
+)
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -147,11 +151,10 @@ class StateMachineModule(Module):
         queues: Queues,
         robot: RobotInterface,
         transform: Transformation,
+        mqtt_client: MqttClientInterface,
     ) -> StateMachine:
         return StateMachine(
-            queues=queues,
-            robot=robot,
-            transform=transform,
+            queues=queues, robot=robot, transform=transform, mqtt_client=mqtt_client
         )
 
 
@@ -191,6 +194,16 @@ class CoordinateModule(Module):
         return Transformation(map_config=map_config)
 
 
+class MqttModule(Module):
+    @provider
+    @singleton
+    def provide_mqtt_client(self) -> MqttClientInterface:
+        mqtt_enabled: bool = config.getboolean("modules", "mqtt_enabled")
+        if mqtt_enabled:
+            return MqttClient()
+        return None
+
+
 modules: dict = {
     "api": {"default": APIModule},
     "authentication": {"default": AuthenticationModule},
@@ -211,6 +224,11 @@ modules: dict = {
         "local": LocalStorageModule,
         "blob": BlobStorageModule,
         "slimm": SlimmStorageModule,
+    },
+    "mqtt_enabled": {
+        "default": MqttModule,
+        "false": MqttModule,
+        "true": MqttModule,
     },
     "utilities": {"default": UtilitiesModule},
 }

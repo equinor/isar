@@ -16,7 +16,7 @@ class Cancel(State):
         self.logger = logging.getLogger("state_machine")
 
     def start(self):
-        self.state_machine.update_status()
+        self.state_machine.update_state()
         self.logger.info(f"State: {self.state_machine.current_state}")
 
         self._log_task_status()

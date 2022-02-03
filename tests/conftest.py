@@ -21,6 +21,7 @@ from isar.modules import (
 )
 from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.map_reader import MapConfigReader
+from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -29,6 +30,7 @@ from isar.state_machine.states import Idle, Monitor, Send
 from tests.mocks.robot_interface import MockRobot
 from tests.test_modules import (
     MockAuthenticationModule,
+    MockMqttModule,
     MockNoAuthenticationModule,
     MockRobotModule,
     MockStorageModule,
@@ -40,16 +42,17 @@ def injector():
     return Injector(
         [
             APIModule,
-            MockNoAuthenticationModule,
             CoordinateModule,
+            LocalPlannerModule,
+            MockMqttModule,
+            MockNoAuthenticationModule,
+            MockRobotModule,
+            MockStorageModule,
             QueuesModule,
             ReaderModule,
             RequestHandlerModule,
-            MockRobotModule,
             ServiceModule,
             StateMachineModule,
-            LocalPlannerModule,
-            MockStorageModule,
             UtilitiesModule,
         ]
     )
@@ -60,16 +63,17 @@ def injector_auth():
     return Injector(
         [
             APIModule,
-            MockAuthenticationModule,
             CoordinateModule,
+            LocalPlannerModule,
+            MockAuthenticationModule,
+            MockMqttModule,
+            MockRobotModule,
+            MockStorageModule,
             QueuesModule,
             ReaderModule,
             RequestHandlerModule,
-            MockRobotModule,
             ServiceModule,
             StateMachineModule,
-            LocalPlannerModule,
-            MockStorageModule,
             UtilitiesModule,
         ]
     )
@@ -116,7 +120,12 @@ def keyvault(injector):
 
 @pytest.fixture()
 def state_machine(injector, robot, transform):
-    return StateMachine(queues=injector.get(Queues), robot=robot, transform=transform)
+    return StateMachine(
+        queues=injector.get(Queues),
+        robot=robot,
+        transform=transform,
+        mqtt_client=injector.get(MqttClientInterface),
+    )
 
 
 @pytest.fixture()
