@@ -16,27 +16,42 @@ from isar.storage.uploader import Uploader
 
 if __name__ == "__main__":
     setup_logger()
+    logger: Logger = logging.getLogger("main")
 
     injector_modules, module_config_keys = get_injector_modules()
     injector: Injector = Injector(injector_modules)
 
-    state_machine_thread: Thread = Thread(target=main, args=[injector])
-    state_machine_thread.start()
+    module_config_log = "\n".join(module_config_keys)
+    logger.info(f"Loaded the following module configurations:\n{module_config_log}")
+
+    threads: List[Thread] = []
+
+    state_machine_thread: Thread = Thread(
+        target=main, name="ISAR State Machine", args=[injector], daemon=True
+    )
+    threads.append(state_machine_thread)
 
     uploader: Uploader = Uploader(
         upload_queue=injector.get(Queues).upload_queue,
         storage_handlers=injector.get(List[StorageInterface]),
     )
 
-    uploader_thread: Thread = Thread(target=uploader.run)
-    uploader_thread.start()
+    uploader_thread: Thread = Thread(
+        target=uploader.run, name="ISAR Uploader", daemon=True
+    )
+    threads.append(uploader_thread)
 
     host: str = config.get("DEFAULT", "api_host")
     port: int = config.getint("DEFAULT", "api_port")
 
-    logger: Logger = logging.getLogger("api")
+    api: API = injector.get(API)
+    api_thread: Thread = Thread(target=api.run_app, name="ISAR API", daemon=True)
+    threads.append(api_thread)
 
-    module_config_log = "\n".join(module_config_keys)
-    logger.info(f"Loaded the following module configurations:\n{module_config_log}")
+    for thread in threads:
+        thread.start()
+        logger.info(f"Started thread: {thread.name}")
 
-    injector.get(API).run_app()
+    for thread in threads:
+        thread.join()
+        logger.info(f"Joined thread: {thread.name}")
