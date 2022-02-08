@@ -89,12 +89,15 @@ def test_reset_state_machine(state_machine):
     assert next_state is States.Idle
 
 
+empty_mission: Mission = Mission([], None)
+
+
 @pytest.mark.parametrize(
     "mission, mission_in_progress, expected_output",
     [
         (None, True, (False, None)),
-        (Mission([], None), True, (False, None)),
-        (Mission([], None), False, (True, Mission([], None))),
+        (empty_mission, True, (False, None)),
+        (empty_mission, False, (True, empty_mission)),
     ],
 )
 def test_should_start_mission(
