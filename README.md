@@ -8,6 +8,124 @@ ISAR - Integration and Supervisory control of Autonomous Robots - is a tool for 
 operator systems. Through the ISAR API you can send commands to a robot to do missions and collect results from the
 missions.
 
+## Getting started
+There are 2 ways of getting started
+* Install and run, see [here](#installation)
+* Develop and run, see right below. The steps are
+  - Install for development
+  - Integrate a robot
+  - Run a robot mission
+
+### Install for development
+
+For local development, please fork the repository. Then, clone and install in the repository root folder:
+
+```
+git clone https://github.com/equinor/isar
+cd isar
+pip install -e .[dev]
+```
+
+For `zsh` you might have to type `".[dev]"`
+
+Verify that you can run the tests:
+
+```bash
+pytest .
+```
+
+### Robot integration
+
+To connect the state machine to a robot in a separate repository, it is required that the separate repository implements
+the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interface/robot_interface.py). A mocked robot
+can be found in [this repository](https://github.com/equinor/isar-robot). Install the repo, i.e:
+
+```bash
+pip install git+https://@github.com/equinor/isar-robot.git@main
+```
+
+Then, ensure the `robot_package` variable
+in [default.ini](./src/isar/config/default.ini)
+is set to the name of the package you installed. `isar_robot` is set by default.
+
+If you have the robot repository locally, you can simply install through
+
+```bash
+pip install -e /path/to/robot/repo/
+```
+
+#### Running ISAR with a robot simulator
+
+A simulator based on the open source robot Turtlebot3 has been implemented for use with ISAR and may be
+found [here](https://github.com/equinor/isar-turtlebot). Follow the installation instructions for the simulator and
+install `isar-turtlebot` in the same manner as given in the [robot integration](#robot-integration) section. Set the
+following configuration variables
+in [default.ini](./src/isar/config/default.ini):
+
+```bash
+robot_package = isar_turtlebot
+default_map = turtleworld
+```
+
+### Running a robot mission
+
+Once the application has been started the swagger site may be accessed at
+
+```
+http://localhost:3000/docs
+```
+
+Execute the `/schedule/start-mission` endpoint with `mission_id=1` to run a mission.
+
+In [this](./src/isar/config/predefined_missions) folder there are predefined default missions, for example the mission
+corresponding to `mission_id=1`. A new mission may be added by adding a new json-file with a mission description. Note,
+the mission IDs must be unique.
+
+### Running tests
+
+After following the steps in [Development](#install-for-development), you can run the tests:
+
+```bash
+pytest .
+```
+
+To create an interface test in your robot repository, use the function `interface_test` from `robot_interface`. The
+argument should be an interface object from your robot specific implementation.
+See [isar-robot](https://github.com/equinor/isar-robot/blob/main/tests/interfaces/test_robotinterface.py) for example.
+
+#### Integration tests
+
+Integration tests can be found [here](https://github.com/equinor/isar/tree/main/tests/integration) and have been created
+with a simulator in mind. The integration tests will not run as part of `pytest .` or as part of the CI/CD pipeline. To
+run the integration tests please follow the instructions in [this section](#running-isar-with-a-robot-simulator) for
+setting up the `isar-turtlebot` implementation with simulator and run the following command once the simulation has been
+launched.
+
+```bash
+pytest tests/integration
+```
+
+Note that these tests will run towards the actual simulation (you may monitor it through Gazebo and RVIZ) and it will
+take a long time.
+
+### Documentation
+
+To build the project documentation, run the following commands:
+
+```bash
+cd docs
+make docs
+```
+
+The documentation can now be viewed at `docs/build/html/index.html`.
+
+### Contributing
+
+We welcome all kinds of contributions, including code, bug reports, issues, feature requests, and documentation. The
+preferred way of submitting a contribution is to either make an [issue](https://github.com/equinor/isar/issues) on
+GitHub or by forking the project on GitHub and making a pull requests.
+
+
 ## Components
 
 The system consists of two main components.
@@ -53,71 +171,6 @@ python main.py
 
 Note, running the full system requires that an implementation of a robot has been installed. See
 this [section](#robot-integration) for installing a mocked robot or a Turtlebot3 simulator.
-
-## Robot integration
-
-To connect the state machine to a robot in a separate repository, it is required that the separate repository implements
-the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interface/robot_interface.py). A mocked robot
-can be found in [this repository](https://github.com/equinor/isar-robot). Install the repo, i.e:
-
-```bash
-pip install git+https://@github.com/equinor/isar-robot.git@main
-```
-
-Then, ensure the `robot_package` variable
-in [default.ini](https://github.com/equinor/isar/blob/62312ac6844c06f93d98dce8db05d8172f22bca0/src/isar/config/default.ini#L4)
-is set to the name of the package you installed. `isar_robot` is set by default.
-
-If you have the robot repository locally, you can simply install through
-
-```bash
-pip install -e /path/to/robot/repo/
-```
-
-### Running ISAR with a robot simulator
-
-A simulator based on the open source robot Turtlebot3 has been implemented for use with ISAR and may be
-found [here](https://github.com/equinor/isar-turtlebot). Follow the installation instructions for the simulator and
-install `isar-turtlebot` in the same manner as given in the [robot integration](#robot-integration) section. Set the
-following configuration variables
-in [default.ini](https://github.com/equinor/isar/blob/62312ac6844c06f93d98dce8db05d8172f22bca0/src/isar/config/default.ini#L4):
-
-```bash
-robot_package = isar_turtlebot
-default_map = turtleworld
-```
-
-## Running a robot mission
-
-Once the application has been started the swagger site may be accessed at
-
-```
-http://localhost:3000/docs
-```
-
-Execute the `/schedule/start-mission` endpoint with `mission_id=1` to run a mission.
-
-In [this](./src/isar/config/predefined_missions) folder there are predefined default missions, for example the mission
-corresponding to `mission_id=1`. A new mission may be added by adding a new json-file with a mission description. Note,
-the mission IDs must be unique.
-
-## <a name="dev"></a>Development
-
-For local development, please fork the repository. Then, clone and install in the repository root folder:
-
-```
-git clone https://github.com/equinor/isar
-cd isar
-pip install -e .[dev]
-```
-
-For `zsh` you might have to type `".[dev]"`
-
-Verify that you can run the tests:
-
-```bash
-pytest .
-```
 
 ## Mission planner
 
@@ -190,47 +243,3 @@ mqtt_port
 ```
 In addition, the `MQTT_PASSWORD` environment variable should be available for connection to the broker. If username 
 and password is not specified both will default to empty strings.
-
-## Running tests
-
-After following the steps in [Development](#dev), you can run the tests:
-
-```bash
-pytest .
-```
-
-To create an interface test in your robot repository, use the function `interface_test` from `robot_interface`. The
-argument should be an interface object from your robot specific implementation.
-See [isar-robot](https://github.com/equinor/isar-robot/blob/main/tests/interfaces/test_robotinterface.py) for example.
-
-### Integration tests
-
-Integration tests can be found [here](https://github.com/equinor/isar/tree/main/tests/integration) and have been created
-with a simulator in mind. The integration tests will not run as part of `pytest .` or as part of the CI/CD pipeline. To
-run the integration tests please follow the instructions in [this section](#running-isar-with-a-robot-simulator) for
-setting up the `isar-turtlebot` implementation with simulator and run the following command once the simulation has been
-launched.
-
-```bash
-pytest tests/integration
-```
-
-Note that these tests will run towards the actual simulation (you may monitor it through Gazebo and RVIZ) and it will
-take a long time.
-
-## Documentation
-
-To build the project documentation, run the following commands:
-
-```bash
-cd docs
-make docs
-```
-
-The documentation can now be viewed at `docs/build/html/index.html`.
-
-## Contributing
-
-We welcome all kinds of contributions, including code, bug reports, issues, feature requests, and documentation. The
-preferred way of submitting a contribution is to either make an [issue](https://github.com/equinor/isar/issues) on
-GitHub or by forking the project on GitHub and making a pull requests.
