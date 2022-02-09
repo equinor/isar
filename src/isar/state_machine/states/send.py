@@ -32,7 +32,6 @@ class Send(State):
     def start(self):
         self.state_machine.update_state()
         self.state_machine.update_current_task()
-        self.logger.info(f"State: {self.state_machine.current_state}")
 
         if self.state_machine.mqtt_client:
             self.state_machine.publish_task_status()
@@ -61,6 +60,9 @@ class Send(State):
 
             if not self.state_machine.current_task:
                 next_state: States = States.Cancel
+                self.logger.info(
+                    f"Completed mission: {self.state_machine.current_mission.id}"
+                )
                 break
 
             if self.state_machine.should_send_status():
@@ -95,10 +97,14 @@ class Send(State):
             if send_success:
                 self.state_machine.current_task.status = TaskStatus.Scheduled
                 next_state = States.Monitor
+                self.logger.info(
+                    f"Successfully scheduled {type(self.state_machine.current_task).__name__} "
+                    f"task: {str(self.state_machine.current_task.id)[:8]}"
+                )
                 break
             else:
                 self.send_failure_counter += 1
-                self.logger.info("sending failed #: " + str(self.send_failure_counter))
+                self.logger.info(f"Sending failed #: {str(self.send_failure_counter)}")
                 if self.send_failure_counter >= self.send_failure_counter_limit:
                     self.logger.error(
                         f"Failed to send mission after "

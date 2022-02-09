@@ -133,6 +133,7 @@ class StateMachine(object):
     def update_state(self):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)
+        self.logger.info(f"State: {self.current_state}")
 
         payload: str = json.dumps({"state": self.current_state})
 
@@ -174,7 +175,6 @@ class StateMachine(object):
             current_state=self.current_state,
         )
         self.queues.mission_status.output.put(deepcopy(status))
-        self.logger.info(status)
 
     def should_send_status(self) -> bool:
         """Determines if mission status should be sent.
@@ -221,7 +221,8 @@ class StateMachine(object):
         self.mission_in_progress = True
         self.current_mission = mission
         self.queues.start_mission.output.put(deepcopy(StartMissionMessages.success()))
-        self.logger.info(StartMissionMessages.success())
+        self.logger.info(f"Starting new mission: {mission.id}")
+        self.log_task_overview(mission=mission)
 
     def should_stop_mission(self) -> bool:
         """Determines if the running mission should be stopped.
@@ -297,6 +298,16 @@ class StateMachine(object):
         """Logs all state transitions that are not self-transitions."""
         if next_state != self.current_state:
             self.transitions_list.append(next_state)
+
+    def log_task_overview(self, mission: Mission):
+        """Log an overview of the tasks in a mission"""
+        task_status: str = "\n".join(
+            [
+                f"{i:>3}  {type(task).__name__:<20} {str(task.id)[:8]:<32} -- {task.status}"
+                for i, task in enumerate(mission.tasks)
+            ]
+        )
+        self.logger.info(f"Mission task overview:\n{task_status}")
 
     def _check_dependencies(self):
         """Check dependencies of previous tasks"""

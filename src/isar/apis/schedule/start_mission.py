@@ -35,6 +35,7 @@ class StartMission:
             description="ID-number for predefined mission",
         ),
     ):
+        self.logger.info("Received request to start new mission")
 
         try:
             mission: Mission = self.mission_planner.get_mission(mission_id)
@@ -50,8 +51,9 @@ class StartMission:
             response.status_code = status_code_ready_start.value
             return StartResponse(message=message.message, started=message.started)
 
+        self.logger.info(f"Starting mission: {mission.id}")
         response_scheduler = self.scheduling_utilities.start_mission(mission=mission)
-        self.logger.info(response_scheduler)
+        self.logger.info(f"Received response from State Machine: {response_scheduler}")
 
         message_scheduler, status_code_scheduler = response_scheduler
         response.status_code = status_code_scheduler.value

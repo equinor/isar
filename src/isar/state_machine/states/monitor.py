@@ -15,7 +15,7 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions import RobotException
 from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.inspection.inspection import Inspection, TimeIndexedPose
-from robot_interface.models.mission import InspectionTask, TaskStatus
+from robot_interface.models.mission import InspectionTask, Task, TaskStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -37,8 +37,6 @@ class Monitor(State):
 
     def start(self):
         self.state_machine.update_state()
-        self.logger.info(f"State: {self.state_machine.current_state}")
-
         self._run()
 
     def stop(self):
@@ -78,7 +76,7 @@ class Monitor(State):
 
             self.state_machine.current_task.status = task_status
 
-            if self._task_completed(task_status=self.state_machine.current_task.status):
+            if self._task_completed(task=self.state_machine.current_task):
                 if isinstance(self.state_machine.current_task, InspectionTask):
                     self._queue_inspections_for_upload(
                         current_task=self.state_machine.current_task
@@ -108,15 +106,18 @@ class Monitor(State):
                 mission_metadata,
             )
             self.state_machine.queues.upload_queue.put(message)
+            self.logger.info(f"Inspection: {str(inspection.id)[:8]} queued for upload")
 
-    def _task_completed(self, task_status: TaskStatus) -> bool:
-
-        if task_status == TaskStatus.Unexpected:
+    def _task_completed(self, task: Task) -> bool:
+        if task.status == TaskStatus.Unexpected:
             self.logger.error("Task status returned an unexpected status string")
-        elif task_status == TaskStatus.Failed:
-            self.logger.warning("Task failed...")
+        elif task.status == TaskStatus.Failed:
+            self.logger.warning(f"Task: {str(task.id)[:8]} failed")
             return True
-        elif task_status == TaskStatus.Completed:
+        elif task.status == TaskStatus.Completed:
+            self.logger.info(
+                f"{type(task).__name__} task: {str(task.id)[:8]} completed"
+            )
             return True
         return False
 

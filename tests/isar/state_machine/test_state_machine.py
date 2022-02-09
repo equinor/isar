@@ -17,6 +17,7 @@ from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.mission import DriveToPose, TakeImage, Task
 from robot_interface.models.mission.status import TaskStatus
+from tests.mocks.mission_definition import default_mission
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.robot_variables import mock_pose
 from tests.mocks.task import MockTask
@@ -108,7 +109,8 @@ def test_should_start_mission(
 
 
 def test_start_mission(state_machine):
-    state_machine.start_mission(1)
+    mission: Mission = default_mission
+    state_machine.start_mission(mission=mission)
     message = state_machine.queues.start_mission.output.get()
     assert state_machine.mission_in_progress
     assert message

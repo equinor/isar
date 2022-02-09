@@ -1,6 +1,7 @@
 import pytest
 
-from robot_interface.models.mission import TaskStatus
+from robot_interface.models.mission import Task, TaskStatus
+from tests.mocks.task import MockTask
 
 
 @pytest.mark.parametrize(
@@ -13,8 +14,10 @@ from robot_interface.models.mission import TaskStatus
     ],
 )
 def test_task_completed(monitor, mock_status, expected_output):
+    task: Task = MockTask.drive_to()
+    task.status = mock_status
     task_completed: bool = monitor._task_completed(
-        task_status=mock_status,
+        task=task,
     )
 
     assert task_completed == expected_output

@@ -17,6 +17,7 @@ class Uploader:
         self.logger = logging.getLogger("uploader")
 
     def run(self) -> None:
+        self.logger.info("Started uploader")
         while True:
             inspection: Inspection
             mission_metadata: MissionMetadata
@@ -30,7 +31,12 @@ class Uploader:
                     storage_handler.store(
                         inspection=inspection, metadata=mission_metadata
                     )
+                    self.logger.info(
+                        f"Storage handler: {type(storage_handler).__name__} "
+                        f"uploaded inspection {str(inspection.id)[:8]}"
+                    )
                 except StorageException:
                     self.logger.warning(
-                        f"{type(storage_handler)} failed to upload inspection: {inspection.id}"
+                        f"Storage handler: {type(storage_handler).__name__} "
+                        f"failed to upload inspection: {str(inspection.id)[:8]}"
                     )
