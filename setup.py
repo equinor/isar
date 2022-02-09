@@ -26,7 +26,6 @@ setup(
         "azure-keyvault-secrets",
         "azure-storage-blob",
         "click",
-        "cryptography",
         "dacite",
         "fastapi-azure-auth",
         "fastapi",

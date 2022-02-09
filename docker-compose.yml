@@ -1,0 +1,22 @@
+version: '3.7'
+services:
+  isar:
+    build:
+      context: .
+      args:
+        ROBOT_REPOSITORY_CLONE_URL: https://github.com/equinor/isar-robot.git
+    image: isar:latest
+    ports:
+      - '3000:3000'
+    environment:
+      # Client ID, Tenant ID and Client Secret for the Azure App Registration used to connect with blob storage,
+      # SLIMM storage and Echo Planner.
+      - AZURE_CLIENT_ID
+      - AZURE_TENANT_ID
+      - AZURE_CLIENT_SECRET
+
+      # Password for connection with MQTT Broker
+      - MQTT_PASSWORD
+
+      # Selected robot package
+      - ROBOT_PACKAGE=isar_robot

@@ -1,0 +1,15 @@
+api.log
+state_machine.log
+uploader.log
+
+temp_results
+results
+
+.mypy_cache
+.pytest_cache
+
+docs
+
+src/isar.egg-info
+
+venv
