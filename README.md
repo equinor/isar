@@ -9,14 +9,13 @@ operator systems. Through the ISAR API you can send commands to a robot to do mi
 missions.
 
 ## Getting started
-There are 2 ways of getting started
-* Install and run, see [here](#installation)
-* Develop and run, see right below. The steps are
-  - Install for development
-  - Integrate a robot
-  - Run a robot mission
+Steps:
+* Install
+* Integrate a robot
+* Run the ISAR server
+* Run a robot mission
 
-### Install for development
+### Install
 
 For local development, please fork the repository. Then, clone and install in the repository root folder:
 
@@ -67,6 +66,17 @@ robot_package = isar_turtlebot
 default_map = turtleworld
 ```
 
+### Run ISAR server
+
+To run ISAR:
+
+```bash
+python main.py
+```
+
+Note, running the full system requires that an implementation of a robot has been installed. See
+this [section](#robot-integration) for installing a mocked robot or a Turtlebot3 simulator.
+
 ### Running a robot mission
 
 Once the application has been started the swagger site may be accessed at
@@ -83,7 +93,7 @@ the mission IDs must be unique.
 
 ### Running tests
 
-After following the steps in [Development](#install-for-development), you can run the tests:
+After following the steps in [Development](#install), you can run the tests:
 
 ```bash
 pytest .
@@ -155,22 +165,6 @@ The FastAPI establishes an interface to the state machine for the user. As the A
 threads, they communicate through python queues. FastAPI runs on an ASGI-server, specifically uvicorn. The
 FastAPI-framework is split into routers where the endpoint operations are defined.
 
-## Installation
-
-ISAR may be installed through pip as
-
-```bash
-pip install isar
-```
-
-However, to run ISAR you are required to clone this repository and run:
-
-```bash
-python main.py
-```
-
-Note, running the full system requires that an implementation of a robot has been installed. See
-this [section](#robot-integration) for installing a mocked robot or a Turtlebot3 simulator.
 
 ## Mission planner
 
