@@ -80,28 +80,9 @@ class Monitor(State):
 
             if self._task_completed(task_status=self.state_machine.current_task.status):
                 if isinstance(self.state_machine.current_task, InspectionTask):
-                    inspections: Sequence[
-                        Inspection
-                    ] = self.state_machine.robot.get_inspections(
-                        task=self.state_machine.current_task
+                    self._queue_inspections_for_upload(
+                        current_task=self.state_machine.current_task
                     )
-
-                    mission_metadata: MissionMetadata = (
-                        self.state_machine.current_mission.metadata
-                    )
-                    for inspection in inspections:
-                        inspection.metadata.tag_id = (
-                            self.state_machine.current_task.tag_id
-                        )
-                        self._transform_poses_to_asset_frame(
-                            time_indexed_pose=inspection.metadata.time_indexed_pose
-                        )
-
-                        message: Tuple[Inspection, MissionMetadata] = (
-                            inspection,
-                            mission_metadata,
-                        )
-                        self.state_machine.queues.upload_queue.put(message)
 
                 next_state = States.Send
                 break
@@ -110,6 +91,23 @@ class Monitor(State):
                 time.sleep(self.state_machine.sleep_time)
 
         self.state_machine.to_next_state(next_state)
+
+    def _queue_inspections_for_upload(self, current_task: InspectionTask):
+        inspections: Sequence[Inspection] = self.state_machine.robot.get_inspections(
+            task=current_task
+        )
+        mission_metadata: MissionMetadata = self.state_machine.current_mission.metadata
+        for inspection in inspections:
+            inspection.metadata.tag_id = current_task.tag_id
+            self._transform_poses_to_asset_frame(
+                time_indexed_pose=inspection.metadata.time_indexed_pose
+            )
+
+            message: Tuple[Inspection, MissionMetadata] = (
+                inspection,
+                mission_metadata,
+            )
+            self.state_machine.queues.upload_queue.put(message)
 
     def _task_completed(self, task_status: TaskStatus) -> bool:
 
