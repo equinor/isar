@@ -20,7 +20,7 @@ class StopMission:
         self.queue_timeout: int = config.getint("DEFAULT", "queue_timeout")
 
     def post(self, response: Response):
-
+        self.logger.info("Received request to stop current mission")
         self.queues.stop_mission.input.put(True)
 
         try:

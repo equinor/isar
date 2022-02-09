@@ -82,5 +82,4 @@ class SchedulingUtilities:
             return error_message
 
         error_message = start_message, HTTPStatus.OK
-        self.logger.info(error_message)
         return error_message

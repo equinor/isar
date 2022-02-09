@@ -17,9 +17,8 @@ class Cancel(State):
 
     def start(self):
         self.state_machine.update_state()
-        self.logger.info(f"State: {self.state_machine.current_state}")
 
-        self._log_task_status()
+        self.state_machine.log_task_overview(mission=self.state_machine.current_mission)
         next_state = self.state_machine.reset_state_machine()
         self.state_machine.to_next_state(next_state)
 
@@ -37,12 +36,3 @@ class Cancel(State):
         )
 
         self.logger.info(f"State transitions:\n  {state_transitions}")
-
-    def _log_task_status(self):
-        task_status: str = "\n".join(
-            [
-                f"{i:>3}  {task.name:<25}" f" -- {task.status} "
-                for i, task in enumerate(self.state_machine.current_mission.tasks)
-            ]
-        )
-        self.logger.info(f"Mission task status:\n{task_status}")
