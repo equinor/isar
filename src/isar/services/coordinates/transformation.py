@@ -16,7 +16,6 @@ from robot_interface.models.geometry.position import Position
 
 class Transformation:
     def __init__(self, map_config: MapConfig):
-        self.logger = logging.getLogger("state_machine")
         self.transform: FrameTransform = AlignFrames.align_frames(
             map_config.robot_reference_points, map_config.asset_reference_points, "z"
         )
