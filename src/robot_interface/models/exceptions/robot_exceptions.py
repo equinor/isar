@@ -8,3 +8,7 @@ class RobotCommunicationException(RobotException):
 
 class RobotInvalidResponseException(RobotException):
     pass
+
+
+class RobotMapException(RobotException):
+    pass
