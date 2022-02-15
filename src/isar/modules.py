@@ -15,9 +15,6 @@ from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.models.communication.queues.queues import Queues
-from isar.models.map.map_config import MapConfig
-from isar.services.coordinates.transformation import Transformation
-from isar.services.readers.map_reader import MapConfigReader
 from isar.services.service_connections.mqtt.mqtt_client import (
     MqttClient,
     MqttClientInterface,
@@ -170,23 +167,6 @@ class ServiceModule(Module):
         return StidService(request_handler=request_handler)
 
 
-class ReaderModule(Module):
-    @provider
-    @singleton
-    def provide_map_config_reader(self) -> MapConfigReader:
-        return MapConfigReader()
-
-
-class CoordinateModule(Module):
-    @provider
-    @singleton
-    def provide_transform(self, map_config_reader: MapConfigReader) -> Transformation:
-        map_config: MapConfig = map_config_reader.get_map_config_by_name(
-            config.get("DEFAULT", "default_map")
-        )
-        return Transformation(map_config=map_config)
-
-
 class MqttModule(Module):
     @provider
     @singleton
@@ -200,9 +180,7 @@ class MqttModule(Module):
 modules: dict = {
     "api": {"default": APIModule},
     "authentication": {"default": AuthenticationModule},
-    "coordinate": {"default": CoordinateModule},
     "queues": {"default": QueuesModule},
-    "reader": {"default": ReaderModule},
     "request_handler": {"default": RequestHandlerModule},
     "robot": {"default": RobotModule},
     "mission_planner": {

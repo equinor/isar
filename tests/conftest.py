@@ -10,17 +10,13 @@ from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
 from isar.modules import (
     APIModule,
-    CoordinateModule,
     LocalPlannerModule,
     QueuesModule,
-    ReaderModule,
     RequestHandlerModule,
     ServiceModule,
     StateMachineModule,
     UtilitiesModule,
 )
-from isar.services.coordinates.transformation import Transformation
-from isar.services.readers.map_reader import MapConfigReader
 from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
@@ -42,14 +38,12 @@ def injector():
     return Injector(
         [
             APIModule,
-            CoordinateModule,
             LocalPlannerModule,
             MockMqttModule,
             MockNoAuthenticationModule,
             MockRobotModule,
             MockStorageModule,
             QueuesModule,
-            ReaderModule,
             RequestHandlerModule,
             ServiceModule,
             StateMachineModule,
@@ -63,14 +57,12 @@ def injector_auth():
     return Injector(
         [
             APIModule,
-            CoordinateModule,
             LocalPlannerModule,
             MockAuthenticationModule,
             MockMqttModule,
             MockRobotModule,
             MockStorageModule,
             QueuesModule,
-            ReaderModule,
             RequestHandlerModule,
             ServiceModule,
             StateMachineModule,
@@ -175,13 +167,3 @@ def scheduling_utilities(app, injector):
 @pytest.fixture()
 def mission_reader(injector):
     return injector.get(LocalPlanner)
-
-
-@pytest.fixture()
-def map_config_reader(injector):
-    return injector.get(MapConfigReader)
-
-
-@pytest.fixture()
-def transform(injector):
-    return injector.get(Transformation)
