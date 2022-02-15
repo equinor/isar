@@ -11,21 +11,18 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerInterface,
 )
 from isar.models.mission import Mission
-from isar.services.coordinates.transformation import Transformation
 from isar.services.readers.base_reader import BaseReader, BaseReaderError
 from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.mission.task import DriveToPose, TakeImage, TakeThermalImage
 
 logger = logging.getLogger("api")
 
 
 class LocalPlanner(MissionPlannerInterface):
     @inject
-    def __init__(self, transform: Transformation):
+    def __init__(self):
         self.predefined_mission_folder = Path(
             config.get("DEFAULT", "predefined_missions_folder")
         )
-        self.transform: Transformation = transform
 
     def get_mission(self, mission_id) -> Mission:
         missions: dict = self.get_predefined_missions()
@@ -34,15 +31,6 @@ class LocalPlanner(MissionPlannerInterface):
         try:
             mission: Mission = missions[mission_id]["mission"]
             mission.set_unique_id_and_metadata()
-            for task in mission.tasks:
-                if isinstance(task, DriveToPose):
-                    task.pose = self.transform.transform_pose(
-                        task.pose, to_=Frame.Robot
-                    )
-                elif isinstance(task, (TakeImage, TakeThermalImage)):
-                    task.target = self.transform.transform_position(
-                        task.target, to_=Frame.Robot
-                    )
             mission.set_task_dependencies()
             return mission
         except Exception as e:

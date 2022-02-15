@@ -121,10 +121,8 @@ class SlimmStorageModule(Module):
 class LocalPlannerModule(Module):
     @provider
     @singleton
-    def provide_local_planner(
-        self, transform: Transformation
-    ) -> MissionPlannerInterface:
-        return LocalPlanner(transform=transform)
+    def provide_local_planner(self) -> MissionPlannerInterface:
+        return LocalPlanner()
 
 
 class EchoPlannerModule(Module):
