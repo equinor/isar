@@ -18,10 +18,7 @@ from isar.models.communication.messages import (
 from isar.models.communication.queues.queues import Queues
 from isar.models.communication.status import Status
 from isar.models.mission import Mission
-from isar.services.coordinates.transformation import Transformation
-from isar.services.service_connections.mqtt.mqtt_client import (
-    MqttClientInterface,
-)
+from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
 from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.state_machine.states import Cancel, Idle, Monitor, Off, Send
 from isar.state_machine.states_enum import States
@@ -39,7 +36,6 @@ class StateMachine(object):
         self,
         queues: Queues,
         robot: RobotInterface,
-        transform: Transformation,
         mqtt_client: MqttClientInterface,
         sleep_time: float = config.getfloat("DEFAULT", "fsm_sleep_time"),
         stop_robot_attempts_limit: int = config.getint(
@@ -75,7 +71,7 @@ class StateMachine(object):
             Off(self),
             Idle(self),
             Send(self),
-            Monitor(self, transform=transform),
+            Monitor(self),
             Cancel(self),
         ]
         self.machine = Machine(

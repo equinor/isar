@@ -1,20 +1,18 @@
 import logging
 import time
-from typing import List, Sequence, TYPE_CHECKING, Tuple, Union
+from typing import TYPE_CHECKING, List, Sequence, Tuple
 
 from injector import inject
 from transitions import State
 
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from isar.services.coordinates.transformation import Transformation
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions import RobotException
-from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.inspection.inspection import Inspection, TimeIndexedPose
+from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission import InspectionTask, Task, TaskStatus
 
 if TYPE_CHECKING:
@@ -23,10 +21,9 @@ if TYPE_CHECKING:
 
 class Monitor(State):
     @inject
-    def __init__(self, state_machine: "StateMachine", transform: Transformation):
+    def __init__(self, state_machine: "StateMachine"):
         super().__init__(name="monitor", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
-        self.transform: Transformation = transform
 
         self.logger = logging.getLogger("state_machine")
 
@@ -97,9 +94,6 @@ class Monitor(State):
         mission_metadata: MissionMetadata = self.state_machine.current_mission.metadata
         for inspection in inspections:
             inspection.metadata.tag_id = current_task.tag_id
-            self._transform_poses_to_asset_frame(
-                time_indexed_pose=inspection.metadata.time_indexed_pose
-            )
 
             message: Tuple[Inspection, MissionMetadata] = (
                 inspection,
@@ -120,15 +114,3 @@ class Monitor(State):
             )
             return True
         return False
-
-    def _transform_poses_to_asset_frame(
-        self, time_indexed_pose: Union[TimeIndexedPose, List[TimeIndexedPose]]
-    ):
-        if isinstance(time_indexed_pose, TimeIndexedPose):
-            time_indexed_pose = [time_indexed_pose]
-
-        for indexed_pose in time_indexed_pose:
-            indexed_pose.pose = self.transform.transform_pose(
-                pose=indexed_pose.pose,
-                to_=Frame.Asset,
-            )

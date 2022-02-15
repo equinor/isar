@@ -119,11 +119,10 @@ def keyvault(injector):
 
 
 @pytest.fixture()
-def state_machine(injector, robot, transform):
+def state_machine(injector, robot):
     return StateMachine(
         queues=injector.get(Queues),
         robot=robot,
-        transform=transform,
         mqtt_client=injector.get(MqttClientInterface),
     )
 
@@ -139,8 +138,8 @@ def send(state_machine):
 
 
 @pytest.fixture()
-def monitor(state_machine, transform):
-    return Monitor(state_machine=state_machine, transform=transform)
+def monitor(state_machine):
+    return Monitor(state_machine=state_machine)
 
 
 @pytest.fixture()
