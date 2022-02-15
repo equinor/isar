@@ -146,12 +146,9 @@ class StateMachineModule(Module):
         self,
         queues: Queues,
         robot: RobotInterface,
-        transform: Transformation,
         mqtt_client: MqttClientInterface,
     ) -> StateMachine:
-        return StateMachine(
-            queues=queues, robot=robot, transform=transform, mqtt_client=mqtt_client
-        )
+        return StateMachine(queues=queues, robot=robot, mqtt_client=mqtt_client)
 
 
 class UtilitiesModule(Module):
