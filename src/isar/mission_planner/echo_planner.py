@@ -69,7 +69,7 @@ class EchoPlanner(MissionPlannerInterface):
                 ] = self._create_inspection_tasks_from_sensor_types(
                     tag_name=tag_name, sensors=sensors
                 )
-            except Exception as e:
+            except (ValueError, Exception) as e:
                 self.logger.error(e)
                 continue
 
@@ -120,8 +120,9 @@ class EchoPlanner(MissionPlannerInterface):
         predefined_pose: Pose = predefined_poses[tag_name]
 
         if predefined_pose.frame is Frame.Robot:
-            # TODO: Should we raise an error and require workaround pose to be asset frame?
-            return predefined_pose
+            raise ValueError(
+                f"Frame of predefined pose should be {Frame.Asset} not {Frame.Robot}"
+            )
 
         return predefined_pose
 

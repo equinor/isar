@@ -44,7 +44,7 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                 "planItems": [
                     {
                         "planItemId": 1227,
-                        "tag": "314-LD-1001",
+                        "tag": "355-LD-1003",
                         "sensorTypes": [{"sensorTypeKey": "Picture"}],
                         "sortingOrder": 0,
                         "robotPlanId": 76,
