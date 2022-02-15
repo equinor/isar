@@ -13,7 +13,6 @@ from isar.mission_planner.mission_planner_interface import (
 )
 from isar.models.mission import Mission
 from isar.services.auth.azure_credentials import AzureCredentials
-from isar.services.coordinates.transformation import Transformation
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from robot_interface.models.geometry.frame import Frame
@@ -28,11 +27,9 @@ class EchoPlanner(MissionPlannerInterface):
         self,
         request_handler: RequestHandler,
         stid_service: StidService,
-        transform: Transformation,
     ):
         self.request_handler: RequestHandler = request_handler
         self.stid_service: StidService = stid_service
-        self.transform: Transformation = transform
         self.credentials: DefaultAzureCredential = (
             AzureCredentials.get_azure_credentials()
         )
@@ -104,13 +101,13 @@ class EchoPlanner(MissionPlannerInterface):
     def _create_inspection_tasks_from_sensor_types(
         self, tag_name: str, sensors: List[str]
     ) -> List[Union[TakeImage, TakeThermalImage]]:
-        tag_position_robot: Position = self._get_tag_position_robot(tag_name=tag_name)
+        tag_position: Position = self._get_tag_position(tag_name=tag_name)
         inspection_tasks: List[Union[TakeImage, TakeThermalImage]] = []
         for sensor in sensors:
             inspection: Union[
                 TakeImage, TakeThermalImage
             ] = self._echo_sensor_type_to_isar_inspection_task(sensor_type=sensor)
-            inspection.target = tag_position_robot
+            inspection.target = tag_position
             inspection.tag_id = tag_name
             inspection_tasks.append(inspection)
         return inspection_tasks
@@ -123,20 +120,15 @@ class EchoPlanner(MissionPlannerInterface):
         predefined_pose: Pose = predefined_poses[tag_name]
 
         if predefined_pose.frame is Frame.Robot:
+            # TODO: Should we raise an error and require workaround pose to be asset frame?
             return predefined_pose
-
-        predefined_pose = self.transform.transform_pose(
-            predefined_pose, to_=Frame.Robot
-        )
 
         return predefined_pose
 
-    def _get_tag_position_robot(self, tag_name: str) -> Position:
-        tag_position_asset: Position = self.stid_service.tag_position(tag_name)
-        tag_position_robot: Position = self.transform.transform_position(
-            tag_position_asset, to_=Frame.Robot
-        )
-        return tag_position_robot
+    def _get_tag_position(self, tag_name: str) -> Position:
+        tag_position: Position = self.stid_service.tag_position(tag_name)
+
+        return tag_position
 
     def _create_drive_task(self, tag_name: str) -> DriveToPose:
         robot_pose: Pose = self._get_robot_pose(tag_name=tag_name)
