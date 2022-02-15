@@ -1,9 +1,8 @@
 import logging
 from typing import Optional
 
-from alitra import AlignFrames, FrameTransform, Point, Quaternion
+from alitra import AlignFrames, FrameTransform, MapConfig, Point, Quaternion
 
-from isar.models.map.map_config import MapConfig
 from isar.services.coordinates.coordinate_utilities import (
     orientation_from_quaternion,
     quaternion_from_orientation,

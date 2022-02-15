@@ -16,11 +16,9 @@ from isar.config import config
 from isar.models.mission import Mission
 from isar.modules import (
     APIModule,
-    CoordinateModule,
     LocalPlannerModule,
     LocalStorageModule,
     QueuesModule,
-    ReaderModule,
     RequestHandlerModule,
     RobotModule,
     ServiceModule,
