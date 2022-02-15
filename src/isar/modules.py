@@ -134,12 +134,10 @@ class EchoPlannerModule(Module):
         self,
         request_handler: RequestHandler,
         stid_service: StidService,
-        transform: Transformation,
     ) -> MissionPlannerInterface:
         return EchoPlanner(
             request_handler=request_handler,
             stid_service=stid_service,
-            transform=transform,
         )
 
 
