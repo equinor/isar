@@ -8,10 +8,10 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class Cancel(State):
+class Finalize(State):
     @inject
     def __init__(self, state_machine: "StateMachine"):
-        super().__init__(name="cancel", on_enter=self.start, on_exit=self.stop)
+        super().__init__(name="finalize", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
 

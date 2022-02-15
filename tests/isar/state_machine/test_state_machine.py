@@ -164,7 +164,7 @@ def test_state_machine_transitions(injector, state_machine_thread):
             States.Send,
             States.Monitor,
             States.Send,
-            States.Cancel,
+            States.Finalize,
             States.Idle,
         ]
     )
@@ -192,7 +192,7 @@ def test_state_machine_failed_dependency(injector, state_machine_thread, mocker)
             States.Send,
             States.Monitor,
             States.Send,
-            States.Cancel,
+            States.Finalize,
             States.Idle,
         ]
     )
@@ -219,7 +219,7 @@ def test_state_machine_with_successful_collection(
             States.Send,
             States.Monitor,
             States.Send,
-            States.Cancel,
+            States.Finalize,
             States.Idle,
         ]
     )
@@ -250,7 +250,7 @@ def test_state_machine_with_unsuccessful_collection(
             States.Send,
             States.Monitor,
             States.Send,
-            States.Cancel,
+            States.Finalize,
             States.Idle,
         ]
     )
