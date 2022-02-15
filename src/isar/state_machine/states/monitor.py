@@ -52,7 +52,7 @@ class Monitor(State):
                 self.state_machine.stop_mission()
 
             if not self.state_machine.mission_in_progress:
-                next_state = States.Cancel
+                next_state = States.Finalize
                 break
 
             if self.state_machine.should_send_status():

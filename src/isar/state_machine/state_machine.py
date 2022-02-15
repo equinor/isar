@@ -20,7 +20,7 @@ from isar.models.communication.status import Status
 from isar.models.mission import Mission
 from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
 from isar.services.utilities.json_service import EnhancedJSONEncoder
-from isar.state_machine.states import Cancel, Idle, Monitor, Off, Send
+from isar.state_machine.states import Finalize, Idle, Monitor, Off, Send
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions import RobotException
 from robot_interface.models.mission.status import TaskStatus
@@ -72,7 +72,7 @@ class StateMachine(object):
             Idle(self),
             Send(self),
             Monitor(self),
-            Cancel(self),
+            Finalize(self),
         ]
         self.machine = Machine(
             self,
@@ -114,8 +114,8 @@ class StateMachine(object):
             self.to_send()
         elif next_state == States.Monitor:
             self.to_monitor()
-        elif next_state == States.Cancel:
-            self.to_cancel()
+        elif next_state == States.Finalize:
+            self.to_finalize()
         else:
             self.logger.error("Not valid state direction.")
 

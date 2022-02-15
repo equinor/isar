@@ -21,7 +21,7 @@ class TestSchedulingUtilities:
             ),
             (mock_status(mission_in_progress=False, current_state=States.Off), False),
             (
-                mock_status(mission_in_progress=False, current_state=States.Cancel),
+                mock_status(mission_in_progress=False, current_state=States.Finalize),
                 False,
             ),
             (mock_status(mission_in_progress=False, current_state=States.Send), False),
@@ -30,7 +30,10 @@ class TestSchedulingUtilities:
                 False,
             ),
             (mock_status(mission_in_progress=True, current_state=States.Off), False),
-            (mock_status(mission_in_progress=True, current_state=States.Cancel), False),
+            (
+                mock_status(mission_in_progress=True, current_state=States.Finalize),
+                False,
+            ),
             (mock_status(mission_in_progress=True, current_state=States.Send), False),
         ],
     )

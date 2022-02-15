@@ -55,11 +55,11 @@ class Send(State):
                 self.state_machine.stop_mission()
 
             if not self.state_machine.mission_in_progress:
-                next_state: States = States.Cancel
+                next_state: States = States.Finalize
                 break
 
             if not self.state_machine.current_task:
-                next_state: States = States.Cancel
+                next_state: States = States.Finalize
                 self.logger.info(
                     f"Completed mission: {self.state_machine.current_mission.id}"
                 )
@@ -111,7 +111,7 @@ class Send(State):
                         f"{self.send_failure_counter_limit} attempts. "
                         f"Cancelling mission."
                     )
-                    next_state: States = States.Cancel
+                    next_state: States = States.Finalize
                     break
                 self.send_thread = None
                 time.sleep(self.state_machine.sleep_time)

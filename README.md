@@ -9,7 +9,9 @@ operator systems. Through the ISAR API you can send commands to a robot to do mi
 missions.
 
 ## Getting started
+
 Steps:
+
 * Install
 * Integrate a robot
 * Run the ISAR server
@@ -43,8 +45,7 @@ can be found in [this repository](https://github.com/equinor/isar-robot). Instal
 pip install git+https://@github.com/equinor/isar-robot.git@main
 ```
 
-Then, ensure the `robot_package` variable
-in [default.ini](./src/isar/config/default.ini)
+Then, ensure the `robot_package` variable in [default.ini](./src/isar/config/default.ini)
 is set to the name of the package you installed. `isar_robot` is set by default.
 
 If you have the robot repository locally, you can simply install through
@@ -58,8 +59,7 @@ pip install -e /path/to/robot/repo/
 A simulator based on the open source robot Turtlebot3 has been implemented for use with ISAR and may be
 found [here](https://github.com/equinor/isar-turtlebot). Follow the installation instructions for the simulator and
 install `isar-turtlebot` in the same manner as given in the [robot integration](#robot-integration) section. Set the
-following configuration variables
-in [default.ini](./src/isar/config/default.ini):
+following configuration variables in [default.ini](./src/isar/config/default.ini):
 
 ```bash
 robot_package = isar_turtlebot
@@ -135,7 +135,6 @@ We welcome all kinds of contributions, including code, bug reports, issues, feat
 preferred way of submitting a contribution is to either make an [issue](https://github.com/equinor/isar/issues) on
 GitHub or by forking the project on GitHub and making a pull requests.
 
-
 ## Components
 
 The system consists of two main components.
@@ -155,16 +154,14 @@ main states are:
 - Send: The state machine has received a mission and is sending the mission to the robot.
 - Monitor: The robot has received a mission from the state machine, and the state machine is monitoring the current
   mission.
-- Cancel: The state machine has received a request to abort, or an event has occurred which requires the mission to be
-  canceled. The cancel state also functions as a wrap-up state when a mission is finished, prior to the state machine
-  returning to idle.
+- Finalize: The state machine has finished the mission, received a request to abort, or an event has occurred which
+  requires the mission to be canceled. Once finished the state machine will return to idle.
 
 ### FastAPI
 
 The FastAPI establishes an interface to the state machine for the user. As the API and state machine are separate
 threads, they communicate through python queues. FastAPI runs on an ASGI-server, specifically uvicorn. The
 FastAPI-framework is split into routers where the endpoint operations are defined.
-
 
 ## Mission planner
 
@@ -223,17 +220,22 @@ AZURE_CLIENT_SECRET
 ```
 
 ## MQTT communication
-ISAR is able to publish parts of its internal state to topics on an MQTT broker whenever they change. This is by 
-default turned off but may be activated by setting
+
+ISAR is able to publish parts of its internal state to topics on an MQTT broker whenever they change. This is by default
+turned off but may be activated by setting
+
 ```
 mqtt_enabled = true
 ```
-in [default.ini](./src/isar/config/default.ini). The connection to the broker will be determined by the following 
+
+in [default.ini](./src/isar/config/default.ini). The connection to the broker will be determined by the following
 configuration values in [default.ini](./src/isar/config/default.ini).
+
 ```
 mqtt_username
 mqtt_host
 mqtt_port
 ```
-In addition, the `MQTT_PASSWORD` environment variable should be available for connection to the broker. If username 
-and password is not specified both will default to empty strings.
+
+In addition, the `MQTT_PASSWORD` environment variable should be available for connection to the broker. If username and
+password is not specified both will default to empty strings.
