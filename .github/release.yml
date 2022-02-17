@@ -7,8 +7,8 @@ changelog:
       labels:
         - feature
     - title: Improvements
-        labels:
-          - improvement
+      labels:
+        - improvement
     - title: Bug Fixes
       labels:
         - bug
