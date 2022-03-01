@@ -22,3 +22,9 @@ class StopMissionMessages:
     @staticmethod
     def no_active_missions() -> StopMessage:
         return StopMessage(stopped=False, message="No mission is currently active")
+
+    @staticmethod
+    def failure() -> StopMessage:
+        return StopMessage(
+            stopped=False, message="Failed to stop the robot within maximum attempts!"
+        )

@@ -246,6 +246,7 @@ class StateMachine(object):
 
     def stop_mission(self):
         """Stops a mission in progress."""
+        failure: bool = False
         stop_attempts = 0
         while True:
             try:
@@ -255,13 +256,17 @@ class StateMachine(object):
                 stop_attempts += 1
                 if stop_attempts < self.stop_robot_attempts_limit:
                     continue
-                self.logger.warning("Failed to stop the robot within maximum attempts!")
+                self.logger.warning(StopMissionMessages.failure())
+                failure = True
                 break
 
-        self.mission_in_progress = False
-        message: StopMessage = StopMissionMessages.success()
+        message: StopMessage = (
+            StopMissionMessages.failure() if failure else StopMissionMessages.success()
+        )
         self.queues.stop_mission.output.put(deepcopy(message))
         self.logger.info(message)
+        if not failure:
+            self.mission_in_progress = False
 
     def publish_task_status(self) -> None:
         """Publishes the current task status to the MQTT Broker"""
