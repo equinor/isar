@@ -490,4 +490,107 @@ predefined_poses = {
         orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Robot),
         frame=Frame.Robot,
     ),
+    #
+    # AQ200
+    #
+    "VG29-4269": Pose(
+        position=Position(x=155.5, y=289.8, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "29PT0183": Pose(
+        position=Position(x=152.5, y=289.9, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VB64-4037": Pose(
+        position=Position(x=149.25, y=292.16, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG53-4024": Pose(
+        position=Position(x=151.5, y=286, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=-0.7071, w=0.7071, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VF29-4270": Pose(
+        position=Position(x=153.35, y=285.56, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4352": Pose(
+        position=Position(x=155.2, y=285.63, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4249": Pose(
+        position=Position(x=154.24, y=282.04, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "29LT0112": Pose(
+        position=Position(x=150.88, y=279.84, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "29XU0188": Pose(
+        position=Position(x=157.46, y=277.14, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=-0.7071, w=0.7071, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VB71-4216": Pose(
+        position=Position(x=160.75, y=276.86, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4337": Pose(
+        position=Position(x=160.1, y=278.2, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071, w=0.7071, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4335": Pose(
+        position=Position(x=160.07, y=279.07, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071, w=0.7071, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4333": Pose(
+        position=Position(x=160.01, y=279.78, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071, w=0.7071, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4331": Pose(
+        position=Position(x=160.1, y=280.65, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071, w=0.7071, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4329": Pose(
+        position=Position(x=160.12, y=281.56, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071, w=0.7071, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4327": Pose(
+        position=Position(x=160.08, y=282.39, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071, w=0.7071, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4325": Pose(
+        position=Position(x=160.08, y=282.54, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071, w=0.7071, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "29PT0214": Pose(
+        position=Position(x=161.81, y=282.98, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "72SP211": Pose(
+        position=Position(x=147.07, y=280.34, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG63-4001 ": Pose(
+        position=Position(x=148.19, y=287.14, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
 }
