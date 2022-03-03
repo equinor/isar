@@ -1,15 +1,15 @@
 import logging
 from http import HTTPStatus
 
-from fastapi import Query, Response
+from fastapi import HTTPException, Query, Response
 from injector import inject
+from requests import HTTPError
 
 from isar.apis.models import StartResponse
 from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
     MissionPlannerInterface,
 )
-from isar.models.communication.messages.start_message import StartMissionMessages
 from isar.models.mission import Mission
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 
@@ -39,17 +39,24 @@ class StartMission:
 
         try:
             mission: Mission = self.mission_planner.get_mission(mission_id)
-        except MissionPlannerError as e:
-            message = StartMissionMessages.mission_not_found()
+        except HTTPError as e:
             self.logger.error(e)
-            response.status_code = HTTPStatus.NOT_FOUND.value
-            return StartResponse(message=message.message, started=message.started)
+            message: str = e.response.content.decode()
+            response.status_code = e.response.status_code
+            return StartResponse(message=message, started=False)
+        except MissionPlannerError as e:
+            self.logger.error(e)
+            message = e.args[0] if e.args else ""
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
+            return StartResponse(message=message, started=False)
 
         ready, response_ready_start = self.scheduling_utilities.ready_to_start_mission()
         if not ready:
-            message, status_code_ready_start = response_ready_start
+            start_message, status_code_ready_start = response_ready_start
             response.status_code = status_code_ready_start.value
-            return StartResponse(message=message.message, started=message.started)
+            return StartResponse(
+                message=start_message.message, started=start_message.started
+            )
 
         self.logger.info(f"Starting mission: {mission.id}")
         response_scheduler = self.scheduling_utilities.start_mission(mission=mission)

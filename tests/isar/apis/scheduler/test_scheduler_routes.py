@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 
 import pytest
 
+from isar.apis.models.models import StartResponse
 from isar.apis.security.authentication import Authenticator
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
@@ -72,8 +73,8 @@ class TestSchedulerRoutes:
                 MissionPlannerError,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.OK),
-                StartMissionMessages.mission_not_found(),
-                HTTPStatus.NOT_FOUND,
+                StartMessage(message="", started=False),
+                HTTPStatus.INTERNAL_SERVER_ERROR,
             ),
             (
                 1,

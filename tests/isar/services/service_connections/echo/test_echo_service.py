@@ -2,6 +2,7 @@ import pytest
 from requests import RequestException
 
 from isar.mission_planner.echo_planner import EchoPlanner
+from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.mission import Mission
 from isar.services.service_connections.stid.stid_service import StidService
 from robot_interface.models.geometry.frame import Frame
@@ -59,28 +60,6 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                 "task_2_type": TakeImage,
             },
         ),
-        (
-            76,
-            {
-                "robotPlanId": 76,
-                "planItems": [
-                    {
-                        "planItemId": 1227,
-                        "tag": "wrong_tag",
-                        "senorTypes": [{"sensorTypeKey": "Picture"}],
-                        "sortingOrder": 0,
-                        "robotPlanId": 76,
-                    },
-                ],
-            },
-            RequestException,
-            Position(x=1, y=1, z=0, frame=Frame.Asset),
-            {
-                "tasks": 0,
-                "task_1_type": None,
-                "task_2_type": None,
-            },
-        ),
     ],
 )
 def test_get_echo_mission(
@@ -104,3 +83,26 @@ def test_get_echo_mission(
     if not len(mission.tasks) == 0:
         assert isinstance(mission.tasks[0], expected_return["task_1_type"])
         assert isinstance(mission.tasks[1], expected_return["task_2_type"])
+
+
+def test_get_echo_mission_raises_when_empty_mission(echo_service, mocker):
+    mock_return = {
+        "robotPlanId": 76,
+        "planItems": [
+            {
+                "planItemId": 1227,
+                "tag": "wrong_tag",
+                "senorTypes": [{"sensorTypeKey": "Picture"}],
+                "sortingOrder": 0,
+                "robotPlanId": 76,
+            },
+        ],
+    }
+    mocker.patch.object(EchoPlanner, "_mission_plan", return_value=mock_return)
+    mocker.patch.object(
+        StidService,
+        "tag_position",
+        side_effect=RequestException,
+    )
+    with pytest.raises(MissionPlannerError):
+        echo_service.get_mission(mission_id=76)

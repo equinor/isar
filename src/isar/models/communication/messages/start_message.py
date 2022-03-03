@@ -26,3 +26,9 @@ class StartMissionMessages:
         return StartMessage(
             started=False, message="Waiting for return message on queue timed out"
         )
+
+    @staticmethod
+    def empty_mission() -> StartMessage:
+        return StartMessage(
+            started=False, message="The mission contains no valid tasks"
+        )
