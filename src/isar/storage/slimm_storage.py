@@ -3,7 +3,7 @@ import logging
 
 from azure.identity import DefaultAzureCredential
 from injector import inject
-from requests import RequestException
+from requests import HTTPError, RequestException
 from requests_toolbelt import MultipartEncoder
 
 from isar.config import config
@@ -70,7 +70,7 @@ class SlimmStorage(StorageInterface):
                     "Content-Type": multiform_body.content_type,
                 },
             )
-        except RequestException as e:
+        except (RequestException, HTTPError) as e:
             self.logger.warning(
                 f"Failed to upload inspection: {inspection.id} to SLIMM due to a request exception"
             )

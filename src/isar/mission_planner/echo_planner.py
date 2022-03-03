@@ -4,6 +4,7 @@ from typing import Dict, List, Union
 from azure.identity import DefaultAzureCredential
 from injector import inject
 from requests import Response
+from requests.exceptions import RequestException
 
 from isar.config import config
 from isar.config.predefined_poses.predefined_poses import predefined_poses
@@ -11,6 +12,7 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
     MissionPlannerInterface,
 )
+from isar.models.communication.messages import StartMissionMessages
 from isar.models.mission import Mission
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
@@ -46,8 +48,9 @@ class EchoPlanner(MissionPlannerInterface):
         try:
             plan_items: List[dict] = mission_plan["planItems"]
         except KeyError as e:
-            self.logger.error("Echo request body don't contain expected keys")
-            raise MissionPlannerError from e
+            msg: str = "Echo request body don't contain expected keys"
+            self.logger.error(msg)
+            raise MissionPlannerError(msg) from e
 
         mission: Mission = Mission(tasks=[])
 
@@ -69,12 +72,17 @@ class EchoPlanner(MissionPlannerInterface):
                 ] = self._create_inspection_tasks_from_sensor_types(
                     tag_name=tag_name, sensors=sensors
                 )
-            except (ValueError, Exception) as e:
-                self.logger.error(e)
+            except (ValueError, RequestException) as e:
+                self.logger.error(
+                    f"Failed to create task with exception message: '{str(e)}'"
+                )
                 continue
 
             mission.tasks.append(drive_task)
             mission.tasks.extend(inspection_tasks)
+
+        if not mission.tasks:
+            raise MissionPlannerError(StartMissionMessages.empty_mission().message)
 
         mission.set_task_dependencies()
         return mission
