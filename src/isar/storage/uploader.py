@@ -105,6 +105,7 @@ class Uploader:
                     f"Retrying in {upload_item.seconds_until_retry()}s."
                 )
             else:
+                self._internal_upload_queue.remove(upload_item)
                 self.logger.error(
                     f"Storage handler: {type(upload_item.storage_handler).__name__} "
                     f"exceeded max retries to upload inspection: {str(upload_item.inspection.id)[:8]}. "
