@@ -490,4 +490,53 @@ predefined_poses = {
         orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Robot),
         frame=Frame.Robot,
     ),
+    #########################################################################
+    #
+    #    JC SRU Level 2
+    #
+    #########################################################################
+    "VF29-4353": Pose(
+        position=Position(x=152.882, y=289.815, z=40.800, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4352": Pose(
+        position=Position(x=155.977, y=286.061, z=40.800, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+
+    "VG42-4003": Pose(
+        position=Position(x=157.045, y=279.128, z=40.800, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+
+    "VG64-4019": Pose(
+        position=Position(x=163.999, y=276.562, z=40.800, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+
+    "VG29-4044": Pose(
+        position=Position(x=175.129, y=287.865, z=40.800, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071068, w=0.7071068, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+
+    "29CA108F": Pose(
+        position=Position(x=175.129, y=282.778, z=40.800, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071068, w=0.7071068, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+
+    "VG29-4275": Pose(
+        position=Position(x=162.651, y=289.526, z=40.800, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+
 }
+
+
+
