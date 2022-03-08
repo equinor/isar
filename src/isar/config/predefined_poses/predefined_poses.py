@@ -625,9 +625,29 @@ predefined_poses = {
         orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
-    "VG63-4001 ": Pose(
+    "VG63-4001": Pose(
         position=Position(x=148.19, y=287.14, z=40.8, frame=Frame.Asset),
         orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG63-4044": Pose(
+        position=Position(x=147.072, y=286.858, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4273": Pose(
+        position=Position(x=162.773, y=283.000, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG29-4405": Pose(
+        position=Position(x=157.502, y=282.836, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    "VG40-4008": Pose(
+        position=Position(x=146.008, y=291.255, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
 }
