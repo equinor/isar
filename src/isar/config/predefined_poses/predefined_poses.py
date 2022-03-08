@@ -593,4 +593,121 @@ predefined_poses = {
         orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
+    #
+    # Next floor
+    #
+    # Valve, theta 0*
+    "VF29-4097": Pose(
+        position=Position(x=160.287, y=287.770, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Valve, -90*
+    "VG29-4451": Pose(
+        position=Position(x=157.379, y=283.211, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=-0.7071068, w=0.7071068, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Valve, -45*
+    "29PV0209B": Pose(
+        position=Position(x=158.985, y=279.811, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=-0.3826834, w=0.9238795, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Valve, 0*
+    "VF29-4092": Pose(
+        position=Position(x=160.785, y=276.923, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Gauge board, 90*
+    "29JZ001": Pose(
+        position=Position(x=162.716, y=279.027, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071068, w=0.7071068, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Gauge board, 90*
+    "29XU0208": Pose(
+        position=Position(x=162.583, y=282.911, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071068, w=0.7071068, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Gauge, 90*
+    "29FT0199": Pose(
+        position=Position(x=162.625, y=284.612, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071068, w=0.7071068, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Gauge, 0*
+    "29FT0164": Pose(
+        position=Position(x=169.332, y=292.845, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Gauge, 180*
+    "29FT0163": Pose(
+        position=Position(x=169.689, y=290.744, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Gauge, 0*
+    "29FT0165": Pose(
+        position=Position(x=166.749, y=287.860, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Gauge board, 0*
+    "29XU0085": Pose(
+        position=Position(x=167.789, y=283.497, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Valve on gauge board, 0*
+    "VX41-4011": Pose(
+        position=Position(x=154.989, y=287.202, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Gauge, 0*
+    "29FT0112": Pose(
+        position=Position(x=153.314, y=287.136, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Fire extinguisher, 90*
+    "72SP212": Pose(
+        position=Position(x=145.986, y=280.926, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.7071068, w=0.7071068, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Manual valve, 180*
+    "VB71-4209": Pose(
+        position=Position(x=148.182, y=276.623, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Manual valve, 180*
+    "VF29-4360": Pose(
+        position=Position(x=154.483, y=291.359, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Gauge, -90*
+    "29FT0051": Pose(
+        position=Position(x=174.656, y=283.008, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=-0.7071068, w=0.7071068, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Gauge, -90*
+    "29FT0031": Pose(
+        position=Position(x=174.650, y=278.876, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=-0.7071068, w=0.7071068, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
+    # Gauge board, 180*
+    "29XV0025": Pose(
+        position=Position(x=167.807, y=275.660, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
 }
