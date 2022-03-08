@@ -73,7 +73,7 @@ class Monitor(State):
 
             self.state_machine.current_task.status = task_status
 
-            if self._task_completed(task=self.state_machine.current_task):
+            if self._task_finished(task=self.state_machine.current_task):
                 next_state = self._process_finished_task(
                     task=self.state_machine.current_task
                 )
@@ -85,9 +85,16 @@ class Monitor(State):
         self.state_machine.to_next_state(next_state)
 
     def _queue_inspections_for_upload(self, current_task: InspectionTask):
-        inspections: Sequence[Inspection] = self.state_machine.robot.get_inspections(
-            task=current_task
-        )
+        try:
+            inspections: Sequence[
+                Inspection
+            ] = self.state_machine.robot.get_inspections(task=current_task)
+        except Exception as e:
+            self.logger.error(
+                f"Error getting inspections for task {str(current_task.id)[:8]}: {e}"
+            )
+            return
+
         mission_metadata: MissionMetadata = self.state_machine.current_mission.metadata
         for inspection in inspections:
             inspection.metadata.tag_id = current_task.tag_id
@@ -99,21 +106,22 @@ class Monitor(State):
             self.state_machine.queues.upload_queue.put(message)
             self.logger.info(f"Inspection: {str(inspection.id)[:8]} queued for upload")
 
-    def _task_completed(self, task: Task) -> bool:
+    def _task_finished(self, task: Task) -> bool:
+        finished: bool = False
         if task.status == TaskStatus.Unexpected:
             self.logger.error("Task status returned an unexpected status string")
         elif task.status == TaskStatus.Failed:
             self.logger.warning(f"Task: {str(task.id)[:8]} failed")
-            return True
+            finished = True
         elif task.status == TaskStatus.Completed:
             self.logger.info(
                 f"{type(task).__name__} task: {str(task.id)[:8]} completed"
             )
-            return True
-        return False
+            finished = True
+        return finished
 
     def _process_finished_task(self, task: Task) -> State:
-        if isinstance(task, InspectionTask):
+        if task.status == TaskStatus.Completed and isinstance(task, InspectionTask):
             self._queue_inspections_for_upload(current_task=task)
 
         return States.Send

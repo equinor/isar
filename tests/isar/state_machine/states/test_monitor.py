@@ -1,5 +1,3 @@
-import time
-
 import pytest
 
 from isar.state_machine.states.monitor import Monitor
