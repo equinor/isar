@@ -74,12 +74,9 @@ class Monitor(State):
             self.state_machine.current_task.status = task_status
 
             if self._task_completed(task=self.state_machine.current_task):
-                if isinstance(self.state_machine.current_task, InspectionTask):
-                    self._queue_inspections_for_upload(
-                        current_task=self.state_machine.current_task
-                    )
-
-                next_state = States.Send
+                next_state = self._process_finished_task(
+                    task=self.state_machine.current_task
+                )
                 break
             else:
                 self.task_status_thread = None
@@ -114,3 +111,9 @@ class Monitor(State):
             )
             return True
         return False
+
+    def _process_finished_task(self, task: Task) -> State:
+        if isinstance(task, InspectionTask):
+            self._queue_inspections_for_upload(current_task=task)
+
+        return States.Send
