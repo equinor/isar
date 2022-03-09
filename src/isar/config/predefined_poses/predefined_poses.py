@@ -650,7 +650,15 @@ predefined_poses = {
         orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
+    #########################################################################
+    #
+    #    JC SRU Level 3
+    #
+    #########################################################################
+    "": Pose(
+        position=Position(x=146.008, y=291.255, z=40.8, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        frame=Frame.Asset,
+    ),
 }
-
-
 
