@@ -497,12 +497,12 @@ predefined_poses = {
     #########################################################################
     "VF29-4353": Pose(
         position=Position(x=152.882, y=289.815, z=40.800, frame=Frame.Asset),
-        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.3826834, w=0.9238795 , frame=Frame.Asset),
         frame=Frame.Asset,
     ),
     "VG29-4352": Pose(
         position=Position(x=155.977, y=286.061, z=40.800, frame=Frame.Asset),
-        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0.3826834, w=0.9238795 , frame=Frame.Asset),
         frame=Frame.Asset,
     ),
 
@@ -669,8 +669,8 @@ predefined_poses = {
     ),
     # Valve, -45*
     "29PV0209B": Pose(
-        position=Position(x=158.985, y=279.811, z=46.000, frame=Frame.Asset),
-        orientation=Orientation(x=0, y=0, z=-0.3826834, w=0.9238795, frame=Frame.Asset),
+        position=Position(x=158.766, y=279.955, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
     # Valve, 0*
@@ -699,26 +699,26 @@ predefined_poses = {
     ),
     # Gauge, 0*
     "29FT0164": Pose(
-        position=Position(x=169.332, y=292.845, z=46.000, frame=Frame.Asset),
+        position=Position(x=169.348, y=292.845, z=46.000, frame=Frame.Asset),
         orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
     # Gauge, 180*
     "29FT0163": Pose(
-        position=Position(x=169.689, y=290.744, z=46.000, frame=Frame.Asset),
-        orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
+        position=Position(x=169.461, y=290.852, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
     # Gauge, 0*
     "29FT0165": Pose(
-        position=Position(x=166.749, y=287.860, z=46.000, frame=Frame.Asset),
-        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        position=Position(x=166.840, y=287.596, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=-0.7071068, w=0.7071068, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
     # Gauge board, 0*
     "29XU0085": Pose(
-        position=Position(x=167.789, y=283.497, z=46.000, frame=Frame.Asset),
-        orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
+        position=Position(x=166.755, y=283.061, z=46.000, frame=Frame.Asset),
+        orientation=Orientation(x=0, y=0, z=-0.7071068, w=0.7071068, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
     # Valve on gauge board, 0*
@@ -729,7 +729,7 @@ predefined_poses = {
     ),
     # Gauge, 0*
     "29FT0112": Pose(
-        position=Position(x=153.314, y=287.136, z=46.000, frame=Frame.Asset),
+        position=Position(x=153.862, y=287.106, z=46.000, frame=Frame.Asset),
         orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
@@ -753,19 +753,19 @@ predefined_poses = {
     ),
     # Gauge, -90*
     "29FT0051": Pose(
-        position=Position(x=174.656, y=283.008, z=46.000, frame=Frame.Asset),
+        position=Position(x=174.646, y=283.398, z=46.000, frame=Frame.Asset),
         orientation=Orientation(x=0, y=0, z=-0.7071068, w=0.7071068, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
     # Gauge, -90*
     "29FT0031": Pose(
-        position=Position(x=174.650, y=278.876, z=46.000, frame=Frame.Asset),
+        position=Position(x=174.610, y=278.863, z=46.000, frame=Frame.Asset),
         orientation=Orientation(x=0, y=0, z=-0.7071068, w=0.7071068, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
     # Gauge board, 180*
     "29XV0025": Pose(
-        position=Position(x=167.807, y=275.660, z=46.000, frame=Frame.Asset),
+        position=Position(x=167.204, y=275.744, z=46.000, frame=Frame.Asset),
         orientation=Orientation(x=0, y=0, z=1, w=0, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
