@@ -12,7 +12,7 @@ from injector import Injector
 from starlette.testclient import TestClient
 
 from isar.apis.api import API
-from isar.config import config
+from isar.config.settings import settings
 from isar.models.mission import Mission
 from isar.modules import (
     APIModule,
@@ -30,30 +30,28 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.geometry.position import Position
 from robot_interface.models.mission import DriveToPose
-from tests.isar.state_machine.test_state_machine import StateMachineThread
-from tests.test_modules import MockNoAuthenticationModule
+from tests.isar.state_machine.test_state_machine import (
+    StateMachineThread,
+    UploaderThread,
+)
+from tests.test_modules import MockMqttModule, MockNoAuthenticationModule
 
 
 @pytest.fixture()
 def injector_turtlebot():
-    config.set("DEFAULT", "robot_package", "isar_turtlebot")
-    config.set("DEFAULT", "local_storage_path", "./tests/results")
-    config.set(
-        "DEFAULT",
-        "predefined_missions_folder",
-        "./tests/integration/turtlebot/config/missions",
+    settings.ROBOT_PACKAGE = "isar_turtlebot"
+    settings.LOCAL_STORAGE_PATH = "./tests/results"
+    settings.PREDEFINED_MISSIONS_FOLDER = (
+        "./tests/integration/turtlebot/config/missions"
     )
-
-    config.set("DEFAULT", "maps_folder", "tests/integration/turtlebot/config/maps")
-    config.set("DEFAULT", "default_map", "turtleworld")
+    settings.MAPS_FOLDER = "tests/integration/turtlebot/config/maps"
+    settings.DEFAULT_MAP = "turtleworld"
 
     return Injector(
         [
             APIModule,
             MockNoAuthenticationModule,
-            CoordinateModule,
             QueuesModule,
-            ReaderModule,
             RequestHandlerModule,
             RobotModule,
             ServiceModule,
@@ -61,6 +59,7 @@ def injector_turtlebot():
             LocalPlannerModule,
             LocalStorageModule,
             UtilitiesModule,
+            MockMqttModule,
         ]
     )
 
@@ -68,6 +67,11 @@ def injector_turtlebot():
 @pytest.fixture()
 def state_machine_thread(injector_turtlebot) -> StateMachineThread:
     return StateMachineThread(injector=injector_turtlebot)
+
+
+@pytest.fixture()
+def uploader_thread(injector_turtlebot) -> UploaderThread:
+    return UploaderThread(injector=injector_turtlebot)
 
 
 @pytest.fixture(autouse=True)
@@ -82,7 +86,7 @@ def run_before_and_after_tests():
 
 
 def test_successful_mission(
-    injector_turtlebot, state_machine_thread, access_token
+    injector_turtlebot, state_machine_thread, uploader_thread, access_token
 ) -> None:
     integration_test_timeout: timedelta = timedelta(minutes=5)
     app: FastAPI = injector_turtlebot.get(API).get_app()
@@ -106,45 +110,36 @@ def test_successful_mission(
         time.sleep(5)
 
     mission_result_folder: Path = Path(f"tests/results/{mission_id}")
-    image_folder: Path = mission_result_folder.joinpath("sensor_data/image")
-    image_navi_file: Path = image_folder.joinpath(f"{mission_id}_image_NAVI.json")
 
-    thermal_folder: Path = mission_result_folder.joinpath("sensor_data/thermal")
-    thermal_navi_file: Path = thermal_folder.joinpath(f"{mission_id}_thermal_NAVI.json")
-
-    mission_metadata_file: Path = mission_result_folder.joinpath(
-        f"{mission_id}_META.json"
-    )
-
-    image_navi: dict = BaseReader.read_json(image_navi_file)
-    position_1: Position = Position.from_list(
-        image_navi[0]["position"], frame=Frame.Asset
-    )
-    position_2: Position = Position.from_list(
-        image_navi[1]["position"], frame=Frame.Asset
-    )
-
-    thermal_navi: dict = BaseReader.read_json(thermal_navi_file)
-    position_3: Position = Position.from_list(
-        thermal_navi[0]["position"], frame=Frame.Asset
-    )
-
-    mission_metadata: dict = BaseReader.read_json(mission_metadata_file)
-    folder_locations: list = mission_metadata["data"]
-
-    actual_positions: list = [position_1, position_2, position_3]
     drive_to_tasks: List[DriveToPose] = [
         task for task in mission.tasks if isinstance(task, DriveToPose)
     ]
     expected_positions: list = [task.pose.position for task in drive_to_tasks]
 
-    assert image_navi_file.exists()
-    assert thermal_navi_file.exists()
-    assert mission_metadata_file.exists()
+    paths = mission_result_folder.rglob("*.json")
+    for path in paths:
+        metadata: dict = BaseReader.read_json(path)
+        files_metadata: dict = metadata["data"][0]["files"][0]
+        filename: str = files_metadata["file_name"]
+        inspection_file: Path = mission_result_folder.joinpath(filename)
 
-    assert len(list(image_folder.glob("*"))) == 3  # Expected two images + metadata
-    assert len(list(thermal_folder.glob("*"))) == 2  # Expected one thermal + metadata
-    assert len(folder_locations) == 2  # Folders for images and thermal images
+        actual_position: Position = Position(
+            x=files_metadata["x"],
+            y=files_metadata["y"],
+            z=files_metadata["z"],
+            frame=Frame.Asset,
+        )
 
-    for actual, expected in zip(actual_positions, expected_positions):
-        assert np.allclose(actual.to_list(), expected.to_list(), atol=0.2)
+        close_to_expected_positions: List[bool] = []
+        for expected_position in expected_positions:
+            close_to_expected_positions.append(
+                np.allclose(
+                    actual_position.to_list(), expected_position.to_list(), atol=0.2
+                )
+            )
+
+        assert any(close_to_expected_positions)
+        assert inspection_file.exists()
+    assert (
+        len(list(mission_result_folder.glob("*"))) == 6
+    )  # Expected two images, one thermal + three metadata files
