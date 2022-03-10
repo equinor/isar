@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Union
 from uuid import UUID
 
-from isar.config import config
+from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from robot_interface.models.mission import TASKS
 from robot_interface.models.mission.task import DriveToPose, InspectionTask
@@ -33,8 +33,8 @@ class Mission:
                     task.depends_on = [self.tasks[ind].id for ind in task.depends_on]
 
     def _set_unique_id(self) -> None:
-        plant_short_name: str = config.get("metadata", "plant_short_name")
-        robot_id: str = config.get("metadata", "robot_id")
+        plant_short_name: str = settings.PLANT_SHORT_NAME
+        robot_id: str = settings.ROBOT_ID
         now: datetime = datetime.utcnow()
         self.id = f"{plant_short_name.upper()}{robot_id.upper()}{now.strftime('%d%m%Y%H%M%S%f')[:-3]}"
 

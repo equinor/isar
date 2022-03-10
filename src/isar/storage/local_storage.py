@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from isar.config import config
+from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageException, StorageInterface
 from isar.storage.utilities import construct_local_paths, construct_metadata_file
@@ -10,7 +10,7 @@ from robot_interface.models.inspection.inspection import Inspection
 
 class LocalStorage(StorageInterface):
     def __init__(self):
-        self.root_folder: Path = Path(config.get("DEFAULT", "local_storage_path"))
+        self.root_folder: Path = Path(settings.LOCAL_STORAGE_PATH)
         self.logger = logging.getLogger("uploader")
 
     def store(self, inspection: Inspection, metadata: MissionMetadata):

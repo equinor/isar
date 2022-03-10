@@ -5,7 +5,7 @@ from fastapi import Response
 from injector import inject
 
 from isar.apis.models import StopResponse
-from isar.config import config
+from isar.config.settings import settings
 from isar.models.communication.messages import StopMessage, StopMissionMessages
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.models.communication.queues.queues import Queues
@@ -17,7 +17,7 @@ class StopMission:
     def __init__(self, queues: Queues):
         self.logger = logging.getLogger("api")
         self.queues = queues
-        self.queue_timeout: int = config.getint("DEFAULT", "queue_timeout")
+        self.queue_timeout: int = settings.QUEUE_TIMEOUT
 
     def post(self, response: Response):
         self.logger.info("Received request to stop current mission")

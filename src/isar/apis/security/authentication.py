@@ -4,7 +4,7 @@ from fastapi.security.base import SecurityBase
 from fastapi_azure_auth import SingleTenantAzureAuthorizationCodeBearer
 from pydantic import BaseModel
 
-from isar.config import config
+from isar.config.settings import settings
 
 
 class Token(BaseModel):
@@ -20,12 +20,10 @@ class NoSecurity(SecurityBase):
 class Authenticator:
     def __init__(
         self,
-        app_client_id: str = config.get("authentication", "app_client_id"),
-        tenant_id: str = config.get("authentication", "azure_tenant_id"),
-        openapi_client_id: str = config.get("authentication", "openapi_client_id"),
-        authentication_enabled: bool = config.getboolean(
-            "authentication", "authentication_enabled"
-        ),
+        app_client_id: str = settings.APP_CLIENT_ID,
+        tenant_id: str = settings.AZURE_TENANT_ID,
+        openapi_client_id: str = settings.OPENAPI_CLIENT_ID,
+        authentication_enabled: bool = settings.AUTHENTICATION_ENABLED,
     ) -> None:
         self.logger = logging.getLogger("api")
         self.app_client_id: str = app_client_id

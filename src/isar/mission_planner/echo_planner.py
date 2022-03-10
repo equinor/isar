@@ -6,8 +6,8 @@ from injector import inject
 from requests import Response
 from requests.exceptions import RequestException
 
-from isar.config import config
 from isar.config.predefined_poses.predefined_poses import predefined_poses
+from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
     MissionPlannerInterface,
@@ -92,13 +92,13 @@ class EchoPlanner(MissionPlannerInterface):
         Get mission plan from echo planner.
         :param mission_id: Unique id of echo mission plan
         """
-        client_id: str = config.get("service_connections", "echo_client_id")
-        scope: str = config.get("service_connections", "echo_app_scope")
+        client_id: str = settings.ECHO_CLIENT_ID
+        scope: str = settings.ECHO_APP_SCOPE
         request_scope: str = f"{client_id}/{scope}"
 
         token: str = self.credentials.get_token(request_scope).token
 
-        url: str = f"{config.get('service_connections', 'echo_api_url')}/robots/robot-plan/{mission_id}"
+        url: str = f"{settings.ECHO_API_URL}/robots/robot-plan/{mission_id}"
         response: Response = self.request_handler.get(
             url=url,
             headers={"Authorization": f"Bearer {token}"},

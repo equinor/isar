@@ -6,7 +6,7 @@ from injector import inject
 from requests import HTTPError, RequestException
 from requests_toolbelt import MultipartEncoder
 
-from isar.config import config
+from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
@@ -25,11 +25,11 @@ class SlimmStorage(StorageInterface):
             AzureCredentials.get_azure_credentials()
         )
 
-        client_id: str = config.get("service_connections", "slimm_client_id")
-        scope: str = config.get("service_connections", "slimm_app_scope")
+        client_id: str = settings.SLIMM_CLIENT_ID
+        scope: str = settings.SLIMM_APP_SCOPE
         self.request_scope: str = f"{client_id}/{scope}"
 
-        self.url: str = config.get("service_connections", "slimm_api_url")
+        self.url: str = settings.SLIMM_API_URL
 
     def store(self, inspection: Inspection, metadata: MissionMetadata):
         token: str = self.credentials.get_token(self.request_scope).token
@@ -60,9 +60,7 @@ class SlimmStorage(StorageInterface):
             self.request_handler.post(
                 url=request_url,
                 params={
-                    "CopyFilesToSlimmDatalake": config.getboolean(
-                        "service_connections", "copy_files_to_slimm_datalake"
-                    )
+                    "CopyFilesToSlimmDatalake": settings.COPY_FILES_TO_SLIMM_DATALAKE
                 },
                 data=multiform_body,
                 headers={

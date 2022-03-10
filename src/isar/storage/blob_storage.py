@@ -5,8 +5,8 @@ from azure.core.exceptions import ResourceExistsError
 from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
 from injector import inject
 
-from isar.config import config
 from isar.config.keyvault.keyvault_service import Keyvault
+from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageException, StorageInterface
 from isar.storage.utilities import construct_local_paths, construct_metadata_file
@@ -16,9 +16,7 @@ from robot_interface.models.inspection.inspection import Inspection
 class BlobStorage(StorageInterface):
     @inject
     def __init__(
-        self,
-        keyvault: Keyvault,
-        container_name: str = config.get("service_connections", "blob_container"),
+        self, keyvault: Keyvault, container_name: str = settings.BLOB_CONTAINER
     ):
         self.keyvault = keyvault
         self.storage_connection_string = self.keyvault.get_secret(

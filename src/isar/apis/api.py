@@ -16,7 +16,7 @@ from isar.apis.schedule.drive_to import DriveTo
 from isar.apis.schedule.start_mission import StartMission
 from isar.apis.schedule.stop_mission import StopMission
 from isar.apis.security.authentication import Authenticator
-from isar.config import config
+from isar.config.settings import settings
 
 
 class API:
@@ -27,8 +27,8 @@ class API:
         start_mission: StartMission,
         stop_mission: StopMission,
         drive_to: DriveTo,
-        host: str = config.get("DEFAULT", "api_host"),
-        port: int = config.getint("DEFAULT", "api_port"),
+        host: str = settings.API_HOST,
+        port: int = settings.API_PORT,
     ) -> None:
 
         self.authenticator: Authenticator = authenticator

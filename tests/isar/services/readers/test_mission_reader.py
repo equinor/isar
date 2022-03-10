@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from isar.config import config
+from isar.config.settings import settings
 from isar.models.mission import Mission
 from robot_interface.models.mission import TakeThermalImage
 from robot_interface.models.mission.task import Task
@@ -47,7 +47,7 @@ def test_get_mission_by_id(mission_reader, mission_id, expected_output):
 
 @pytest.mark.parametrize(
     "mission_id",
-    [12345, None, config],
+    [12345, None],
 )
 def test_get_mission_by_invalid_id(mission_reader, mission_id):
     with pytest.raises(Exception):
@@ -57,9 +57,7 @@ def test_get_mission_by_invalid_id(mission_reader, mission_id):
 def test_valid_predefined_missions_files(mission_reader):
     # Checks that the predefined mission folder contains only valid missions!
     mission_list_dict = mission_reader.get_predefined_missions()
-    predefined_mission_folder = Path(
-        config.get("DEFAULT", "predefined_missions_folder")
-    )
+    predefined_mission_folder = Path(settings.PREDEFINED_MISSIONS_FOLDER)
     assert len(list(predefined_mission_folder.glob("*.json"))) == len(
         list(mission_list_dict)
     )

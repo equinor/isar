@@ -9,7 +9,7 @@ from injector import Injector, inject
 from transitions import Machine
 from transitions.core import State
 
-from isar.config import config
+from isar.config.settings import settings
 from isar.models.communication.messages import (
     StartMissionMessages,
     StopMessage,
@@ -37,13 +37,9 @@ class StateMachine(object):
         queues: Queues,
         robot: RobotInterface,
         mqtt_client: MqttClientInterface,
-        sleep_time: float = config.getfloat("DEFAULT", "fsm_sleep_time"),
-        stop_robot_attempts_limit: int = config.getint(
-            "DEFAULT", "stop_robot_attempts_limit"
-        ),
-        transitions_log_length: int = config.getint(
-            "DEFAULT", "state_transitions_log_length"
-        ),
+        sleep_time: float = settings.FSM_SLEEP_TIME,
+        stop_robot_attempts_limit: int = settings.STOP_ROBOT_ATTEMPTS_LIMIT,
+        transitions_log_length: int = settings.STATE_TRANSITIONS_LOG_LENGTH,
     ):
         """Initializes the state machine.
 
@@ -135,7 +131,7 @@ class StateMachine(object):
 
         if self.mqtt_client:
             self.mqtt_client.publish(
-                topic=config.get("mqtt_topics", "isar_state"),
+                topic=settings.ISAR_STATE,
                 payload=payload,
                 retain=True,
             )
@@ -279,7 +275,7 @@ class StateMachine(object):
         )
 
         self.mqtt_client.publish(
-            topic=config.get("mqtt_topics", "isar_task_status"),
+            topic=settings.ISAR_TASK_STATUS,
             payload=payload,
             retain=True,
         )
@@ -290,7 +286,7 @@ class StateMachine(object):
         )
 
         self.mqtt_client.publish(
-            topic=config.get("mqtt_topics", "isar_mission"),
+            topic=settings.ISAR_MISSION,
             payload=payload,
             retain=True,
         )

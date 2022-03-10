@@ -1,14 +1,13 @@
 import pytest
 import requests
 from requests.exceptions import (
-    ConnectionError,
     ConnectTimeout,
+    ConnectionError,
     RequestException,
     Timeout,
 )
 from requests.models import Response
 
-from isar.config import config
 from isar.services.service_connections.request_handler import RequestHandler
 
 url = "http://10.0.0.1"

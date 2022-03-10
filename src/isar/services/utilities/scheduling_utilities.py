@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 from injector import inject
 
-from isar.config import config
+from isar.config.settings import settings
 from isar.models.communication.messages import StartMessage, StartMissionMessages
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.models.communication.queues.queues import Queues
@@ -22,11 +22,7 @@ class SchedulingUtilities:
     """
 
     @inject
-    def __init__(
-        self,
-        queues: Queues,
-        queue_timeout: int = config.getint("DEFAULT", "queue_timeout"),
-    ):
+    def __init__(self, queues: Queues, queue_timeout: int = settings.QUEUE_TIMEOUT):
         self.queues = queues
         self.queue_timeout: int = queue_timeout
         self.logger = logging.getLogger("api")

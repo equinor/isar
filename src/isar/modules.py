@@ -1,6 +1,6 @@
 from importlib import import_module
 from types import ModuleType
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 from injector import Module, multiprovider, provider, singleton
 
@@ -9,8 +9,9 @@ from isar.apis.schedule.drive_to import DriveTo
 from isar.apis.schedule.start_mission import StartMission
 from isar.apis.schedule.stop_mission import StopMission
 from isar.apis.security.authentication import Authenticator
-from isar.config import config
+from isar.config.configuration_error import ConfigurationError
 from isar.config.keyvault.keyvault_service import Keyvault
+from isar.config.settings import settings
 from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
@@ -73,7 +74,7 @@ class RobotModule(Module):
     @provider
     @singleton
     def provide_robot_interface(self) -> RobotInterface:
-        robot_package_name: str = config.get("DEFAULT", "robot_package")
+        robot_package_name: str = settings.ROBOT_PACKAGE
         robot: ModuleType = import_module(robot_package_name)
         return robot.robotinterface.Robot()  # type: ignore
 
@@ -159,7 +160,7 @@ class ServiceModule(Module):
     @provider
     @singleton
     def provide_keyvault(self) -> Keyvault:
-        return Keyvault(config.get("service_connections", "keyvault"))
+        return Keyvault(keyvault_name=settings.KEYVAULT)
 
     @provider
     @singleton
@@ -171,8 +172,7 @@ class MqttModule(Module):
     @provider
     @singleton
     def provide_mqtt_client(self) -> MqttClientInterface:
-        mqtt_enabled: bool = config.getboolean("modules", "mqtt_enabled")
-        if mqtt_enabled:
+        if settings.MQTT_ENABLED:
             return MqttClient()
         return None
 
@@ -198,31 +198,54 @@ modules: dict = {
     },
     "mqtt_enabled": {
         "default": MqttModule,
-        "false": MqttModule,
-        "true": MqttModule,
+        False: MqttModule,
+        True: MqttModule,
     },
     "utilities": {"default": UtilitiesModule},
 }
+
+configurable_modules: List[str] = [
+    "storage",
+    "mission_planner",
+    "mqtt_enabled",
+]
 
 
 def get_injector_modules() -> Tuple[List[Module], List[str]]:
     injector_modules: List[Module] = []
     module_config_keys: List[str] = []
 
-    module_config: dict = dict(config.items("modules"))
-
     for module_key, module in modules.items():
-        if module_key not in module_config:
-            injector_modules.append(module["default"])
-            module_config_keys.append(f"{module_key} : default")
+        if module_key in configurable_modules:
+            module_config_key: Any = _get_setting_for_module(module_key=module_key)
 
-        else:
-            config_list: List[str] = [
-                x.strip() for x in module_config[module_key].split(",")
-            ]
+            # The configuration contains a list of options
+            if type(module_config_key) is list:
+                for key in module_config_key:
+                    injector_modules.append(module[key])
+                    module_config_keys.append(f"{module_key} : {key}")
 
-            for module_config_key in config_list:
+            # A single configuration is selected
+            else:
                 injector_modules.append(module[module_config_key])
                 module_config_keys.append(f"{module_key} : {module_config_key}")
 
+        # Use default module
+        else:
+            injector_modules.append(module["default"])
+            module_config_keys.append(f"{module_key} : default")
+
     return injector_modules, module_config_keys
+
+
+def _get_setting_for_module(module_key: str):
+    if module_key == "mission_planner":
+        return settings.MISSION_PLANNER
+    elif module_key == "storage":
+        return settings.STORAGE
+    elif module_key == "mqtt_enabled":
+        return settings.MQTT_ENABLED
+    else:
+        raise ConfigurationError(
+            "Configurable module key did not have a matching setting"
+        )
