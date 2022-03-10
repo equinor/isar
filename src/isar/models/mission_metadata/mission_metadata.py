@@ -3,7 +3,7 @@ from datetime import date, datetime
 from typing import Optional, Union
 from uuid import UUID
 
-from isar.config import config
+from isar.config.settings import settings
 
 additional_meta: dict = {}
 
@@ -11,16 +11,14 @@ additional_meta: dict = {}
 @dataclass
 class MissionMetadata:
     mission_id: Union[UUID, int, str, None]
-    coordinate_reference_system: str = config.get(
-        "metadata", "coordinate_reference_system"
-    )
-    vertical_reference_system: str = config.get("metadata", "vertical_reference_system")
-    data_classification: str = config.get("metadata", "data_classification")
+    coordinate_reference_system: str = settings.COORDINATE_REFERENCE_SYSTEM
+    vertical_reference_system: str = settings.VERTICAL_REFERENCE_SYSTEM
+    data_classification: str = settings.DATA_CLASSIFICATION
     source_url: Optional[str] = None
-    plant_code: str = config.get("metadata", "plant_code")
-    plant_name: str = config.get("metadata", "plant_name")
-    media_orientation_reference_system: str = config.get(
-        "metadata", "media_orientation_reference_system"
+    plant_code: str = settings.PLANT_CODE
+    plant_name: str = settings.PLANT_NAME
+    media_orientation_reference_system: str = (
+        settings.MEDIA_ORIENTATION_REFERENCE_SYSTEM
     )
-    robot_id: str = config.get("metadata", "robot_type")
+    robot_id: str = settings.ROBOT_TYPE
     mission_date: date = datetime.utcnow().date()

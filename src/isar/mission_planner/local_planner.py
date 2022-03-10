@@ -1,11 +1,10 @@
 import logging
 from dataclasses import asdict
 from pathlib import Path
-from typing import Optional
 
 from injector import inject
 
-from isar.config import config
+from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
     MissionPlannerInterface,
@@ -20,9 +19,7 @@ logger = logging.getLogger("api")
 class LocalPlanner(MissionPlannerInterface):
     @inject
     def __init__(self):
-        self.predefined_mission_folder = Path(
-            config.get("DEFAULT", "predefined_missions_folder")
-        )
+        self.predefined_mission_folder = Path(settings.PREDEFINED_MISSIONS_FOLDER)
 
     def get_mission(self, mission_id) -> Mission:
         missions: dict = self.get_predefined_missions()

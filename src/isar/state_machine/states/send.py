@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from transitions import State
 
-from isar.config import config
+from isar.config.settings import settings
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
@@ -22,9 +22,7 @@ class Send(State):
         super().__init__(name="send", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.send_failure_counter: int = 0
-        self.send_failure_counter_limit: int = config.getint(
-            "DEFAULT", "send_failure_counter_limit"
-        )
+        self.send_failure_counter_limit: int = settings.SEND_FAILURE_COUNTER_LIMIT
         self.logger = logging.getLogger("state_machine")
 
         self.send_thread = None

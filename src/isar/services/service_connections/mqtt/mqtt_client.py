@@ -6,7 +6,7 @@ from typing import Any
 from paho.mqtt import client as mqtt
 from paho.mqtt.client import Client
 
-from isar.config import config
+from isar.config.settings import settings
 
 
 class MqttClientInterface(metaclass=ABCMeta):
@@ -37,17 +37,17 @@ class MqttClient(MqttClientInterface):
     def __init__(self):
         self.logger = logging.getLogger("mqtt_client")
 
-        username: str = config.get("service_connections", "mqtt_username")
+        username: str = settings.MQTT_USERNAME
         password: str = ""
         try:
-            password = os.environ["MQTT_PASSWORD"]
+            password = os.environ["ISAR_MQTT_PASSWORD"]
         except KeyError:
             self.logger.warning(
-                "Failed to retrieve MQTT_PASSWORD from environment. Attempting with empty string as password."
+                "Failed to retrieve ISAR_MQTT_PASSWORD from environment. Attempting with empty string as password."
             )
 
-        host: str = config.get("service_connections", "mqtt_host")
-        port: int = config.getint("service_connections", "mqtt_port")
+        host: str = settings.MQTT_HOST
+        port: int = settings.MQTT_PORT
 
         self.client: Client = Client()
 

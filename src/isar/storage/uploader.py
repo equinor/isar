@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from queue import Empty, Queue
 from typing import List
 
-from isar.config import config
+from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageException, StorageInterface
 from robot_interface.models.inspection.inspection import Inspection
@@ -40,10 +40,8 @@ class Uploader:
         self,
         upload_queue: Queue,
         storage_handlers: List[StorageInterface],
-        max_wait_time: int = config.getint("DEFAULT", "upload_failure_max_wait"),
-        max_retry_attempts: int = config.getint(
-            "DEFAULT", "upload_failure_attempts_limit"
-        ),
+        max_wait_time: int = settings.UPLOAD_FAILURE_MAX_WAIT,
+        max_retry_attempts: int = settings.UPLOAD_FAILURE_ATTEMPTS_LIMIT,
     ) -> None:
         """Initializes the uploader.
 

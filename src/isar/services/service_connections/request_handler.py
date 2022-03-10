@@ -5,7 +5,7 @@ import requests
 from requests.exceptions import ConnectionError, HTTPError, RequestException, Timeout
 from requests.models import Response
 
-from isar.config import config
+from isar.config.settings import settings
 
 
 class RequestHandler:
@@ -60,7 +60,7 @@ class RequestHandler:
         self,
         url: str,
         json_body=None,
-        request_timeout: float = config.getfloat("DEFAULT", "request_timeout"),
+        request_timeout: float = settings.REQUEST_TIMEOUT,
         auth: Optional[tuple] = None,
         headers: Optional[dict] = None,
         data: Optional[dict] = None,
@@ -84,7 +84,7 @@ class RequestHandler:
         self,
         url: str,
         json_body=None,
-        request_timeout: float = config.getfloat("DEFAULT", "request_timeout"),
+        request_timeout: float = settings.REQUEST_TIMEOUT,
         auth: Optional[tuple] = None,
         headers: Optional[dict] = None,
         data: Optional[dict] = None,
@@ -108,7 +108,7 @@ class RequestHandler:
         self,
         url: str,
         json_body=None,
-        request_timeout: float = config.getfloat("DEFAULT", "request_timeout"),
+        request_timeout: float = settings.REQUEST_TIMEOUT,
         auth: Optional[tuple] = None,
         headers: Optional[dict] = None,
         data: Optional[dict] = None,
@@ -132,7 +132,7 @@ class RequestHandler:
         self,
         url: str,
         json_body=None,
-        request_timeout: float = config.getfloat("DEFAULT", "request_timeout"),
+        request_timeout: float = settings.REQUEST_TIMEOUT,
         auth: Optional[tuple] = None,
         headers: Optional[dict] = None,
         data: Optional[dict] = None,

@@ -5,7 +5,7 @@ from azure.identity import DefaultAzureCredential
 from injector import inject
 from requests import Response
 
-from isar.config import config
+from isar.config.settings import settings
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
 from robot_interface.models.geometry.frame import Frame
@@ -22,14 +22,14 @@ class StidService:
         self.logger = logging.getLogger("api")
 
     def tag_position(self, tag: str) -> Optional[Position]:
-        client_id: str = config.get("service_connections", "stid_client_id")
-        scope: str = config.get("service_connections", "stid_app_scope")
+        client_id: str = settings.STID_CLIENT_ID
+        scope: str = settings.STID_APP_SCOPE
         request_scope: str = f"{client_id}/{scope}"
 
         token: str = self.credentials.get_token(request_scope).token
 
-        stid_url: str = config.get("service_connections", "stid_api_url")
-        plant_name: str = config.get("service_connections", "stid_plant_name")
+        stid_url: str = settings.STID_API_URL
+        plant_name: str = settings.STID_PLANT_NAME
         request_url: str = f"{stid_url}/{plant_name}/tag"
 
         response: Response = self.request_handler.get(
