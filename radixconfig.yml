@@ -6,7 +6,7 @@ spec:
   environments:
     - name: dev
       build:
-        from: main
+        from: radix
     - name: test
     - name: prod
 
