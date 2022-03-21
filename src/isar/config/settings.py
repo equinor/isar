@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     UPLOAD_FAILURE_MAX_WAIT: int = Field(default=60)
 
     # FastAPI host
-    API_HOST: str = Field(default="localhost")
+    API_HOST: str = Field(default="0.0.0.0")
 
     # FastAPI port
     API_PORT: int = Field(default=3000)
