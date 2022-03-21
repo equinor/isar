@@ -5,6 +5,9 @@ WORKDIR /app
 # Default robot repository
 ARG ROBOT_REPOSITORY_CLONE_URL=https://github.com/equinor/isar-robot.git
 
+RUN apt-get update
+RUN apt-get install -y git
+
 ENV VIRTUAL_ENV=/venv
 RUN python -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
