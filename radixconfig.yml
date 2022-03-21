@@ -1,0 +1,34 @@
+apiVersion: radix.equinor.com/v1
+kind: RadixApplication
+metadata:
+  name: isar-dev
+spec:
+  environments:
+    - name: dev
+      build:
+        from: main
+    - name: test
+    - name: prod
+
+  components:
+    - name: isar
+      src: ./
+      ports:
+        - name: http
+          port: 3000
+      publicPort: http
+      variables:
+        AZURE_TENANT_ID: 3aa4a235-b6e2-48d5-9195-7fcf05b459b0
+        ROBOT_PACKAGE: isar_robot
+        ISAR_MISSION_PLANNER: local
+        ISAR_STORAGE: '["local"]'
+        ISAR_MQTT_ENABLED: false
+        ISAR_AUTHENTICATION_ENABLED: true
+      environmentConfig:
+        - environment: dev
+          variables:
+            AZURE_CLIENT_ID: b29bed99-7637-4fdc-8809-48c777a9b714
+          runAsNonRoot: true
+      secrets:
+        - AZURE_CLIENT_SECRET
+        - MQTT_PASSWORD

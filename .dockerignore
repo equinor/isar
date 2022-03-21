@@ -7,9 +7,13 @@ results
 
 .mypy_cache
 .pytest_cache
+.git
 
 docs
 
 src/isar.egg-info
 
 venv
+
+# This file makes the docker build step fail. We do not know why, but it is needed for PyPi publishing.
+pyproject.toml
