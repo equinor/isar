@@ -25,6 +25,7 @@ setup(
         "azure-identity",
         "azure-keyvault-secrets",
         "azure-storage-blob",
+        "backoff",
         "click",
         "dacite",
         "fastapi-azure-auth",
