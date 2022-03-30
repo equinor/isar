@@ -17,8 +17,8 @@ from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.models.communication.queues.queues import Queues
 from isar.services.service_connections.mqtt.mqtt_client import (
-    MqttClient,
     MqttClientInterface,
+    MqttPublisher,
 )
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
@@ -171,9 +171,9 @@ class ServiceModule(Module):
 class MqttModule(Module):
     @provider
     @singleton
-    def provide_mqtt_client(self) -> MqttClientInterface:
+    def provide_mqtt_client(self, queues: Queues) -> MqttClientInterface:
         if settings.MQTT_ENABLED:
-            return MqttClient()
+            return MqttPublisher(mqtt_queue=queues.mqtt_queue)
         return None
 
 

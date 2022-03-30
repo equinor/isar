@@ -10,6 +10,7 @@ from isar.config.log import setup_logger
 from isar.config.settings import settings
 from isar.models.communication.queues.queues import Queues
 from isar.modules import get_injector_modules
+from isar.services.service_connections.mqtt.mqtt_client import MqttClient
 from isar.state_machine.state_machine import main
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
@@ -40,6 +41,15 @@ if __name__ == "__main__":
         target=uploader.run, name="ISAR Uploader", daemon=True
     )
     threads.append(uploader_thread)
+
+    if settings.MQTT_ENABLED:
+        mqtt_client: MqttClient = MqttClient(mqtt_queue=injector.get(Queues).mqtt_queue)
+
+        mqtt_thread: Thread = Thread(
+            target=mqtt_client.run, name="ISAR MQTT Client", daemon=True
+        )
+
+        threads.append(mqtt_thread)
 
     host: str = settings.API_HOST
     port: int = settings.API_PORT
