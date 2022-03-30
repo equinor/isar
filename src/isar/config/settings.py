@@ -1,7 +1,7 @@
 import importlib.resources as pkg_resources
 from typing import List
 
-from pydantic import BaseSettings, Field
+from pydantic import BaseSettings, Field, validator
 
 
 class Settings(BaseSettings):
@@ -189,11 +189,15 @@ class Settings(BaseSettings):
     # Type of missions the robot performs
     MISSION_TYPE: str = Field(default="inspection")
 
-    ISAR_STATE: str = Field(default=f"{ROBOT_ID}/isar_state")
+    ISAR_STATE: str = Field(default="isar_state")
 
-    ISAR_MISSION: str = Field(default=f"{ROBOT_ID}/isar_mission")
+    ISAR_MISSION: str = Field(default=f"isar_mission")
 
-    ISAR_TASK_STATUS: str = Field(default=f"{ROBOT_ID}/isar_task_status")
+    ISAR_TASK_STATUS: str = Field(default=f"isar_task_status")
+
+    @validator("ISAR_STATE", "ISAR_MISSION", "ISAR_TASK_STATUS", pre=True, always=True)
+    def prefix_isar_topics(cls, v, values):
+        return f"{values['ROBOT_ID']}/{v}"
 
     class Config:
         with pkg_resources.path("isar.config", "settings.env") as path:
