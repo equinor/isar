@@ -51,9 +51,6 @@ if __name__ == "__main__":
 
         threads.append(mqtt_thread)
 
-    host: str = settings.API_HOST
-    port: int = settings.API_PORT
-
     api: API = injector.get(API)
     api_thread: Thread = Thread(target=api.run_app, name="ISAR API", daemon=True)
     threads.append(api_thread)
