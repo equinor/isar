@@ -92,6 +92,21 @@ In [this](./src/isar/config/predefined_missions) folder there are predefined def
 corresponding to `mission_id=1`. A new mission may be added by adding a new json-file with a mission description. Note,
 the mission IDs must be unique.
 
+### Running with docker-compose
+
+ISAR may be started with an instance of the [isar-robot](https://github.com/equinor/isar-robot) package by
+
+```shell
+docker-compose up --build
+```
+
+Provided that the simulator from [isar-turtlebot](https://github.com/equinor/isar-turtlebot) is running ISAR may be
+started with the turtlebot by
+
+```shell
+docker-compose -f docker-compose-turtlebot.yml up --build
+```
+
 ### Configuration
 
 The system consists of many configuration variables which may alter the functionality. As an example, it is possible to
@@ -188,8 +203,8 @@ FastAPI-framework is split into routers where the endpoint operations are define
 
 ## Mission planner
 
-The mission planner that is currently in use is defined by the `ISAR_MISSION_PLANNER` configuration variable. This can be
-changed by overriding the configuration through an environment variable. The available options are
+The mission planner that is currently in use is defined by the `ISAR_MISSION_PLANNER` configuration variable. This can
+be changed by overriding the configuration through an environment variable. The available options are
 
 ```
 ISAR_MISSION_PLANNER = local
@@ -206,9 +221,9 @@ selection [here](./src/isar/modules.py). Note that you must add your module as a
 
 ## Storage
 
-The storage modules that are used is defined by the `ISAR_STORAGE` configuration variable. This can be
-changed by overriding the configuration through an environment variable. It accepts a json encoded list and will use each
-element in the list to retrieve the corresponding handler. The current options are
+The storage modules that are used is defined by the `ISAR_STORAGE` configuration variable. This can be changed by
+overriding the configuration through an environment variable. It accepts a json encoded list and will use each element
+in the list to retrieve the corresponding handler. The current options are
 
 ```
 ISAR_STORAGE = '["local", "blob", "slimm"]'
@@ -249,8 +264,8 @@ turned off but may be activated by setting the environment variable
 ISAR_MQTT_ENABLED = true
 ```
 
-The connection to the broker will be determined by the following
-configuration values which may all be overwritten through the environment.
+The connection to the broker will be determined by the following configuration values which may all be overwritten
+through the environment.
 
 ```
 ISAR_MQTT_USERNAME
@@ -258,5 +273,5 @@ ISAR_MQTT_HOST
 ISAR_MQTT_PORT
 ```
 
-In addition, the `ISAR_MQTT_PASSWORD` environment variable should be available for connection to the broker. If username and
-password is not specified both will default to empty strings.
+In addition, the `ISAR_MQTT_PASSWORD` environment variable should be available for connection to the broker. If username
+and password is not specified both will default to empty strings.
