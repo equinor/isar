@@ -19,7 +19,7 @@ services:
       - MQTT_PASSWORD
 
       # Selected robot package
-      - ROBOT_PACKAGE=isar_turtlebot
+      - ISAR_ROBOT_PACKAGE=isar_turtlebot
 
       # isar-turtlebot environment
       - ISAR_TURTLEBOT_ROS_BRIDGE_HOST=noetic
