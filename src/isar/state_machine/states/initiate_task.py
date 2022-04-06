@@ -72,7 +72,7 @@ class InitiateTask(State):
                 self.state_machine.current_task.status = TaskStatus.Failed
                 self.logger.warning(
                     f"Dependency for task {self.state_machine.current_task_index}: "
-                    f"{self.state_machine.current_task.name}, not fulfilled, "
+                    f"{self.state_machine.current_task.type}, not fulfilled, "
                     "skipping to next task"
                 )
 

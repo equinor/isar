@@ -2,7 +2,7 @@
   "id": 1,
   "tasks": [
     {
-      "name": "drive_to_pose",
+      "type": "drive_to_pose",
       "pose": {
         "position": {
           "x": -2,
@@ -21,7 +21,7 @@
       }
     },
     {
-      "name": "drive_to_pose",
+      "type": "drive_to_pose",
       "pose": {
         "position": {
           "x": -2,
@@ -40,7 +40,7 @@
       }
     },
     {
-      "name": "take_image",
+      "type": "take_image",
       "target": {
         "x": 2,
         "y": 2,
@@ -49,7 +49,7 @@
       }
     },
     {
-      "name": "drive_to_pose",
+      "type": "drive_to_pose",
       "pose": {
         "position": {
           "x": 2,
@@ -68,7 +68,7 @@
       }
     },
     {
-      "name": "take_image",
+      "type": "take_image",
       "target": {
         "x": 2,
         "y": 2,
@@ -80,7 +80,7 @@
       ]
     },
     {
-      "name": "drive_to_pose",
+      "type": "drive_to_pose",
       "pose": {
         "position": {
           "x": 0,

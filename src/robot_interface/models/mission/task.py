@@ -85,7 +85,7 @@ class DriveToPose(MotionTask):
     """
 
     pose: Pose
-    name: Literal["drive_to_pose"] = "drive_to_pose"
+    type: Literal["drive_to_pose"] = "drive_to_pose"
     depends_on: Optional[List[int]] = None
 
 
@@ -96,7 +96,7 @@ class DockingProcedure(MotionTask):
     """
 
     behavior: Literal["dock, undock"]
-    name: Literal["docking_procedure"] = "docking_procedure"
+    type: Literal["docking_procedure"] = "docking_procedure"
 
 
 @dataclass
@@ -106,7 +106,7 @@ class TakeImage(InspectionTask):
     """
 
     target: Position
-    name: Literal["take_image"] = "take_image"
+    type: Literal["take_image"] = "take_image"
     depends_on: Optional[List[int]] = None
 
 
@@ -117,7 +117,7 @@ class TakeThermalImage(InspectionTask):
     """
 
     target: Position
-    name: Literal["take_thermal_image"] = "take_thermal_image"
+    type: Literal["take_thermal_image"] = "take_thermal_image"
     depends_on: Optional[List[int]] = None
 
 
