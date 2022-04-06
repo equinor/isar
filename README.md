@@ -189,7 +189,7 @@ The state machine is based on the [transitions](https://github.com/pytransitions
 main states are:
 
 - Idle: The robot is in an idle state and ready to perform new missions.
-- Send: The state machine has received a mission and is sending the mission to the robot.
+- InitiateTask: The state machine has received a mission and initiates a task for the robot.
 - Monitor: The robot has received a mission from the state machine, and the state machine is monitoring the current
   mission.
 - Finalize: The state machine has finished the mission, received a request to abort, or an event has occurred which

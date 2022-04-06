@@ -24,7 +24,12 @@ class TestSchedulingUtilities:
                 mock_status(mission_in_progress=False, current_state=States.Finalize),
                 False,
             ),
-            (mock_status(mission_in_progress=False, current_state=States.Send), False),
+            (
+                mock_status(
+                    mission_in_progress=False, current_state=States.InitiateTask
+                ),
+                False,
+            ),
             (
                 mock_status(mission_in_progress=True, current_state=States.Monitor),
                 False,
@@ -34,7 +39,12 @@ class TestSchedulingUtilities:
                 mock_status(mission_in_progress=True, current_state=States.Finalize),
                 False,
             ),
-            (mock_status(mission_in_progress=True, current_state=States.Send), False),
+            (
+                mock_status(
+                    mission_in_progress=True, current_state=States.InitiateTask
+                ),
+                False,
+            ),
         ],
     )
     def test_ready_to_start_mission(

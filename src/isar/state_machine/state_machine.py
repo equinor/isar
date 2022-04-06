@@ -20,7 +20,7 @@ from isar.models.communication.status import Status
 from isar.models.mission import Mission
 from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
 from isar.services.utilities.json_service import EnhancedJSONEncoder
-from isar.state_machine.states import Finalize, Idle, Monitor, Off, Send
+from isar.state_machine.states import Finalize, Idle, InitiateTask, Monitor, Off
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions import RobotException
 from robot_interface.models.mission.status import TaskStatus
@@ -66,7 +66,7 @@ class StateMachine(object):
         self.states = [
             Off(self),
             Idle(self),
-            Send(self),
+            InitiateTask(self),
             Monitor(self),
             Finalize(self),
         ]
@@ -106,8 +106,8 @@ class StateMachine(object):
 
         if next_state == States.Idle:
             self.to_idle()
-        elif next_state == States.Send:
-            self.to_send()
+        elif next_state == States.InitiateTask:
+            self.to_initiate_task()
         elif next_state == States.Monitor:
             self.to_monitor()
         elif next_state == States.Finalize:

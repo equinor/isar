@@ -14,7 +14,7 @@ from tests.mocks.robot_variables import mock_pose
                 True,
                 Mission([DriveToPose(pose=mock_pose())]),
             ),
-            States.Send,
+            States.InitiateTask,
         ),
         ((False, None), States.Idle),
     ],

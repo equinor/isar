@@ -161,9 +161,9 @@ def test_state_machine_transitions(injector, state_machine_thread):
     expected_transitions_list = deque(
         [
             States.Idle,
-            States.Send,
+            States.InitiateTask,
             States.Monitor,
-            States.Send,
+            States.InitiateTask,
             States.Finalize,
             States.Idle,
         ]
@@ -189,9 +189,9 @@ def test_state_machine_failed_dependency(injector, state_machine_thread, mocker)
     expected_transitions_list = deque(
         [
             States.Idle,
-            States.Send,
+            States.InitiateTask,
             States.Monitor,
-            States.Send,
+            States.InitiateTask,
             States.Finalize,
             States.Idle,
         ]
@@ -216,9 +216,9 @@ def test_state_machine_with_successful_collection(
     expected_transitions_list = deque(
         [
             States.Idle,
-            States.Send,
+            States.InitiateTask,
             States.Monitor,
-            States.Send,
+            States.InitiateTask,
             States.Finalize,
             States.Idle,
         ]
@@ -247,9 +247,9 @@ def test_state_machine_with_unsuccessful_collection(
     expected_transitions_list = deque(
         [
             States.Idle,
-            States.Send,
+            States.InitiateTask,
             States.Monitor,
-            States.Send,
+            States.InitiateTask,
             States.Finalize,
             States.Idle,
         ]
