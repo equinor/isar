@@ -2,7 +2,7 @@
   "id": 1,
   "tasks": [
     {
-      "action_name": "drive_to",
+      "action_type": "drive_to",
       "action_message": {
         "xypsi_pose": {
           "x": -2,
@@ -12,7 +12,7 @@
       }
     },
     {
-      "action_name": "drive_three",
+      "action_type": "drive_three",
       "action_message": {
         "xypsi_pose": {
           "x": -2,
@@ -22,7 +22,7 @@
       }
     },
     {
-      "action_name": "drive_to",
+      "action_type": "drive_to",
       "action_message": {
         "xypsi_pose": {
           "x": 2,
@@ -32,7 +32,7 @@
       }
     },
     {
-      "action_name": "drive_to",
+      "action_type": "drive_to",
       "action_message": {
         "uups": {
           "x": 0,

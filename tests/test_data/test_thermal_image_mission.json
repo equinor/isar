@@ -2,7 +2,7 @@
   "id": 1,
   "tasks": [
     {
-      "name": "take_thermal_image",
+      "type": "take_thermal_image",
       "target": {
         "x": 2,
         "y": 2,

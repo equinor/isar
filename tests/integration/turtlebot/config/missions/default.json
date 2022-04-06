@@ -2,7 +2,7 @@
     "id": 2,
     "tasks": [
         {
-            "name": "drive_to_pose",
+            "type": "drive_to_pose",
             "pose": {
                 "position": {
                     "x": -3.6,
@@ -21,7 +21,7 @@
             }
         },
         {
-            "name": "take_image",
+            "type": "take_image",
             "target": {
                 "x": -4.7,
                 "y": 4.9,
@@ -30,7 +30,7 @@
             }
         },
         {
-            "name": "drive_to_pose",
+            "type": "drive_to_pose",
             "pose": {
                 "position": {
                     "x": 4.7,
@@ -49,7 +49,7 @@
             }
         },
         {
-            "name": "take_image",
+            "type": "take_image",
             "target": {
                 "x": 5.6,
                 "y": 5.2,
@@ -58,7 +58,7 @@
             }
         },
         {
-            "name": "drive_to_pose",
+            "type": "drive_to_pose",
             "pose": {
                 "position": {
                     "x": 0.95,
@@ -77,7 +77,7 @@
             }
         },
         {
-            "name": "take_thermal_image",
+            "type": "take_thermal_image",
             "target": {
                 "x": 1.9,
                 "y": 1.9,
