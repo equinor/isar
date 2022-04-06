@@ -124,4 +124,4 @@ class Monitor(State):
         if task.status == TaskStatus.Completed and isinstance(task, InspectionTask):
             self._queue_inspections_for_upload(current_task=task)
 
-        return States.Send
+        return States.InitiateTask

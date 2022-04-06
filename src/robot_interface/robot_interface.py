@@ -10,7 +10,7 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def initiate_task(self, task: Task) -> None:
-        """Send a task to the robot and start the execution of the task
+        """Send a task to the robot and initiate the execution of the task
 
         Parameters
         ----------

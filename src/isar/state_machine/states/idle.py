@@ -40,7 +40,7 @@ class Idle(State):
         (should_start_mission, mission) = self.state_machine.should_start_mission()
         if should_start_mission:
             self.state_machine.start_mission(mission)
-            return States.Send
+            return States.InitiateTask
 
         if self.state_machine.should_send_status():
             self.state_machine.send_status()
