@@ -8,7 +8,7 @@ from isar.models.mission import Mission
 from isar.services.readers.base_reader import BaseReader
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.mission import Task
-from tests.mocks.mission_definition import mock_mission_definition
+from tests.mocks.mission_definition import MockMissionDefinition
 from tests.mocks.pose import MockPose
 from tests.mocks.task import MockTask
 from tests.utilities import Utilities
@@ -35,9 +35,9 @@ class TestBaseReader:
     @pytest.mark.parametrize(
         "dataclass_dict, expected_dataclass",
         [
-            (asdict(mock_mission_definition("long_mission")), Mission),
-            (asdict(MockTask.drive_to()), Task),
-            (asdict(MockTask.take_image_in_coordinate_direction()), Task),
+            (asdict(MockMissionDefinition.default_mission), Mission),
+            (asdict(MockTask.drive_to), Task),
+            (asdict(MockTask.take_image_in_coordinate_direction), Task),
             (asdict(MockPose.default_pose), Pose),
         ],
     )

@@ -17,7 +17,7 @@ from isar.models.communication.messages.stop_message import StopMessage
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from tests.mocks.mission_definition import mock_mission_definition
+from tests.mocks.mission_definition import MockMissionDefinition
 from tests.mocks.status import mock_status
 
 
@@ -69,7 +69,7 @@ class TestSchedulerRoutes:
         [
             (
                 12345,
-                mock_mission_definition(),
+                MockMissionDefinition.default_mission,
                 MissionPlannerError,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.OK),
@@ -78,7 +78,7 @@ class TestSchedulerRoutes:
             ),
             (
                 1,
-                mock_mission_definition(),
+                MockMissionDefinition.default_mission,
                 None,
                 mock_ready_to_start_mission(HTTPStatus.REQUEST_TIMEOUT),
                 mock_start_mission(HTTPStatus.OK),
@@ -87,7 +87,7 @@ class TestSchedulerRoutes:
             ),
             (
                 1,
-                mock_mission_definition(),
+                MockMissionDefinition.default_mission,
                 None,
                 mock_ready_to_start_mission(HTTPStatus.CONFLICT),
                 mock_start_mission(HTTPStatus.OK),
@@ -96,7 +96,7 @@ class TestSchedulerRoutes:
             ),
             (
                 1,
-                mock_mission_definition(),
+                MockMissionDefinition.default_mission,
                 None,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.REQUEST_TIMEOUT),
@@ -105,7 +105,7 @@ class TestSchedulerRoutes:
             ),
             (
                 1,
-                mock_mission_definition(),
+                MockMissionDefinition.default_mission,
                 None,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.OK),

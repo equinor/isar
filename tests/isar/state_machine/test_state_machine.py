@@ -17,7 +17,7 @@ from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.mission import DriveToPose, TakeImage, Task
 from robot_interface.models.mission.status import TaskStatus
-from tests.mocks.mission_definition import default_mission
+from tests.mocks.mission_definition import MockMissionDefinition
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.task import MockTask
@@ -112,7 +112,7 @@ def test_should_start_mission(
 
 
 def test_start_mission(state_machine):
-    mission: Mission = default_mission
+    mission: Mission = MockMissionDefinition.default_mission
     state_machine.start_mission(mission=mission)
     message = state_machine.queues.start_mission.output.get()
     assert state_machine.mission_in_progress
@@ -175,7 +175,7 @@ def test_state_machine_transitions(injector, state_machine_thread):
 
 def test_state_machine_failed_dependency(injector, state_machine_thread, mocker):
     driveto_task: Task = DriveToPose(pose=MockPose.default_pose)
-    inspection_task: Task = MockTask.take_image_in_coordinate_direction()
+    inspection_task: Task = MockTask.take_image_in_coordinate_direction
     mission: Mission = Mission([driveto_task, inspection_task])
     mission.set_task_dependencies()
 
@@ -206,7 +206,7 @@ def test_state_machine_with_successful_collection(
 ):
     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
 
-    task: TakeImage = MockTask.take_image_in_coordinate_direction()
+    task: TakeImage = MockTask.take_image_in_coordinate_direction
     mission: Mission = Mission([task])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
@@ -237,7 +237,7 @@ def test_state_machine_with_unsuccessful_collection(
 
     mocker.patch.object(MockRobot, "get_inspections", return_value=[])
 
-    task: TakeImage = MockTask.take_image_in_coordinate_direction()
+    task: TakeImage = MockTask.take_image_in_coordinate_direction
     mission: Mission = Mission([task])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
