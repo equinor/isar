@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import TYPE_CHECKING, List, Sequence, Tuple
+from typing import TYPE_CHECKING, Sequence, Tuple
 
 from injector import inject
 from transitions import State
