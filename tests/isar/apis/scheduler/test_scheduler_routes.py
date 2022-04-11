@@ -4,8 +4,8 @@ from typing import Optional, Tuple
 
 import pytest
 
-from isar.apis.models.models import StartResponse
 from isar.apis.security.authentication import Authenticator
+from isar.config.settings import robot_settings
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.communication.messages import (
@@ -194,7 +194,6 @@ class TestSchedulerRoutes:
         result = StopMessage(
             message=result_message["message"], stopped=result_message["stopped"]
         )
-
         assert result == expected_output
         assert response.status_code == expected_status_code
 

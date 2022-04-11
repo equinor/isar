@@ -210,3 +210,24 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+class RobotSettings(BaseSettings):
+    def __init__(self) -> None:
+        try:
+            with pkg_resources.path(
+                f"{settings.ROBOT_PACKAGE}.config", f"settings.env"
+            ) as path:
+                env_file_path = path
+        except ModuleNotFoundError:
+            env_file_path = None
+        super().__init__(_env_file=env_file_path)
+
+    CAPABILITIES: List[str] = Field(default=["drive_to_pose", "take_image"])
+
+    class Config:
+        env_file_encoding = "utf-8"
+        case_sensitive = True
+
+
+robot_settings = RobotSettings()
