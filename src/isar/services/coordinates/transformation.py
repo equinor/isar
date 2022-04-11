@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 
 from alitra import AlignFrames, FrameTransform, MapConfig, Point, Quaternion

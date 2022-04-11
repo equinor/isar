@@ -9,7 +9,7 @@ from injector import Injector
 from isar.models.communication.queues.queues import Queues
 from isar.models.mission import Mission
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from isar.storage.storage_interface import StorageException, StorageInterface
+from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.geometry.orientation import Orientation
@@ -20,10 +20,6 @@ from robot_interface.models.inspection.inspection import (
     Inspection,
     TimeIndexedPose,
 )
-from robot_interface.models.mission.task import DriveToPose, Task
-from tests.mocks.blob_storage import StorageMock
-from tests.mocks.robot_variables import mock_pose
-from tests.mocks.task import MockTask
 
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(

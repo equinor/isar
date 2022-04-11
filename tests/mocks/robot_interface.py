@@ -1,6 +1,5 @@
 from datetime import datetime
-from typing import Optional, Sequence
-from uuid import UUID
+from typing import Sequence
 
 from robot_interface.models.geometry.frame import Frame
 from robot_interface.models.geometry.orientation import Orientation
