@@ -53,7 +53,7 @@ class BlobStorage(StorageInterface):
             )
             raise StorageException from e
         except Exception as e:
-            self.logger.error(f"An unexpected error occurred while uploading blob")
+            self.logger.error("An unexpected error occurred while uploading blob")
             raise StorageException from e
 
     def _get_blob_service_client(self) -> BlobServiceClient:
