@@ -49,7 +49,7 @@ class RequestHandler:
             raise RequestException from e
         try:
             response.raise_for_status()
-        except HTTPError as e:
+        except HTTPError:
             self.logger.exception(
                 f"Http error. Http status code= {response.status_code}"
             )
