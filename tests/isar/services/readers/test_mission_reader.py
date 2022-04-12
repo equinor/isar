@@ -3,25 +3,22 @@ from pathlib import Path
 import pytest
 
 from isar.config.settings import settings
+from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.mission import Mission
 from robot_interface.models.mission import TakeThermalImage
 from robot_interface.models.mission.task import Task
-from tests.utilities import Utilities
 
 
 @pytest.mark.parametrize(
-    "mission_path ,expected_output",
+    "mission_path",
     [
-        (
-            Path("./tests/test_data/test_mission_working_notasks.json"),
-            Mission,
-        ),
-        (Path("./tests/test_data/test_mission_working.json"), Mission),
+        Path("./tests/test_data/test_mission_working_notasks.json"),
+        Path("./tests/test_data/test_mission_working.json"),
     ],
 )
-def test_get_mission(mission_reader, mission_path, expected_output):
+def test_get_mission(mission_reader, mission_path):
     output: Mission = mission_reader.read_mission_from_file(mission_path)
-    assert Utilities.compare_two_arguments(output, expected_output)
+    assert isinstance(output, Mission)
 
 
 @pytest.mark.parametrize(
@@ -36,22 +33,14 @@ def test_get_invalid_mission(mission_reader, mission_path):
         mission_reader.read_mission_from_file(mission_path)
 
 
-@pytest.mark.parametrize(
-    "mission_id ,expected_output",
-    [(1, Mission)],
-)
-def test_get_mission_by_id(mission_reader, mission_id, expected_output):
-    output = mission_reader.get_mission(mission_id)
-    assert Utilities.compare_two_arguments(output, expected_output)
+def test_get_mission_by_id(mission_reader):
+    output = mission_reader.get_mission(1)
+    assert isinstance(output, Mission)
 
 
-@pytest.mark.parametrize(
-    "mission_id",
-    [12345, None],
-)
-def test_get_mission_by_invalid_id(mission_reader, mission_id):
-    with pytest.raises(Exception):
-        mission_reader.get_mission_by_id(mission_id)
+def test_get_mission_by_invalid_id(mission_reader):
+    with pytest.raises(MissionPlannerError):
+        mission_reader.get_mission(12345)
 
 
 def test_valid_predefined_missions_files(mission_reader):

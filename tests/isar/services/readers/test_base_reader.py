@@ -11,27 +11,9 @@ from robot_interface.models.mission import Task
 from tests.mocks.mission_definition import MockMissionDefinition
 from tests.mocks.pose import MockPose
 from tests.mocks.task import MockTask
-from tests.utilities import Utilities
 
 
 class TestBaseReader:
-    @pytest.mark.parametrize(
-        "location, expected_output",
-        [
-            (Path("./tests/test_data/test_mission_nofile.json"), None),
-            (Path("./tests/test_data/test_mission_working_notasks.json"), dict),
-            (Path("./tests/test_data/test_mission_working.json"), dict),
-            (Path("./tests/test_data/test_mission_not_working.json"), dict),
-            (Path("./tests/test_data/test_json_file.json"), list),
-        ],
-    )
-    def test_read_json(self, location, expected_output):
-        try:
-            content = BaseReader.read_json(location)
-        except Exception:
-            content = None
-        assert Utilities.compare_two_arguments(content, expected_output)
-
     @pytest.mark.parametrize(
         "dataclass_dict, expected_dataclass",
         [
