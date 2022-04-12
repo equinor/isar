@@ -145,12 +145,6 @@ predefined_poses = {
         orientation=Orientation(x=0, y=0, z=0.935, w=0.357, frame=Frame.Asset),
         frame=Frame.Asset,
     ),
-    # Robot Orientation: 90 deg
-    "300-XCV-003": Pose(
-        position=Position(x=20259.530, y=5241.897, z=16.880, frame=Frame.Asset),
-        orientation=Orientation(x=0, y=0, z=0.935, w=0.357, frame=Frame.Asset),
-        frame=Frame.Asset,
-    ),
     # 313-LD-1243 and 313-LD-1242 has the same pose
     # Robot Orientation: 180 deg
     "313-LD-1243": Pose(
@@ -303,7 +297,7 @@ predefined_poses = {
         frame=Frame.Asset,
     ),
     # EJE-342-1004.03 Robot orientation 90 degrees
-    "EJE-342-0226.10": Pose(
+    "EJE-342-1004.03": Pose(
         position=Position(x=20252.630, y=5253.136, z=18.540, frame=Frame.Asset),
         orientation=Orientation(x=0, y=0, z=0.935, w=0.357, frame=Frame.Asset),
         frame=Frame.Asset,
@@ -315,7 +309,7 @@ predefined_poses = {
         frame=Frame.Asset,
     ),
     # JBZS-313-021 Robot orientation 270 degrees
-    "JBZS-313-024": Pose(
+    "JBZS-313-021": Pose(
         position=Position(x=20250.000, y=5253.155, z=18.540, frame=Frame.Asset),
         orientation=Orientation(x=0, y=0, z=0.935, w=0.357, frame=Frame.Asset),
         frame=Frame.Asset,
