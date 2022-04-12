@@ -32,7 +32,7 @@ class Task:
                     package_name: Optional[str] = (
                         str(value.__class__).split("'")[1].split(".")[0]
                     )
-                except (AttributeError, IndexError) as e:
+                except (AttributeError, IndexError):
                     package_name = None
 
                 if package_name == "robot_interface":
