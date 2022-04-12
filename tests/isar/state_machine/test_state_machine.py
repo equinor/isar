@@ -18,8 +18,8 @@ from isar.storage.uploader import Uploader
 from robot_interface.models.mission import DriveToPose, TakeImage, Task
 from robot_interface.models.mission.status import TaskStatus
 from tests.mocks.mission_definition import default_mission
+from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import MockRobot
-from tests.mocks.robot_variables import mock_pose
 from tests.mocks.task import MockTask
 
 
@@ -150,7 +150,7 @@ def test_stop_mission(state_machine):
 
 
 def test_state_machine_transitions(injector, state_machine_thread):
-    task: Task = DriveToPose(pose=mock_pose())
+    task: Task = DriveToPose(pose=MockPose.default_pose)
     mission: Mission = Mission([task])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
@@ -174,7 +174,7 @@ def test_state_machine_transitions(injector, state_machine_thread):
 
 
 def test_state_machine_failed_dependency(injector, state_machine_thread, mocker):
-    driveto_task: Task = DriveToPose(pose=mock_pose())
+    driveto_task: Task = DriveToPose(pose=MockPose.default_pose)
     inspection_task: Task = MockTask.take_image_in_coordinate_direction()
     mission: Mission = Mission([driveto_task, inspection_task])
     mission.set_task_dependencies()
