@@ -3,7 +3,7 @@ import pytest
 from isar.models.mission import Mission
 from isar.state_machine.state_machine import StateMachine, States
 from robot_interface.models.mission import DriveToPose
-from tests.mocks.robot_variables import mock_pose
+from tests.mocks.pose import MockPose
 
 
 @pytest.mark.parametrize(
@@ -12,7 +12,7 @@ from tests.mocks.robot_variables import mock_pose
         (
             (
                 True,
-                Mission([DriveToPose(pose=mock_pose())]),
+                Mission([DriveToPose(pose=MockPose.default_pose)]),
             ),
             States.InitiateTask,
         ),

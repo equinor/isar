@@ -9,7 +9,7 @@ from isar.services.readers.base_reader import BaseReader
 from robot_interface.models.geometry.pose import Pose
 from robot_interface.models.mission import Task
 from tests.mocks.mission_definition import mock_mission_definition
-from tests.mocks.robot_variables import mock_pose
+from tests.mocks.pose import MockPose
 from tests.mocks.task import MockTask
 from tests.utilities import Utilities
 
@@ -38,7 +38,7 @@ class TestBaseReader:
             (asdict(mock_mission_definition("long_mission")), Mission),
             (asdict(MockTask.drive_to()), Task),
             (asdict(MockTask.take_image_in_coordinate_direction()), Task),
-            (asdict(mock_pose()), Pose),
+            (asdict(MockPose.default_pose), Pose),
         ],
     )
     def test_dict_to_dataclass(self, dataclass_dict: dict, expected_dataclass: Any):
