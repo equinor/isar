@@ -6,7 +6,7 @@ from uvicorn.logging import ColourizedFormatter
 
 
 def setup_logger():
-    log_config = yaml.safe_load(open(f"./src/isar/config/logging.conf"))
+    log_config = yaml.safe_load(open("./src/isar/config/logging.conf"))
     log_handler = logging.StreamHandler()
 
     log_handler.setLevel(log_config["root"]["level"])

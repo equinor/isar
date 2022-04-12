@@ -191,9 +191,9 @@ class Settings(BaseSettings):
 
     ISAR_STATE: str = Field(default="isar_state")
 
-    ISAR_MISSION: str = Field(default=f"isar_mission")
+    ISAR_MISSION: str = Field(default="isar_mission")
 
-    ISAR_TASK_STATUS: str = Field(default=f"isar_task_status")
+    ISAR_TASK_STATUS: str = Field(default="isar_task_status")
 
     @validator("ISAR_STATE", "ISAR_MISSION", "ISAR_TASK_STATUS", pre=True, always=True)
     def prefix_isar_topics(cls, v, values):
@@ -216,7 +216,7 @@ class RobotSettings(BaseSettings):
     def __init__(self) -> None:
         try:
             with pkg_resources.path(
-                f"{settings.ROBOT_PACKAGE}.config", f"settings.env"
+                f"{settings.ROBOT_PACKAGE}.config", "settings.env"
             ) as path:
                 env_file_path = path
         except ModuleNotFoundError:
