@@ -16,7 +16,7 @@ services:
       - AZURE_CLIENT_SECRET
 
       # Password for connection with MQTT Broker
-      - MQTT_PASSWORD
+      - ISAR_MQTT_PASSWORD
 
       # Selected robot package
-      - ROBOT_PACKAGE=isar_robot
+      - ISAR_ROBOT_PACKAGE=isar_robot
