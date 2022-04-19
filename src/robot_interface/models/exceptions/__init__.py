@@ -1,5 +1,6 @@
 from .robot_exceptions import (
-    RobotException,
     RobotCommunicationException,
+    RobotException,
     RobotInvalidResponseException,
+    RobotInvalidTaskExpection,
 )
