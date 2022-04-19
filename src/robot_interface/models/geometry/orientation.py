@@ -11,9 +11,10 @@ from robot_interface.models.geometry.frame import Frame
 @dataclass
 class Orientation:
     """
-    This class represents an orientation using quaternions. The quaternion is used throughout the project.
-    Methods that utilize Euler angles will all follow the yaw, pitch, roll convention which rotates around the ZYX axis
-    with intrinsic rotations.
+    This class represents an orientation using quaternions. The quaternion is used
+    throughout the project.
+    Methods that utilize Euler angles will all follow the yaw, pitch, roll convention
+    which rotates around the ZYX axis with intrinsic rotations.
     """
 
     x: float
@@ -42,8 +43,8 @@ class Orientation:
         wrap_angles: bool = False,
     ) -> list:
         """
-        Retrieve the orientation as yaw, pitch, roll Euler coordinates. This function uses the ZYX intrinsic rotations
-        as standard convention.
+        Retrieve the orientation as yaw, pitch, roll Euler coordinates. This function
+        uses the ZYX intrinsic rotations as standard convention.
         :param degrees: Set to true to retrieve angles as degrees.
         :return: List of euler angles [yaw, pitch, roll]
         """

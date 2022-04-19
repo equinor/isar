@@ -99,15 +99,16 @@ class Uploader:
                 upload_item.increment_retry(self.max_wait_time)
                 self.logger.warning(
                     f"Storage handler: {type(upload_item.storage_handler).__name__} "
-                    f"failed to upload inspection: {str(upload_item.inspection.id)[:8]}. "
+                    f"failed to upload inspection: "
+                    f"{str(upload_item.inspection.id)[:8]}. "
                     f"Retrying in {upload_item.seconds_until_retry()}s."
                 )
             else:
                 self._internal_upload_queue.remove(upload_item)
                 self.logger.error(
                     f"Storage handler: {type(upload_item.storage_handler).__name__} "
-                    f"exceeded max retries to upload inspection: {str(upload_item.inspection.id)[:8]}. "
-                    "Aborting upload."
+                    f"exceeded max retries to upload inspection: "
+                    f"{str(upload_item.inspection.id)[:8]}. Aborting upload."
                 )
 
     def _process_upload_queue(self):

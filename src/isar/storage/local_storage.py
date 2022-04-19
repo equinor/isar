@@ -34,7 +34,8 @@ class LocalStorage(StorageInterface):
                 metadata_file.write(metadata_bytes)
         except IOError as e:
             self.logger.warning(
-                f"Failed open/write for one of the following files: \n{absolute_path}\n{absolute_metadata_path}"
+                f"Failed open/write for one of the following files: \n"
+                f"{absolute_path}\n{absolute_metadata_path}"
             )
             raise StorageException from e
         except Exception as e:

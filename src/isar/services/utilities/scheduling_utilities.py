@@ -17,8 +17,8 @@ from isar.state_machine.states_enum import States
 
 class SchedulingUtilities:
     """
-    Contains utility functions for scheduling missions from the API. The class handles required thread communication
-    through queues to the state machine.
+    Contains utility functions for scheduling missions from the API. The class handles
+    required thread communication through queues to the state machine.
     """
 
     @inject
@@ -31,9 +31,10 @@ class SchedulingUtilities:
         self,
     ) -> Tuple[bool, Optional[Tuple[StartMessage, HTTPStatus]]]:
         """
-        Checks the current mission status by communicating with the state machine thread through queues.
-        :return: (True, None) if the mission may be started. Otherwise (False, response) with a relevant response
-        message indicating the cause.
+        Checks the current mission status by communicating with the state machine thread
+        through queues.
+        :return: (True, None) if the mission may be started. Otherwise (False, response)
+        with a relevant response message indicating the cause.
         """
         self.queues.mission_status.input.put(True)
         try:
@@ -58,7 +59,8 @@ class SchedulingUtilities:
         """
         Starts a mission by communicating with the state machine thread through queues.
         :param mission: A Mission containing the mission tasks to be started.
-        :return: (message, status_code) is returned indicating the success and cause of the operation.
+        :return: (message, status_code) is returned indicating the success and cause of
+        the operation.
         """
         self.queues.start_mission.input.put(deepcopy(mission))
         try:

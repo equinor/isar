@@ -7,18 +7,18 @@ class TestQueues:
         assert queues.start_mission is not None
         assert (
             queues.start_mission.input is not None
-            and queues.start_mission.input.maxsize is 1
+            and queues.start_mission.input.maxsize == 1
         )
         assert (
             queues.start_mission.output is not None
-            and queues.start_mission.output.maxsize is 1
+            and queues.start_mission.output.maxsize == 1
         )
         assert queues.stop_mission is not None
         assert (
             queues.stop_mission.input is not None
-            and queues.stop_mission.input.maxsize is 1
+            and queues.stop_mission.input.maxsize == 1
         )
         assert (
             queues.stop_mission.output is not None
-            and queues.stop_mission.output.maxsize is 1
+            and queues.stop_mission.output.maxsize == 1
         )

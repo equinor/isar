@@ -122,8 +122,8 @@ class EchoPlanner(MissionPlannerInterface):
 
     def _get_robot_pose(self, tag_name: str) -> Pose:
         """
-        Retrieve robot pose corresponding to inspection of a given tag. For now, this is a temporary hard-coded
-        solution.
+        Retrieve robot pose corresponding to inspection of a given tag. For now, this is
+        a temporary hard-coded solution.
         """
         predefined_pose: Pose = predefined_poses[tag_name]
 
