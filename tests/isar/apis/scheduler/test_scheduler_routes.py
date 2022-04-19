@@ -5,7 +5,6 @@ from typing import Optional, Tuple
 import pytest
 
 from isar.apis.security.authentication import Authenticator
-from isar.config.settings import robot_settings
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.communication.messages import (

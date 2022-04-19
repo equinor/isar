@@ -15,8 +15,9 @@ class QueueUtilities:
     @staticmethod
     def check_queue(queue: Queue, queue_timeout: int = None) -> Any:
         """
-        Checks if there is a message on a queue. If a timeout is specified the function will raise a QueueTimeoutError
-        if there is no message within the timeout. If there is no timeout specified this function will block.
+        Checks if there is a message on a queue. If a timeout is specified the function
+        will raise a QueueTimeoutError if there is no message within the timeout. If
+        there is no timeout specified this function will block.
         :param queue: The queue to be checked for a message
         :param queue_timeout: Timeout in seconds
         :return: Message found on queue

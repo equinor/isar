@@ -94,7 +94,7 @@ def test_successful_mission(
 
     _id: int = 2
 
-    response = client.post(
+    _ = client.post(
         f"schedule/start-mission?ID={_id}",
         headers={"Authorization": "Bearer {}".format(access_token)},
     )

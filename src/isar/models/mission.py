@@ -36,7 +36,10 @@ class Mission:
         plant_short_name: str = settings.PLANT_SHORT_NAME
         robot_id: str = settings.ROBOT_ID
         now: datetime = datetime.utcnow()
-        self.id = f"{plant_short_name.upper()}{robot_id.upper()}{now.strftime('%d%m%Y%H%M%S%f')[:-3]}"
+        self.id = (
+            f"{plant_short_name.upper()}{robot_id.upper()} "
+            f"{now.strftime('%d%m%Y%H%M%S%f')[:-3]}"
+        )
 
     def __post_init__(self) -> None:
         if self.id is None:

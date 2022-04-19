@@ -300,7 +300,8 @@ class StateMachine(object):
         """Log an overview of the tasks in a mission"""
         task_status: str = "\n".join(
             [
-                f"{i:>3}  {type(task).__name__:<20} {str(task.id)[:8]:<32} -- {task.status}"
+                f"{i:>3}  {type(task).__name__:<20} "
+                f"{str(task.id)[:8]:<32} -- {task.status}"
                 for i, task in enumerate(mission.tasks)
             ]
         )

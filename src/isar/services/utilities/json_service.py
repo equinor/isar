@@ -21,7 +21,7 @@ class JsonService:
 
 class EnhancedJSONEncoder(json.JSONEncoder):
     """
-    Custom JSONEncoder used in this project. Of special note is the ability to encode dataclasses.
+    Custom JSONEncoder with the ability to encode dataclasses.
     """
 
     def default(self, o):

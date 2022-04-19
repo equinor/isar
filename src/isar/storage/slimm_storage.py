@@ -70,7 +70,8 @@ class SlimmStorage(StorageInterface):
             )
         except (RequestException, HTTPError) as e:
             self.logger.warning(
-                f"Failed to upload inspection: {inspection.id} to SLIMM due to a request exception"
+                f"Failed to upload inspection: {inspection.id} to SLIMM due to a "
+                f"request exception"
             )
             raise StorageException from e
 

@@ -63,7 +63,7 @@ class InspectionTask(Task):
 @dataclass
 class MotionTask(Task):
     """
-    Base class for all tasks which should cause the robot to move, but not return a result.
+    Base class for all tasks which should move the robot, but not return a result.
     """
 
     pass

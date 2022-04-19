@@ -58,7 +58,8 @@ class MqttClient(MqttClientInterface):
             password = os.environ["ISAR_MQTT_PASSWORD"]
         except KeyError:
             self.logger.warning(
-                "Failed to retrieve ISAR_MQTT_PASSWORD from environment. Attempting with empty string as password."
+                "Failed to retrieve ISAR_MQTT_PASSWORD from environment. Attempting "
+                "with empty string as password."
             )
 
         self.host: str = settings.MQTT_HOST
@@ -110,7 +111,7 @@ class MqttClient(MqttClientInterface):
     @staticmethod
     def _on_giveup(data: dict) -> None:
         logging.getLogger("mqtt_client").error(
-            "Failed to connect to MQTT Broker within set backoff strategy. Raising error."
+            "Failed to connect to MQTT Broker within set backoff strategy."
         )
 
     @backoff.on_exception(

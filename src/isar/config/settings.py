@@ -56,23 +56,27 @@ class Settings(BaseSettings):
 
     # Determines which mission planner module is used by ISAR
     # Options: [local echo]
-    # Selecting a different mission planner module than local may require certain access rights
+    # Selecting a different mission planner module than local may require certain access
+    # rights
     MISSION_PLANNER: str = Field(default="local")
 
     # Determines which storage modules are used by ISAR
-    # Comma separated list of modules to use. Each module will be called when storing results from inspections
+    # Comma separated list of modules to use. Each module will be called when storing
+    # results from inspections
     # Options [local blob slimm]
     # Selecting a different storage module than local may require certain access rights
     STORAGE: List[str] = Field(default=["local"])
 
     # Determines whether the MQTT publishing module should be enabled or not
-    # The publishing module will attempt to connect to the MQTT broker configured in "service_connections"
+    # The publishing module will attempt to connect to the MQTT broker configured in
+    # "service_connections"
     # Options: [false true]
     MQTT_ENABLED: bool = Field(default=False)
 
     # Determines whether authentication is enabled for the API or not
     # Enabling this requires certain resources available for OAuth2 authentication
-    # Currently supported authentication is Azure AD (https://github.com/Intility/fastapi-azure-auth)
+    # Currently supported authentication is Azure AD
+    # (https://github.com/Intility/fastapi-azure-auth)
     AUTHENTICATION_ENABLED: bool = Field(default=False)
 
     # Tenant ID for the Azure tenant with your Azure Active Directory application
@@ -139,11 +143,12 @@ class Settings(BaseSettings):
         default="https://slimmingestapidev.azurewebsites.net/api/Ingest"
     )
 
-    # Whether the results should be copied directly into the SLIMM datalake or only the metadata
+    # Whether the results should be copied directly into the SLIMM datalake or only the
+    # metadata
     COPY_FILES_TO_SLIMM_DATALAKE: bool = Field(default=False)
 
-    # The configuration of this section is tightly coupled with the metadata that is submitted with the results once
-    # they have been uploaded.
+    # The configuration of this section is tightly coupled with the metadata that is
+    # submitted with the results once they have been uploaded.
 
     # Four digit code indicating facility
     PLANT_CODE: str = Field(default="1320")

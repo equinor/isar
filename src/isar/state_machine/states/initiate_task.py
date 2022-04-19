@@ -95,7 +95,8 @@ class InitiateTask(State):
             except RobotInvalidTaskExpection:
                 self.state_machine.current_task.status = TaskStatus.Failed
                 self.logger.warning(
-                    f"Failed to initiate {type(self.state_machine.current_task).__name__}"
+                    f"Failed to initiate "
+                    f"{type(self.state_machine.current_task).__name__}"
                     f"Invalid task: {str(self.state_machine.current_task.id)[:8]}"
                 )
                 next_state = States.InitiateTask
@@ -107,14 +108,16 @@ class InitiateTask(State):
                 self.state_machine.current_task.status = TaskStatus.Scheduled
                 next_state = States.Monitor
                 self.logger.info(
-                    f"Successfully initiated {type(self.state_machine.current_task).__name__} "
+                    f"Successfully initiated "
+                    f"{type(self.state_machine.current_task).__name__} "
                     f"task: {str(self.state_machine.current_task.id)[:8]}"
                 )
                 break
             else:
                 self.initiate_task_failure_counter += 1
                 self.logger.info(
-                    f"Initiating task failed #: {str(self.initiate_task_failure_counter)}"
+                    f"Initiating task failed #: "
+                    f"{str(self.initiate_task_failure_counter)}"
                 )
                 if (
                     self.initiate_task_failure_counter
