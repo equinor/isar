@@ -45,6 +45,7 @@ setup(
     extras_require={
         "dev": [
             "black",
+            "flake8",
             "mypy",
             "myst-parser",
             "pytest-dotenv",
