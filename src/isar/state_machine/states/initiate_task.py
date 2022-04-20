@@ -10,7 +10,10 @@ from isar.services.utilities.threaded_request import (
     ThreadedRequestNotFinishedError,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.exceptions import RobotException, RobotInvalidTaskExpection
+from robot_interface.models.exceptions import (
+    RobotException,
+    RobotInfeasibleTaskException,
+)
 from robot_interface.models.mission.status import TaskStatus
 
 if TYPE_CHECKING:
@@ -92,7 +95,7 @@ class InitiateTask(State):
                 time.sleep(self.state_machine.sleep_time)
                 continue
 
-            except RobotInvalidTaskExpection:
+            except RobotInfeasibleTaskException:
                 self.state_machine.current_task.status = TaskStatus.Failed
                 self.logger.warning(
                     f"Failed to initiate {type(self.state_machine.current_task).__name__}"
