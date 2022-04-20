@@ -1,9 +1,8 @@
 import pytest
+from alitra import Frame, Position
 from azure.identity._credentials.default import DefaultAzureCredential
 
 from isar.services.service_connections.request_handler import RequestHandler
-from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.geometry.position import Position
 from tests.mocks.request import MockRequests
 from tests.mocks.token import MockToken
 
@@ -13,7 +12,7 @@ from tests.mocks.token import MockToken
     [
         (
             "334-LD-0225",
-            Position(x=20196.2000, y=5248.4740, z=15.2080, frame=Frame.Asset),
+            Position(x=20196.2000, y=5248.4740, z=15.2080, frame=Frame("asset")),
             MockRequests(
                 json_data={
                     "xCoordinate": 20196200.0,

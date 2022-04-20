@@ -2,16 +2,13 @@ import logging
 from dataclasses import asdict
 from typing import List
 
+from alitra import Frame, Orientation, Pose, Position
 from fastapi import Query
 from injector import inject
 from starlette.responses import JSONResponse
 
 from isar.models.mission import Mission
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.geometry.orientation import Orientation
-from robot_interface.models.geometry.pose import Pose
-from robot_interface.models.geometry.position import Position
 from robot_interface.models.mission import DriveToPose
 
 
@@ -49,12 +46,12 @@ class DriveTo:
         if not ready:
             message, status_code = response
             return JSONResponse(content=asdict(message), status_code=status_code)
-
-        position: Position = Position(x=x, y=y, z=z, frame=Frame.Robot)
+        robot_frame: Frame = Frame("robot")
+        position: Position = Position(x=x, y=y, z=z, frame=robot_frame)
         orientation: Orientation = Orientation(
-            x=q[0], y=q[1], z=q[2], w=q[3], frame=Frame.Robot
+            x=q[0], y=q[1], z=q[2], w=q[3], frame=robot_frame
         )
-        pose: Pose = Pose(position=position, orientation=orientation, frame=Frame.Robot)
+        pose: Pose = Pose(position=position, orientation=orientation, frame=robot_frame)
 
         task: DriveToPose = DriveToPose(pose=pose)
         mission: Mission = Mission([task])

@@ -2,6 +2,7 @@ import logging
 from dataclasses import asdict
 from pathlib import Path
 
+from alitra import Frame
 from injector import inject
 
 from isar.config.settings import settings
@@ -11,7 +12,6 @@ from isar.mission_planner.mission_planner_interface import (
 )
 from isar.models.mission import Mission
 from isar.services.readers.base_reader import BaseReader, BaseReaderError
-from robot_interface.models.geometry.frame import Frame
 
 logger = logging.getLogger("api")
 

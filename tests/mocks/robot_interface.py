@@ -1,10 +1,8 @@
 from datetime import datetime
 from typing import Sequence
 
-from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.geometry.orientation import Orientation
-from robot_interface.models.geometry.pose import Pose
-from robot_interface.models.geometry.position import Position
+from alitra import Frame, Orientation, Pose, Position
+
 from robot_interface.models.inspection.inspection import (
     Image,
     ImageMetadata,
@@ -22,9 +20,9 @@ class MockRobot(RobotInterface):
         task_status: TaskStatus = TaskStatus.Completed,
         stop: bool = True,
         pose: Pose = Pose(
-            position=Position(x=0, y=0, z=0, frame=Frame.Robot),
-            orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame.Robot),
-            frame=Frame.Robot,
+            position=Position(x=0, y=0, z=0, frame=Frame("robot")),
+            orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame("robot")),
+            frame=Frame("robot"),
         ),
     ):
         self.initiate_task_return_value: bool = initiate_task
@@ -52,9 +50,9 @@ def mock_image_metadata() -> ImageMetadata:
         datetime.now(),
         TimeIndexedPose(
             Pose(
-                Position(0, 0, 0, Frame.Robot),
-                Orientation(0, 0, 0, 1, Frame.Robot),
-                Frame.Robot,
+                Position(0, 0, 0, Frame("robot")),
+                Orientation(0, 0, 0, 1, Frame("robot")),
+                Frame("robot"),
             ),
             datetime.now(),
         ),
