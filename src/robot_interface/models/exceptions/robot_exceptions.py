@@ -2,11 +2,11 @@ class RobotException(Exception):
     pass
 
 
-class RobotInvalidTaskExpection(RobotException):
+class RobotCommunicationException(RobotException):
     pass
 
 
-class RobotCommunicationException(RobotException):
+class RobotInfeasibleTaskException(RobotException):
     pass
 
 
