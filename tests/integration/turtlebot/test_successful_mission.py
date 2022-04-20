@@ -7,6 +7,7 @@ from typing import List
 
 import numpy as np
 import pytest
+from alitra import Frame, Position
 from fastapi import FastAPI
 from injector import Injector
 from starlette.testclient import TestClient
@@ -27,8 +28,6 @@ from isar.modules import (
 )
 from isar.services.readers.base_reader import BaseReader
 from isar.state_machine.states_enum import States
-from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.geometry.position import Position
 from robot_interface.models.mission import DriveToPose
 from tests.isar.state_machine.test_state_machine import (
     StateMachineThread,
@@ -127,7 +126,7 @@ def test_successful_mission(
             x=files_metadata["x"],
             y=files_metadata["y"],
             z=files_metadata["z"],
-            frame=Frame.Asset,
+            frame=Frame("asset"),
         )
 
         close_to_expected_positions: List[bool] = []

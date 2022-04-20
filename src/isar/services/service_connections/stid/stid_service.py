@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 
+from alitra import Frame, Position
 from azure.identity import DefaultAzureCredential
 from injector import inject
 from requests import Response
@@ -8,8 +9,6 @@ from requests import Response
 from isar.config.settings import settings
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
-from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.geometry.position import Position
 
 
 class StidService:
@@ -43,4 +42,4 @@ class StidService:
         y_coord: float = tag_metadata["yCoordinate"] / 1000
         z_coord: float = tag_metadata["zCoordinate"] / 1000
 
-        return Position(x=x_coord, y=y_coord, z=z_coord, frame=Frame.Asset)
+        return Position(x=x_coord, y=y_coord, z=z_coord, frame=Frame("asset"))

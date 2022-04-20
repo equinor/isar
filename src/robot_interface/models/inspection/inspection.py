@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID, uuid4
 
-from robot_interface.models.geometry.pose import Pose
+from alitra import Pose
 
 
 @dataclass

@@ -5,8 +5,7 @@ from types import SimpleNamespace
 from uuid import UUID
 
 import numpy as np
-
-from robot_interface.models.geometry.orientation import Orientation
+from alitra import Orientation
 
 
 class JsonService:

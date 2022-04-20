@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, List, Union
 
+from alitra import Frame, Pose, Position
 from azure.identity import DefaultAzureCredential
 from injector import inject
 from requests import Response
@@ -17,9 +18,6 @@ from isar.models.mission import Mission
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
-from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.geometry.pose import Pose
-from robot_interface.models.geometry.position import Position
 from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalImage
 
 
@@ -126,11 +124,8 @@ class EchoPlanner(MissionPlannerInterface):
         a temporary hard-coded solution.
         """
         predefined_pose: Pose = predefined_poses[tag_name]
-
-        if predefined_pose.frame is Frame.Robot:
-            raise ValueError(
-                f"Frame of predefined pose should be {Frame.Asset} not {Frame.Robot}"
-            )
+        if predefined_pose.frame == Frame("robot"):
+            raise ValueError("Frame of predefined pose should be asset not robot")
 
         return predefined_pose
 

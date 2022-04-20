@@ -1,12 +1,11 @@
 import pytest
+from alitra import Frame, Position
 from requests import RequestException
 
 from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.mission import Mission
 from isar.services.service_connections.stid.stid_service import StidService
-from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.geometry.position import Position
 from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalImage
 
 
@@ -31,7 +30,7 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                 ],
             },
             None,
-            Position(x=1, y=1, z=0, frame=Frame.Asset),
+            Position(x=1, y=1, z=0, frame=Frame("asset")),
             {
                 "tasks": 3,
                 "task_1_type": DriveToPose,
@@ -53,7 +52,7 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                 ],
             },
             None,
-            Position(x=1, y=1, z=0, frame=Frame.Asset),
+            Position(x=1, y=1, z=0, frame=Frame("asset")),
             {
                 "tasks": 2,
                 "task_1_type": DriveToPose,

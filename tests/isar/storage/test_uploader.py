@@ -4,6 +4,7 @@ from threading import Thread
 from typing import List, Tuple
 
 import pytest
+from alitra import Frame, Orientation, Pose, Position
 from injector import Injector
 
 from isar.models.communication.queues.queues import Queues
@@ -11,10 +12,6 @@ from isar.models.mission import Mission
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
-from robot_interface.models.geometry.frame import Frame
-from robot_interface.models.geometry.orientation import Orientation
-from robot_interface.models.geometry.pose import Pose
-from robot_interface.models.geometry.position import Position
 from robot_interface.models.inspection.inspection import (
     ImageMetadata,
     Inspection,
@@ -26,9 +23,9 @@ ARBITRARY_IMAGE_METADATA = ImageMetadata(
     datetime.now(),
     TimeIndexedPose(
         Pose(
-            Position(0, 0, 0, Frame.Asset),
-            Orientation(0, 0, 0, 1, Frame.Asset),
-            Frame.Asset,
+            Position(0, 0, 0, Frame("asset")),
+            Orientation(x=0, y=0, z=0, w=1, frame=Frame("asset")),
+            Frame("asset"),
         ),
         datetime.now(),
     ),

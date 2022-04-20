@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from typing import Any, List, Literal, Optional, Union
 from uuid import UUID, uuid4
 
-from robot_interface.models.geometry.pose import Pose
-from robot_interface.models.geometry.position import Position
+from alitra import Pose, Position
+
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.status import TaskStatus
 
