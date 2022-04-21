@@ -1,15 +1,16 @@
+import logging
+from logging import Logger
 from importlib import import_module
 from types import ModuleType
-from typing import Any, List, Tuple
+from typing import List, Union
 
-from injector import Module, multiprovider, provider, singleton
+from injector import Injector, Module, multiprovider, provider, singleton
 
 from isar.apis.api import API
 from isar.apis.schedule.drive_to import DriveTo
 from isar.apis.schedule.start_mission import StartMission
 from isar.apis.schedule.stop_mission import StopMission
 from isar.apis.security.authentication import Authenticator
-from isar.config.configuration_error import ConfigurationError
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 from isar.mission_planner.echo_planner import EchoPlanner
@@ -177,75 +178,42 @@ class MqttModule(Module):
         return None
 
 
-modules: dict = {
-    "api": {"default": APIModule},
-    "authentication": {"default": AuthenticationModule},
-    "queues": {"default": QueuesModule},
-    "request_handler": {"default": RequestHandlerModule},
-    "robot": {"default": RobotModule},
-    "mission_planner": {
-        "default": LocalPlannerModule,
-        "local": LocalPlannerModule,
-        "echo": EchoPlannerModule,
-    },
-    "service": {"default": ServiceModule},
-    "state_machine": {"default": StateMachineModule},
-    "storage": {
-        "default": LocalStorageModule,
-        "local": LocalStorageModule,
-        "blob": BlobStorageModule,
-        "slimm": SlimmStorageModule,
-    },
-    "mqtt_enabled": {
-        "default": MqttModule,
-        False: MqttModule,
-        True: MqttModule,
-    },
-    "utilities": {"default": UtilitiesModule},
+modules: dict[str, tuple[Module, Union[str, bool]]] = {
+    "api": (APIModule, "required"),
+    "authentication": (AuthenticationModule, "required"),
+    "queues": (QueuesModule, "required"),
+    "request_handler": (RequestHandlerModule, "required"),
+    "robot": (RobotModule, settings.ROBOT_PACKAGE),
+    "mission_planner": (
+        {
+            "default": LocalPlannerModule,
+            "local": LocalPlannerModule,
+            "echo": EchoPlannerModule,
+        }[settings.MISSION_PLANNER],
+        settings.MISSION_PLANNER,
+    ),
+    "service": (ServiceModule, "required"),
+    "state_machine": (StateMachineModule, "required"),
+    "storage_local": (LocalStorageModule, settings.STORAGE_LOCAL_ENABLED),
+    "storage_blob": (BlobStorageModule, settings.STORAGE_BLOB_ENABLED),
+    "storage_slimm": (SlimmStorageModule, settings.STORAGE_SLIMM_ENABLED),
+    "mqtt": (MqttModule, "required"),
+    "utilities": (UtilitiesModule, "required"),
 }
 
-configurable_modules: List[str] = [
-    "storage",
-    "mission_planner",
-    "mqtt_enabled",
-]
 
-
-def get_injector_modules() -> Tuple[List[Module], List[str]]:
+def get_injector() -> Injector:
     injector_modules: List[Module] = []
-    module_config_keys: List[str] = []
+    module_overview: str = ""
 
-    for module_key, module in modules.items():
-        if module_key in configurable_modules:
-            module_config_key: Any = _get_setting_for_module(module_key=module_key)
-
-            # The configuration contains a list of options
-            if type(module_config_key) is list:
-                for key in module_config_key:
-                    injector_modules.append(module[key])
-                    module_config_keys.append(f"{module_key} : {key}")
-
-            # A single configuration is selected
-            else:
-                injector_modules.append(module[module_config_key])
-                module_config_keys.append(f"{module_key} : {module_config_key}")
-
-        # Use default module
-        else:
-            injector_modules.append(module["default"])
-            module_config_keys.append(f"{module_key} : default")
-
-    return injector_modules, module_config_keys
-
-
-def _get_setting_for_module(module_key: str):
-    if module_key == "mission_planner":
-        return settings.MISSION_PLANNER
-    elif module_key == "storage":
-        return settings.STORAGE
-    elif module_key == "mqtt_enabled":
-        return settings.MQTT_ENABLED
-    else:
-        raise ConfigurationError(
-            "Configurable module key did not have a matching setting"
+    for category, (module, config_option) in modules.items():
+        if config_option:
+            injector_modules.append(module)
+        module_overview += (
+            f"\n    {category:<15} : {config_option:<20} ({module.__name__})"
         )
+
+    logger: Logger = logging.getLogger("modules")
+    logger.info(f"Loaded the following module configurations:{module_overview}")
+
+    return Injector(injector_modules)

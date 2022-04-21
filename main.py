@@ -9,7 +9,7 @@ from isar.apis.api import API
 from isar.config.log import setup_logger
 from isar.config.settings import settings
 from isar.models.communication.queues.queues import Queues
-from isar.modules import get_injector_modules
+from isar.modules import get_injector
 from isar.services.service_connections.mqtt.mqtt_client import MqttClient
 from isar.state_machine.state_machine import main
 from isar.storage.storage_interface import StorageInterface
@@ -19,11 +19,7 @@ if __name__ == "__main__":
     setup_logger()
     logger: Logger = logging.getLogger("main")
 
-    injector_modules, module_config_keys = get_injector_modules()
-    injector: Injector = Injector(injector_modules)
-
-    module_config_log = "\n".join(module_config_keys)
-    logger.info(f"Loaded the following module configurations:\n{module_config_log}")
+    injector: Injector = get_injector()
 
     threads: List[Thread] = []
 

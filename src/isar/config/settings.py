@@ -61,11 +61,12 @@ class Settings(BaseSettings):
     MISSION_PLANNER: str = Field(default="local")
 
     # Determines which storage modules are used by ISAR
-    # Comma separated list of modules to use. Each module will be called when storing
-    # results from inspections
-    # Options [local blob slimm]
+    # Multiple storage modules can be chosen
+    # Each module will be called when storing results from inspections
     # Selecting a different storage module than local may require certain access rights
-    STORAGE: List[str] = Field(default=["local"])
+    STORAGE_LOCAL_ENABLED: bool = Field(default=True)
+    STORAGE_BLOB_ENABLED: bool = Field(default=False)
+    STORAGE_SLIMM_ENABLED: bool = Field(default=False)
 
     # Determines whether the MQTT publishing module should be enabled or not
     # The publishing module will attempt to connect to the MQTT broker configured in
