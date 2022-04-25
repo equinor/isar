@@ -58,7 +58,7 @@ class SchedulingUtilities:
     def start_mission(self, mission: Mission) -> Tuple[StartMessage, HTTPStatus]:
         """
         Starts a mission by communicating with the state machine thread through queues.
-        :param mission: A Mission containing the mission tasks to be started.
+        :param mission: A Mission containing the mission steps to be started.
         :return: (message, status_code) is returned indicating the success and cause of
         the operation.
         """

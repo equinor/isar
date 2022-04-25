@@ -2,20 +2,20 @@ from abc import ABCMeta, abstractmethod
 from typing import Sequence
 
 from robot_interface.models.inspection.inspection import Inspection
-from robot_interface.models.mission import InspectionTask, Task, TaskStatus
+from robot_interface.models.mission import InspectionStep, Step, StepStatus
 
 
 class RobotInterface(metaclass=ABCMeta):
     """Interface to communicate with robots."""
 
     @abstractmethod
-    def initiate_task(self, task: Task) -> None:
-        """Send a task to the robot and initiate the execution of the task
+    def initiate_step(self, step: Step) -> None:
+        """Send a step to the robot and initiate the execution of the step
 
         Parameters
         ----------
-        task : Task
-            The task that should be initiated on the robot.
+        step : Step
+            The step that should be initiated on the robot.
 
         Returns
         -------
@@ -24,14 +24,14 @@ class RobotInterface(metaclass=ABCMeta):
         Raises
         ------
         RobotException
-            If the task is not initiated.
+            If the step is not initiated.
 
         """
         raise NotImplementedError
 
     @abstractmethod
-    def task_status(self) -> TaskStatus:
-        """Gets the status of the currently active task on robot.
+    def step_status(self) -> StepStatus:
+        """Gets the status of the currently active step on robot.
 
         Parameters
         ----------
@@ -39,20 +39,20 @@ class RobotInterface(metaclass=ABCMeta):
 
         Returns
         -------
-        TaskStatus
-            Status of the execution of current task.
+        StepStatus
+            Status of the execution of current step.
 
         Raises:
         ------
         RobotException
-            If the task status can't be retrieved.
+            If the step status can't be retrieved.
 
         """
         raise NotImplementedError
 
     @abstractmethod
     def stop(self) -> None:
-        """Stops the execution of the current task and stops the movement of the robot.
+        """Stops the execution of the current step and stops the movement of the robot.
 
         Parameters
         ----------
@@ -71,17 +71,17 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_inspections(self, task: InspectionTask) -> Sequence[Inspection]:
-        """Return the inspections connected to the given task.
+    def get_inspections(self, step: InspectionStep) -> Sequence[Inspection]:
+        """Return the inspections connected to the given step.
 
         Parameters
         ----------
-        task : Task
+        step : Step
 
         Returns
         -------
         Sequence[InspectionResult]
-            List containing all the inspection results connected to the given task.
+            List containing all the inspection results connected to the given step.
 
         Raises
         ------

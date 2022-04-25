@@ -27,7 +27,7 @@ class TestSchedulingUtilities:
             ),
             (
                 mock_status(
-                    mission_in_progress=False, current_state=States.InitiateTask
+                    mission_in_progress=False, current_state=States.InitiateStep
                 ),
                 False,
             ),
@@ -42,7 +42,7 @@ class TestSchedulingUtilities:
             ),
             (
                 mock_status(
-                    mission_in_progress=True, current_state=States.InitiateTask
+                    mission_in_progress=True, current_state=States.InitiateStep
                 ),
                 False,
             ),

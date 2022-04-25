@@ -6,7 +6,7 @@ class RobotCommunicationException(RobotException):
     pass
 
 
-class RobotInfeasibleTaskException(RobotException):
+class RobotInfeasibleStepException(RobotException):
     pass
 
 

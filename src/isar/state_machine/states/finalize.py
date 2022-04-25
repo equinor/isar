@@ -18,7 +18,7 @@ class Finalize(State):
     def start(self):
         self.state_machine.update_state()
 
-        self.state_machine.log_task_overview(mission=self.state_machine.current_mission)
+        self.state_machine.log_step_overview(mission=self.state_machine.current_mission)
         next_state = self.state_machine.reset_state_machine()
         self.state_machine.to_next_state(next_state)
 

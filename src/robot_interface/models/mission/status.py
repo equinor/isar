@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class TaskStatus(str, Enum):
+class StepStatus(str, Enum):
 
     NotStarted: str = "not_started"
     Completed: str = "completed"

@@ -30,5 +30,5 @@ class StartMissionMessages:
     @staticmethod
     def empty_mission() -> StartMessage:
         return StartMessage(
-            started=False, message="The mission contains no valid tasks"
+            started=False, message="The mission contains no valid steps"
         )

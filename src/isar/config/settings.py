@@ -36,8 +36,8 @@ class Settings(BaseSettings):
     # Determines the number of state transitions that are kept in the log
     STATE_TRANSITIONS_LOG_LENGTH: int = Field(default=20)
 
-    # Number of attempts to initiate a task before cancelling
-    INITIATE_TASK_FAILURE_COUNTER_LIMIT: int = Field(default=10)
+    # Number of attempts to initiate a step before cancelling
+    INITIATE_STEP_FAILURE_COUNTER_LIMIT: int = Field(default=10)
 
     # Number of attempts to stop the robot before giving up
     STOP_ROBOT_ATTEMPTS_LIMIT: int = Field(default=10)
@@ -199,9 +199,9 @@ class Settings(BaseSettings):
 
     ISAR_MISSION: str = Field(default="isar_mission")
 
-    ISAR_TASK_STATUS: str = Field(default="isar_task_status")
+    ISAR_STEP_STATUS: str = Field(default="isar_step_status")
 
-    @validator("ISAR_STATE", "ISAR_MISSION", "ISAR_TASK_STATUS", pre=True, always=True)
+    @validator("ISAR_STATE", "ISAR_MISSION", "ISAR_STEP_STATUS", pre=True, always=True)
     def prefix_isar_topics(cls, v, values):
         return f"{values['ROBOT_ID']}/{v}"
 

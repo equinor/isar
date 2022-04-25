@@ -14,7 +14,7 @@ from tests.mocks.pose import MockPose
                 True,
                 Mission([DriveToPose(pose=MockPose.default_pose)]),
             ),
-            States.InitiateTask,
+            States.InitiateStep,
         ),
         ((False, None), States.Idle),
     ],

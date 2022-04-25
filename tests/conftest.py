@@ -22,7 +22,7 @@ from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
-from isar.state_machine.states import Idle, Monitor, InitiateTask
+from isar.state_machine.states import Idle, InitiateStep, Monitor
 from tests.mocks.robot_interface import MockRobot
 from tests.test_modules import (
     MockAuthenticationModule,
@@ -125,8 +125,8 @@ def idle_state(state_machine):
 
 
 @pytest.fixture()
-def initiate_task(state_machine):
-    return InitiateTask(state_machine)
+def initiate_step(state_machine):
+    return InitiateStep(state_machine)
 
 
 @pytest.fixture()

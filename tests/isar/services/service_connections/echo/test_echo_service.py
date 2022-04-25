@@ -32,9 +32,9 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
             None,
             Position(x=1, y=1, z=0, frame=Frame("asset")),
             {
-                "tasks": 3,
-                "task_1_type": DriveToPose,
-                "task_2_type": TakeThermalImage,
+                "steps": 3,
+                "step_1_type": DriveToPose,
+                "step_2_type": TakeThermalImage,
             },
         ),
         (
@@ -54,9 +54,9 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
             None,
             Position(x=1, y=1, z=0, frame=Frame("asset")),
             {
-                "tasks": 2,
-                "task_1_type": DriveToPose,
-                "task_2_type": TakeImage,
+                "steps": 2,
+                "step_1_type": DriveToPose,
+                "step_2_type": TakeImage,
             },
         ),
     ],
@@ -78,10 +78,10 @@ def test_get_echo_mission(
         side_effect=mock_stid_side_effect,
     )
     mission: Mission = echo_service.get_mission(mission_id=id)
-    assert len(mission.tasks) == expected_return["tasks"]
-    if not len(mission.tasks) == 0:
-        assert isinstance(mission.tasks[0], expected_return["task_1_type"])
-        assert isinstance(mission.tasks[1], expected_return["task_2_type"])
+    assert len(mission.steps) == expected_return["steps"]
+    if not len(mission.steps) == 0:
+        assert isinstance(mission.steps[0], expected_return["step_1_type"])
+        assert isinstance(mission.steps[1], expected_return["step_2_type"])
 
 
 def test_get_echo_mission_raises_when_empty_mission(echo_service, mocker):
