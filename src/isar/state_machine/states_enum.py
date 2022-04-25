@@ -5,7 +5,7 @@ class States(str, Enum):
 
     Off = "off"
     Idle = "idle"
-    InitiateTask = "initiate_task"
+    InitiateStep = "initiate_step"
     Monitor = "monitor"
     Finalize = "finalize"
 

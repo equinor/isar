@@ -1,6 +1,6 @@
 {
   "id": 1,
-  "tasks": [
+  "steps": [
     {
       "type": "drive_to_pose",
       "pose": {

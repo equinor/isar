@@ -50,7 +50,7 @@ class EchoPlanner(MissionPlannerInterface):
             self.logger.error(msg)
             raise MissionPlannerError(msg) from e
 
-        mission: Mission = Mission(tasks=[])
+        mission: Mission = Mission(steps=[])
 
         for plan_item in plan_items:
             try:
@@ -64,25 +64,25 @@ class EchoPlanner(MissionPlannerInterface):
                 continue
 
             try:
-                drive_task: DriveToPose = self._create_drive_task(tag_name=tag_name)
-                inspection_tasks: List[
+                drive_step: DriveToPose = self._create_drive_step(tag_name=tag_name)
+                inspection_steps: List[
                     Union[TakeImage, TakeThermalImage]
-                ] = self._create_inspection_tasks_from_sensor_types(
+                ] = self._create_inspection_steps_from_sensor_types(
                     tag_name=tag_name, sensors=sensors
                 )
             except (ValueError, RequestException) as e:
                 self.logger.error(
-                    f"Failed to create task with exception message: '{str(e)}'"
+                    f"Failed to create step with exception message: '{str(e)}'"
                 )
                 continue
 
-            mission.tasks.append(drive_task)
-            mission.tasks.extend(inspection_tasks)
+            mission.steps.append(drive_step)
+            mission.steps.extend(inspection_steps)
 
-        if not mission.tasks:
+        if not mission.steps:
             raise MissionPlannerError(StartMissionMessages.empty_mission().message)
 
-        mission.set_task_dependencies()
+        mission.set_step_dependencies()
         return mission
 
     def _mission_plan(self, mission_id: int) -> dict:
@@ -104,19 +104,19 @@ class EchoPlanner(MissionPlannerInterface):
 
         return response.json()
 
-    def _create_inspection_tasks_from_sensor_types(
+    def _create_inspection_steps_from_sensor_types(
         self, tag_name: str, sensors: List[str]
     ) -> List[Union[TakeImage, TakeThermalImage]]:
         tag_position: Position = self._get_tag_position(tag_name=tag_name)
-        inspection_tasks: List[Union[TakeImage, TakeThermalImage]] = []
+        inspection_steps: List[Union[TakeImage, TakeThermalImage]] = []
         for sensor in sensors:
             inspection: Union[
                 TakeImage, TakeThermalImage
-            ] = self._echo_sensor_type_to_isar_inspection_task(sensor_type=sensor)
+            ] = self._echo_sensor_type_to_isar_inspection_step(sensor_type=sensor)
             inspection.target = tag_position
             inspection.tag_id = tag_name
-            inspection_tasks.append(inspection)
-        return inspection_tasks
+            inspection_steps.append(inspection)
+        return inspection_steps
 
     def _get_robot_pose(self, tag_name: str) -> Pose:
         """
@@ -134,14 +134,14 @@ class EchoPlanner(MissionPlannerInterface):
 
         return tag_position
 
-    def _create_drive_task(self, tag_name: str) -> DriveToPose:
+    def _create_drive_step(self, tag_name: str) -> DriveToPose:
         robot_pose: Pose = self._get_robot_pose(tag_name=tag_name)
 
-        drive_task: DriveToPose = DriveToPose(pose=robot_pose)
-        return drive_task
+        drive_step: DriveToPose = DriveToPose(pose=robot_pose)
+        return drive_step
 
     @staticmethod
-    def _echo_sensor_type_to_isar_inspection_task(
+    def _echo_sensor_type_to_isar_inspection_step(
         sensor_type: str,
     ) -> Union[TakeImage, TakeThermalImage]:
         mapping: Dict[str, Union[TakeImage, TakeThermalImage]] = {

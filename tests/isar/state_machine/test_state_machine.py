@@ -15,12 +15,12 @@ from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
-from robot_interface.models.mission import DriveToPose, TakeImage, Task
-from robot_interface.models.mission.status import TaskStatus
+from robot_interface.models.mission import DriveToPose, Step, TakeImage
+from robot_interface.models.mission.status import StepStatus
 from tests.mocks.mission_definition import MockMissionDefinition
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import MockRobot
-from tests.mocks.task import MockTask
+from tests.mocks.step import MockStep
 
 
 class StateMachineThread(object):
@@ -85,8 +85,8 @@ def test_reset_state_machine(state_machine):
     next_state = state_machine.reset_state_machine()
 
     assert not state_machine.mission_in_progress
-    assert state_machine.current_task is None
-    assert state_machine.current_mission.tasks == []
+    assert state_machine.current_step is None
+    assert state_machine.current_mission.steps == []
     assert next_state is States.Idle
 
 
@@ -150,8 +150,8 @@ def test_stop_mission(state_machine):
 
 
 def test_state_machine_transitions(injector, state_machine_thread):
-    task: Task = DriveToPose(pose=MockPose.default_pose)
-    mission: Mission = Mission([task])
+    step: Step = DriveToPose(pose=MockPose.default_pose)
+    mission: Mission = Mission([step])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     message, _ = scheduling_utilities.start_mission(mission=mission)
@@ -161,9 +161,9 @@ def test_state_machine_transitions(injector, state_machine_thread):
     expected_transitions_list = deque(
         [
             States.Idle,
-            States.InitiateTask,
+            States.InitiateStep,
             States.Monitor,
-            States.InitiateTask,
+            States.InitiateStep,
             States.Finalize,
             States.Idle,
         ]
@@ -174,12 +174,12 @@ def test_state_machine_transitions(injector, state_machine_thread):
 
 
 def test_state_machine_failed_dependency(injector, state_machine_thread, mocker):
-    driveto_task: Task = DriveToPose(pose=MockPose.default_pose)
-    inspection_task: Task = MockTask.take_image_in_coordinate_direction
-    mission: Mission = Mission([driveto_task, inspection_task])
-    mission.set_task_dependencies()
+    drive_to_step: Step = DriveToPose(pose=MockPose.default_pose)
+    inspection_step: Step = MockStep.take_image_in_coordinate_direction
+    mission: Mission = Mission([drive_to_step, inspection_step])
+    mission.set_step_dependencies()
 
-    mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.Failed)
+    mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.Failed)
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     message, _ = scheduling_utilities.start_mission(mission=mission)
@@ -189,9 +189,9 @@ def test_state_machine_failed_dependency(injector, state_machine_thread, mocker)
     expected_transitions_list = deque(
         [
             States.Idle,
-            States.InitiateTask,
+            States.InitiateStep,
             States.Monitor,
-            States.InitiateTask,
+            States.InitiateStep,
             States.Finalize,
             States.Idle,
         ]
@@ -206,8 +206,8 @@ def test_state_machine_with_successful_collection(
 ):
     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
 
-    task: TakeImage = MockTask.take_image_in_coordinate_direction
-    mission: Mission = Mission([task])
+    step: TakeImage = MockStep.take_image_in_coordinate_direction
+    mission: Mission = Mission([step])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     message, _ = scheduling_utilities.start_mission(mission=mission)
@@ -216,9 +216,9 @@ def test_state_machine_with_successful_collection(
     expected_transitions_list = deque(
         [
             States.Idle,
-            States.InitiateTask,
+            States.InitiateStep,
             States.Monitor,
-            States.InitiateTask,
+            States.InitiateStep,
             States.Finalize,
             States.Idle,
         ]
@@ -237,8 +237,8 @@ def test_state_machine_with_unsuccessful_collection(
 
     mocker.patch.object(MockRobot, "get_inspections", return_value=[])
 
-    task: TakeImage = MockTask.take_image_in_coordinate_direction
-    mission: Mission = Mission([task])
+    step: TakeImage = MockStep.take_image_in_coordinate_direction
+    mission: Mission = Mission([step])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     message, _ = scheduling_utilities.start_mission(mission=mission)
@@ -247,9 +247,9 @@ def test_state_machine_with_unsuccessful_collection(
     expected_transitions_list = deque(
         [
             States.Idle,
-            States.InitiateTask,
+            States.InitiateStep,
             States.Monitor,
-            States.InitiateTask,
+            States.InitiateStep,
             States.Finalize,
             States.Idle,
         ]

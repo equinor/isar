@@ -1,10 +1,10 @@
-from .status import TaskStatus
-from .task import (
-    TASKS,
+from .status import StepStatus
+from .step import (
     DriveToPose,
-    InspectionTask,
-    MotionTask,
+    InspectionStep,
+    MotionStep,
+    STEPS,
+    Step,
     TakeImage,
     TakeThermalImage,
-    Task,
 )

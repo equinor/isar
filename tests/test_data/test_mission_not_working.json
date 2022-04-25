@@ -1,6 +1,6 @@
 {
   "id": 1,
-  "tasks": [
+  "steps": [
     {
       "action_type": "drive_to",
       "action_message": {

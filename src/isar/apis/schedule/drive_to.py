@@ -53,8 +53,8 @@ class DriveTo:
         )
         pose: Pose = Pose(position=position, orientation=orientation, frame=robot_frame)
 
-        task: DriveToPose = DriveToPose(pose=pose)
-        mission: Mission = Mission([task])
+        step: DriveToPose = DriveToPose(pose=pose)
+        mission: Mission = Mission([step])
 
         response = self.scheduling_utilities.start_mission(mission=mission)
         self.logger.info(response)
