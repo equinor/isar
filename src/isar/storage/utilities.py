@@ -57,7 +57,7 @@ def construct_metadata_file(
                         "z": inspection.metadata.time_indexed_pose.pose.position.z,
                         "tag": inspection.metadata.tag_id,
                         "additional_media_metadata": {
-                            "orientation": inspection.metadata.time_indexed_pose.pose.orientation.to_list()
+                            "orientation": inspection.metadata.time_indexed_pose.pose.orientation.to_quat_array()
                         },
                     }
                 ],
