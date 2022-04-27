@@ -65,10 +65,12 @@ class StartMission:
         )
         if not robot_capable:
             response.status_code = HTTPStatus.BAD_REQUEST
-            return StartResponse(
-                message="Robot don't have necessary capabilities for the given mission",
-                started=False,
+            message = (
+                "Robot doesn't have the necessary capabilities for the given mission"
             )
+            self.logger.error(f"{message}{robot_settings.CAPABILITIES}")
+            return StartResponse(message=message, started=False)
+
         self.logger.info(f"Starting mission: {mission.id}")
         response_scheduler = self.scheduling_utilities.start_mission(mission=mission)
         self.logger.info(f"Received response from State Machine: {response_scheduler}")
