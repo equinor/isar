@@ -33,7 +33,7 @@ from tests.isar.state_machine.test_state_machine import (
     StateMachineThread,
     UploaderThread,
 )
-from tests.test_modules import MockMqttModule, MockNoAuthenticationModule
+from tests.test_modules import MockNoAuthenticationModule
 
 
 @pytest.fixture()
@@ -58,7 +58,6 @@ def injector_turtlebot():
             LocalPlannerModule,
             LocalStorageModule,
             UtilitiesModule,
-            MockMqttModule,
         ]
     )
 

@@ -1,6 +1,6 @@
 import logging
-from logging import Logger
 from importlib import import_module
+from logging import Logger
 from types import ModuleType
 from typing import List, Union
 
@@ -17,10 +17,6 @@ from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.models.communication.queues.queues import Queues
-from isar.services.service_connections.mqtt.mqtt_client import (
-    MqttClientInterface,
-    MqttPublisher,
-)
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -145,9 +141,8 @@ class StateMachineModule(Module):
         self,
         queues: Queues,
         robot: RobotInterface,
-        mqtt_client: MqttClientInterface,
     ) -> StateMachine:
-        return StateMachine(queues=queues, robot=robot, mqtt_client=mqtt_client)
+        return StateMachine(queues=queues, robot=robot)
 
 
 class UtilitiesModule(Module):
@@ -169,15 +164,6 @@ class ServiceModule(Module):
         return StidService(request_handler=request_handler)
 
 
-class MqttModule(Module):
-    @provider
-    @singleton
-    def provide_mqtt_client(self, queues: Queues) -> MqttClientInterface:
-        if settings.MQTT_ENABLED:
-            return MqttPublisher(mqtt_queue=queues.mqtt_queue)
-        return None
-
-
 modules: dict[str, tuple[Module, Union[str, bool]]] = {
     "api": (APIModule, "required"),
     "authentication": (AuthenticationModule, "required"),
@@ -197,7 +183,6 @@ modules: dict[str, tuple[Module, Union[str, bool]]] = {
     "storage_local": (LocalStorageModule, settings.STORAGE_LOCAL_ENABLED),
     "storage_blob": (BlobStorageModule, settings.STORAGE_BLOB_ENABLED),
     "storage_slimm": (SlimmStorageModule, settings.STORAGE_SLIMM_ENABLED),
-    "mqtt": (MqttModule, "required"),
     "utilities": (UtilitiesModule, "required"),
 }
 

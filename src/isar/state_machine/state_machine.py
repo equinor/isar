@@ -1,11 +1,14 @@
-import json
 import logging
 import queue
+import time
 from collections import deque
 from copy import deepcopy
+from datetime import datetime
 from typing import Deque, Optional, Tuple
 
-from injector import Injector, inject
+import numpy as np
+from alitra import Pose
+from injector import inject
 from transitions import Machine
 from transitions.core import State
 
@@ -18,13 +21,17 @@ from isar.models.communication.messages import (
 from isar.models.communication.queues.queues import Queues
 from isar.models.communication.status import Status
 from isar.models.mission import Mission
-from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
-from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.state_machine.states import Finalize, Idle, InitiateStep, Monitor, Off
 from isar.state_machine.states_enum import States
+from isar.telemetry.telemetry import Telemetry
 from robot_interface.models.exceptions import RobotException
 from robot_interface.models.mission.status import StepStatus
 from robot_interface.models.mission.step import Step
+from robot_interface.models.telemetry import (
+    IsarStatePayload,
+    TelemetryBatteryPayload,
+    TelemetryPosePayload,
+)
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -36,7 +43,6 @@ class StateMachine(object):
         self,
         queues: Queues,
         robot: RobotInterface,
-        mqtt_client: MqttClientInterface,
         sleep_time: float = settings.FSM_SLEEP_TIME,
         stop_robot_attempts_limit: int = settings.STOP_ROBOT_ATTEMPTS_LIMIT,
         transitions_log_length: int = settings.STATE_TRANSITIONS_LOG_LENGTH,
@@ -61,7 +67,6 @@ class StateMachine(object):
 
         self.queues = queues
         self.robot = robot
-        self.mqtt_client: Optional[MqttClientInterface] = mqtt_client
 
         self.states = [
             Off(self),
@@ -91,12 +96,10 @@ class StateMachine(object):
         self.transitions_log_length = transitions_log_length
         self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
 
+        self.state_messenger = Telemetry()
+
     def begin(self):
-        """Starts the state machine.
-
-        Transitions into idle state.
-
-        """
+        """Starts the state machine by transitioning into idle state."""
         self._log_state_transition(States.Idle)
         self.to_idle()
 
@@ -126,15 +129,6 @@ class StateMachine(object):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)
         self.logger.info(f"State: {self.current_state}")
-
-        payload: str = json.dumps({"state": self.current_state})
-
-        if self.mqtt_client:
-            self.mqtt_client.publish(
-                topic=settings.ISAR_STATE,
-                payload=payload,
-                retain=True,
-            )
 
     def reset_state_machine(self) -> States:
         """Resets the state machine.
@@ -264,37 +258,17 @@ class StateMachine(object):
         if not failure:
             self.mission_in_progress = False
 
-    def publish_step_status(self) -> None:
-        """Publishes the current step status to the MQTT Broker"""
-        payload: str = json.dumps(
-            {
-                "step_id": self.current_step.id if self.current_step else None,
-                "step_status": self.current_step.status if self.current_step else None,
-            },
-            cls=EnhancedJSONEncoder,
-        )
-
-        self.mqtt_client.publish(
-            topic=settings.ISAR_STEP_STATUS,
-            payload=payload,
-            retain=True,
-        )
-
-    def publish_mission(self) -> None:
-        payload: str = json.dumps(
-            {"mission": self.current_mission}, cls=EnhancedJSONEncoder
-        )
-
-        self.mqtt_client.publish(
-            topic=settings.ISAR_MISSION,
-            payload=payload,
-            retain=True,
-        )
-
     def _log_state_transition(self, next_state):
         """Logs all state transitions that are not self-transitions."""
         if next_state != self.current_state:
             self.transitions_list.append(next_state)
+
+            timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+            state: IsarStatePayload.State = IsarStatePayload.State(next_state)
+            payload_state = IsarStatePayload(state=state, timestamp=timestamp).to_json()
+
+            robot_id = settings.ROBOT_ID
+            self.state_messenger.publish(f"/isar/{robot_id}/state", payload_state)
 
     def log_step_overview(self, mission: Mission):
         """Log an overview of the steps in a mission"""
@@ -321,8 +295,34 @@ class StateMachine(object):
                 return False
         return True
 
+    def publish_telemetry_thread(self) -> None:
+        robot_id = settings.ROBOT_ID
 
-def main(injector: Injector):
-    """Starts a state machine instance."""
-    state_machine = injector.get(StateMachine)
-    state_machine.begin()
+        messenger = Telemetry()
+
+        while True:
+            timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            battery_payload: float = self.robot.get_battery()
+            payload_battery = TelemetryBatteryPayload(
+                battery=battery_payload, timestamp=timestamp
+            ).to_json()
+
+            pose: Pose = self.robot.get_pose()
+            euler_orientation: np.ndarray = pose.orientation.to_euler_array()
+            pose_payload: TelemetryPosePayload.Pose = TelemetryPosePayload.Pose(
+                x=pose.position.x,
+                y=pose.position.y,
+                z=pose.position.z,
+                yaw=euler_orientation[0],
+                pitch=euler_orientation[1],
+                roll=euler_orientation[2],
+            )
+            payload_pose = TelemetryPosePayload(
+                pose=pose_payload, timestamp=timestamp
+            ).to_json()
+
+            messenger.publish(f"/telemetry/{robot_id}/battery", payload_battery)
+            messenger.publish(f"/telemetry/{robot_id}/pose", payload_pose)
+
+            time.sleep(1.0 / settings.TELEMETRY_FREQUENCY)

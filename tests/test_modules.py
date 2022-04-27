@@ -3,11 +3,9 @@ from typing import List
 from injector import Module, multiprovider, provider, singleton
 
 from isar.apis.security.authentication import Authenticator
-from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
 from isar.storage.storage_interface import StorageInterface
 from robot_interface.robot_interface import RobotInterface
 from tests.mocks.blob_storage import StorageMock
-from tests.mocks.mqtt_client import MqttClientMock
 from tests.mocks.robot_interface import MockRobot
 
 
@@ -16,13 +14,6 @@ class MockStorageModule(Module):
     @singleton
     def provide_storage(self) -> List[StorageInterface]:
         return [StorageMock()]
-
-
-class MockMqttModule(Module):
-    @provider
-    @singleton
-    def provide_mqtt(self) -> MqttClientInterface:
-        return MqttClientMock()
 
 
 class MockRobotModule(Module):

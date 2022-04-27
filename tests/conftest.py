@@ -17,7 +17,6 @@ from isar.modules import (
     StateMachineModule,
     UtilitiesModule,
 )
-from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -26,7 +25,6 @@ from isar.state_machine.states import Idle, InitiateStep, Monitor
 from tests.mocks.robot_interface import MockRobot
 from tests.test_modules import (
     MockAuthenticationModule,
-    MockMqttModule,
     MockNoAuthenticationModule,
     MockRobotModule,
     MockStorageModule,
@@ -39,7 +37,6 @@ def injector():
         [
             APIModule,
             LocalPlannerModule,
-            MockMqttModule,
             MockNoAuthenticationModule,
             MockRobotModule,
             MockStorageModule,
@@ -59,7 +56,6 @@ def injector_auth():
             APIModule,
             LocalPlannerModule,
             MockAuthenticationModule,
-            MockMqttModule,
             MockRobotModule,
             MockStorageModule,
             QueuesModule,
@@ -115,7 +111,6 @@ def state_machine(injector, robot):
     return StateMachine(
         queues=injector.get(Queues),
         robot=robot,
-        mqtt_client=injector.get(MqttClientInterface),
     )
 
 

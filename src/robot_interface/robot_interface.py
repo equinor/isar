@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from typing import Sequence
 
+from alitra import Pose
+
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission import InspectionStep, Step, StepStatus
 
@@ -87,6 +89,40 @@ class RobotInterface(metaclass=ABCMeta):
         ------
         RobotException
             If the inspection results can't be retrieved.
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_pose(self) -> Pose:
+        """Return the pose of the robot.
+
+        Returns
+        -------
+        Pose
+            An Alitra pose containing a position, an orientation and a frame.
+
+        Raises
+        ------
+        RobotException
+            If the pose can't be retrieved.
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_battery(self) -> float:
+        """Return the battery level of the robot.
+
+        Returns
+        -------
+        float
+            The battery level of the robot in percentage from 0-100
+
+        Raises
+        ------
+        RobotException
+            If the battery can't be retrieved.
 
         """
         raise NotImplementedError

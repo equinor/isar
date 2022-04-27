@@ -44,6 +44,16 @@ class MockRobot(RobotInterface):
         image.data = b"Some binary image data"
         return [image]
 
+    def get_pose(self) -> Pose:
+        return Pose(
+            Position(0, 0, 0, Frame("robot")),
+            Orientation(0, 0, 0, 1, Frame("robot")),
+            Frame("robot"),
+        )
+
+    def get_battery(self) -> float:
+        return 98.76
+
 
 def mock_image_metadata() -> ImageMetadata:
     return ImageMetadata(

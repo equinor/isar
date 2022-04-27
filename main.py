@@ -10,8 +10,7 @@ from isar.config.log import setup_logger
 from isar.config.settings import settings
 from isar.models.communication.queues.queues import Queues
 from isar.modules import get_injector
-from isar.services.service_connections.mqtt.mqtt_client import MqttClient
-from isar.state_machine.state_machine import main
+from isar.state_machine.state_machine import StateMachine
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 
@@ -23,10 +22,22 @@ if __name__ == "__main__":
 
     threads: List[Thread] = []
 
+    state_machine = injector.get(StateMachine)
+
     state_machine_thread: Thread = Thread(
-        target=main, name="ISAR State Machine", args=[injector], daemon=True
+        target=state_machine.begin,
+        name="ISAR State Machine",
+        daemon=True,
     )
     threads.append(state_machine_thread)
+
+    if settings.MQTT_ENABLED:
+        telemetry_thread: Thread = Thread(
+            target=state_machine.publish_telemetry_thread,
+            name="ISAR MQTT Client",
+            daemon=True,
+        )
+        threads.append(telemetry_thread)
 
     uploader: Uploader = Uploader(
         upload_queue=injector.get(Queues).upload_queue,
@@ -37,15 +48,6 @@ if __name__ == "__main__":
         target=uploader.run, name="ISAR Uploader", daemon=True
     )
     threads.append(uploader_thread)
-
-    if settings.MQTT_ENABLED:
-        mqtt_client: MqttClient = MqttClient(mqtt_queue=injector.get(Queues).mqtt_queue)
-
-        mqtt_thread: Thread = Thread(
-            target=mqtt_client.run, name="ISAR MQTT Client", daemon=True
-        )
-
-        threads.append(mqtt_thread)
 
     api: API = injector.get(API)
     api_thread: Thread = Thread(target=api.run_app, name="ISAR API", daemon=True)

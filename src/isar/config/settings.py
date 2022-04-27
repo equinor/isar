@@ -89,17 +89,19 @@ class Settings(BaseSettings):
     # Client ID for the OpenAPI client
     OPENAPI_CLIENT_ID: str = Field(default="5f412c20-8c36-4c69-898f-d2b5051f5fb6")
 
-    # MQTT username
-    # The username and password is set by the MQTT broker and must be known in advance
-    # The password should be set as an environment variable "MQTT_PASSWORD"
-    # If the password is not set in the environment an empty string will be used
+    # MQTT credentials
+    # The username and password for connecting to the MQTT broker
     MQTT_USERNAME: str = Field(default="mosquitto")
+    MQTT_PASSWORD: str = Field(default="")
 
     # MQTT host
     MQTT_HOST: str = Field(default="localhost")
 
     # MQTT port
     MQTT_PORT: int = Field(default=1883)
+
+    # How often telemetry should be published to the MQTT broker
+    TELEMETRY_FREQUENCY: float = Field(default=1.0)
 
     # Keyvault name
     KEYVAULT: str = Field(default="EqRobotKeyVault")

@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Sequence, TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Sequence, Tuple
 
 from injector import inject
 from transitions import State
@@ -37,10 +37,6 @@ class Monitor(State):
         self._run()
 
     def stop(self):
-        if self.state_machine.mqtt_client:
-            self.state_machine.publish_step_status()
-            self.state_machine.publish_mission()
-
         self.iteration_counter = 0
         if self.step_status_thread:
             self.step_status_thread.wait_for_thread()

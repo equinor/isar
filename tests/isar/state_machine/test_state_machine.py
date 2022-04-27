@@ -11,7 +11,7 @@ from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
 from isar.models.mission import Mission
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from isar.state_machine.state_machine import StateMachine, main
+from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
@@ -27,7 +27,7 @@ class StateMachineThread(object):
     def __init__(self, injector) -> None:
         self.injector: Injector = injector
         self.state_machine: StateMachine = injector.get(StateMachine)
-        self._thread: Thread = Thread(target=main, args=[injector])
+        self._thread: Thread = Thread(target=self.state_machine.begin)
         self._thread.daemon = True
         self._thread.start()
 
