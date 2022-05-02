@@ -14,7 +14,7 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerInterface,
 )
 from isar.models.communication.messages import StartMissionMessages
-from isar.models.mission import Mission
+from isar.models.mission import Mission, Task
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
@@ -50,7 +50,7 @@ class EchoPlanner(MissionPlannerInterface):
             self.logger.error(msg)
             raise MissionPlannerError(msg) from e
 
-        mission: Mission = Mission(steps=[])
+        tasks: List[Task] = []
 
         for plan_item in plan_items:
             try:
@@ -75,14 +75,14 @@ class EchoPlanner(MissionPlannerInterface):
                     f"Failed to create step with exception message: '{str(e)}'"
                 )
                 continue
+            task: Task = Task(steps=[drive_step, *inspection_steps])
+            tasks.append(task)
 
-            mission.steps.append(drive_step)
-            mission.steps.extend(inspection_steps)
-
-        if not mission.steps:
+        if not tasks:
             raise MissionPlannerError(StartMissionMessages.empty_mission().message)
 
-        mission.set_step_dependencies()
+        mission: Mission = Mission(tasks=tasks)
+
         return mission
 
     def _mission_plan(self, mission_id: int) -> dict:

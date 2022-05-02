@@ -28,7 +28,6 @@ class LocalPlanner(MissionPlannerInterface):
         try:
             mission: Mission = missions[mission_id]["mission"]
             mission.set_unique_id_and_metadata()
-            mission.set_step_dependencies()
             return mission
         except Exception as e:
             raise MissionPlannerError(

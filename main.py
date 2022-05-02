@@ -3,6 +3,7 @@ from logging import Logger
 from threading import Thread
 from typing import List
 
+from dotenv import load_dotenv
 from injector import Injector
 
 from isar.apis.api import API
@@ -16,6 +17,8 @@ from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 
 if __name__ == "__main__":
+    load_dotenv()
+
     setup_logger()
     logger: Logger = logging.getLogger("main")
 

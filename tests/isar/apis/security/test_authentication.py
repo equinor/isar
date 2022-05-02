@@ -34,7 +34,7 @@ class TestAuthentication:
                 HTTPStatus.UNAUTHORIZED,
             ),
             (
-                "drive-to?x-value=1&y-value=2&z-value=3&quaternion=0&quaternion=0&quaternion=0&quaternion=1",
+                "drive-to?x-value=1&y-value=2&z-value=3&quaternion=0&quaternion=0&quaternion=0&quaternion=1",  # noqa: E501
                 mock_access_token(),
                 {"detail": "Unable to verify token, no signing keys found"},
                 HTTPStatus.UNAUTHORIZED,

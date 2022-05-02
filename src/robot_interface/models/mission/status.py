@@ -5,7 +5,6 @@ class StepStatus(str, Enum):
 
     NotStarted: str = "not_started"
     Completed: str = "completed"
-    Scheduled: str = "scheduled"
+    PartiallySuccessful: str = "partially_successful"
     InProgress: str = "in_progress"
     Failed: str = "failed"
-    Unexpected: str = "error_unexpected"

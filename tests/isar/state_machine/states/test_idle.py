@@ -1,6 +1,6 @@
 import pytest
 
-from isar.models.mission import Mission
+from isar.models.mission import Mission, Task
 from isar.state_machine.state_machine import StateMachine, States
 from robot_interface.models.mission import DriveToPose
 from tests.mocks.pose import MockPose
@@ -12,7 +12,7 @@ from tests.mocks.pose import MockPose
         (
             (
                 True,
-                Mission([DriveToPose(pose=MockPose.default_pose)]),
+                Mission(tasks=[Task(steps=[DriveToPose(pose=MockPose.default_pose)])]),
             ),
             States.InitiateStep,
         ),

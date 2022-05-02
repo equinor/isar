@@ -38,7 +38,7 @@ def construct_metadata_file(
         "data_classification": metadata.data_classification,
         "source_url": None,
         "plant_code": metadata.plant_code,
-        "media_orientation_reference_system": metadata.media_orientation_reference_system,
+        "media_orientation_reference_system": metadata.media_orientation_reference_system,  # noqa: E501
         "additional_meta": {
             "mission_id": metadata.mission_id,
             "plant_name": metadata.plant_name,
@@ -57,7 +57,7 @@ def construct_metadata_file(
                         "z": inspection.metadata.time_indexed_pose.pose.position.z,
                         "tag": inspection.metadata.tag_id,
                         "additional_media_metadata": {
-                            "orientation": inspection.metadata.time_indexed_pose.pose.orientation.to_quat_array()
+                            "orientation": inspection.metadata.time_indexed_pose.pose.orientation.to_quat_array()  # noqa: E501
                         },
                     }
                 ],

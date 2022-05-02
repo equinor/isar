@@ -69,7 +69,7 @@ class Monitor(State):
                 time.sleep(self.state_machine.sleep_time)
                 continue
             except RobotException:
-                step_status = StepStatus.Unexpected
+                step_status = StepStatus.Failed
 
             self.state_machine.current_step.status = step_status
 
@@ -108,9 +108,7 @@ class Monitor(State):
 
     def _step_finished(self, step: Step) -> bool:
         finished: bool = False
-        if step.status == StepStatus.Unexpected:
-            self.logger.error("Step status returned an unexpected status string")
-        elif step.status == StepStatus.Failed:
+        if step.status == StepStatus.Failed:
             self.logger.warning(f"Step: {str(step.id)[:8]} failed")
             finished = True
         elif step.status == StepStatus.Completed:

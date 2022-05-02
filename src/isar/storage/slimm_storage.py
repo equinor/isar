@@ -89,7 +89,7 @@ class SlimmStorage(StorageInterface):
                 ),
                 "coordinate_reference_system": metadata.coordinate_reference_system,
                 "vertical_reference_system": metadata.vertical_reference_system,
-                "media_orientation_reference_system": metadata.media_orientation_reference_system,
+                "media_orientation_reference_system": metadata.media_orientation_reference_system,  # noqa: E501
                 "data_classification": metadata.data_classification,
                 "plant_code": metadata.plant_code,
                 "attached_file_navigation.Filename": filename,
@@ -105,13 +105,13 @@ class SlimmStorage(StorageInterface):
                 ),
                 "attached_file_navigation.AdditionalMediaMetadata": json.dumps(
                     {
-                        "orientation": inspection.metadata.time_indexed_pose.pose.orientation.to_list()
+                        "orientation": inspection.metadata.time_indexed_pose.pose.orientation.to_quat_array().tolist()  # noqa: E501
                     }
                 ),
-                "attached_file_navigation.FunctionalLocation": inspection.metadata.tag_id
+                "attached_file_navigation.FunctionalLocation": inspection.metadata.tag_id  # noqa: E501
                 if inspection.metadata.tag_id
                 else "NA",
-                "attached_file_navigation.Timestamp": inspection.metadata.start_time.isoformat(),
+                "attached_file_navigation.Timestamp": inspection.metadata.start_time.isoformat(),  # noqa: E501
                 "attached_file": (filename, inspection.data),
             }
         )

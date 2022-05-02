@@ -9,7 +9,6 @@ from isar.config.settings import settings
 from isar.models.communication.messages import StartMessage, StartMissionMessages
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.models.communication.queues.queues import Queues
-from isar.models.communication.status import Status
 from isar.models.mission import Mission
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.state_machine.states_enum import States
@@ -38,7 +37,7 @@ class SchedulingUtilities:
         """
         self.queues.mission_status.input.put(True)
         try:
-            status: Status = QueueUtilities.check_queue(
+            mission_in_progress, current_state = QueueUtilities.check_queue(
                 self.queues.mission_status.output, self.queue_timeout
             )
         except QueueTimeoutError:
@@ -49,7 +48,7 @@ class SchedulingUtilities:
             self.logger.error(error_message)
             return False, error_message
 
-        if status.mission_in_progress or status.current_state != States.Idle:
+        if mission_in_progress or current_state != States.Idle:
             message = StartMissionMessages.mission_in_progress()
             error_message = message, HTTPStatus.CONFLICT
             return False, error_message

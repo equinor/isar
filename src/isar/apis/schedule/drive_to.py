@@ -7,7 +7,7 @@ from fastapi import Query
 from injector import inject
 from starlette.responses import JSONResponse
 
-from isar.models.mission import Mission
+from isar.models.mission import Mission, Task
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from robot_interface.models.mission import DriveToPose
 
@@ -54,7 +54,7 @@ class DriveTo:
         pose: Pose = Pose(position=position, orientation=orientation, frame=robot_frame)
 
         step: DriveToPose = DriveToPose(pose=pose)
-        mission: Mission = Mission([step])
+        mission: Mission = Mission(tasks=[Task(steps=[step])])
 
         response = self.scheduling_utilities.start_mission(mission=mission)
         self.logger.info(response)

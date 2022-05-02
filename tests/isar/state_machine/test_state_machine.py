@@ -9,7 +9,7 @@ from injector import Injector
 
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
-from isar.models.mission import Mission
+from isar.models.mission import Mission, Task
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states_enum import States
@@ -86,7 +86,7 @@ def test_reset_state_machine(state_machine):
 
     assert not state_machine.mission_in_progress
     assert state_machine.current_step is None
-    assert state_machine.current_mission.steps == []
+    assert state_machine.current_mission.tasks == []
     assert next_state is States.Idle
 
 
@@ -151,7 +151,7 @@ def test_stop_mission(state_machine):
 
 def test_state_machine_transitions(injector, state_machine_thread):
     step: Step = DriveToPose(pose=MockPose.default_pose)
-    mission: Mission = Mission([step])
+    mission: Mission = Mission(tasks=[Task(steps=[step])])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     message, _ = scheduling_utilities.start_mission(mission=mission)
@@ -176,8 +176,7 @@ def test_state_machine_transitions(injector, state_machine_thread):
 def test_state_machine_failed_dependency(injector, state_machine_thread, mocker):
     drive_to_step: Step = DriveToPose(pose=MockPose.default_pose)
     inspection_step: Step = MockStep.take_image_in_coordinate_direction
-    mission: Mission = Mission([drive_to_step, inspection_step])
-    mission.set_step_dependencies()
+    mission: Mission = Mission(tasks=[Task(steps=[drive_to_step, inspection_step])])
 
     mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.Failed)
 
@@ -207,7 +206,7 @@ def test_state_machine_with_successful_collection(
     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
 
     step: TakeImage = MockStep.take_image_in_coordinate_direction
-    mission: Mission = Mission([step])
+    mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     message, _ = scheduling_utilities.start_mission(mission=mission)
@@ -238,7 +237,7 @@ def test_state_machine_with_unsuccessful_collection(
     mocker.patch.object(MockRobot, "get_inspections", return_value=[])
 
     step: TakeImage = MockStep.take_image_in_coordinate_direction
-    mission: Mission = Mission([step])
+    mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     message, _ = scheduling_utilities.start_mission(mission=mission)

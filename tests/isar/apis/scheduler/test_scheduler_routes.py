@@ -17,13 +17,10 @@ from isar.models.communication.queues.queue_timeout_error import QueueTimeoutErr
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from tests.mocks.mission_definition import MockMissionDefinition
-from tests.mocks.status import mock_status
 
 
 def mock_check_queue(was_mission_started, state_at_request):
-    mock_return_1 = mock_status(
-        mission_in_progress=was_mission_started, current_state=state_at_request
-    )
+    mock_return_1 = was_mission_started, state_at_request
     if was_mission_started or state_at_request != "idle":
         mock_return_2 = StartMissionMessages.mission_in_progress()
     else:
