@@ -7,43 +7,38 @@ from isar.models.communication.queues.queue_timeout_error import QueueTimeoutErr
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.state_machine.states_enum import States
 from tests.mocks.mission_definition import MockMissionDefinition
-from tests.mocks.status import mock_status
 
 
 class TestSchedulingUtilities:
     @pytest.mark.parametrize(
         "mock_return, expected_ready",
         [
-            (mock_status(mission_in_progress=False, current_state=States.Idle), True),
-            (mock_status(mission_in_progress=True, current_state=States.Idle), False),
+            ((False, States.Idle), True),
+            ((True, States.Idle), False),
             (
-                mock_status(mission_in_progress=False, current_state=States.Monitor),
+                (False, States.Monitor),
                 False,
             ),
-            (mock_status(mission_in_progress=False, current_state=States.Off), False),
+            ((False, States.Off), False),
             (
-                mock_status(mission_in_progress=False, current_state=States.Finalize),
-                False,
-            ),
-            (
-                mock_status(
-                    mission_in_progress=False, current_state=States.InitiateStep
-                ),
+                (False, States.Finalize),
                 False,
             ),
             (
-                mock_status(mission_in_progress=True, current_state=States.Monitor),
-                False,
-            ),
-            (mock_status(mission_in_progress=True, current_state=States.Off), False),
-            (
-                mock_status(mission_in_progress=True, current_state=States.Finalize),
+                (False, States.InitiateStep),
                 False,
             ),
             (
-                mock_status(
-                    mission_in_progress=True, current_state=States.InitiateStep
-                ),
+                (True, States.Monitor),
+                False,
+            ),
+            ((True, States.Off), False),
+            (
+                (True, States.Finalize),
+                False,
+            ),
+            (
+                (True, States.InitiateStep),
                 False,
             ),
         ],

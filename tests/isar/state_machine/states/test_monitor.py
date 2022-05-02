@@ -10,7 +10,6 @@ from tests.mocks.step import MockStep
     [
         (StepStatus.Completed, True),
         (StepStatus.Completed, True),
-        (StepStatus.Unexpected, False),
         (StepStatus.Failed, True),
     ],
 )

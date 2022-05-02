@@ -86,7 +86,6 @@ class DriveToPose(MotionStep):
 
     pose: Pose
     type: Literal["drive_to_pose"] = "drive_to_pose"
-    depends_on: Optional[List[int]] = None
 
 
 @dataclass
@@ -107,7 +106,6 @@ class TakeImage(InspectionStep):
 
     target: Position
     type: Literal["take_image"] = "take_image"
-    depends_on: Optional[List[int]] = None
 
 
 @dataclass
@@ -118,7 +116,6 @@ class TakeThermalImage(InspectionStep):
 
     target: Position
     type: Literal["take_thermal_image"] = "take_thermal_image"
-    depends_on: Optional[List[int]] = None
 
 
 STEPS = Union[DriveToPose, DockingProcedure, TakeImage, TakeThermalImage]

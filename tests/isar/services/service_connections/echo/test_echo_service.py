@@ -78,10 +78,10 @@ def test_get_echo_mission(
         side_effect=mock_stid_side_effect,
     )
     mission: Mission = echo_service.get_mission(mission_id=id)
-    assert len(mission.steps) == expected_return["steps"]
-    if not len(mission.steps) == 0:
-        assert isinstance(mission.steps[0], expected_return["step_1_type"])
-        assert isinstance(mission.steps[1], expected_return["step_2_type"])
+    assert len(mission.tasks[0].steps) == expected_return["steps"]
+    if not len(mission.tasks) == 0:
+        assert isinstance(mission.tasks[0].steps[0], expected_return["step_1_type"])
+        assert isinstance(mission.tasks[0].steps[1], expected_return["step_2_type"])
 
 
 def test_get_echo_mission_raises_when_empty_mission(echo_service, mocker):

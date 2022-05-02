@@ -3,7 +3,7 @@ import logging
 import queue
 from collections import deque
 from copy import deepcopy
-from typing import Deque, Optional, Tuple
+from typing import Deque, List, Optional, Tuple
 
 from injector import Injector, inject
 from transitions import Machine
@@ -16,14 +16,13 @@ from isar.models.communication.messages import (
     StopMissionMessages,
 )
 from isar.models.communication.queues.queues import Queues
-from isar.models.communication.status import Status
-from isar.models.mission import Mission
+from isar.models.mission import Mission, Task
 from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
 from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.state_machine.states import Finalize, Idle, InitiateStep, Monitor, Off
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions import RobotException
-from robot_interface.models.mission.status import StepStatus
+from robot_interface.models.mission import StepStatus
 from robot_interface.models.mission.step import Step
 from robot_interface.robot_interface import RobotInterface
 
@@ -80,9 +79,9 @@ class StateMachine(object):
         self.sleep_time = sleep_time
 
         self.mission_in_progress: bool = False
-        self.current_mission: Mission = Mission(steps=[])
+        self.current_mission: Mission = Mission(tasks=[])
+        self.current_task: Optional[Task] = None
         self.current_step: Optional[Step] = None
-        self.current_step_index: int = -1
 
         self.current_state: State = States(self.state)  # type: ignore
 
@@ -115,12 +114,18 @@ class StateMachine(object):
         else:
             self.logger.error("Not valid state direction.")
 
+    def update_current_task(self):
+        if self.current_task.is_finished():
+            try:
+                self.current_task = self.current_mission.next_task()
+                self.current_task.status = StepStatus.InProgress
+            except StopIteration:
+                # Indicates that all tasks are finished
+                self.current_task = None
+
     def update_current_step(self):
-        self.current_step_index += 1
-        if len(self.current_mission.steps) > self.current_step_index:
-            self.current_step = self.current_mission.steps[self.current_step_index]
-        else:
-            self.current_step = None
+        if self.current_task:
+            self.current_step = self.current_task.next_step()
 
     def update_state(self):
         """Updates the current state of the state machine."""
@@ -153,20 +158,15 @@ class StateMachine(object):
 
         self.mission_in_progress = False
         self.current_step = None
-        self.current_step_index = -1
-        self.current_mission = Mission(steps=[])
+        self.current_mission = Mission(tasks=[])
 
         return States.Idle
 
     def send_status(self):
         """Communicates state machine status."""
-        status = Status(
-            mission_in_progress=self.mission_in_progress,
-            current_step=self.current_step,
-            current_mission=self.current_mission,
-            current_state=self.current_state,
+        self.queues.mission_status.output.put(
+            (self.mission_in_progress, self.current_state)
         )
-        self.queues.mission_status.output.put(deepcopy(status))
 
     def should_send_status(self) -> bool:
         """Determines if mission status should be sent.
@@ -212,6 +212,9 @@ class StateMachine(object):
         """Starts a scheduled mission."""
         self.mission_in_progress = True
         self.current_mission = mission
+        self.current_task = mission.next_task()
+        self.current_task.status = StepStatus.InProgress
+
         self.queues.start_mission.output.put(deepcopy(StartMissionMessages.success()))
         self.logger.info(f"Starting new mission: {mission.id}")
         self.log_step_overview(mission=mission)
@@ -298,28 +301,19 @@ class StateMachine(object):
 
     def log_step_overview(self, mission: Mission):
         """Log an overview of the steps in a mission"""
-        step_status: str = "\n".join(
-            [
-                f"{i:>3}  {type(step).__name__:<20} "
-                f"{str(step.id)[:8]:<32} -- {step.status}"
-                for i, step in enumerate(mission.steps)
-            ]
-        )
-        self.logger.info(f"Mission step overview:\n{step_status}")
+        log_statements: List[str] = []
+        for task in mission.tasks:
+            log_statements.append(
+                f"{type(task).__name__:<20} {str(task.id)[:8]:<32} -- {task.status}"
+            )
+            for j, step in enumerate(task.steps):
+                log_statements.append(
+                    f"{j:>3} {type(step).__name__:<20} {str(step.id)[:8]:<32} -- {step.status}"  # noqa: E501
+                )
 
-    def _check_dependencies(self):
-        """Check dependencies of previous steps"""
-        if self.current_step and self.current_step.depends_on:
-            dependency_steps = [
-                step
-                for step in self.current_mission.steps
-                if step.id in self.current_step.depends_on
-            ]
-            if not all(
-                [step.status == StepStatus.Completed for step in dependency_steps]
-            ):
-                return False
-        return True
+        log_statement: str = "\n".join(log_statements)
+
+        self.logger.info(f"Mission overview:\n{log_statement}")
 
 
 def main(injector: Injector):

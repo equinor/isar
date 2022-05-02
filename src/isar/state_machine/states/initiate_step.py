@@ -34,6 +34,7 @@ class InitiateStep(State):
 
     def start(self):
         self.state_machine.update_state()
+        self.state_machine.update_current_task()
         self.state_machine.update_current_step()
 
         if self.state_machine.mqtt_client:
@@ -61,7 +62,7 @@ class InitiateStep(State):
                 next_state: States = States.Finalize
                 break
 
-            if not self.state_machine.current_step:
+            if not self.state_machine.current_task:
                 next_state: States = States.Finalize
                 self.logger.info(
                     f"Completed mission: {self.state_machine.current_mission.id}"
@@ -70,17 +71,6 @@ class InitiateStep(State):
 
             if self.state_machine.should_send_status():
                 self.state_machine.send_status()
-
-            if not self.state_machine._check_dependencies():
-                self.state_machine.current_step.status = StepStatus.Failed
-                self.logger.warning(
-                    f"Dependency for step {self.state_machine.current_step_index}: "
-                    f"{self.state_machine.current_step.type}, not fulfilled, "
-                    "skipping to next step"
-                )
-
-                next_state: States = States.InitiateStep
-                break
 
             if not self.initiate_step_thread:
                 self.initiate_step_thread = ThreadedRequest(
@@ -108,7 +98,7 @@ class InitiateStep(State):
                 initiate_step_success = False
 
             if initiate_step_success:
-                self.state_machine.current_step.status = StepStatus.Scheduled
+                self.state_machine.current_step.status = StepStatus.InProgress
                 next_state = States.Monitor
                 self.logger.info(
                     f"Successfully initiated "

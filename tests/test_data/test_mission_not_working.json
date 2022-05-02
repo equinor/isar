@@ -1,45 +1,61 @@
 {
   "id": 1,
-  "steps": [
+  "tasks": [
     {
-      "action_type": "drive_to",
-      "action_message": {
-        "xypsi_pose": {
-          "x": -2,
-          "y": -2,
-          "yaw": 1
+      "steps": [
+        {
+          "action_type": "drive_to",
+          "action_message": {
+            "xypsi_pose": {
+              "x": -2,
+              "y": -2,
+              "yaw": 1
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "action_type": "drive_three",
-      "action_message": {
-        "xypsi_pose": {
-          "x": -2,
-          "y": 2,
-          "psi": 1
+      "steps": [
+        {
+          "action_type": "drive_three",
+          "action_message": {
+            "xypsi_pose": {
+              "x": -2,
+              "y": 2,
+              "psi": 1
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "action_type": "drive_to",
-      "action_message": {
-        "xypsi_pose": {
-          "x": 2,
-          "y": 2,
-          "phi": 1
+      "steps": [
+        {
+          "action_type": "drive_to",
+          "action_message": {
+            "xypsi_pose": {
+              "x": 2,
+              "y": 2,
+              "phi": 1
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "action_type": "drive_to",
-      "action_message": {
-        "uups": {
-          "x": 0,
-          "y": 0,
-          "psi": 1
+      "steps": [
+        {
+          "action_type": "drive_to",
+          "action_message": {
+            "uups": {
+              "x": 0,
+              "y": 0,
+              "psi": 1
+            }
+          }
         }
-      }
+      ]
     }
   ]
 }

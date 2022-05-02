@@ -1,21 +1,11 @@
 import json
 from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
-from types import SimpleNamespace
+from typing import Iterator
 from uuid import UUID
 
 import numpy as np
 from alitra import Orientation
-
-
-class JsonService:
-    """
-    Contains helper functions and custom encoders for handling Json objects.
-    """
-
-    @staticmethod
-    def to_object(json_string: str) -> SimpleNamespace:
-        return json.loads(json_string, object_hook=lambda d: SimpleNamespace(**d))
 
 
 class EnhancedJSONEncoder(json.JSONEncoder):
@@ -38,4 +28,6 @@ class EnhancedJSONEncoder(json.JSONEncoder):
             return o.isoformat()
         if isinstance(o, bytes):
             return "<<non-serializable: bytes>>"
+        if isinstance(o, Iterator):
+            return "<<non-serializable: iterator>>"
         return super().default(o)
