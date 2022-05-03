@@ -79,7 +79,7 @@ class StateMachine(object):
         self.sleep_time = sleep_time
 
         self.mission_in_progress: bool = False
-        self.current_mission: Mission = Mission(tasks=[])
+        self.current_mission: Optional[Mission] = None
         self.current_task: Optional[Task] = None
         self.current_step: Optional[Step] = None
 
@@ -158,7 +158,8 @@ class StateMachine(object):
 
         self.mission_in_progress = False
         self.current_step = None
-        self.current_mission = Mission(tasks=[])
+        self.current_task = None
+        self.current_mission = None
 
         return States.Idle
 
