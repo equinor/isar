@@ -1,5 +1,6 @@
 import logging
 import time
+from copy import deepcopy
 from typing import Sequence, TYPE_CHECKING, Tuple
 
 from injector import inject
@@ -95,7 +96,12 @@ class Monitor(State):
             )
             return
 
-        mission_metadata: MissionMetadata = self.state_machine.current_mission.metadata
+        # A deepcopy is made to freeze the metadata before passing it to another thread
+        # through the queue
+        mission_metadata: MissionMetadata = deepcopy(
+            self.state_machine.current_mission.metadata
+        )
+
         for inspection in inspections:
             inspection.metadata.tag_id = current_step.tag_id
 

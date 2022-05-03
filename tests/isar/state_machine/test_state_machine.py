@@ -86,7 +86,8 @@ def test_reset_state_machine(state_machine):
 
     assert not state_machine.mission_in_progress
     assert state_machine.current_step is None
-    assert state_machine.current_mission.tasks == []
+    assert state_machine.current_task is None
+    assert state_machine.current_mission is None
     assert next_state is States.Idle
 
 
