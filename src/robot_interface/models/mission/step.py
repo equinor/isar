@@ -118,4 +118,37 @@ class TakeThermalImage(InspectionStep):
     type: Literal["take_thermal_image"] = "take_thermal_image"
 
 
-STEPS = Union[DriveToPose, DockingProcedure, TakeImage, TakeThermalImage]
+@dataclass
+class TakeVideo(InspectionStep):
+    """
+    Step which causes the robot to take a video towards the given coordinate.
+
+    Duration of video is given in seconds.
+    """
+
+    target: Position
+    duration: float
+    type: Literal["take_video"] = "take_video"
+
+
+@dataclass
+class TakeThermalVideo(InspectionStep):
+    """
+    Step which causes the robot to record thermal video towards the given coordinate
+
+    Duration of video is given in seconds.
+    """
+
+    target: Position
+    duration: float
+    type: Literal["take_thermal_video"] = "take_thermal_video"
+
+
+STEPS = Union[
+    DriveToPose,
+    DockingProcedure,
+    TakeImage,
+    TakeThermalImage,
+    TakeVideo,
+    TakeThermalVideo,
+]
