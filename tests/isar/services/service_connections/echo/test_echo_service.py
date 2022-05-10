@@ -7,6 +7,7 @@ from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.mission import Mission
 from isar.services.service_connections.stid.stid_service import StidService
 from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalImage
+from robot_interface.models.mission.step import TakeThermalVideo, TakeVideo
 
 
 @pytest.mark.parametrize(
@@ -21,8 +22,8 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                         "planItemId": 1227,
                         "tag": "313-PA-101A",
                         "sensorTypes": [
-                            {"sensorTypeKey": "ThermicPicture"},
-                            {"sensorTypeKey": "Picture"},
+                            {"sensorTypeKey": "ThermicPicture", "timeInSeconds": None},
+                            {"sensorTypeKey": "Picture", "timeInSeconds": None},
                         ],
                         "sortingOrder": 0,
                         "robotPlanId": 76,
@@ -45,7 +46,9 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                     {
                         "planItemId": 1227,
                         "tag": "355-LD-1003",
-                        "sensorTypes": [{"sensorTypeKey": "Picture"}],
+                        "sensorTypes": [
+                            {"sensorTypeKey": "Picture", "timeInSeconds": None}
+                        ],
                         "sortingOrder": 0,
                         "robotPlanId": 76,
                     },
@@ -57,6 +60,54 @@ from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalIm
                 "steps": 2,
                 "step_1_type": DriveToPose,
                 "step_2_type": TakeImage,
+            },
+        ),
+        (
+            76,
+            {
+                "robotPlanId": 76,
+                "planItems": [
+                    {
+                        "planItemId": 1227,
+                        "tag": "355-LD-1003",
+                        "sensorTypes": [
+                            {"sensorTypeKey": "Video", "timeInSeconds": 10}
+                        ],
+                        "sortingOrder": 0,
+                        "robotPlanId": 76,
+                    },
+                ],
+            },
+            None,
+            Position(x=1, y=1, z=0, frame=Frame("asset")),
+            {
+                "steps": 2,
+                "step_1_type": DriveToPose,
+                "step_2_type": TakeVideo,
+            },
+        ),
+        (
+            76,
+            {
+                "robotPlanId": 76,
+                "planItems": [
+                    {
+                        "planItemId": 1227,
+                        "tag": "355-LD-1003",
+                        "sensorTypes": [
+                            {"sensorTypeKey": "ThermicVideo", "timeInSeconds": 10}
+                        ],
+                        "sortingOrder": 0,
+                        "robotPlanId": 76,
+                    },
+                ],
+            },
+            None,
+            Position(x=1, y=1, z=0, frame=Frame("asset")),
+            {
+                "steps": 2,
+                "step_1_type": DriveToPose,
+                "step_2_type": TakeThermalVideo,
             },
         ),
     ],

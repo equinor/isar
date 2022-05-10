@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from alitra import Frame, Pose, Position
 from azure.identity import DefaultAzureCredential
@@ -19,6 +19,7 @@ from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalImage
+from robot_interface.models.mission.step import TakeThermalVideo, TakeVideo
 
 
 class EchoPlanner(MissionPlannerInterface):
@@ -54,25 +55,20 @@ class EchoPlanner(MissionPlannerInterface):
 
         for plan_item in plan_items:
             try:
-                tag_name: str = plan_item["tag"]
-                sensors: List[str] = [
-                    sensor_item["sensorTypeKey"]
-                    for sensor_item in plan_item["sensorTypes"]
-                ]
-            except KeyError:
-                self.logger.error("Echo request body don't contain expected keys")
-                continue
-
-            try:
-                drive_step: DriveToPose = self._create_drive_step(tag_name=tag_name)
+                tag_id: str = plan_item["tag"]
+                tag_position: Position = self._get_tag_position(tag_id=tag_id)
+                drive_step: DriveToPose = self._create_drive_step(tag_id=tag_id)
                 inspection_steps: List[
-                    Union[TakeImage, TakeThermalImage]
-                ] = self._create_inspection_steps_from_sensor_types(
-                    tag_name=tag_name, sensors=sensors
-                )
-            except (ValueError, RequestException) as e:
+                    Union[TakeImage, TakeThermalImage, TakeVideo, TakeThermalVideo]
+                ] = [
+                    self._echo_sensor_to_isar_inspection_step(
+                        sensor=sensor, tag_id=tag_id, tag_position=tag_position
+                    )
+                    for sensor in plan_item["sensorTypes"]
+                ]
+            except (ValueError, KeyError, RequestException) as e:
                 self.logger.error(
-                    f"Failed to create step with exception message: '{str(e)}'"
+                    f"Failed to create task with exception message: '{str(e)}'"
                 )
                 continue
             task: Task = Task(steps=[drive_step, *inspection_steps])
@@ -104,48 +100,44 @@ class EchoPlanner(MissionPlannerInterface):
 
         return response.json()
 
-    def _create_inspection_steps_from_sensor_types(
-        self, tag_name: str, sensors: List[str]
-    ) -> List[Union[TakeImage, TakeThermalImage]]:
-        tag_position: Position = self._get_tag_position(tag_name=tag_name)
-        inspection_steps: List[Union[TakeImage, TakeThermalImage]] = []
-        for sensor in sensors:
-            inspection: Union[
-                TakeImage, TakeThermalImage
-            ] = self._echo_sensor_type_to_isar_inspection_step(sensor_type=sensor)
-            inspection.target = tag_position
-            inspection.tag_id = tag_name
-            inspection_steps.append(inspection)
-        return inspection_steps
-
-    def _get_robot_pose(self, tag_name: str) -> Pose:
+    def _get_robot_pose(self, tag_id: str) -> Pose:
         """
         Retrieve robot pose corresponding to inspection of a given tag. For now, this is
         a temporary hard-coded solution.
         """
-        predefined_pose: Pose = predefined_poses[tag_name]
+        predefined_pose: Pose = predefined_poses[tag_id]
         if predefined_pose.frame == Frame("robot"):
             raise ValueError("Frame of predefined pose should be asset not robot")
 
         return predefined_pose
 
-    def _get_tag_position(self, tag_name: str) -> Position:
-        tag_position: Position = self.stid_service.tag_position(tag_name)
+    def _get_tag_position(self, tag_id: str) -> Position:
+        tag_position: Position = self.stid_service.tag_position(tag_id)
 
         return tag_position
 
-    def _create_drive_step(self, tag_name: str) -> DriveToPose:
-        robot_pose: Pose = self._get_robot_pose(tag_name=tag_name)
+    def _create_drive_step(self, tag_id: str) -> DriveToPose:
+        robot_pose: Pose = self._get_robot_pose(tag_id=tag_id)
 
         drive_step: DriveToPose = DriveToPose(pose=robot_pose)
         return drive_step
 
     @staticmethod
-    def _echo_sensor_type_to_isar_inspection_step(
-        sensor_type: str,
-    ) -> Union[TakeImage, TakeThermalImage]:
-        mapping: Dict[str, Union[TakeImage, TakeThermalImage]] = {
-            "Picture": TakeImage(target=None),
-            "ThermicPicture": TakeThermalImage(target=None),
-        }
-        return mapping[sensor_type]
+    def _echo_sensor_to_isar_inspection_step(
+        sensor: dict, tag_id: str, tag_position: Position
+    ) -> Union[TakeImage, TakeThermalImage, TakeVideo, TakeThermalVideo]:
+        sensor_type: str = sensor["sensorTypeKey"]
+        duration: Optional[float] = sensor["timeInSeconds"]
+        inspection: Union[TakeImage, TakeThermalImage, TakeVideo, TakeThermalVideo]
+        if sensor_type == "Picture":
+            inspection = TakeImage(target=tag_position)
+        elif sensor_type == "Video":
+            inspection = TakeVideo(target=tag_position, duration=duration)
+        elif sensor_type == "ThermicPicture":
+            inspection = TakeThermalImage(target=tag_position)
+        elif sensor_type == "ThermicVideo":
+            inspection = TakeThermalVideo(target=tag_position, duration=duration)
+        else:
+            raise ValueError(f"No step supported for sensor_type {sensor_type}")
+        inspection.tag_id = tag_id
+        return inspection
