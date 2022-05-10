@@ -1,6 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
+from importlib.metadata import metadata
 from typing import Optional
 from uuid import UUID, uuid4
 
@@ -33,6 +34,16 @@ class ThermalImageMetadata(InspectionMetadata):
 
 
 @dataclass
+class VideoMetadata(InspectionMetadata):
+    duration: float
+
+
+@dataclass
+class ThermalVideoMetadata(InspectionMetadata):
+    duration: float
+
+
+@dataclass
 class Inspection:
     id: UUID = field(default_factory=uuid4, init=False)
     metadata: InspectionMetadata
@@ -47,3 +58,13 @@ class Image(Inspection):
 @dataclass
 class ThermalImage(Inspection):
     metadata: ThermalImageMetadata
+
+
+@dataclass
+class Video(Inspection):
+    metadata: VideoMetadata
+
+
+@dataclass
+class ThermalVideo(Inspection):
+    metadata: ThermalVideoMetadata
