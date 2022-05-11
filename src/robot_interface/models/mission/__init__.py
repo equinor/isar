@@ -7,4 +7,6 @@ from .step import (
     Step,
     TakeImage,
     TakeThermalImage,
+    TakeThermalVideo,
+    TakeVideo,
 )
