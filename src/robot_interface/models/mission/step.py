@@ -1,11 +1,18 @@
+from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, List, Literal, Optional, Union
+from typing import Any, List, Literal, Optional, Union, Type
 from uuid import UUID, uuid4
 
 from alitra import Pose, Position
 
-from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.status import StepStatus
+from robot_interface.models.inspection.inspection import (
+    Inspection,
+    Image,
+    ThermalImage,
+    ThermalVideo,
+    Video,
+)
 
 
 @dataclass
@@ -57,6 +64,10 @@ class InspectionStep(Step):
     inspections: List[Inspection] = field(default_factory=list, init=False)
     tag_id: Optional[str] = field(default=None, init=False)
 
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return Inspection
+
     pass
 
 
@@ -107,6 +118,10 @@ class TakeImage(InspectionStep):
     target: Position
     type: Literal["take_image"] = "take_image"
 
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return Image
+
 
 @dataclass
 class TakeThermalImage(InspectionStep):
@@ -116,6 +131,10 @@ class TakeThermalImage(InspectionStep):
 
     target: Position
     type: Literal["take_thermal_image"] = "take_thermal_image"
+
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return ThermalImage
 
 
 @dataclass
@@ -130,6 +149,10 @@ class TakeVideo(InspectionStep):
     duration: float
     type: Literal["take_video"] = "take_video"
 
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return Video
+
 
 @dataclass
 class TakeThermalVideo(InspectionStep):
@@ -142,6 +165,10 @@ class TakeThermalVideo(InspectionStep):
     target: Position
     duration: float
     type: Literal["take_thermal_video"] = "take_thermal_video"
+
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return ThermalVideo
 
 
 STEPS = Union[
