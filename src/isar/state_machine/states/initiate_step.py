@@ -39,14 +39,12 @@ class InitiateStep(State):
 
         if self.state_machine.mqtt_client:
             self.state_machine.publish_step_status()
-            self.state_machine.publish_mission()
 
         self._run()
 
     def stop(self):
         if self.state_machine.mqtt_client:
             self.state_machine.publish_step_status()
-            self.state_machine.publish_mission()
 
         self.initiate_step_failure_counter = 0
         if self.initiate_step_thread:

@@ -192,18 +192,26 @@ class Settings(BaseSettings):
     # Data classification
     DATA_CLASSIFICATION: str = Field(default="internal")
 
-    # Type of missions the robot performs
-    MISSION_TYPE: str = Field(default="inspection")
+    # List of MQTT Topics
 
-    ISAR_STATE: str = Field(default="isar_state")
+    TOPIC_ISAR_STATE: str = Field(default="state")
 
-    ISAR_MISSION: str = Field(default="isar_mission")
+    TOPIC_ISAR_MISSION: str = Field(default="mission")
 
-    ISAR_STEP_STATUS: str = Field(default="isar_step_status")
+    TOPIC_ISAR_TASK: str = Field(default="task")
 
-    @validator("ISAR_STATE", "ISAR_MISSION", "ISAR_STEP_STATUS", pre=True, always=True)
+    TOPIC_ISAR_STEP: str = Field(default="step")
+
+    @validator(
+        "TOPIC_ISAR_STATE",
+        "TOPIC_ISAR_MISSION",
+        "TOPIC_ISAR_TASK",
+        "TOPIC_ISAR_STEP",
+        pre=True,
+        always=True,
+    )
     def prefix_isar_topics(cls, v, values):
-        return f"{values['ROBOT_ID']}/{v}"
+        return f"isar/{values['ROBOT_ID']}/{v}"
 
     class Config:
         with pkg_resources.path("isar.config", "settings.env") as path:
