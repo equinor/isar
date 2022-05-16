@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 from injector import inject
 from transitions import State
 
+from robot_interface.models.mission.status import StepStatus
+
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
@@ -17,7 +19,8 @@ class Finalize(State):
 
     def start(self):
         self.state_machine.update_state()
-
+        self.state_machine.current_mission.status = StepStatus.Completed
+        self.state_machine.publish_mission_status()
         self.state_machine.log_step_overview(mission=self.state_machine.current_mission)
         next_state = self.state_machine.reset_state_machine()
         self.state_machine.to_next_state(next_state)
@@ -36,3 +39,11 @@ class Finalize(State):
         )
 
         self.logger.info(f"State transitions:\n  {state_transitions}")
+
+    def _update_tasks(self):
+        for task in self.state_machine.current_mission.tasks:
+            for step in task.steps:
+                if step.status == StepStatus.NotStarted:
+                    step.status = StepStatus.Cancelled
+            if task.status == StepStatus.NotStarted:
+                task.status = StepStatus.Cancelled

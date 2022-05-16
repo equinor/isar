@@ -8,3 +8,4 @@ class StepStatus(str, Enum):
     PartiallySuccessful: str = "partially_successful"
     InProgress: str = "in_progress"
     Failed: str = "failed"
+    Cancelled: str = "cancelled"

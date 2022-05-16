@@ -144,6 +144,7 @@ def test_should_stop_mission(
 
 
 def test_stop_mission(state_machine):
+    state_machine.start_mission(MockMissionDefinition.default_mission)
     state_machine.stop_mission()
     message = state_machine.queues.stop_mission.output.get()
     assert not state_machine.mission_in_progress

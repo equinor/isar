@@ -3,6 +3,7 @@ import logging
 import queue
 from collections import deque
 from copy import deepcopy
+from datetime import datetime
 from typing import Deque, List, Optional, Tuple
 
 from injector import Injector, inject
@@ -116,9 +117,11 @@ class StateMachine(object):
 
     def update_current_task(self):
         if self.current_task.is_finished():
+            self.publish_task_status()
             try:
                 self.current_task = self.current_mission.next_task()
                 self.current_task.status = StepStatus.InProgress
+                self.publish_task_status()
             except StopIteration:
                 # Indicates that all tasks are finished
                 self.current_task = None
@@ -136,7 +139,7 @@ class StateMachine(object):
 
         if self.mqtt_client:
             self.mqtt_client.publish(
-                topic=settings.ISAR_STATE,
+                topic=settings.TOPIC_ISAR_STATE,
                 payload=payload,
                 retain=True,
             )
@@ -213,8 +216,11 @@ class StateMachine(object):
         """Starts a scheduled mission."""
         self.mission_in_progress = True
         self.current_mission = mission
+        self.current_mission.status = StepStatus.InProgress
+        self.publish_mission_status()
         self.current_task = mission.next_task()
         self.current_task.status = StepStatus.InProgress
+        self.publish_task_status()
 
         self.queues.start_mission.output.put(deepcopy(StartMissionMessages.success()))
         self.logger.info(f"Starting new mission: {mission.id}")
@@ -267,30 +273,65 @@ class StateMachine(object):
         self.logger.info(message)
         if not failure:
             self.mission_in_progress = False
+            for task in self.current_mission.tasks:
+                for step in task.steps:
+                    if step.status == StepStatus.NotStarted:
+                        step.status = StepStatus.Cancelled
+                if task.status == StepStatus.NotStarted:
+                    task.status = StepStatus.Cancelled
 
-    def publish_step_status(self) -> None:
-        """Publishes the current step status to the MQTT Broker"""
+    def publish_mission_status(self) -> None:
         payload: str = json.dumps(
             {
-                "step_id": self.current_step.id if self.current_step else None,
-                "step_status": self.current_step.status if self.current_step else None,
+                "robot_id": settings.ROBOT_ID,
+                "mission_id": self.current_mission.id if self.current_mission else None,
+                "status": self.current_mission.status if self.current_mission else None,
+                "timestamp": datetime.utcnow(),
             },
             cls=EnhancedJSONEncoder,
         )
 
         self.mqtt_client.publish(
-            topic=settings.ISAR_STEP_STATUS,
+            topic=settings.TOPIC_ISAR_MISSION,
             payload=payload,
             retain=True,
         )
 
-    def publish_mission(self) -> None:
+    def publish_task_status(self) -> None:
+        """Publishes the current step status to the MQTT Broker"""
         payload: str = json.dumps(
-            {"mission": self.current_mission}, cls=EnhancedJSONEncoder
+            {
+                "robot_id": settings.ROBOT_ID,
+                "misison_id": self.current_mission.id if self.current_mission else None,
+                "task_id": self.current_task.id if self.current_task else None,
+                "status": self.current_task.status if self.current_task else None,
+                "timestamp": datetime.utcnow(),
+            },
+            cls=EnhancedJSONEncoder,
         )
 
         self.mqtt_client.publish(
-            topic=settings.ISAR_MISSION,
+            topic=settings.TOPIC_ISAR_TASK,
+            payload=payload,
+            retain=True,
+        )
+
+    def publish_step_status(self) -> None:
+        """Publishes the current step status to the MQTT Broker"""
+        payload: str = json.dumps(
+            {
+                "robot_id": settings.ROBOT_ID,
+                "misison_id": self.current_mission.id if self.current_mission else None,
+                "task_id": self.current_task.id if self.current_task else None,
+                "step_id": self.current_step.id if self.current_step else None,
+                "status": self.current_step.status if self.current_step else None,
+                "timestamp": datetime.utcnow(),
+            },
+            cls=EnhancedJSONEncoder,
+        )
+
+        self.mqtt_client.publish(
+            topic=settings.TOPIC_ISAR_STEP,
             payload=payload,
             retain=True,
         )
