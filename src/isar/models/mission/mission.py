@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Iterator, List, Union
+from typing import Iterator, List, Optional, Union
 from uuid import UUID, uuid4
 
 from isar.config.settings import settings
@@ -20,6 +20,7 @@ from .status import MissionStatus, TaskStatus
 class Task:
     steps: List[STEPS]
     status: TaskStatus = field(default=TaskStatus.NotStarted, init=False)
+    tag_id: Optional[str] = field(default=None)
     id: UUID = field(default_factory=uuid4, init=False)
     _iterator: Iterator = None
 
