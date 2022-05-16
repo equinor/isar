@@ -20,5 +20,5 @@ class MissionMetadata:
     media_orientation_reference_system: str = (
         settings.MEDIA_ORIENTATION_REFERENCE_SYSTEM
     )
-    robot_id: str = settings.ROBOT_TYPE
+    robot_id: str = settings.ROBOT_ID
     mission_date: date = datetime.utcnow().date()
