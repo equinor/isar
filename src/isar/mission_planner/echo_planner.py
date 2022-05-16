@@ -71,7 +71,7 @@ class EchoPlanner(MissionPlannerInterface):
                     f"Failed to create task with exception message: '{str(e)}'"
                 )
                 continue
-            task: Task = Task(steps=[drive_step, *inspection_steps])
+            task: Task = Task(steps=[drive_step, *inspection_steps], tag_id=tag_id)
             tasks.append(task)
 
         if not tasks:
