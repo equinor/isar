@@ -80,17 +80,3 @@ class LocalPlanner(MissionPlannerInterface):
                     "mission": mission,
                 }
         return missions
-
-    def list_predefined_missions(self) -> dict:
-        missions: dict = self.get_predefined_missions()
-        predefined_missions: list = []
-        for id, mission in missions.items():
-            predefined_missions.append(
-                {
-                    "id": id,
-                    "name": mission["name"],
-                    "file": mission["file"],
-                    "steps": asdict(mission["mission"])["steps"],
-                }
-            )
-        return {"missions": predefined_missions}
