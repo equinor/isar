@@ -4,7 +4,7 @@ from http import HTTPStatus
 from fastapi import Response
 from injector import inject
 
-from isar.apis.models import StopResponse
+from isar.apis.models import StopFailedResponse
 from isar.config.settings import settings
 from isar.models.communication.messages import StopMessage, StopMissionMessages
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
@@ -32,6 +32,6 @@ class StopMission:
             message = StopMissionMessages.queue_timeout()
             self.logger.error((message, HTTPStatus.REQUEST_TIMEOUT))
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
-            return StopResponse(message=message.message, stopped=message.stopped)
+            return StopFailedResponse(message=message.message)
         self.logger.info(response)
-        return StopResponse(message=message.message, stopped=message.stopped)
+        return
