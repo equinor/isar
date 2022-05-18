@@ -105,7 +105,10 @@ class EchoPlanner(MissionPlannerInterface):
         Retrieve robot pose corresponding to inspection of a given tag. For now, this is
         a temporary hard-coded solution.
         """
-        predefined_pose: Pose = predefined_poses[tag_id]
+        try:
+            predefined_pose: Pose = predefined_poses[tag_id]
+        except KeyError:
+            raise KeyError(f"Tag not in list of predefined poses: {tag_id}")
         if predefined_pose.frame == Frame("robot"):
             raise ValueError("Frame of predefined pose should be asset not robot")
 
