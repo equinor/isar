@@ -116,7 +116,7 @@ class Monitor(State):
         if step.status == StepStatus.Failed:
             self.logger.warning(f"Step: {str(step.id)[:8]} failed")
             finished = True
-        elif step.status == StepStatus.Completed:
+        elif step.status == StepStatus.Successful:
             self.logger.info(
                 f"{type(step).__name__} step: {str(step.id)[:8]} completed"
             )
@@ -124,7 +124,7 @@ class Monitor(State):
         return finished
 
     def _process_finished_step(self, step: Step) -> State:
-        if step.status == StepStatus.Completed and isinstance(step, InspectionStep):
+        if step.status == StepStatus.Successful and isinstance(step, InspectionStep):
             self._queue_inspections_for_upload(current_step=step)
 
         return States.InitiateStep

@@ -17,7 +17,7 @@ class MockRobot(RobotInterface):
     def __init__(
         self,
         initiate_step: bool = True,
-        step_status: StepStatus = StepStatus.Completed,
+        step_status: StepStatus = StepStatus.Successful,
         stop: bool = True,
         pose: Pose = Pose(
             position=Position(x=0, y=0, z=0, frame=Frame("robot")),

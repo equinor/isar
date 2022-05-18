@@ -18,6 +18,7 @@ from isar.models.communication.messages import (
 )
 from isar.models.communication.queues.queues import Queues
 from isar.models.mission import Mission, Task
+from isar.models.mission.status import MissionStatus, TaskStatus
 from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
 from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.state_machine.states import Finalize, Idle, InitiateStep, Monitor, Off
@@ -120,7 +121,7 @@ class StateMachine(object):
             self.publish_task_status()
             try:
                 self.current_task = self.current_mission.next_task()
-                self.current_task.status = StepStatus.InProgress
+                self.current_task.status = TaskStatus.InProgress
                 self.publish_task_status()
             except StopIteration:
                 # Indicates that all tasks are finished
@@ -216,10 +217,10 @@ class StateMachine(object):
         """Starts a scheduled mission."""
         self.mission_in_progress = True
         self.current_mission = mission
-        self.current_mission.status = StepStatus.InProgress
+        self.current_mission.status = MissionStatus.InProgress
         self.publish_mission_status()
         self.current_task = mission.next_task()
-        self.current_task.status = StepStatus.InProgress
+        self.current_task.status = TaskStatus.InProgress
         self.publish_task_status()
 
         self.queues.start_mission.output.put(deepcopy(StartMissionMessages.success()))
@@ -272,13 +273,14 @@ class StateMachine(object):
         self.queues.stop_mission.output.put(deepcopy(message))
         self.logger.info(message)
         if not failure:
+            self.current_mission.status = MissionStatus.Cancelled
             self.mission_in_progress = False
             for task in self.current_mission.tasks:
                 for step in task.steps:
-                    if step.status == StepStatus.NotStarted:
+                    if step.status in [StepStatus.NotStarted, StepStatus.InProgress]:
                         step.status = StepStatus.Cancelled
-                if task.status == StepStatus.NotStarted:
-                    task.status = StepStatus.Cancelled
+                if task.status in [TaskStatus.NotStarted, TaskStatus.InProgress]:
+                    task.status = TaskStatus.Cancelled
 
     def publish_mission_status(self) -> None:
         payload: str = json.dumps(
@@ -298,7 +300,7 @@ class StateMachine(object):
         )
 
     def publish_task_status(self) -> None:
-        """Publishes the current step status to the MQTT Broker"""
+        """Publishes the current task status to the MQTT Broker"""
         payload: str = json.dumps(
             {
                 "robot_id": settings.ROBOT_ID,

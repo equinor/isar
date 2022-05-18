@@ -13,11 +13,13 @@ from robot_interface.models.mission import (
     StepStatus,
 )
 
+from .status import MissionStatus, TaskStatus
+
 
 @dataclass
 class Task:
     steps: List[STEPS]
-    status: StepStatus = field(default=StepStatus.NotStarted, init=False)
+    status: TaskStatus = field(default=TaskStatus.NotStarted, init=False)
     id: UUID = field(default_factory=uuid4, init=False)
     _iterator: Iterator = None
 
@@ -29,7 +31,7 @@ class Task:
             if step.status is StepStatus.Failed and isinstance(step, MotionStep):
                 # One motion step has failed meaning the task as a whole should be
                 # aborted
-                self.status = StepStatus.Failed
+                self.status = TaskStatus.Failed
                 return True
 
             elif (step.status is StepStatus.Failed) and isinstance(
@@ -38,10 +40,10 @@ class Task:
                 # It should be possible to perform several inspections per task. If
                 # one out of many inspections fail the task is considered as
                 # partially successful.
-                self.status = StepStatus.PartiallySuccessful
+                self.status = TaskStatus.PartiallySuccessful
                 continue
 
-            elif step.status is StepStatus.Completed:
+            elif step.status is StepStatus.Successful:
                 # The task is complete once all steps are completed
                 continue
             else:
@@ -50,13 +52,13 @@ class Task:
 
         # Check if the task has been marked as partially successful by having one or
         # more inspection steps fail
-        if self.status is not StepStatus.PartiallySuccessful:
+        if self.status is not TaskStatus.PartiallySuccessful:
             # All steps have been completed
-            self.status = StepStatus.Completed
+            self.status = TaskStatus.Successful
 
         # Set the task to failed if all inspection steps failed
         elif self._all_inspection_steps_failed():
-            self.status = StepStatus.Failed
+            self.status = TaskStatus.Failed
 
         return True
 
@@ -78,7 +80,7 @@ class Task:
 class Mission:
     tasks: List[Task]
     id: Union[UUID, int, str, None] = None
-    status: StepStatus = StepStatus.NotStarted
+    status: MissionStatus = MissionStatus.NotStarted
     metadata: MissionMetadata = None
     _iterator: Iterator = None
 
