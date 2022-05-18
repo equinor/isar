@@ -61,7 +61,7 @@ def mock_start_mission(status_code: int) -> Tuple[StartMessage, int]:
 class TestSchedulerRoutes:
     @pytest.mark.parametrize(
         "mission_id, mock_get_mission, expected_exception,"
-        "mock_ready_to_start, mock_start, expected_output, expected_status_code",
+        "mock_ready_to_start, mock_start, expected_status_code",
         [
             (
                 12345,
@@ -69,7 +69,6 @@ class TestSchedulerRoutes:
                 MissionPlannerError,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.OK),
-                StartMessage(message="", started=False),
                 HTTPStatus.INTERNAL_SERVER_ERROR,
             ),
             (
@@ -78,7 +77,6 @@ class TestSchedulerRoutes:
                 None,
                 mock_ready_to_start_mission(HTTPStatus.REQUEST_TIMEOUT),
                 mock_start_mission(HTTPStatus.OK),
-                StartMissionMessages.queue_timeout(),
                 HTTPStatus.REQUEST_TIMEOUT,
             ),
             (
@@ -87,7 +85,6 @@ class TestSchedulerRoutes:
                 None,
                 mock_ready_to_start_mission(HTTPStatus.CONFLICT),
                 mock_start_mission(HTTPStatus.OK),
-                StartMissionMessages.mission_in_progress(),
                 HTTPStatus.CONFLICT,
             ),
             (
@@ -96,7 +93,6 @@ class TestSchedulerRoutes:
                 None,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.REQUEST_TIMEOUT),
-                StartMissionMessages.queue_timeout(),
                 HTTPStatus.REQUEST_TIMEOUT,
             ),
             (
@@ -105,7 +101,6 @@ class TestSchedulerRoutes:
                 None,
                 mock_ready_to_start_mission(HTTPStatus.OK),
                 mock_start_mission(HTTPStatus.OK),
-                StartMissionMessages.success(),
                 HTTPStatus.OK,
             ),
         ],
@@ -120,7 +115,6 @@ class TestSchedulerRoutes:
         expected_exception,
         mock_ready_to_start,
         mock_start,
-        expected_output,
         expected_status_code,
     ):
         mocker.patch.object(
@@ -145,26 +139,17 @@ class TestSchedulerRoutes:
             headers={"Authorization": "Bearer {}".format(access_token)},
         )
 
-        result_message = json.loads(response.text)
-        result = StartMessage(
-            message=result_message["message"], started=result_message["started"]
-        )
-        assert result == expected_output
         assert response.status_code == expected_status_code
 
     @pytest.mark.parametrize(
-        "should_stop, mock_return, expected_output, expected_status_code",
+        "mock_return, expected_status_code",
         [
             (
-                True,
                 QueueTimeoutError(),
-                StopMissionMessages.queue_timeout(),
                 HTTPStatus.REQUEST_TIMEOUT,
             ),
             (
-                True,
                 [StopMissionMessages.success()],
-                StopMissionMessages.success(),
                 HTTPStatus.OK,
             ),
         ],
@@ -174,9 +159,7 @@ class TestSchedulerRoutes:
         client,
         access_token,
         mocker,
-        should_stop,
         mock_return,
-        expected_output,
         expected_status_code,
     ):
         mocker.patch.object(QueueUtilities, "check_queue", side_effect=mock_return)
@@ -186,11 +169,6 @@ class TestSchedulerRoutes:
             headers={"Authorization": "Bearer {}".format(access_token)},
         )
 
-        result_message = json.loads(response.text)
-        result = StopMessage(
-            message=result_message["message"], stopped=result_message["stopped"]
-        )
-        assert result == expected_output
         assert response.status_code == expected_status_code
 
     @pytest.mark.parametrize(

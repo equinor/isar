@@ -11,7 +11,11 @@ from fastapi.routing import APIRouter
 from injector import inject
 from pydantic import AnyHttpUrl
 
-from isar.apis.models.models import StartResponse, StopResponse
+from isar.apis.models.models import (
+    StartFailedResponse,
+    StartMissionResponse,
+    StopFailedResponse,
+)
 from isar.apis.schedule.drive_to import DriveTo
 from isar.apis.schedule.start_mission import StartMission
 from isar.apis.schedule.stop_mission import StopMission
@@ -102,19 +106,19 @@ class API:
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully started",
-                    "model": StartResponse,
+                    "model": StartMissionResponse,
                 },
                 HTTPStatus.NOT_FOUND.value: {
                     "description": "Not found - Mission not found",
-                    "model": StartResponse,
+                    "model": StartFailedResponse,
                 },
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Mission already ongoing",
-                    "model": StartResponse,
+                    "model": StartFailedResponse,
                 },
                 HTTPStatus.REQUEST_TIMEOUT.value: {
                     "description": "Timeout - Could not contact state machine",
-                    "model": StartResponse,
+                    "model": StartFailedResponse,
                 },
             },
         )
@@ -127,11 +131,10 @@ class API:
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully stopped",
-                    "model": StopResponse,
                 },
                 HTTPStatus.REQUEST_TIMEOUT.value: {
                     "description": "Timeout - Could not contact state machine",
-                    "model": StopResponse,
+                    "model": StopFailedResponse,
                 },
             },
         )

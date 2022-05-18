@@ -76,6 +76,15 @@ class Task:
         if self._iterator is None:
             self._iterator = iter(self.steps)
 
+    def api_response_dict(self):
+        return {
+            "id": self.id,
+            "tag_id": self.tag_id,
+            "steps": list(
+                map(lambda x: {"id": x.id, "type": x.__class__.__name__}, self.steps)
+            ),
+        }
+
 
 @dataclass
 class Mission:
@@ -110,3 +119,9 @@ class Mission:
 
         if self._iterator is None:
             self._iterator = iter(self.tasks)
+
+    def api_response_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "tasks": [task.api_response_dict() for task in self.tasks],
+        }

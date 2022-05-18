@@ -1,18 +1,18 @@
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, List, Literal, Optional, Union, Type
+from typing import Any, List, Literal, Optional, Type, Union
 from uuid import UUID, uuid4
 
 from alitra import Pose, Position
 
-from robot_interface.models.mission.status import StepStatus
 from robot_interface.models.inspection.inspection import (
-    Inspection,
     Image,
+    Inspection,
     ThermalImage,
     ThermalVideo,
     Video,
 )
+from robot_interface.models.mission.status import StepStatus
 
 
 @dataclass
