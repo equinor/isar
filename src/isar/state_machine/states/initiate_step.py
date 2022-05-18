@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from transitions import State
 
 from isar.config.settings import settings
+from isar.models.mission.status import MissionStatus
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
@@ -82,7 +83,6 @@ class InitiateStep(State):
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
-
             except RobotInfeasibleStepException:
                 self.state_machine.current_step.status = StepStatus.Failed
                 self.logger.warning(
@@ -114,6 +114,8 @@ class InitiateStep(State):
                     self.initiate_step_failure_counter
                     >= self.initiate_step_failure_counter_limit
                 ):
+                    self.state_machine.current_step.status = StepStatus.Failed
+                    self.state_machine.current_mission.status = MissionStatus.Failed
                     self.logger.error(
                         f"Failed to initiate step after "
                         f"{self.initiate_step_failure_counter_limit} attempts. "

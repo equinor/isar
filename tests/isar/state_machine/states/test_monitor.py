@@ -9,8 +9,8 @@ from tests.mocks.step import MockStep
 @pytest.mark.parametrize(
     "mock_status, expected_output",
     [
-        (StepStatus.Completed, True),
-        (StepStatus.Completed, True),
+        (StepStatus.Successful, True),
+        (StepStatus.Successful, True),
         (StepStatus.Failed, True),
     ],
 )
@@ -27,7 +27,7 @@ def test_step_finished(monitor: Monitor, mock_status, expected_output):
 @pytest.mark.parametrize(
     "mock_status, should_queue_upload",
     [
-        (StepStatus.Completed, True),
+        (StepStatus.Successful, True),
         (StepStatus.Failed, False),
     ],
 )
