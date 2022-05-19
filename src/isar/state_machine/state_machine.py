@@ -283,6 +283,8 @@ class StateMachine(object):
                     task.status = TaskStatus.Cancelled
 
     def publish_mission_status(self) -> None:
+        if not self.mqtt_client:
+            return
         payload: str = json.dumps(
             {
                 "robot_id": settings.ROBOT_ID,
@@ -301,6 +303,8 @@ class StateMachine(object):
 
     def publish_task_status(self) -> None:
         """Publishes the current task status to the MQTT Broker"""
+        if not self.mqtt_client:
+            return
         payload: str = json.dumps(
             {
                 "robot_id": settings.ROBOT_ID,
@@ -320,6 +324,8 @@ class StateMachine(object):
 
     def publish_step_status(self) -> None:
         """Publishes the current step status to the MQTT Broker"""
+        if not self.mqtt_client:
+            return
         payload: str = json.dumps(
             {
                 "robot_id": settings.ROBOT_ID,
