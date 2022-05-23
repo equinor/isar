@@ -8,6 +8,8 @@ class States(str, Enum):
     InitiateStep = "initiate_step"
     Monitor = "monitor"
     Finalize = "finalize"
+    Paused = "paused"
+    Stop = "stop"
 
     def __repr__(self):
         return self.value

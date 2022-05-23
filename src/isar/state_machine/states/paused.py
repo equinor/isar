@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from transitions import State
 
@@ -8,9 +8,9 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class Idle(State):
+class Paused(State):
     def __init__(self, state_machine: "StateMachine"):
-        super().__init__(name="idle", on_enter=self.start, on_exit=self.stop)
+        super().__init__(name="paused", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
 
@@ -19,18 +19,22 @@ class Idle(State):
         self._run()
 
     def stop(self):
-        pass
+        self.state_machine.paused = False
 
     def _run(self):
+        transition: Callable
         while True:
+            if self.state_machine.should_stop_mission():
+                transition = self.state_machine.mission_stopped
+                break
+
+            if self.state_machine.should_continue_mission():
+                transition = self.state_machine.unpause
+                break
+
             if self.state_machine.should_send_status():
                 self.state_machine.send_status()
 
-            (should_start_mission, mission) = self.state_machine.should_start_mission()
-            if should_start_mission:
-                self.state_machine.start_mission(mission)
-                transition = self.state_machine.mission_started
-                break
             time.sleep(self.state_machine.sleep_time)
 
         transition()

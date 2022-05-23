@@ -8,6 +8,8 @@ class Queues:
     def __init__(self):
         self.start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
         self.stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.pause_mission_activate: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.pause_mission_deactivate: QueueIO = QueueIO(input_size=1, output_size=1)
         self.mission_status: QueueIO = QueueIO()
         self.single_action: QueueIO = QueueIO(input_size=1, output_size=1)
         self.upload_queue: Queue = Queue(maxsize=10)
