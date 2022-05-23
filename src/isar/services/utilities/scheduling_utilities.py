@@ -54,6 +54,19 @@ class SchedulingUtilities:
             return False, error_message
         return True, None
 
+    def get_state(self) -> Optional[States]:
+        self.queues.mission_status.input.put(True)
+        try:
+            _, state = QueueUtilities.check_queue(
+                self.queues.mission_status.output, self.queue_timeout
+            )
+        except QueueTimeoutError:
+            state = None
+
+        QueueUtilities.clear_queue(self.queues.mission_status.input)
+
+        return state
+
     def start_mission(self, mission: Mission) -> Tuple[StartMessage, HTTPStatus]:
         """
         Starts a mission by communicating with the state machine thread through queues.

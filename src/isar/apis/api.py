@@ -17,6 +17,7 @@ from isar.apis.models.models import (
     StopFailedResponse,
 )
 from isar.apis.schedule.drive_to import DriveTo
+from isar.apis.schedule.pause_mission import PauseMission
 from isar.apis.schedule.start_mission import StartMission
 from isar.apis.schedule.stop_mission import StopMission
 from isar.apis.security.authentication import Authenticator
@@ -30,6 +31,7 @@ class API:
         authenticator: Authenticator,
         start_mission: StartMission,
         stop_mission: StopMission,
+        pause_mission: PauseMission,
         drive_to: DriveTo,
         host: str = settings.API_HOST,
         port: int = settings.API_PORT,
@@ -38,6 +40,7 @@ class API:
         self.authenticator: Authenticator = authenticator
         self.start_mission: StartMission = start_mission
         self.stop_mission: StopMission = stop_mission
+        self.pause_mission: PauseMission = pause_mission
         self.drive_to: DriveTo = drive_to
         self.host: str = host
         self.port: int = port
@@ -135,6 +138,40 @@ class API:
                 HTTPStatus.REQUEST_TIMEOUT.value: {
                     "description": "Timeout - Could not contact state machine",
                     "model": StopFailedResponse,
+                },
+            },
+        )
+        router.add_api_route(
+            "/schedule/pause-mission",
+            self.pause_mission.pause,
+            methods=["POST"],
+            dependencies=[authentication_dependency],
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Mission succesfully paused",
+                },
+                HTTPStatus.REQUEST_TIMEOUT.value: {
+                    "description": "Timeout - Could not contact state machine",
+                },
+                HTTPStatus.BAD_REQUEST.value: {
+                    "description": "Bad Request - Invalid command in the current state",
+                },
+            },
+        )
+        router.add_api_route(
+            "/schedule/resume-mission",
+            self.pause_mission.resume,
+            methods=["POST"],
+            dependencies=[authentication_dependency],
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Mission succesfully resumed",
+                },
+                HTTPStatus.REQUEST_TIMEOUT.value: {
+                    "description": "Timeout - Could not contact state machine",
+                },
+                HTTPStatus.BAD_REQUEST.value: {
+                    "description": "Bad Request - Invalid command in the current state",
                 },
             },
         )

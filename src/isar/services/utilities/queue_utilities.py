@@ -29,3 +29,11 @@ class QueueUtilities:
             logger.error("Queue timed out")
             raise QueueTimeoutError
         return message
+
+    @staticmethod
+    def clear_queue(queue: Queue) -> None:
+        while True:
+            try:
+                queue.get(block=False)
+            except Empty:
+                break

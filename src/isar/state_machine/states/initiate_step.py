@@ -35,9 +35,6 @@ class InitiateStep(State):
 
     def start(self):
         self.state_machine.update_state()
-        self.state_machine.update_current_task()
-        self.state_machine.update_current_step()
-
         self._run()
 
     def stop(self):
@@ -50,7 +47,6 @@ class InitiateStep(State):
         transition: Callable
         while True:
             if self.state_machine.should_stop_mission():
-                self.state_machine.stop_mission()
                 transition = self.state_machine.stop
                 break
 
@@ -69,7 +65,10 @@ class InitiateStep(State):
                 break
 
             if not self.initiate_step_thread:
-                self._initiate_step()
+                self.initiate_step_thread = ThreadedRequest(
+                    self.state_machine.robot.initiate_step
+                )
+                self.initiate_step_thread.start_thread(self.state_machine.current_step)
 
             try:
                 self.initiate_step_thread.get_output()
@@ -109,9 +108,3 @@ class InitiateStep(State):
             time.sleep(self.state_machine.sleep_time)
 
         transition()
-
-    def _initiate_step(self):
-        self.initiate_step_thread = ThreadedRequest(
-            self.state_machine.robot.initiate_step
-        )
-        self.initiate_step_thread.start_thread(self.state_machine.current_step)

@@ -126,10 +126,10 @@ class StateMachine(object):
                     "before": self._mission_started,
                 },
                 {
-                    "trigger": "unpause",
+                    "trigger": "resume",
                     "source": self.paused_state,
                     "dest": self.initiate_step_state,
-                    "before": self._unpause,
+                    "before": self._resume,
                 },
                 {
                     "trigger": "step_finished",
@@ -139,8 +139,8 @@ class StateMachine(object):
                 },
                 {
                     "trigger": "paused_successfully",
-                    "source": self.monitor_state,
-                    "dest": self.initiate_step_state,
+                    "source": self.stop_state,
+                    "dest": self.paused_state,
                     "before": self._paused_successfully,
                 },
                 {
@@ -157,7 +157,7 @@ class StateMachine(object):
                 },
                 {
                     "trigger": "mission_stopped",
-                    "source": self.stop_state,
+                    "source": [self.stop_state, self.paused_state],
                     "dest": self.idle_state,
                     "before": self._mission_stopped,
                 },
@@ -180,6 +180,8 @@ class StateMachine(object):
         self.transitions_log_length = transitions_log_length
         self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
 
+    #################################################################################
+    # Transition Callbacks
     def _step_initiated(self) -> None:
         self.current_step.status = StepStatus.InProgress
         self.publish_step_status()
@@ -192,12 +194,17 @@ class StateMachine(object):
     def _pause(self) -> None:
         self.paused = True
 
-    def _unpause(self) -> None:
+    def _resume(self) -> None:
+        self.logger.info("Resuming mission!")
+        self.paused = False
         self.current_mission.status = MissionStatus.InProgress
         self.current_task.status = TaskStatus.InProgress
-        if self.mqtt_client:
-            self.publish_mission_status()
-            self.publish_task_status()
+        self.publish_mission_status()
+        self.publish_task_status()
+        self.queues.resume_mission.output.put(True)
+        self.current_task.reset_task()
+        self.update_current_task()
+        self.update_current_step()
 
     def _finalize(self) -> None:
         self.publish_mission_status()
@@ -212,17 +219,22 @@ class StateMachine(object):
         self.logger.info(f"State transitions:\n  {state_transitions}")
 
     def _mission_started(self) -> None:
+        self.logger.info(f"Starting new mission: {self.current_mission.id}")
         self.current_mission.status = MissionStatus.InProgress
         self.current_task.status = TaskStatus.InProgress
         self.publish_mission_status()
         self.publish_task_status()
-        self.logger.info(f"Starting new mission: {self.current_mission.id}")
         self.log_step_overview(mission=self.current_mission)
+        self.update_current_task()
+        self.update_current_step()
 
     def _step_finished(self) -> None:
         self.publish_task_status()
+        self.update_current_task()
+        self.update_current_step()
 
     def _paused_successfully(self) -> None:
+        self.queues.pause_mission.output.put(True)
         self.current_mission.status = MissionStatus.Paused
         self.current_task.status = TaskStatus.Paused
         self.current_step.status = StepStatus.NotStarted
@@ -258,13 +270,14 @@ class StateMachine(object):
         self.publish_step_status()
         self._finalize()
 
+    #################################################################################
+
     def begin(self):
         """Starts the state machine.
 
         Transitions into idle state.
 
         """
-        self._log_state_transition(States.Idle)
         self.to_idle()
 
     def update_current_task(self):
@@ -285,6 +298,8 @@ class StateMachine(object):
     def update_state(self):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)
+        self._log_state_transition(self.current_state)
+
         self.logger.info(f"State: {self.current_state}")
 
         payload: str = json.dumps({"state": self.current_state})
@@ -382,13 +397,13 @@ class StateMachine(object):
 
     def should_pause_mission(self) -> bool:
         try:
-            return self.queues.pause_mission_activate.input.get(block=False)
+            return self.queues.pause_mission.input.get(block=False)
         except queue.Empty:
             return False
 
-    def should_continue_mission(self) -> bool:
+    def should_resume_mission(self) -> bool:
         try:
-            return self.queues.pause_mission_activate.input.get(block=False)
+            return self.queues.resume_mission.input.get(block=False)
         except queue.Empty:
             return False
 
@@ -456,8 +471,7 @@ class StateMachine(object):
 
     def _log_state_transition(self, next_state):
         """Logs all state transitions that are not self-transitions."""
-        if next_state != self.current_state:
-            self.transitions_list.append(next_state)
+        self.transitions_list.append(next_state)
 
     def log_step_overview(self, mission: Mission):
         """Log an overview of the steps in a mission"""
