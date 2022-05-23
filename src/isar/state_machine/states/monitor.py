@@ -11,7 +11,6 @@ from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
 )
-from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions import RobotException
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission import InspectionStep, Step, StepStatus
@@ -42,7 +41,6 @@ class Monitor(State):
         transition: Callable
         while True:
             if self.state_machine.should_stop_mission():
-                self.state_machine.stop_mission()
                 transition = self.state_machine.stop
                 break
 
@@ -54,7 +52,10 @@ class Monitor(State):
                 self.state_machine.send_status()
 
             if not self.step_status_thread:
-                self._start_step_status_thread()
+                self.step_status_thread = ThreadedRequest(
+                    self.state_machine.robot.step_status
+                )
+                self.step_status_thread.start_thread()
 
             try:
                 step_status: StepStatus = self.step_status_thread.get_output()
@@ -75,10 +76,6 @@ class Monitor(State):
             time.sleep(self.state_machine.sleep_time)
 
         transition()
-
-    def _start_step_status_thread(self) -> None:
-        self.step_status_thread = ThreadedRequest(self.state_machine.robot.step_status)
-        self.step_status_thread.start_thread()
 
     def _queue_inspections_for_upload(self, current_step: InspectionStep):
         try:

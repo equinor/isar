@@ -12,6 +12,7 @@ from robot_interface.models.mission import (
     Step,
     StepStatus,
 )
+from robot_interface.models.mission.step import DriveToPose
 
 from .status import MissionStatus, TaskStatus
 
@@ -25,7 +26,10 @@ class Task:
     _iterator: Iterator = None
 
     def next_step(self) -> Step:
-        return self._iterator.__next__()
+        step: Step = next(self._iterator)
+        while step.status != StepStatus.NotStarted:
+            step = next(self._iterator)
+        return step
 
     def is_finished(self) -> bool:
         for step in self.steps:
@@ -62,6 +66,17 @@ class Task:
             self.status = TaskStatus.Failed
 
         return True
+
+    def reset_task(self):
+        for step in self.steps:
+            if isinstance(step, DriveToPose):
+                step.status = StepStatus.NotStarted
+            elif (
+                isinstance(step, InspectionStep)
+                and step.status == StepStatus.InProgress
+            ):
+                step.status = StepStatus.NotStarted
+        self._iterator = iter(self.steps)
 
     def _all_inspection_steps_failed(self) -> bool:
         for step in self.steps:

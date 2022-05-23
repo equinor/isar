@@ -82,13 +82,12 @@ def test_send_status(state_machine):
 
 
 def test_reset_state_machine(state_machine):
-    next_state = state_machine.reset_state_machine()
+    state_machine.reset_state_machine()
 
     assert not state_machine.mission_in_progress
     assert state_machine.current_step is None
     assert state_machine.current_task is None
     assert state_machine.current_mission is None
-    assert next_state is States.Idle
 
 
 empty_mission: Mission = Mission([], None)
@@ -143,14 +142,6 @@ def test_should_stop_mission(
     assert start is expected_output
 
 
-def test_stop_mission(state_machine):
-    state_machine.start_mission(MockMissionDefinition.default_mission)
-    state_machine.stop_mission()
-    message = state_machine.queues.stop_mission.output.get()
-    assert not state_machine.mission_in_progress
-    assert message
-
-
 def test_state_machine_transitions(injector, state_machine_thread):
     step: Step = DriveToPose(pose=MockPose.default_pose)
     mission: Mission = Mission(tasks=[Task(steps=[step])])
@@ -166,7 +157,6 @@ def test_state_machine_transitions(injector, state_machine_thread):
             States.InitiateStep,
             States.Monitor,
             States.InitiateStep,
-            States.Finalize,
             States.Idle,
         ]
     )
@@ -193,7 +183,6 @@ def test_state_machine_failed_dependency(injector, state_machine_thread, mocker)
             States.InitiateStep,
             States.Monitor,
             States.InitiateStep,
-            States.Finalize,
             States.Idle,
         ]
     )
@@ -220,7 +209,6 @@ def test_state_machine_with_successful_collection(
             States.InitiateStep,
             States.Monitor,
             States.InitiateStep,
-            States.Finalize,
             States.Idle,
         ]
     )
@@ -251,7 +239,6 @@ def test_state_machine_with_unsuccessful_collection(
             States.InitiateStep,
             States.Monitor,
             States.InitiateStep,
-            States.Finalize,
             States.Idle,
         ]
     )

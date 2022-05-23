@@ -28,8 +28,8 @@ class Paused(State):
                 transition = self.state_machine.mission_stopped
                 break
 
-            if self.state_machine.should_continue_mission():
-                transition = self.state_machine.unpause
+            if self.state_machine.should_resume_mission():
+                transition = self.state_machine.resume
                 break
 
             if self.state_machine.should_send_status():

@@ -28,15 +28,9 @@ class Stop(State):
         self._run()
 
     def stop(self):
-        if self.state_machine.mqtt_client:
-            self.state_machine.publish_mission_status()
-            self.state_machine.publish_task_status()
-            self.state_machine.publish_step_status()
-
-        self.iteration_counter = 0
         if self.stop_thread:
             self.stop_thread.wait_for_thread()
-        self.step_status_thread = None
+        self.stop_thread = None
 
     def _run(self):
         transition: Callable
@@ -44,6 +38,9 @@ class Stop(State):
             if not self.stop_thread:
                 self.stop_thread = ThreadedRequest(self.state_machine.robot.stop)
                 self.stop_thread.start_thread()
+
+            if self.state_machine.should_send_status():
+                self.state_machine.send_status()
 
             try:
                 self.stop_thread.get_output()
@@ -56,7 +53,7 @@ class Stop(State):
             if self.state_machine.paused:
                 transition = self.state_machine.paused_successfully
             else:
-                transition = self.state_machine.finalize
+                transition = self.state_machine.mission_stopped
             break
 
         transition()
