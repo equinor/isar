@@ -6,6 +6,7 @@ from copy import deepcopy
 from datetime import datetime
 from typing import Deque, List, Optional, Tuple
 
+from anyio import fail_after
 from injector import Injector, inject
 from transitions import Machine
 from transitions.core import State
@@ -21,11 +22,11 @@ from isar.models.mission import Mission, Task
 from isar.models.mission.status import MissionStatus, TaskStatus
 from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
 from isar.services.utilities.json_service import EnhancedJSONEncoder
-from isar.state_machine.states import Finalize, Idle, InitiateStep, Monitor, Off
+from isar.state_machine.states import Idle, InitiateStep, Monitor, Off, Paused, Stop
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions import RobotException
 from robot_interface.models.mission import StepStatus
-from robot_interface.models.mission.step import Step
+from robot_interface.models.mission.step import InspectionStep, Step
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -64,23 +65,110 @@ class StateMachine(object):
         self.robot = robot
         self.mqtt_client: Optional[MqttClientInterface] = mqtt_client
 
+        # List of states
+        self.stop_state = Stop(self)
+        self.paused_state = Paused(self)
+        self.idle_state = Idle(self)
+        self.monitor_state = Monitor(self)
+        self.initiate_step_state = InitiateStep(self)
+        self.off_state = Off(self)
+
         self.states = [
-            Off(self),
-            Idle(self),
-            InitiateStep(self),
-            Monitor(self),
-            Finalize(self),
+            self.off_state,
+            self.idle_state,
+            self.initiate_step_state,
+            self.monitor_state,
+            self.stop_state,
+            self.paused_state,
         ]
+
         self.machine = Machine(
             self,
             states=self.states,
             initial="off",
             queued=True,
         )
+
+        self.machine.add_transitions(
+            [
+                {
+                    "trigger": "step_initiated",
+                    "source": self.initiate_step_state,
+                    "dest": self.monitor_state,
+                    "before": self._step_initiated,
+                },
+                {
+                    "trigger": "pause",
+                    "source": [self.initiate_step_state, self.monitor_state],
+                    "dest": self.stop_state,
+                    "before": self._pause,
+                },
+                {
+                    "trigger": "stop",
+                    "source": [self.initiate_step_state, self.monitor_state],
+                    "dest": self.stop_state,
+                    "before": self._stop,
+                },
+                {
+                    "trigger": "finalize",
+                    "source": [
+                        self.initiate_step_state,
+                        self.stop_state,
+                        self.paused_state,
+                    ],
+                    "dest": self.idle_state,
+                    "before": self._finalize,
+                },
+                {
+                    "trigger": "mission_started",
+                    "source": self.idle_state,
+                    "dest": self.initiate_step_state,
+                    "before": self._mission_started,
+                },
+                {
+                    "trigger": "unpause",
+                    "source": self.paused_state,
+                    "dest": self.initiate_step_state,
+                    "before": self._unpause,
+                },
+                {
+                    "trigger": "step_finished",
+                    "source": self.monitor_state,
+                    "dest": self.initiate_step_state,
+                    "before": self._step_finished,
+                },
+                {
+                    "trigger": "paused_successfully",
+                    "source": self.monitor_state,
+                    "dest": self.initiate_step_state,
+                    "before": self._paused_successfully,
+                },
+                {
+                    "trigger": "step_infeasible",
+                    "source": self.initiate_step_state,
+                    "dest": self.initiate_step_state,
+                    "before": self._step_infeasible,
+                },
+                {
+                    "trigger": "step_failed",
+                    "source": self.initiate_step_state,
+                    "dest": self.idle_state,
+                    "before": self._step_failed,
+                },
+                {
+                    "trigger": "mission_stopped",
+                    "source": self.stop_state,
+                    "dest": self.idle_state,
+                    "before": self._mission_stopped,
+                },
+            ]
+        )
+
         self.stop_robot_attempts_limit = stop_robot_attempts_limit
         self.sleep_time = sleep_time
 
         self.mission_in_progress: bool = False
+        self.paused = False
         self.current_mission: Optional[Mission] = None
         self.current_task: Optional[Task] = None
         self.current_step: Optional[Step] = None
@@ -92,6 +180,84 @@ class StateMachine(object):
         self.transitions_log_length = transitions_log_length
         self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
 
+    def _step_initiated(self) -> None:
+        self.current_step.status = StepStatus.InProgress
+        self.publish_step_status()
+        self.logger.info(
+            f"Successfully initiated "
+            f"{type(self.current_step).__name__} "
+            f"step: {str(self.current_step.id)[:8]}"
+        )
+
+    def _pause(self) -> None:
+        self.paused = True
+
+    def _unpause(self) -> None:
+        self.current_mission.status = MissionStatus.InProgress
+        self.current_task.status = TaskStatus.InProgress
+        if self.mqtt_client:
+            self.publish_mission_status()
+            self.publish_task_status()
+
+    def _finalize(self) -> None:
+        self.publish_mission_status()
+        self.log_step_overview(mission=self.current_mission)
+        self.reset_state_machine()
+        state_transitions: str = ", ".join(
+            [
+                f"\n  {transition}" if (i + 1) % 10 == 0 else f"{transition}"
+                for i, transition in enumerate(list(self.transitions_list))
+            ]
+        )
+        self.logger.info(f"State transitions:\n  {state_transitions}")
+
+    def _mission_started(self) -> None:
+        self.current_mission.status = MissionStatus.InProgress
+        self.current_task.status = TaskStatus.InProgress
+        self.publish_mission_status()
+        self.publish_task_status()
+        self.logger.info(f"Starting new mission: {self.current_mission.id}")
+        self.log_step_overview(mission=self.current_mission)
+
+    def _step_finished(self) -> None:
+        self.publish_task_status()
+
+    def _paused_successfully(self) -> None:
+        self.current_mission.status = MissionStatus.Paused
+        self.current_task.status = TaskStatus.Paused
+        self.current_step.status = StepStatus.NotStarted
+        self.publish_mission_status()
+        self.publish_task_status()
+        self.publish_step_status()
+
+    def _stop(self) -> None:
+        return
+
+    def _step_failed(self) -> None:
+        self.current_step.status = StepStatus.Failed
+        self.current_mission.status = MissionStatus.Failed
+        self._finalize()
+
+    def _step_infeasible(self) -> None:
+        self.current_step.status = StepStatus.Failed
+        self.publish_step_status()
+        self.update_current_task()
+        self.update_current_step()
+
+    def _mission_stopped(self) -> None:
+        self.queues.stop_mission.output.put(deepcopy(StopMissionMessages.success()))
+        self.current_mission.status = MissionStatus.Cancelled
+        for task in self.current_mission.tasks:
+            for step in task.steps:
+                if step.status in [StepStatus.NotStarted, StepStatus.InProgress]:
+                    step.status = StepStatus.Cancelled
+            if task.status in [TaskStatus.NotStarted, TaskStatus.InProgress]:
+                task.status = TaskStatus.Cancelled
+        self.publish_mission_status()
+        self.publish_task_status()
+        self.publish_step_status()
+        self._finalize()
+
     def begin(self):
         """Starts the state machine.
 
@@ -100,21 +266,6 @@ class StateMachine(object):
         """
         self._log_state_transition(States.Idle)
         self.to_idle()
-
-    def to_next_state(self, next_state):
-        """Transitions state machine to next state."""
-        self._log_state_transition(next_state)
-
-        if next_state == States.Idle:
-            self.to_idle()
-        elif next_state == States.InitiateStep:
-            self.to_initiate_step()
-        elif next_state == States.Monitor:
-            self.to_monitor()
-        elif next_state == States.Finalize:
-            self.to_finalize()
-        else:
-            self.logger.error("Not valid state direction.")
 
     def update_current_task(self):
         if self.current_task.is_finished():
@@ -145,27 +296,12 @@ class StateMachine(object):
                 retain=True,
             )
 
-    def reset_state_machine(self) -> States:
-        """Resets the state machine.
-
-        The mission status and progress is reset, and mission schedule
-        is emptied.
-
-        Transitions to idle state.
-
-        Returns
-        -------
-        States
-            Idle state.
-
-        """
-
+    def reset_state_machine(self) -> None:
         self.mission_in_progress = False
+        self.paused = False
         self.current_step = None
         self.current_task = None
         self.current_mission = None
-
-        return States.Idle
 
     def send_status(self):
         """Communicates state machine status."""
@@ -217,15 +353,8 @@ class StateMachine(object):
         """Starts a scheduled mission."""
         self.mission_in_progress = True
         self.current_mission = mission
-        self.current_mission.status = MissionStatus.InProgress
-        self.publish_mission_status()
         self.current_task = mission.next_task()
-        self.current_task.status = TaskStatus.InProgress
-        self.publish_task_status()
-
         self.queues.start_mission.output.put(deepcopy(StartMissionMessages.success()))
-        self.logger.info(f"Starting new mission: {mission.id}")
-        self.log_step_overview(mission=mission)
 
     def should_stop_mission(self) -> bool:
         """Determines if the running mission should be stopped.
@@ -251,36 +380,17 @@ class StateMachine(object):
 
         return False
 
-    def stop_mission(self):
-        """Stops a mission in progress."""
-        failure: bool = False
-        stop_attempts = 0
-        while True:
-            try:
-                self.robot.stop()
-                break
-            except RobotException:
-                stop_attempts += 1
-                if stop_attempts < self.stop_robot_attempts_limit:
-                    continue
-                self.logger.warning(StopMissionMessages.failure())
-                failure = True
-                break
+    def should_pause_mission(self) -> bool:
+        try:
+            return self.queues.pause_mission_activate.input.get(block=False)
+        except queue.Empty:
+            return False
 
-        message: StopMessage = (
-            StopMissionMessages.failure() if failure else StopMissionMessages.success()
-        )
-        self.queues.stop_mission.output.put(deepcopy(message))
-        self.logger.info(message)
-        if not failure:
-            self.current_mission.status = MissionStatus.Cancelled
-            self.mission_in_progress = False
-            for task in self.current_mission.tasks:
-                for step in task.steps:
-                    if step.status in [StepStatus.NotStarted, StepStatus.InProgress]:
-                        step.status = StepStatus.Cancelled
-                if task.status in [TaskStatus.NotStarted, TaskStatus.InProgress]:
-                    task.status = TaskStatus.Cancelled
+    def should_continue_mission(self) -> bool:
+        try:
+            return self.queues.pause_mission_activate.input.get(block=False)
+        except queue.Empty:
+            return False
 
     def publish_mission_status(self) -> None:
         if not self.mqtt_client:

@@ -1,7 +1,7 @@
 import logging
 import time
 from copy import deepcopy
-from typing import TYPE_CHECKING, Sequence, Tuple
+from typing import TYPE_CHECKING, Callable, Optional, Sequence, Tuple
 
 from injector import inject
 from transitions import State
@@ -27,41 +27,34 @@ class Monitor(State):
         self.state_machine: "StateMachine" = state_machine
 
         self.logger = logging.getLogger("state_machine")
-
-        self.iteration_counter: int = 0
-        self.log_interval = 20
-
-        self.step_status_thread = None
+        self.step_status_thread: Optional[ThreadedRequest] = None
 
     def start(self):
         self.state_machine.update_state()
         self._run()
 
     def stop(self):
-        if self.state_machine.mqtt_client:
-            self.state_machine.publish_task_status()
-
-        self.iteration_counter = 0
         if self.step_status_thread:
             self.step_status_thread.wait_for_thread()
         self.step_status_thread = None
 
     def _run(self):
+        transition: Callable
         while True:
             if self.state_machine.should_stop_mission():
                 self.state_machine.stop_mission()
+                transition = self.state_machine.stop
+                break
 
-            if not self.state_machine.mission_in_progress:
-                next_state = States.Finalize
+            if self.state_machine.should_pause_mission():
+                transition = self.state_machine.pause
                 break
 
             if self.state_machine.should_send_status():
                 self.state_machine.send_status()
+
             if not self.step_status_thread:
-                self.step_status_thread = ThreadedRequest(
-                    self.state_machine.robot.step_status
-                )
-                self.step_status_thread.start_thread()
+                self._start_step_status_thread()
 
             try:
                 step_status: StepStatus = self.step_status_thread.get_output()
@@ -74,15 +67,18 @@ class Monitor(State):
             self.state_machine.current_step.status = step_status
 
             if self._step_finished(step=self.state_machine.current_step):
-                next_state = self._process_finished_step(
-                    step=self.state_machine.current_step
-                )
+                self._process_finished_step(step=self.state_machine.current_step)
+                transition = self.state_machine.step_finished
                 break
-            else:
-                self.step_status_thread = None
-                time.sleep(self.state_machine.sleep_time)
 
-        self.state_machine.to_next_state(next_state)
+            self.step_status_thread = None
+            time.sleep(self.state_machine.sleep_time)
+
+        transition()
+
+    def _start_step_status_thread(self) -> None:
+        self.step_status_thread = ThreadedRequest(self.state_machine.robot.step_status)
+        self.step_status_thread.start_thread()
 
     def _queue_inspections_for_upload(self, current_step: InspectionStep):
         try:
@@ -123,8 +119,6 @@ class Monitor(State):
             finished = True
         return finished
 
-    def _process_finished_step(self, step: Step) -> State:
+    def _process_finished_step(self, step: Step) -> None:
         if step.status == StepStatus.Successful and isinstance(step, InspectionStep):
             self._queue_inspections_for_upload(current_step=step)
-
-        return States.InitiateStep

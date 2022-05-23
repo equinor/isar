@@ -8,6 +8,7 @@ class MissionStatus(str, Enum):
     Failed: str = "failed"
     Cancelled: str = "cancelled"
     Completed: str = "completed"
+    Paused: str = "paused"
 
 
 class TaskStatus(str, Enum):
@@ -17,3 +18,4 @@ class TaskStatus(str, Enum):
     Failed: str = "failed"
     Cancelled: str = "cancelled"
     Successful: str = "successful"
+    Paused: str = "paused"
