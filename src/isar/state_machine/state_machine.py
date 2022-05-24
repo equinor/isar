@@ -308,7 +308,7 @@ class StateMachine(object):
         payload: str = json.dumps(
             {
                 "robot_id": settings.ROBOT_ID,
-                "misison_id": self.current_mission.id if self.current_mission else None,
+                "mission_id": self.current_mission.id if self.current_mission else None,
                 "task_id": self.current_task.id if self.current_task else None,
                 "status": self.current_task.status if self.current_task else None,
                 "timestamp": datetime.utcnow(),
@@ -329,7 +329,7 @@ class StateMachine(object):
         payload: str = json.dumps(
             {
                 "robot_id": settings.ROBOT_ID,
-                "misison_id": self.current_mission.id if self.current_mission else None,
+                "mission_id": self.current_mission.id if self.current_mission else None,
                 "task_id": self.current_task.id if self.current_task else None,
                 "step_id": self.current_step.id if self.current_step else None,
                 "status": self.current_step.status if self.current_step else None,
