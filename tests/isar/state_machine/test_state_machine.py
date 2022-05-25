@@ -84,7 +84,6 @@ def test_send_status(state_machine):
 def test_reset_state_machine(state_machine):
     state_machine.reset_state_machine()
 
-    assert not state_machine.mission_in_progress
     assert state_machine.current_step is None
     assert state_machine.current_task is None
     assert state_machine.current_mission is None
@@ -93,53 +92,11 @@ def test_reset_state_machine(state_machine):
 empty_mission: Mission = Mission([], None)
 
 
-@pytest.mark.parametrize(
-    "mission, mission_in_progress, expected_output",
-    [
-        (None, True, (False, None)),
-        (empty_mission, True, (False, None)),
-        (empty_mission, False, (True, empty_mission)),
-    ],
-)
-def test_should_start_mission(
-    state_machine, mission, mission_in_progress, expected_output
-):
-    state_machine.queues.start_mission.input.put(mission)
-    state_machine.mission_in_progress = mission_in_progress
-    output = state_machine.should_start_mission()
-
-    assert output == expected_output
-
-
 def test_start_mission(state_machine):
     mission: Mission = MockMissionDefinition.default_mission
     state_machine.start_mission(mission=mission)
     message = state_machine.queues.start_mission.output.get()
-    assert state_machine.mission_in_progress
     assert message
-
-
-@pytest.mark.parametrize(
-    "should_stop, mission_in_progress, expected_output",
-    [
-        (True, True, True),
-        (True, False, False),
-        (False, True, False),
-        (False, False, False),
-        (None, False, False),
-        (None, True, False),
-    ],
-)
-def test_should_stop_mission(
-    state_machine, should_stop, mission_in_progress, expected_output
-):
-    if should_stop is not None:
-        state_machine.queues.stop_mission.input.put(should_stop)
-
-    state_machine.mission_in_progress = mission_in_progress
-    start: bool = state_machine.should_stop_mission()
-
-    assert start is expected_output
 
 
 def test_state_machine_transitions(injector, state_machine_thread):
@@ -147,8 +104,7 @@ def test_state_machine_transitions(injector, state_machine_thread):
     mission: Mission = Mission(tasks=[Task(steps=[step])])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    message, _ = scheduling_utilities.start_mission(mission=mission)
-    assert message.started
+    scheduling_utilities.start_mission(mission=mission)
 
     time.sleep(1)
     expected_transitions_list = deque(
@@ -173,8 +129,7 @@ def test_state_machine_failed_dependency(injector, state_machine_thread, mocker)
     mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.Failed)
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    message, _ = scheduling_utilities.start_mission(mission=mission)
-    assert message.started
+    scheduling_utilities.start_mission(mission=mission)
 
     time.sleep(1)
     expected_transitions_list = deque(
@@ -200,8 +155,7 @@ def test_state_machine_with_successful_collection(
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
-    message, _ = scheduling_utilities.start_mission(mission=mission)
-    assert message.started
+    scheduling_utilities.start_mission(mission=mission)
     time.sleep(1)
     expected_transitions_list = deque(
         [
@@ -230,8 +184,7 @@ def test_state_machine_with_unsuccessful_collection(
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
-    message, _ = scheduling_utilities.start_mission(mission=mission)
-    assert message.started
+    scheduling_utilities.start_mission(mission=mission)
     time.sleep(1)
     expected_transitions_list = deque(
         [
