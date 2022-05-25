@@ -62,6 +62,15 @@
                         "z": 0,
                         "frame": "robot"
                     }
+                },
+                {
+                    "type": "take_thermal_image",
+                    "target": {
+                        "x": 3.1,
+                        "y": 5.2,
+                        "z": 0,
+                        "frame": "robot"
+                    }
                 }
             ]
         },

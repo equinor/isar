@@ -1,6 +1,5 @@
 import logging
 import time
-from sqlite3 import enable_shared_cache
 from typing import TYPE_CHECKING, Callable
 
 from transitions import State
@@ -9,16 +8,15 @@ from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
 )
-from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions import RobotException
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class Stop(State):
+class StopStep(State):
     def __init__(self, state_machine: "StateMachine"):
-        super().__init__(name="stop", on_enter=self.start, on_exit=self.stop)
+        super().__init__(name="stop_step", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
         self.stop_thread = None
@@ -42,18 +40,23 @@ class Stop(State):
             if self.state_machine.should_send_status():
                 self.state_machine.send_status()
 
+            if self.state_machine.should_stop_mission():
+                self.state_machine.stopped = True
+
             try:
                 self.stop_thread.get_output()
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
             except RobotException:
+                self.logger.warning("Failed to stop robot. Retrying.")
+                self.stop_thread = None
                 continue
 
-            if self.state_machine.paused:
-                transition = self.state_machine.paused_successfully
-            else:
+            if self.state_machine.stopped:
                 transition = self.state_machine.mission_stopped
+            else:
+                transition = self.state_machine.mission_paused
             break
 
         transition()

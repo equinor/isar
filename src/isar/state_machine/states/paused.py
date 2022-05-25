@@ -10,16 +10,13 @@ if TYPE_CHECKING:
 
 class Paused(State):
     def __init__(self, state_machine: "StateMachine"):
-        super().__init__(name="paused", on_enter=self.start, on_exit=self.stop)
+        super().__init__(name="paused", on_enter=self.start)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
 
     def start(self):
         self.state_machine.update_state()
         self._run()
-
-    def stop(self):
-        self.state_machine.paused = False
 
     def _run(self):
         transition: Callable

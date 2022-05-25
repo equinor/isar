@@ -9,7 +9,7 @@ class States(str, Enum):
     Monitor = "monitor"
     Finalize = "finalize"
     Paused = "paused"
-    Stop = "stop"
+    StopStep = "stop_step"
 
     def __repr__(self):
         return self.value

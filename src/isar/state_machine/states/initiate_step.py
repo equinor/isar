@@ -61,7 +61,7 @@ class InitiateStep(State):
                 self.logger.info(
                     f"Completed mission: {self.state_machine.current_mission.id}"
                 )
-                transition = self.state_machine.finalize
+                transition = self.state_machine.mission_finished
                 break
 
             if not self.initiate_step_thread:
@@ -102,7 +102,7 @@ class InitiateStep(State):
                     f"{self.initiate_step_failure_counter_limit} attempts. "
                     f"Cancelling mission."
                 )
-                transition = self.state_machine.step_failed
+                transition = self.state_machine.initiate_step_failed
                 break
 
             time.sleep(self.state_machine.sleep_time)
