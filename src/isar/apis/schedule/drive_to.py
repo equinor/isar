@@ -1,14 +1,16 @@
 import logging
 from dataclasses import asdict
+from http import HTTPStatus
 from typing import List
 
 from alitra import Frame, Orientation, Pose, Position
-from fastapi import Query
+from fastapi import Query, Response
 from injector import inject
-from starlette.responses import JSONResponse
 
+from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.models.mission import Mission, Task
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+from isar.state_machine.states_enum import States
 from robot_interface.models.mission import DriveToPose
 
 
@@ -20,6 +22,7 @@ class DriveTo:
 
     def post(
         self,
+        response: Response,
         x: float = Query(
             ...,
             alias="x-value",
@@ -42,10 +45,11 @@ class DriveTo:
         ),
     ):
 
-        ready, response = self.scheduling_utilities.ready_to_start_mission()
-        if not ready:
-            message, status_code = response
-            return JSONResponse(content=asdict(message), status_code=status_code)
+        state: States = self.scheduling_utilities.get_state()
+        if not state or state != States.Idle:
+            response.status_code = HTTPStatus.CONFLICT.value
+            return
+
         robot_frame: Frame = Frame("robot")
         position: Position = Position(x=x, y=y, z=z, frame=robot_frame)
         orientation: Orientation = Orientation(
@@ -56,8 +60,7 @@ class DriveTo:
         step: DriveToPose = DriveToPose(pose=pose)
         mission: Mission = Mission(tasks=[Task(steps=[step])])
 
-        response = self.scheduling_utilities.start_mission(mission=mission)
-        self.logger.info(response)
-        message, status_code = response
-
-        return JSONResponse(content=asdict(message), status_code=status_code)
+        try:
+            self.scheduling_utilities.start_mission(mission=mission)
+        except QueueTimeoutError:
+            response.status_code = HTTPStatus.REQUEST_TIMEOUT.value

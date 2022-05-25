@@ -13,7 +13,6 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
     MissionPlannerInterface,
 )
-from isar.models.communication.messages import StartMissionMessages
 from isar.models.mission import Mission, Task
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
@@ -75,7 +74,7 @@ class EchoPlanner(MissionPlannerInterface):
             tasks.append(task)
 
         if not tasks:
-            raise MissionPlannerError(StartMissionMessages.empty_mission().message)
+            raise MissionPlannerError("Empty mission")
 
         mission: Mission = Mission(tasks=tasks)
 

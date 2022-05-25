@@ -5,9 +5,7 @@ from typing import Optional
 from fastapi import Response
 from injector import inject
 
-from isar.apis.models import StopFailedResponse
 from isar.config.settings import settings
-from isar.models.communication.messages import StopMessage, StopMissionMessages
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.models.communication.queues.queues import Queues
 from isar.services.utilities.queue_utilities import QueueUtilities
@@ -17,11 +15,16 @@ from isar.state_machine.states_enum import States
 
 class PauseMission:
     @inject
-    def __init__(self, queues: Queues, scheduling_utilities: SchedulingUtilities):
+    def __init__(
+        self,
+        queues: Queues,
+        scheduling_utilities: SchedulingUtilities,
+        queue_timeout: int = settings.QUEUE_TIMEOUT,
+    ):
         self.logger = logging.getLogger("api")
-        self.queues = queues
-        self.queue_timeout: int = settings.QUEUE_TIMEOUT
-        self.scheduling_utilities = scheduling_utilities
+        self.queues: Queues = queues
+        self.queue_timeout: int = queue_timeout
+        self.scheduling_utilities: SchedulingUtilities = scheduling_utilities
 
     def pause(self, response: Response):
         self.logger.info("Received request to pause current mission")
@@ -40,11 +43,9 @@ class PauseMission:
                 self.queue_timeout,
             )
         except QueueTimeoutError:
+            QueueUtilities.clear_queue(self.queues.pause_mission.input)
             self.logger.error("Timeout while waiting on response for pause command")
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
-
-        QueueUtilities.clear_queue(self.queues.pause_mission.input)
-        return
 
     def resume(self, response: Response):
         self.logger.info("Received request to resume current mission")
@@ -62,9 +63,6 @@ class PauseMission:
                 self.queue_timeout,
             )
         except QueueTimeoutError:
+            QueueUtilities.clear_queue(self.queues.resume_mission.input)
             self.logger.error("Timeout while waiting on response for pause command")
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
-
-        QueueUtilities.clear_queue(self.queues.resume_mission.input)
-
-        return

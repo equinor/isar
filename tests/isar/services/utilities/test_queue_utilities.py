@@ -2,26 +2,24 @@ from queue import Queue
 
 import pytest
 
-from isar.models.communication.messages import StartMissionMessages
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.services.utilities.queue_utilities import QueueUtilities
 
 
 class TestQueueUtilities:
     @pytest.mark.parametrize(
-        "message, queue_timeout, expected_message, expected_timeout",
+        "message, queue_timeout, expected_message",
         [
             (
-                StartMissionMessages.success(),
+                "Test",
                 10,
-                StartMissionMessages.success(),
-                False,
+                "Test",
             ),
-            (None, 1, None, True),
+            (None, 1, None),
         ],
     )
     def test_check_queue_with_queue_size_one(
-        self, message, queue_timeout, expected_message, expected_timeout
+        self, message, queue_timeout, expected_message
     ):
         test_queue = Queue(maxsize=1)
         if message is not None:

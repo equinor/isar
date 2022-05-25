@@ -2,21 +2,14 @@ import json
 import logging
 import queue
 from collections import deque
-from copy import deepcopy
 from datetime import datetime
-from typing import Deque, List, Optional, Tuple
+from typing import Deque, List, Optional
 
-from anyio import fail_after
 from injector import Injector, inject
 from transitions import Machine
 from transitions.core import State
 
 from isar.config.settings import settings
-from isar.models.communication.messages import (
-    StartMissionMessages,
-    StopMessage,
-    StopMissionMessages,
-)
 from isar.models.communication.queues.queues import Queues
 from isar.models.mission import Mission, Task
 from isar.models.mission.status import MissionStatus, TaskStatus
@@ -24,9 +17,8 @@ from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterfa
 from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.state_machine.states import Idle, InitiateStep, Monitor, Off, Paused, Stop
 from isar.state_machine.states_enum import States
-from robot_interface.models.exceptions import RobotException
 from robot_interface.models.mission import StepStatus
-from robot_interface.models.mission.step import InspectionStep, Step
+from robot_interface.models.mission.step import Step
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -61,19 +53,19 @@ class StateMachine(object):
         """
         self.logger = logging.getLogger("state_machine")
 
-        self.queues = queues
-        self.robot = robot
+        self.queues: Queues = queues
+        self.robot: RobotInterface = robot
         self.mqtt_client: Optional[MqttClientInterface] = mqtt_client
 
         # List of states
-        self.stop_state = Stop(self)
-        self.paused_state = Paused(self)
-        self.idle_state = Idle(self)
-        self.monitor_state = Monitor(self)
-        self.initiate_step_state = InitiateStep(self)
-        self.off_state = Off(self)
+        self.stop_state: State = Stop(self)
+        self.paused_state: State = Paused(self)
+        self.idle_state: State = Idle(self)
+        self.monitor_state: State = Monitor(self)
+        self.initiate_step_state: State = InitiateStep(self)
+        self.off_state: State = Off(self)
 
-        self.states = [
+        self.states: List[State] = [
             self.off_state,
             self.idle_state,
             self.initiate_step_state,
@@ -164,11 +156,10 @@ class StateMachine(object):
             ]
         )
 
-        self.stop_robot_attempts_limit = stop_robot_attempts_limit
-        self.sleep_time = sleep_time
+        self.stop_robot_attempts_limit: int = stop_robot_attempts_limit
+        self.sleep_time: float = sleep_time
 
-        self.mission_in_progress: bool = False
-        self.paused = False
+        self.paused: bool = False
         self.current_mission: Optional[Mission] = None
         self.current_task: Optional[Task] = None
         self.current_step: Optional[Step] = None
@@ -177,7 +168,7 @@ class StateMachine(object):
 
         self.predefined_mission_id: Optional[int] = None
 
-        self.transitions_log_length = transitions_log_length
+        self.transitions_log_length: int = transitions_log_length
         self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
 
     #################################################################################
@@ -222,8 +213,6 @@ class StateMachine(object):
         self.logger.info(f"Starting new mission: {self.current_mission.id}")
         self.current_mission.status = MissionStatus.InProgress
         self.current_task.status = TaskStatus.InProgress
-        self.publish_mission_status()
-        self.publish_task_status()
         self.log_step_overview(mission=self.current_mission)
         self.update_current_task()
         self.update_current_step()
@@ -257,13 +246,17 @@ class StateMachine(object):
         self.update_current_step()
 
     def _mission_stopped(self) -> None:
-        self.queues.stop_mission.output.put(deepcopy(StopMissionMessages.success()))
+        self.queues.stop_mission.output.put(True)
         self.current_mission.status = MissionStatus.Cancelled
         for task in self.current_mission.tasks:
             for step in task.steps:
                 if step.status in [StepStatus.NotStarted, StepStatus.InProgress]:
                     step.status = StepStatus.Cancelled
-            if task.status in [TaskStatus.NotStarted, TaskStatus.InProgress]:
+            if task.status in [
+                TaskStatus.NotStarted,
+                TaskStatus.InProgress,
+                TaskStatus.Paused,
+            ]:
                 task.status = TaskStatus.Cancelled
         self.publish_mission_status()
         self.publish_task_status()
@@ -299,20 +292,10 @@ class StateMachine(object):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)
         self._log_state_transition(self.current_state)
-
         self.logger.info(f"State: {self.current_state}")
-
-        payload: str = json.dumps({"state": self.current_state})
-
-        if self.mqtt_client:
-            self.mqtt_client.publish(
-                topic=settings.TOPIC_ISAR_STATE,
-                payload=payload,
-                retain=True,
-            )
+        self.publish_state()
 
     def reset_state_machine(self) -> None:
-        self.mission_in_progress = False
         self.paused = False
         self.current_step = None
         self.current_task = None
@@ -320,80 +303,31 @@ class StateMachine(object):
 
     def send_status(self):
         """Communicates state machine status."""
-        self.queues.mission_status.output.put(
-            (self.mission_in_progress, self.current_state)
-        )
-
-    def should_send_status(self) -> bool:
-        """Determines if mission status should be sent.
-
-        Returns
-        -------
-        bool
-            True if nonempty queue, false otherwise.
-
-        """
-        try:
-            send: bool = self.queues.mission_status.input.get(block=False)
-            return send
-        except queue.Empty:
-            return False
-
-    def should_start_mission(self) -> Tuple[bool, Optional[Mission]]:
-        """Determines if mission should be started.
-
-        Returns
-        -------
-        Tuple[bool, Optional[Mission]]
-            True if no mission in progress, false otherwise.
-
-        """
-        try:
-            mission: Mission = self.queues.start_mission.input.get(block=False)
-        except queue.Empty:
-            return False, None
-
-        if not self.mission_in_progress and mission is not None:
-            return True, mission
-        elif self.mission_in_progress:
-            self.queues.start_mission.output.put(
-                deepcopy(StartMissionMessages.mission_in_progress())
-            )
-            self.logger.info(StartMissionMessages.mission_in_progress())
-            return False, None
-
-        return False, None
+        self.queues.mission_status.output.put(self.current_state)
 
     def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
-        self.mission_in_progress = True
         self.current_mission = mission
         self.current_task = mission.next_task()
-        self.queues.start_mission.output.put(deepcopy(StartMissionMessages.success()))
+        self.queues.start_mission.output.put(True)
 
-    def should_stop_mission(self) -> bool:
-        """Determines if the running mission should be stopped.
-
-        Returns
-        -------
-        bool
-            True if stop signal is sent and mission is in progress, false otherwise.
-
-        """
+    def should_send_status(self) -> bool:
         try:
-            stop: bool = self.queues.stop_mission.input.get(block=False)
+            return self.queues.mission_status.input.get(block=False)
         except queue.Empty:
             return False
 
-        if stop and self.mission_in_progress:
-            return True
-        elif stop and not self.mission_in_progress:
-            message: StopMessage = StopMissionMessages.no_active_missions()
-            self.queues.stop_mission.output.put(deepcopy(message))
-            self.logger.info(message)
-            return False
+    def should_start_mission(self) -> Optional[Mission]:
+        try:
+            return self.queues.start_mission.input.get(block=False)
+        except queue.Empty:
+            return None
 
-        return False
+    def should_stop_mission(self) -> bool:
+        try:
+            return self.queues.stop_mission.input.get(block=False)
+        except queue.Empty:
+            return False
 
     def should_pause_mission(self) -> bool:
         try:
@@ -465,6 +399,24 @@ class StateMachine(object):
 
         self.mqtt_client.publish(
             topic=settings.TOPIC_ISAR_STEP,
+            payload=payload,
+            retain=True,
+        )
+
+    def publish_state(self) -> None:
+        if not self.mqtt_client:
+            return
+        payload: str = json.dumps(
+            {
+                "robot_id": settings.ROBOT_ID,
+                "state": self.current_state,
+                "timestamp": datetime.utcnow(),
+            },
+            cls=EnhancedJSONEncoder,
+        )
+
+        self.mqtt_client.publish(
+            topic=settings.TOPIC_ISAR_STATE,
             payload=payload,
             retain=True,
         )

@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 from transitions import State
 
+from isar.models.mission import Mission
+
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
@@ -26,8 +28,8 @@ class Idle(State):
             if self.state_machine.should_send_status():
                 self.state_machine.send_status()
 
-            (should_start_mission, mission) = self.state_machine.should_start_mission()
-            if should_start_mission:
+            mission: Mission = self.state_machine.should_start_mission()
+            if mission:
                 self.state_machine.start_mission(mission)
                 transition = self.state_machine.mission_started
                 break

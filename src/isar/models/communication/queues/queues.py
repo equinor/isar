@@ -10,7 +10,7 @@ class Queues:
         self.stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
         self.pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)
         self.resume_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.mission_status: QueueIO = QueueIO()
+        self.mission_status: QueueIO = QueueIO(input_size=1, output_size=1)
         self.single_action: QueueIO = QueueIO(input_size=1, output_size=1)
         self.upload_queue: Queue = Queue(maxsize=10)
 

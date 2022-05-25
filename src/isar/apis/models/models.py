@@ -4,10 +4,6 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class StartFailedResponse(BaseModel):
-    message: str
-
-
 class StepResponse(BaseModel):
     id: UUID
     type: str
@@ -22,7 +18,3 @@ class TaskResponse(BaseModel):
 class StartMissionResponse(BaseModel):
     id: Union[UUID, int, str, None]
     tasks: List[TaskResponse]
-
-
-class StopFailedResponse(BaseModel):
-    message: str
