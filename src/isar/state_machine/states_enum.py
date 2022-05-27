@@ -7,7 +7,6 @@ class States(str, Enum):
     Idle = "idle"
     InitiateStep = "initiate_step"
     Monitor = "monitor"
-    Finalize = "finalize"
     Paused = "paused"
     StopStep = "stop_step"
 

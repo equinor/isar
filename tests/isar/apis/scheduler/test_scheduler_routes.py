@@ -109,15 +109,22 @@ class TestSchedulerRoutes:
         assert response.status_code == expected_status_code
 
     @pytest.mark.parametrize(
-        "mock_return, expected_status_code",
+        "state, mock_return, expected_status_code",
         [
             (
+                States.Monitor,
                 QueueTimeoutError(),
                 HTTPStatus.REQUEST_TIMEOUT,
             ),
             (
-                [True],
+                States.InitiateStep,
+                None,
                 HTTPStatus.OK,
+            ),
+            (
+                States.Idle,
+                None,
+                HTTPStatus.CONFLICT,
             ),
         ],
     )
@@ -126,10 +133,14 @@ class TestSchedulerRoutes:
         client,
         access_token,
         mocker,
+        state,
         mock_return,
         expected_status_code,
     ):
-        mocker.patch.object(QueueUtilities, "check_queue", side_effect=mock_return)
+        mocker.patch.object(SchedulingUtilities, "get_state", return_value=state)
+        mocker.patch.object(
+            SchedulingUtilities, "stop_mission", side_effect=mock_return
+        )
 
         response = client.post(
             "/schedule/stop-mission",
@@ -155,7 +166,7 @@ class TestSchedulerRoutes:
             ),
             (
                 None,
-                States.Off,
+                States.Monitor,
                 HTTPStatus.CONFLICT,
                 {"x": 1, "y": 1, "z": 1, "orientation": "0,0,0,1"},
             ),

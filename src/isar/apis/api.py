@@ -12,10 +12,7 @@ from injector import inject
 from pydantic import AnyHttpUrl
 
 from isar.apis.models.models import StartMissionResponse
-from isar.apis.schedule.drive_to import DriveTo
-from isar.apis.schedule.pause_mission import PauseMission
-from isar.apis.schedule.start_mission import StartMission
-from isar.apis.schedule.stop_mission import StopMission
+from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.settings import settings
 
@@ -25,19 +22,13 @@ class API:
     def __init__(
         self,
         authenticator: Authenticator,
-        start_mission: StartMission,
-        stop_mission: StopMission,
-        pause_mission: PauseMission,
-        drive_to: DriveTo,
+        scheduling_controller: SchedulingController,
         host: str = settings.API_HOST,
         port: int = settings.API_PORT,
     ) -> None:
 
         self.authenticator: Authenticator = authenticator
-        self.start_mission: StartMission = start_mission
-        self.stop_mission: StopMission = stop_mission
-        self.pause_mission: PauseMission = pause_mission
-        self.drive_to: DriveTo = drive_to
+        self.scheduling_controller: SchedulingController = scheduling_controller
         self.host: str = host
         self.port: int = port
 
@@ -99,7 +90,7 @@ class API:
 
         router.add_api_route(
             "/schedule/start-mission",
-            self.start_mission.post,
+            self.scheduling_controller.start_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
             responses={
@@ -111,7 +102,7 @@ class API:
                     "description": "Not found - Mission not found",
                 },
                 HTTPStatus.CONFLICT.value: {
-                    "description": "Conflict - Mission already ongoing",
+                    "description": "Conflict - Invalid command in the current state",
                 },
                 HTTPStatus.REQUEST_TIMEOUT.value: {
                     "description": "Timeout - Could not contact state machine",
@@ -121,12 +112,15 @@ class API:
 
         router.add_api_route(
             "/schedule/stop-mission",
-            self.stop_mission.post,
+            self.scheduling_controller.stop_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully stopped",
+                },
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Invalid command in the current state",
                 },
                 HTTPStatus.REQUEST_TIMEOUT.value: {
                     "description": "Timeout - Could not contact state machine",
@@ -135,7 +129,7 @@ class API:
         )
         router.add_api_route(
             "/schedule/pause-mission",
-            self.pause_mission.pause,
+            self.scheduling_controller.pause_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
             responses={
@@ -145,14 +139,14 @@ class API:
                 HTTPStatus.REQUEST_TIMEOUT.value: {
                     "description": "Timeout - Could not contact state machine",
                 },
-                HTTPStatus.BAD_REQUEST.value: {
-                    "description": "Bad Request - Invalid command in the current state",
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Invalid command in the current state",
                 },
             },
         )
         router.add_api_route(
             "/schedule/resume-mission",
-            self.pause_mission.resume,
+            self.scheduling_controller.resume_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
             responses={
@@ -162,16 +156,27 @@ class API:
                 HTTPStatus.REQUEST_TIMEOUT.value: {
                     "description": "Timeout - Could not contact state machine",
                 },
-                HTTPStatus.BAD_REQUEST.value: {
-                    "description": "Bad Request - Invalid command in the current state",
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Invalid command in the current state",
                 },
             },
         )
         router.add_api_route(
             "/schedule/drive-to",
-            self.drive_to.post,
+            self.scheduling_controller.drive_to,
             methods=["POST"],
             dependencies=[authentication_dependency],
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Drive to succesfully started",
+                },
+                HTTPStatus.REQUEST_TIMEOUT.value: {
+                    "description": "Timeout - Could not contact state machine",
+                },
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Invalid command in the current state",
+                },
+            },
         )
 
         return router
