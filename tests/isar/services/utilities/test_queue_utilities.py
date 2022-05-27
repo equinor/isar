@@ -1,3 +1,4 @@
+from distutils.archive_util import make_zipfile
 from queue import Queue
 
 import pytest
@@ -29,3 +30,10 @@ class TestQueueUtilities:
         else:
             with pytest.raises(QueueTimeoutError):
                 QueueUtilities.check_queue(test_queue, queue_timeout)
+
+    def test_clear_queue(self):
+        test_queue = Queue(maxsize=2)
+        test_queue.put(1)
+        test_queue.put(2)
+        QueueUtilities.clear_queue(test_queue)
+        assert test_queue.empty()

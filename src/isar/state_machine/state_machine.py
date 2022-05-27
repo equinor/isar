@@ -303,7 +303,7 @@ class StateMachine(object):
 
     def send_status(self):
         """Communicates state machine status."""
-        self.queues.mission_status.output.put(self.current_state)
+        self.queues.state.output.put(self.current_state)
 
     def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
@@ -313,7 +313,7 @@ class StateMachine(object):
 
     def should_send_status(self) -> bool:
         try:
-            return self.queues.mission_status.input.get(block=False)
+            return self.queues.state.input.get(block=False)
         except queue.Empty:
             return False
 

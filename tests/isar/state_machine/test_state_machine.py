@@ -69,7 +69,7 @@ def test_initial_off(state_machine):
 @pytest.mark.parametrize("should_send, expected_output", [(True, True), (False, False)])
 def test_should_send_status(state_machine, should_send, expected_output):
     if should_send is not None:
-        state_machine.queues.mission_status.input.put(should_send)
+        state_machine.queues.state.input.put(should_send)
     send: bool = state_machine.should_send_status()
 
     assert send is expected_output
@@ -77,7 +77,7 @@ def test_should_send_status(state_machine, should_send, expected_output):
 
 def test_send_status(state_machine):
     state_machine.send_status()
-    message = state_machine.queues.mission_status.output.get()
+    message = state_machine.queues.state.output.get()
     assert message
 
 

@@ -7,10 +7,7 @@ from typing import List, Union
 from injector import Injector, Module, multiprovider, provider, singleton
 
 from isar.apis.api import API
-from isar.apis.schedule.drive_to import DriveTo
-from isar.apis.schedule.pause_mission import PauseMission
-from isar.apis.schedule.start_mission import StartMission
-from isar.apis.schedule.stop_mission import StopMission
+from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
@@ -39,38 +36,18 @@ class APIModule(Module):
     def provide_api(
         self,
         authenticator: Authenticator,
-        start_mission: StartMission,
-        stop_mission: StopMission,
-        pause_mission: PauseMission,
-        drive_to: DriveTo,
+        scheduling_controller: SchedulingController,
     ) -> API:
-        return API(authenticator, start_mission, stop_mission, pause_mission, drive_to)
+        return API(authenticator, scheduling_controller)
 
     @provider
     @singleton
-    def provide_drive_to(self, scheduling_utilities: SchedulingUtilities) -> DriveTo:
-        return DriveTo(scheduling_utilities)
-
-    @provider
-    @singleton
-    def provide_start_mission(
+    def provide_scheduling_controller(
         self,
         mission_planner: MissionPlannerInterface,
         scheduling_utilities: SchedulingUtilities,
-    ) -> StartMission:
-        return StartMission(mission_planner, scheduling_utilities)
-
-    @provider
-    @singleton
-    def provide_stop_mission(self, queues: Queues) -> StopMission:
-        return StopMission(queues)
-
-    @provider
-    @singleton
-    def provide_pause_mission(
-        self, queues: Queues, scheduling_utilities: SchedulingUtilities
-    ) -> PauseMission:
-        return PauseMission(queues, scheduling_utilities)
+    ) -> SchedulingController:
+        return SchedulingController(mission_planner, scheduling_utilities)
 
 
 class AuthenticationModule(Module):
