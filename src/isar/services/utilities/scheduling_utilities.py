@@ -1,12 +1,11 @@
 import logging
 from copy import deepcopy
-from typing import Any, Optional
+from typing import Any
 
 from injector import inject
 
 from isar.config.settings import settings
-from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
-from isar.models.communication.queues.queues import QueueIO, Queues
+from isar.models.communication.queues import QueueIO, Queues, QueueTimeoutError
 from isar.models.mission.mission import Mission
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.state_machine.states_enum import States
@@ -24,8 +23,8 @@ class SchedulingUtilities:
         self.queue_timeout: int = queue_timeout
         self.logger = logging.getLogger("api")
 
-    def get_state(self) -> Optional[States]:
-        return self._send_command(True, self.queues.state)
+    def get_state(self) -> States:
+        return self.queues.state.check()
 
     def start_mission(self, mission: Mission) -> None:
         self._send_command(deepcopy(mission), self.queues.start_mission)

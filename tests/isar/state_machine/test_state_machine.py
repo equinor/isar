@@ -66,19 +66,10 @@ def test_initial_off(state_machine):
     assert state_machine.state == "off"
 
 
-@pytest.mark.parametrize("should_send, expected_output", [(True, True), (False, False)])
-def test_should_send_status(state_machine, should_send, expected_output):
-    if should_send is not None:
-        state_machine.queues.state.input.put(should_send)
-    send: bool = state_machine.should_send_status()
-
-    assert send is expected_output
-
-
 def test_send_status(state_machine):
-    state_machine.send_status()
-    message = state_machine.queues.state.output.get()
-    assert message
+    state_machine.send_state_status()
+    message = state_machine.queues.state.check()
+    assert message == state_machine.current_state
 
 
 def test_reset_state_machine(state_machine):

@@ -1,7 +1,6 @@
 import pytest
 
-from isar.models.communication.queues.queue_io import QueueIO
-from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
+from isar.models.communication.queues import QueueIO, QueueTimeoutError
 from isar.services.utilities.queue_utilities import QueueUtilities
 
 

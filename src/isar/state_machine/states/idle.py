@@ -25,9 +25,6 @@ class Idle(State):
 
     def _run(self):
         while True:
-            if self.state_machine.should_send_status():
-                self.state_machine.send_status()
-
             mission: Mission = self.state_machine.should_start_mission()
             if mission:
                 self.state_machine.start_mission(mission)

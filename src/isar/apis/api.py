@@ -107,6 +107,9 @@ class API:
                 HTTPStatus.REQUEST_TIMEOUT.value: {
                     "description": "Timeout - Could not contact state machine",
                 },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error - Current state of state machine unknown",
+                },
             },
         )
 
@@ -125,6 +128,9 @@ class API:
                 HTTPStatus.REQUEST_TIMEOUT.value: {
                     "description": "Timeout - Could not contact state machine",
                 },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error - Current state of state machine unknown",
+                },
             },
         )
         router.add_api_route(
@@ -141,6 +147,9 @@ class API:
                 },
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
+                },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error - Current state of state machine unknown",
                 },
             },
         )
@@ -159,6 +168,9 @@ class API:
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
                 },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error - Current state of state machine unknown",
+                },
             },
         )
         router.add_api_route(
@@ -175,6 +187,9 @@ class API:
                 },
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
+                },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error - Current state of state machine unknown",
                 },
             },
         )

@@ -29,9 +29,6 @@ class Paused(State):
                 transition = self.state_machine.resume
                 break
 
-            if self.state_machine.should_send_status():
-                self.state_machine.send_status()
-
             time.sleep(self.state_machine.sleep_time)
 
         transition()
