@@ -1,10 +1,10 @@
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from transitions import State
 
-from isar.models.mission import Mission
+from isar.models.communication.message import StartMissionMessage
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -25,9 +25,14 @@ class Idle(State):
 
     def _run(self):
         while True:
-            mission: Mission = self.state_machine.should_start_mission()
-            if mission:
-                self.state_machine.start_mission(mission)
+            start_mission: Optional[
+                StartMissionMessage
+            ] = self.state_machine.should_start_mission()
+            if start_mission:
+                self.state_machine.start_mission(
+                    mission=start_mission.mission,
+                    initial_pose=start_mission.initial_pose,
+                )
                 transition = self.state_machine.mission_started
                 break
             time.sleep(self.state_machine.sleep_time)

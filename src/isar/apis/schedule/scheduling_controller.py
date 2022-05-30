@@ -1,14 +1,15 @@
 import logging
 from http import HTTPStatus
 from queue import Empty
-from typing import List
+from typing import List, Optional
 
+import numpy as np
 from alitra import Frame, Orientation, Pose, Position
-from fastapi import Query, Response
+from fastapi import Body, Query, Response
 from injector import inject
 from requests import HTTPError
 
-from isar.apis.models import StartMissionResponse
+from isar.apis.models import ApiPose, StartMissionResponse
 from isar.config.settings import robot_settings, settings
 from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
@@ -44,6 +45,11 @@ class SchedulingController:
             title="Mission ID",
             description="ID-number for predefined mission",
         ),
+        initial_pose: Optional[ApiPose] = Body(
+            default=None,
+            description="The starting point of the mission. Used for initial localization of robot",
+            embed=True,
+        ),
     ):
         self.logger.info("Received request to start new mission")
         try:
@@ -56,6 +62,7 @@ class SchedulingController:
             return
 
         if state in [
+            States.Initialize,
             States.InitiateStep,
             States.StopStep,
             States.Monitor,
@@ -86,10 +93,32 @@ class SchedulingController:
             response.status_code = HTTPStatus.BAD_REQUEST.value
             return
 
+        initial_pose_alitra: Optional[Pose]
+        if initial_pose:
+            initial_pose_alitra = Pose(
+                position=Position(
+                    x=initial_pose.x,
+                    y=initial_pose.y,
+                    z=initial_pose.z,
+                    frame=Frame("asset"),
+                ),
+                orientation=Orientation.from_euler_array(
+                    euler=np.array(
+                        [initial_pose.roll, initial_pose.pitch, initial_pose.yaw]
+                    ),
+                    frame=Frame("asset"),
+                ),
+                frame=Frame("asset"),
+            )
+        else:
+            initial_pose_alitra = None
+
         self.logger.info(f"Starting mission: {mission.id}")
 
         try:
-            self.scheduling_utilities.start_mission(mission=mission)
+            self.scheduling_utilities.start_mission(
+                mission=mission, initial_pose=initial_pose_alitra
+            )
             self.logger.info("OK - Mission successfully started")
         except QueueTimeoutError:
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
@@ -109,7 +138,7 @@ class SchedulingController:
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return
 
-        if state in [States.Idle, States.StopStep, States.Paused]:
+        if state in [States.Idle, States.StopStep, States.Paused, States.Initialize]:
             self.logger.info("Conflict - Pause command received in invalid state")
             response.status_code = HTTPStatus.CONFLICT.value
             return
@@ -132,7 +161,13 @@ class SchedulingController:
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return
 
-        if state in [States.Idle, States.InitiateStep, States.Monitor, States.StopStep]:
+        if state in [
+            States.Idle,
+            States.InitiateStep,
+            States.Monitor,
+            States.StopStep,
+            States.Initialize,
+        ]:
             self.logger.info("Conflict - Resume command received in invalid state")
             response.status_code = HTTPStatus.CONFLICT.value
             return
@@ -156,7 +191,7 @@ class SchedulingController:
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return
 
-        if state in [States.Idle]:
+        if state in [States.Idle, States.Initialize]:
             self.logger.info("Conflict - Stop command received in invalid state")
             response.status_code = HTTPStatus.CONFLICT.value
             return
@@ -202,6 +237,7 @@ class SchedulingController:
             return
 
         if state in [
+            States.Initialize,
             States.InitiateStep,
             States.StopStep,
             States.Monitor,
@@ -222,7 +258,7 @@ class SchedulingController:
         mission: Mission = Mission(tasks=[Task(steps=[step])])
 
         try:
-            self.scheduling_utilities.start_mission(mission=mission)
+            self.scheduling_utilities.start_mission(mission=mission, initial_pose=None)
             self.logger.info("OK - Drive to successfully started")
         except QueueTimeoutError:
             self.logger.error("Timout - Failed to start drive to")

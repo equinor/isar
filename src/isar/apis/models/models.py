@@ -18,3 +18,12 @@ class TaskResponse(BaseModel):
 class StartMissionResponse(BaseModel):
     id: Union[UUID, int, str, None]
     tasks: List[TaskResponse]
+
+
+class ApiPose(BaseModel):
+    x: float
+    y: float
+    z: float
+    roll: float
+    pitch: float
+    yaw: float
