@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Sequence
 
+from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission import InspectionStep, Step, StepStatus
 
@@ -87,6 +88,27 @@ class RobotInterface(metaclass=ABCMeta):
         ------
         RobotException
             If the inspection results can't be retrieved.
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def initialize(self, params: InitializeParams) -> None:
+        """Initializes the robot. The initialization needed is robot dependent and the function can
+        be a simple return statement if no initialization is needed for the robot.
+
+        Parameters
+        ----------
+        kwargs: Any
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RobotException
+            If the initialization failed
 
         """
         raise NotImplementedError
