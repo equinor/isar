@@ -54,9 +54,6 @@ class InitiateStep(State):
                 transition = self.state_machine.pause
                 break
 
-            if self.state_machine.should_send_status():
-                self.state_machine.send_status()
-
             if not self.state_machine.current_task:
                 self.logger.info(
                     f"Completed mission: {self.state_machine.current_mission.id}"

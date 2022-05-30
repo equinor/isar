@@ -291,6 +291,7 @@ class StateMachine(object):
     def update_state(self):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)
+        self.send_state_status()
         self._log_state_transition(self.current_state)
         self.logger.info(f"State: {self.current_state}")
         self.publish_state()
@@ -301,21 +302,11 @@ class StateMachine(object):
         self.current_task = None
         self.current_mission = None
 
-    def send_status(self):
-        """Communicates state machine status."""
-        self.queues.state.output.put(self.current_state)
-
     def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
         self.current_mission = mission
         self.current_task = mission.next_task()
         self.queues.start_mission.output.put(True)
-
-    def should_send_status(self) -> bool:
-        try:
-            return self.queues.state.input.get(block=False)
-        except queue.Empty:
-            return False
 
     def should_start_mission(self) -> Optional[Mission]:
         try:
@@ -340,6 +331,9 @@ class StateMachine(object):
             return self.queues.resume_mission.input.get(block=False)
         except queue.Empty:
             return False
+
+    def send_state_status(self):
+        self.queues.state.update(self.current_state)
 
     def publish_mission_status(self) -> None:
         if not self.mqtt_client:

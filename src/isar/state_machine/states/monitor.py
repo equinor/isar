@@ -48,9 +48,6 @@ class Monitor(State):
                 transition = self.state_machine.pause
                 break
 
-            if self.state_machine.should_send_status():
-                self.state_machine.send_status()
-
             if not self.step_status_thread:
                 self.step_status_thread = ThreadedRequest(
                     self.state_machine.robot.step_status

@@ -1,6 +1,7 @@
 import logging
 from http import HTTPStatus
-from typing import List, Optional
+from queue import Empty
+from typing import List
 
 from alitra import Frame, Orientation, Pose, Position
 from fastapi import Query, Response
@@ -14,7 +15,7 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerInterface,
 )
 from isar.mission_planner.mission_validator import is_robot_capable_of_mission
-from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
+from isar.models.communication.queues import QueueTimeoutError
 from isar.models.mission import Mission, Task
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
@@ -47,9 +48,11 @@ class SchedulingController:
         self.logger.info("Received request to start new mission")
         try:
             state: States = self.scheduling_utilities.get_state()
-        except QueueTimeoutError:
-            self.logger.error("Timeout - Could not get current state of state machine")
-            response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
+        except Empty:
+            self.logger.error(
+                "Internal Server Error - Current state of state machine unknown"
+            )
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return
 
         if state in [
@@ -98,10 +101,12 @@ class SchedulingController:
         self.logger.info("Received request to pause current mission")
 
         try:
-            state: Optional[States] = self.scheduling_utilities.get_state()
-        except QueueTimeoutError:
-            self.logger.error("Timeout - Could not get current state of state machine")
-            response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
+            state: States = self.scheduling_utilities.get_state()
+        except Empty:
+            self.logger.error(
+                "Internal Server Error - Current state of state machine unknown"
+            )
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return
 
         if state in [States.Idle, States.StopStep, States.Paused]:
@@ -119,10 +124,12 @@ class SchedulingController:
     def resume_mission(self, response: Response):
         self.logger.info("Received request to resume current mission")
         try:
-            state: Optional[States] = self.scheduling_utilities.get_state()
-        except QueueTimeoutError:
-            self.logger.error("Timeout - Could not get current state of state machine")
-            response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
+            state: States = self.scheduling_utilities.get_state()
+        except Empty:
+            self.logger.error(
+                "Internal Server Error - Current state of state machine unknown"
+            )
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return
 
         if state in [States.Idle, States.InitiateStep, States.Monitor, States.StopStep]:
@@ -141,10 +148,12 @@ class SchedulingController:
         self.logger.info("Received request to stop current mission")
 
         try:
-            state: Optional[States] = self.scheduling_utilities.get_state()
-        except:
-            self.logger.error("Timeout - Could not get current state of state machine")
-            response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
+            state: States = self.scheduling_utilities.get_state()
+        except Empty:
+            self.logger.error(
+                "Internal Server Error - Current state of state machine unknown"
+            )
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return
 
         if state in [States.Idle]:
@@ -185,9 +194,11 @@ class SchedulingController:
     ):
         try:
             state: States = self.scheduling_utilities.get_state()
-        except QueueTimeoutError:
-            self.logger.error("Timeout - Could not get current state of state machine")
-            response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
+        except Empty:
+            self.logger.error(
+                "Internal Server Error - Current state of state machine unknown"
+            )
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return
 
         if state in [
