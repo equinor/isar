@@ -1,8 +1,7 @@
-from dataclasses import dataclass
-from email.policy import default
+from dataclasses import Field, dataclass
+from typing import Optional
 
 from alitra import Pose
-from pyparsing import Optional
 
 
 @dataclass

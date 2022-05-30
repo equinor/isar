@@ -10,3 +10,7 @@ def test_timeout_send_command(mocker, scheduling_utilities):
     with pytest.raises(QueueTimeoutError):
         scheduling_utilities._send_command(True, q)
     assert q.input.empty()
+
+
+import queue
+from queue import Queue

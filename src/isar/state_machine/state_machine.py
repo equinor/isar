@@ -5,18 +5,29 @@ from collections import deque
 from datetime import datetime
 from typing import Deque, List, Optional
 
+from alitra import Pose
 from injector import Injector, inject
 from transitions import Machine
 from transitions.core import State
 
 from isar.config.settings import settings
+from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queues import Queues
 from isar.models.mission import Mission, Task
 from isar.models.mission.status import MissionStatus, TaskStatus
 from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
 from isar.services.utilities.json_service import EnhancedJSONEncoder
-from isar.state_machine.states import Idle, InitiateStep, Monitor, Off, Paused, StopStep
+from isar.state_machine.states import (
+    Idle,
+    Initialize,
+    InitiateStep,
+    Monitor,
+    Off,
+    Paused,
+    StopStep,
+)
 from isar.state_machine.states_enum import States
+from robot_interface.models.initialize.initialize_params import InitializeParams
 from robot_interface.models.mission import StepStatus
 from robot_interface.models.mission.step import Step
 from robot_interface.robot_interface import RobotInterface
@@ -61,6 +72,7 @@ class StateMachine(object):
         self.stop_step_state: State = StopStep(self)
         self.paused_state: State = Paused(self)
         self.idle_state: State = Idle(self)
+        self.initialize_state: State = Initialize(self)
         self.monitor_state: State = Monitor(self)
         self.initiate_step_state: State = InitiateStep(self)
         self.off_state: State = Off(self)
@@ -68,6 +80,7 @@ class StateMachine(object):
         self.states: List[State] = [
             self.off_state,
             self.idle_state,
+            self.initialize_state,
             self.initiate_step_state,
             self.monitor_state,
             self.stop_step_state,
@@ -112,8 +125,20 @@ class StateMachine(object):
                 {
                     "trigger": "mission_started",
                     "source": self.idle_state,
-                    "dest": self.initiate_step_state,
+                    "dest": self.initialize_state,
                     "before": self._mission_started,
+                },
+                {
+                    "trigger": "initialization_successful",
+                    "source": self.initialize_state,
+                    "dest": self.initiate_step_state,
+                    "before": self._initialization_successful,
+                },
+                {
+                    "trigger": "initialization_failed",
+                    "source": self.initialize_state,
+                    "dest": self.idle_state,
+                    "before": self._initialization_failed,
                 },
                 {
                     "trigger": "resume",
@@ -161,6 +186,7 @@ class StateMachine(object):
         self.current_mission: Optional[Mission] = None
         self.current_task: Optional[Task] = None
         self.current_step: Optional[Step] = None
+        self.initial_pose: Optional[Pose] = None
 
         self.current_state: State = States(self.state)  # type: ignore
 
@@ -171,6 +197,23 @@ class StateMachine(object):
 
     #################################################################################
     # Transition Callbacks
+    def _initialization_successful(self) -> None:
+        self.queues.start_mission.output.put(True)
+        self.logger.info(
+            f"Initialization successful. Starting new mission: {self.current_mission.id}"
+        )
+        self.log_step_overview(mission=self.current_mission)
+        self.current_mission.status = MissionStatus.InProgress
+        self.publish_mission_status()
+        self.current_task = self.current_mission.next_task()
+        self.current_task.status = TaskStatus.InProgress
+        self.publish_task_status()
+        self.update_current_step()
+
+    def _initialization_failed(self) -> None:
+        self.queues.start_mission.output.put(False)
+        self._finalize()
+
     def _step_initiated(self) -> None:
         self.current_step.status = StepStatus.InProgress
         self.publish_step_status()
@@ -198,11 +241,7 @@ class StateMachine(object):
         self._finalize()
 
     def _mission_started(self) -> None:
-        self.logger.info(f"Starting new mission: {self.current_mission.id}")
-        self.current_mission.status = MissionStatus.InProgress
-        self.current_task.status = TaskStatus.InProgress
-        self.log_step_overview(mission=self.current_mission)
-        self.update_current_step()
+        return
 
     def _step_finished(self) -> None:
         self.publish_step_status()
@@ -302,13 +341,15 @@ class StateMachine(object):
         self.current_task = None
         self.current_mission = None
 
-    def start_mission(self, mission: Mission):
+    def start_mission(self, mission: Mission, initial_pose: Pose):
         """Starts a scheduled mission."""
         self.current_mission = mission
-        self.current_task = mission.next_task()
-        self.queues.start_mission.output.put(True)
+        self.initial_pose = initial_pose
 
-    def should_start_mission(self) -> Optional[Mission]:
+    def get_initialize_params(self):
+        return InitializeParams(initial_pose=self.initial_pose)
+
+    def should_start_mission(self) -> Optional[StartMissionMessage]:
         try:
             return self.queues.start_mission.input.get(block=False)
         except queue.Empty:

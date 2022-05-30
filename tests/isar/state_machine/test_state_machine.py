@@ -17,7 +17,6 @@ from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.mission import DriveToPose, Step, TakeImage
 from robot_interface.models.mission.status import StepStatus
-from tests.mocks.mission_definition import MockMissionDefinition
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.step import MockStep
@@ -83,24 +82,18 @@ def test_reset_state_machine(state_machine):
 empty_mission: Mission = Mission([], None)
 
 
-def test_start_mission(state_machine):
-    mission: Mission = MockMissionDefinition.default_mission
-    state_machine.start_mission(mission=mission)
-    message = state_machine.queues.start_mission.output.get()
-    assert message
-
-
 def test_state_machine_transitions(injector, state_machine_thread):
     step: Step = DriveToPose(pose=MockPose.default_pose)
     mission: Mission = Mission(tasks=[Task(steps=[step])])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
     time.sleep(1)
     expected_transitions_list = deque(
         [
             States.Idle,
+            States.Initialize,
             States.InitiateStep,
             States.Monitor,
             States.InitiateStep,
@@ -120,12 +113,13 @@ def test_state_machine_failed_dependency(injector, state_machine_thread, mocker)
     mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.Failed)
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
     time.sleep(1)
     expected_transitions_list = deque(
         [
             States.Idle,
+            States.Initialize,
             States.InitiateStep,
             States.Monitor,
             States.InitiateStep,
@@ -146,11 +140,12 @@ def test_state_machine_with_successful_collection(
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
     time.sleep(1)
     expected_transitions_list = deque(
         [
             States.Idle,
+            States.Initialize,
             States.InitiateStep,
             States.Monitor,
             States.InitiateStep,
@@ -175,11 +170,12 @@ def test_state_machine_with_unsuccessful_collection(
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
     time.sleep(1)
     expected_transitions_list = deque(
         [
             States.Idle,
+            States.Initialize,
             States.InitiateStep,
             States.Monitor,
             States.InitiateStep,

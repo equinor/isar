@@ -3,6 +3,7 @@ from typing import Sequence
 
 from alitra import Frame, Orientation, Pose, Position
 
+from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import (
     Image,
     ImageMetadata,
@@ -43,6 +44,9 @@ class MockRobot(RobotInterface):
         image: Image = Image(mock_image_metadata())
         image.data = b"Some binary image data"
         return [image]
+
+    def initialize(self, params: InitializeParams) -> None:
+        return
 
 
 def mock_image_metadata() -> ImageMetadata:

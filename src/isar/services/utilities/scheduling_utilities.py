@@ -1,10 +1,12 @@
 import logging
 from copy import deepcopy
-from typing import Any
+from typing import Any, Optional
 
+from alitra import Pose
 from injector import inject
 
 from isar.config.settings import settings
+from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues import QueueIO, Queues, QueueTimeoutError
 from isar.models.mission.mission import Mission
 from isar.services.utilities.queue_utilities import QueueUtilities
@@ -26,8 +28,11 @@ class SchedulingUtilities:
     def get_state(self) -> States:
         return self.queues.state.check()
 
-    def start_mission(self, mission: Mission) -> None:
-        self._send_command(deepcopy(mission), self.queues.start_mission)
+    def start_mission(self, mission: Mission, initial_pose: Optional[Pose]) -> None:
+        self._send_command(
+            StartMissionMessage(mission=deepcopy(mission), initial_pose=initial_pose),
+            self.queues.start_mission,
+        )
 
     def pause_mission(self) -> None:
         self._send_command(True, self.queues.pause_mission)
