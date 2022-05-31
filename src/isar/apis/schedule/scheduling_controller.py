@@ -50,6 +50,11 @@ class SchedulingController:
             description="The starting point of the mission. Used for initial localization of robot",
             embed=True,
         ),
+        return_pose: Optional[ApiPose] = Body(
+            default=None,
+            description="End pose of the mission. The robot return to the specified pose after finsihing all inspections",
+            embed=True,
+        ),
     ):
         self.logger.info("Received request to start new mission")
         try:
@@ -115,6 +120,22 @@ class SchedulingController:
 
         self.logger.info(f"Starting mission: {mission.id}")
 
+        if return_pose:
+            pose: Pose = Pose(
+                position=Position(
+                    x=return_pose.x,
+                    y=return_pose.y,
+                    z=return_pose.z,
+                    frame=Frame("asset"),
+                ),
+                orientation=Orientation.from_euler_array(
+                    np.array([return_pose.roll, return_pose.pitch, return_pose.yaw]),
+                    Frame("asset"),
+                ),
+                frame=Frame("asset"),
+            )
+            step: DriveToPose = DriveToPose(pose=pose)
+            mission.tasks.append(Task(steps=[step]))
         try:
             self.scheduling_utilities.start_mission(
                 mission=mission, initial_pose=initial_pose_alitra
