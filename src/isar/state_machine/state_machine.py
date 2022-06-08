@@ -41,7 +41,7 @@ class StateMachine(object):
         self,
         queues: Queues,
         robot: RobotInterface,
-        mqtt_client: MqttClientInterface,
+        mqtt_publisher: MqttClientInterface,
         sleep_time: float = settings.FSM_SLEEP_TIME,
         stop_robot_attempts_limit: int = settings.STOP_ROBOT_ATTEMPTS_LIMIT,
         transitions_log_length: int = settings.STATE_TRANSITIONS_LOG_LENGTH,
@@ -54,6 +54,8 @@ class StateMachine(object):
             Queues used for API communication.
         robot : RobotInterface
             Instance of robot interface.
+        mqtt_publisher : MqttClientInterface
+            Instance of MQTT client interface which has a publish function
         sleep_time : float
             Time to sleep in between state machine iterations.
         stop_robot_attempts_limit : int
@@ -66,7 +68,7 @@ class StateMachine(object):
 
         self.queues: Queues = queues
         self.robot: RobotInterface = robot
-        self.mqtt_client: Optional[MqttClientInterface] = mqtt_client
+        self.mqtt_publisher: Optional[MqttClientInterface] = mqtt_publisher
 
         # List of states
         self.stop_step_state: State = StopStep(self)
@@ -377,7 +379,7 @@ class StateMachine(object):
         self.queues.state.update(self.current_state)
 
     def publish_mission_status(self) -> None:
-        if not self.mqtt_client:
+        if not self.mqtt_publisher:
             return
         payload: str = json.dumps(
             {
@@ -389,7 +391,7 @@ class StateMachine(object):
             cls=EnhancedJSONEncoder,
         )
 
-        self.mqtt_client.publish(
+        self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_MISSION,
             payload=payload,
             retain=True,
@@ -397,7 +399,7 @@ class StateMachine(object):
 
     def publish_task_status(self) -> None:
         """Publishes the current task status to the MQTT Broker"""
-        if not self.mqtt_client:
+        if not self.mqtt_publisher:
             return
         payload: str = json.dumps(
             {
@@ -410,7 +412,7 @@ class StateMachine(object):
             cls=EnhancedJSONEncoder,
         )
 
-        self.mqtt_client.publish(
+        self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_TASK,
             payload=payload,
             retain=True,
@@ -418,7 +420,7 @@ class StateMachine(object):
 
     def publish_step_status(self) -> None:
         """Publishes the current step status to the MQTT Broker"""
-        if not self.mqtt_client:
+        if not self.mqtt_publisher:
             return
         payload: str = json.dumps(
             {
@@ -432,14 +434,14 @@ class StateMachine(object):
             cls=EnhancedJSONEncoder,
         )
 
-        self.mqtt_client.publish(
+        self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_STEP,
             payload=payload,
             retain=True,
         )
 
     def publish_state(self) -> None:
-        if not self.mqtt_client:
+        if not self.mqtt_publisher:
             return
         payload: str = json.dumps(
             {
@@ -450,7 +452,7 @@ class StateMachine(object):
             cls=EnhancedJSONEncoder,
         )
 
-        self.mqtt_client.publish(
+        self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_STATE,
             payload=payload,
             retain=True,
