@@ -93,7 +93,7 @@ class Settings(BaseSettings):
     # The username and password is set by the MQTT broker and must be known in advance
     # The password should be set as an environment variable "MQTT_PASSWORD"
     # If the password is not set in the environment an empty string will be used
-    MQTT_USERNAME: str = Field(default="mosquitto")
+    MQTT_USERNAME: str = Field(default="isar")
 
     # MQTT host
     MQTT_HOST: str = Field(default="localhost")
