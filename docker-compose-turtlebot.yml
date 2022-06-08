@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   isar:
     build:
@@ -7,7 +7,7 @@ services:
         ROBOT_REPOSITORY_CLONE_URL: https://github.com/equinor/isar-turtlebot.git
     image: isar:latest
     ports:
-      - '3000:3000'
+      - "3000:3000"
     environment:
       # Client ID, Tenant ID and Client Secret for the Azure App Registration used to connect with blob storage,
       # SLIMM storage and Echo Planner.
@@ -16,7 +16,7 @@ services:
       - AZURE_CLIENT_SECRET
 
       # Password for connection with MQTT Broker
-      - MQTT_PASSWORD
+      - ISAR_MQTT_PASSWORD
 
       # Selected robot package
       - ISAR_ROBOT_PACKAGE=isar_turtlebot
@@ -30,4 +30,3 @@ networks:
   turtlenet:
     external:
       name: turtlenet
-

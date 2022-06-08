@@ -63,6 +63,11 @@ class MqttClient(MqttClientInterface):
             )
 
         self.host: str = settings.MQTT_HOST
+
+        # Fix for mqtt running on localhost in docker
+        if "IS_DOCKER" in os.environ and self.host == "localhost":
+            self.host = "host.docker.internal"
+
         self.port: int = settings.MQTT_PORT
 
         self.client: Client = Client()
