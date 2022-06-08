@@ -133,7 +133,7 @@ class StateMachineModule(Module):
         robot: RobotInterface,
         mqtt_client: MqttClientInterface,
     ) -> StateMachine:
-        return StateMachine(queues=queues, robot=robot, mqtt_client=mqtt_client)
+        return StateMachine(queues=queues, robot=robot, mqtt_publisher=mqtt_client)
 
 
 class UtilitiesModule(Module):

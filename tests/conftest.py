@@ -115,7 +115,7 @@ def state_machine(injector, robot):
     return StateMachine(
         queues=injector.get(Queues),
         robot=robot,
-        mqtt_client=injector.get(MqttClientInterface),
+        mqtt_publisher=injector.get(MqttClientInterface),
     )
 
 
