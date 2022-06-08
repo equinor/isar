@@ -26,6 +26,9 @@ RUN pip install git+${ROBOT_REPOSITORY_CLONE_URL}@main
 
 EXPOSE 3000
 
+# Env variable for ISAR to know it is running in docker
+ENV IS_DOCKER=true
+
 # Change user to avoid running as root
 # User needs to have an explicit guid for radix
 RUN useradd -ms /bin/bash --uid 1001 isar

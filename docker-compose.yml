@@ -1,13 +1,15 @@
-version: '3.7'
+version: "3.7"
 services:
   isar:
     build:
       context: .
       args:
         ROBOT_REPOSITORY_CLONE_URL: https://github.com/equinor/isar-robot.git
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     image: isar:latest
     ports:
-      - '3000:3000'
+      - "3000:3000"
     environment:
       # Client ID, Tenant ID and Client Secret for the Azure App Registration used to connect with blob storage,
       # SLIMM storage and Echo Planner.
