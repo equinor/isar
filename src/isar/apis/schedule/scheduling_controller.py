@@ -55,11 +55,12 @@ class SchedulingController:
         try:
             state: States = self.scheduling_utilities.get_state()
         except Empty:
-            self.logger.error(
+            errorMsg: str = (
                 "Internal Server Error - Current state of state machine unknown"
             )
+            self.logger.error(errorMsg)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
-            return
+            return errorMsg
 
         if state in [
             States.Initialize,
@@ -68,16 +69,17 @@ class SchedulingController:
             States.Monitor,
             States.Paused,
         ]:
-            self.logger.warning("Conflict - Mission already in progress")
+            errorMsg = "Conflict - Mission already in progress"
+            self.logger.warning(errorMsg)
             response.status_code = HTTPStatus.CONFLICT.value
-            return
+            return errorMsg
 
         try:
             mission: Mission = self.mission_planner.get_mission(mission_id)
         except HTTPError as e:
             self.logger.error(e)
             response.status_code = e.response.status_code
-            return
+            raise
         except MissionPlannerError as e:
             self.logger.error(e)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
@@ -87,11 +89,10 @@ class SchedulingController:
             mission=mission, robot_capabilities=robot_settings.CAPABILITIES
         )
         if not robot_capable:
-            self.logger.error(
-                "Bad Request - Robot is not capable of performing mission"
-            )
+            errorMsg = "Bad Request - Robot is not capable of performing mission"
+            self.logger.error(errorMsg)
             response.status_code = HTTPStatus.BAD_REQUEST.value
-            return
+            return errorMsg
 
         initial_pose_alitra: Optional[Pose]
         if initial_pose:
@@ -121,9 +122,10 @@ class SchedulingController:
             )
             self.logger.info("OK - Mission successfully started")
         except QueueTimeoutError:
+            errorMsg = "Timeout - Failed to start mission"
+            self.logger.error(errorMsg)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
-            self.logger.error("Timeout - Failed to start mission")
-            return
+            return errorMsg
         return StartMissionResponse(**mission.api_response_dict())
 
     def pause_mission(self, response: Response):
@@ -132,34 +134,35 @@ class SchedulingController:
         try:
             state: States = self.scheduling_utilities.get_state()
         except Empty:
-            self.logger.error(
-                "Internal Server Error - Current state of state machine unknown"
-            )
+            errorMsg = "Internal Server Error - Current state of state machine unknown"
+            self.logger.error(errorMsg)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
-            return
+            return errorMsg
 
         if state in [States.Idle, States.StopStep, States.Paused, States.Initialize]:
-            self.logger.info("Conflict - Pause command received in invalid state")
+            errorMsg = "Conflict - Pause command received in invalid state"
+            self.logger.warning(errorMsg)
             response.status_code = HTTPStatus.CONFLICT.value
-            return
+            return errorMsg
 
         try:
             self.scheduling_utilities.pause_mission()
             self.logger.info("OK - Mission successfully paused")
         except QueueTimeoutError:
-            self.logger.error("Timeout - Failed to pause mission")
+            errorMsg = "Timeout - Failed to pause mission"
+            self.logger.error(errorMsg)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
+            return errorMsg
 
     def resume_mission(self, response: Response):
         self.logger.info("Received request to resume current mission")
         try:
             state: States = self.scheduling_utilities.get_state()
         except Empty:
-            self.logger.error(
-                "Internal Server Error - Current state of state machine unknown"
-            )
+            errorMsg = "Internal Server Error - Current state of state machine unknown"
+            self.logger.error(errorMsg)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
-            return
+            return errorMsg
 
         if state in [
             States.Idle,
@@ -168,16 +171,19 @@ class SchedulingController:
             States.StopStep,
             States.Initialize,
         ]:
-            self.logger.info("Conflict - Resume command received in invalid state")
+            errorMsg = "Conflict - Resume command received in invalid state"
+            self.logger.warning(errorMsg)
             response.status_code = HTTPStatus.CONFLICT.value
-            return
+            return errorMsg
 
         try:
             self.scheduling_utilities.resume_mission()
             self.logger.info("OK - Mission successfully resumed")
         except QueueTimeoutError:
-            self.logger.error("Timeout - Failed to resume mission")
+            errorMsg = "Timeout - Failed to resume mission"
+            self.logger.error(errorMsg)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
+            return errorMsg
 
     def stop_mission(self, response: Response):
         self.logger.info("Received request to stop current mission")
@@ -185,23 +191,25 @@ class SchedulingController:
         try:
             state: States = self.scheduling_utilities.get_state()
         except Empty:
-            self.logger.error(
-                "Internal Server Error - Current state of state machine unknown"
-            )
+            errorMsg = "Internal Server Error - Current state of state machine unknown"
+            self.logger.error(errorMsg)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
-            return
+            return errorMsg
 
         if state in [States.Idle, States.Initialize]:
-            self.logger.info("Conflict - Stop command received in invalid state")
+            errorMsg = "Conflict - Stop command received in invalid state"
+            self.logger.warning(errorMsg)
             response.status_code = HTTPStatus.CONFLICT.value
-            return
+            return errorMsg
 
         try:
             self.scheduling_utilities.stop_mission()
             self.logger.info("OK - Mission successfully stopped")
         except QueueTimeoutError:
-            self.logger.error("Timeout - Failed to stop mission")
+            errorMsg = "Timeout - Failed to stop mission"
+            self.logger.error(errorMsg)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
+            return errorMsg
 
     def drive_to(
         self,
@@ -230,11 +238,10 @@ class SchedulingController:
         try:
             state: States = self.scheduling_utilities.get_state()
         except Empty:
-            self.logger.error(
-                "Internal Server Error - Current state of state machine unknown"
-            )
+            errorMsg = "Internal Server Error - Current state of state machine unknown"
+            self.logger.error(errorMsg)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
-            return
+            return errorMsg
 
         if state in [
             States.Initialize,
@@ -243,9 +250,10 @@ class SchedulingController:
             States.Monitor,
             States.Paused,
         ]:
-            self.logger.info("Conflict - Drivt to command received in invalid state")
+            errorMsg = "Conflict - DriveTo command received in invalid state"
+            self.logger.warning(errorMsg)
             response.status_code = HTTPStatus.CONFLICT.value
-            return
+            return errorMsg
 
         robot_frame: Frame = Frame("robot")
         position: Position = Position(x=x, y=y, z=z, frame=robot_frame)
@@ -261,5 +269,7 @@ class SchedulingController:
             self.scheduling_utilities.start_mission(mission=mission, initial_pose=None)
             self.logger.info("OK - Drive to successfully started")
         except QueueTimeoutError:
-            self.logger.error("Timout - Failed to start drive to")
+            errorMsg = "Timeout - Failed to start DriveTo"
+            self.logger.error(errorMsg)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
+            return errorMsg
