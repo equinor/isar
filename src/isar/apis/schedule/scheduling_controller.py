@@ -1,7 +1,7 @@
 import logging
 from http import HTTPStatus
 from queue import Empty
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 from alitra import Frame, Orientation, Pose, Position
@@ -90,11 +90,16 @@ class SchedulingController:
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return
 
-        robot_capable: bool = is_robot_capable_of_mission(
+        robot_capable: bool
+        missing_functions: List[str]
+        (robot_capable, missing_functions) = is_robot_capable_of_mission(
             mission=mission, robot_capabilities=robot_settings.CAPABILITIES
         )
         if not robot_capable:
-            errorMsg = "Bad Request - Robot is not capable of performing mission"
+            errorMsg = (
+                "Bad Request - Robot is not capable of performing mission. Missing functionalities: "
+                + str(missing_functions)
+            )
             self.logger.error(errorMsg)
             response.status_code = HTTPStatus.BAD_REQUEST.value
             return errorMsg

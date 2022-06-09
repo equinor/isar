@@ -12,7 +12,7 @@ from tests.mocks.mission_definition import MockMissionDefinition
     ],
 )
 def test_is_robot_capable_of_mission(mission, capabilities, expected_return) -> None:
-    return_value: bool = is_robot_capable_of_mission(
+    return_value, missing_capabilities = is_robot_capable_of_mission(
         mission=mission, robot_capabilities=capabilities
     )
     assert return_value == expected_return
