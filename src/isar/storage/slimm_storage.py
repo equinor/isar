@@ -1,4 +1,3 @@
-import json
 import logging
 
 from azure.identity import DefaultAzureCredential
@@ -59,9 +58,7 @@ class SlimmStorage(StorageInterface):
         try:
             self.request_handler.post(
                 url=request_url,
-                params={
-                    "CopyFilesToSlimmDatalake": settings.COPY_FILES_TO_SLIMM_DATALAKE
-                },
+                params={"DataType": "still"},
                 data=multiform_body,
                 headers={
                     "Authorization": f"Bearer {token}",
@@ -77,42 +74,48 @@ class SlimmStorage(StorageInterface):
 
     @staticmethod
     def _construct_multiform_request(filename, inspection, metadata):
+        array_of_orientation = (
+            inspection.metadata.time_indexed_pose.pose.orientation.to_quat_array().tolist()
+        )
         multiform_body: MultipartEncoder = MultipartEncoder(
             fields={
-                "additional_metadata": json.dumps(
-                    {
-                        "plant_name": metadata.plant_name,
-                        "mission_date": metadata.mission_date.isoformat(),
-                        "mission_id": metadata.mission_id,
-                        "robot_id": metadata.robot_id,
-                    }
-                ),
-                "coordinate_reference_system": metadata.coordinate_reference_system,
-                "vertical_reference_system": metadata.vertical_reference_system,
-                "media_orientation_reference_system": metadata.media_orientation_reference_system,  # noqa: E501
-                "data_classification": metadata.data_classification,
-                "plant_code": metadata.plant_code,
-                "attached_file_navigation.Filename": filename,
-                "attached_file_navigation.ContentSize": str(len(inspection.data)),
-                "attached_file_navigation.X": str(
+                "Metadata.Mission.MissionId": metadata.mission_id,
+                "Metadata.Mission.StartDate": metadata.mission_date.isoformat(),
+                "Metadata.Mission.EndDate": metadata.mission_date.isoformat(),
+                "Metadata.Geodetic.CoordinateReferenceSystemCode": metadata.coordinate_reference_system,  # noqa: E501
+                "Metadata.Geodetic.VerticalCoordinateReferenceSystemCode": metadata.vertical_reference_system,  # noqa: E501
+                "Metadata.Geodetic.OrientationReferenceSystem": metadata.media_orientation_reference_system,  # noqa: E501
+                "Metadata.SensorCarrier.Id": metadata.robot_id,
+                "InternalClassification": metadata.data_classification,
+                "PlantFacilitySAPCode": metadata.plant_code,
+                "Client": "Equinor",
+                "IsoCountryCode": "NO",
+                "AttachedFileMetadata.X": str(
                     inspection.metadata.time_indexed_pose.pose.position.x
                 ),
-                "attached_file_navigation.Y": str(
+                "AttachedFileMetadata.Y": str(
                     inspection.metadata.time_indexed_pose.pose.position.y
                 ),
-                "attached_file_navigation.Z": str(
+                "AttachedFileMetadata.Z": str(
                     inspection.metadata.time_indexed_pose.pose.position.z
                 ),
-                "attached_file_navigation.AdditionalMediaMetadata": json.dumps(
-                    {
-                        "orientation": inspection.metadata.time_indexed_pose.pose.orientation.to_quat_array().tolist()  # noqa: E501
-                    }
+                "AttachedFileMetadata.CameraOrientation[0]": str(
+                    array_of_orientation[0]
                 ),
-                "attached_file_navigation.FunctionalLocation": inspection.metadata.tag_id  # noqa: E501
+                "AttachedFileMetadata.CameraOrientation[1]": str(
+                    array_of_orientation[1]
+                ),
+                "AttachedFileMetadata.CameraOrientation[2]": str(
+                    array_of_orientation[2]
+                ),
+                "AttachedFileMetadata.CameraOrientation[3]": str(
+                    array_of_orientation[3]
+                ),
+                "AttachedFileMetadata.FunctionalLocation": inspection.metadata.tag_id  # noqa: E501
                 if inspection.metadata.tag_id
                 else "NA",
-                "attached_file_navigation.Timestamp": inspection.metadata.start_time.isoformat(),  # noqa: E501
-                "attached_file": (filename, inspection.data),
+                "AttachedFileMetadata.Timestamp": inspection.metadata.start_time.isoformat(),  # noqa: E501
+                "AttachedFile": (filename, inspection.data),
             }
         )
         return multiform_body
