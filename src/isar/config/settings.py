@@ -141,7 +141,7 @@ class Settings(BaseSettings):
 
     # URL for SLIMM endpoint
     SLIMM_API_URL: str = Field(
-        default="https://slimmingestapidev.azurewebsites.net/api/Ingest"
+        default="https://slimmingestapidev.azurewebsites.net/SpatialIngest"
     )
 
     # Whether the results should be copied directly into the SLIMM datalake or only the
