@@ -1,6 +1,7 @@
 import json
 import logging
 import queue
+import time
 from collections import deque
 from datetime import datetime
 from typing import Deque, List, Optional
@@ -205,6 +206,13 @@ class StateMachine(object):
             f"Initialization successful. Starting new mission: {self.current_mission.id}"
         )
         self.log_step_overview(mission=self.current_mission)
+
+        # This is a workaround to enable the Flotilla repository to write the mission to
+        # its database before the publishing from ISAR starts. This is not a permanent
+        # solution and should be further addressed in the following issue.
+        # https://github.com/equinor/flotilla/issues/226
+        time.sleep(2)
+
         self.current_mission.status = MissionStatus.InProgress
         self.publish_mission_status()
         self.current_task = self.current_mission.next_task()
