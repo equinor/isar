@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
-from typing import Sequence
+from queue import Queue
+from threading import Thread
+from typing import List, Sequence
 
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
@@ -94,12 +96,13 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def initialize(self, params: InitializeParams) -> None:
-        """Initializes the robot. The initialization needed is robot dependent and the function can
-        be a simple return statement if no initialization is needed for the robot.
+        """Initializes the robot. The initialization needed is robot dependent and the
+        function can be a simple return statement if no initialization is needed for the
+        robot.
 
         Parameters
         ----------
-        kwargs: Any
+        params: InitializeParams
 
         Returns
         -------
@@ -109,6 +112,27 @@ class RobotInterface(metaclass=ABCMeta):
         ------
         RobotException
             If the initialization failed
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_telemetry_publishers(self, queue: Queue, robot_id: str) -> List[Thread]:
+        """
+        Set up telemetry publisher threads to publish regular updates for pose, battery
+        level etc. from the robot to the MQTT broker. The publishers on the robot side
+        will use the queue to pass messages to the MQTT Client on the ISAR side.
+
+        The robot_id is passed to the robot to ensure the messages are published to the
+        correct topics.
+
+        Note that this functionality will only be utilized if MQTT is enabled in the
+        settings.
+
+        Returns
+        -------
+        List[Thread]
+            List containing all threads that will be started to publish telemetry.
 
         """
         raise NotImplementedError

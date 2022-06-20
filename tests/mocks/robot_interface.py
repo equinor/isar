@@ -1,5 +1,7 @@
 from datetime import datetime
-from typing import Sequence
+from queue import Queue
+from threading import Thread
+from typing import List, Sequence
 
 from alitra import Frame, Orientation, Pose, Position
 
@@ -47,6 +49,9 @@ class MockRobot(RobotInterface):
 
     def initialize(self, params: InitializeParams) -> None:
         return
+
+    def get_telemetry_publishers(self, queue: Queue, robot_id: str) -> List[Thread]:
+        return []
 
 
 def mock_image_metadata() -> ImageMetadata:

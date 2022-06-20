@@ -4,8 +4,8 @@ from typing import Any, Tuple
 from uuid import UUID
 
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from isar.services.utilities.json_service import EnhancedJSONEncoder
 from robot_interface.models.inspection.inspection import Image, Inspection, ThermalImage
+from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 def construct_local_paths(
