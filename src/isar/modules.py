@@ -15,10 +15,6 @@ from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.models.communication.queues.queues import Queues
-from isar.services.service_connections.mqtt.mqtt_client import (
-    MqttClientInterface,
-    MqttPublisher,
-)
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -28,6 +24,10 @@ from isar.storage.local_storage import LocalStorage
 from isar.storage.slimm_storage import SlimmStorage
 from isar.storage.storage_interface import StorageInterface
 from robot_interface.robot_interface import RobotInterface
+from robot_interface.telemetry.mqtt_client import (
+    MqttClientInterface,
+    MqttPublisher,
+)
 
 
 class APIModule(Module):

@@ -1,6 +1,6 @@
 from typing import Any
 
-from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
+from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 
 class MqttClientMock(MqttClientInterface):

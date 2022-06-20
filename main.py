@@ -15,6 +15,7 @@ from isar.services.service_connections.mqtt.mqtt_client import MqttClient
 from isar.state_machine.state_machine import main
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
+from robot_interface.robot_interface import RobotInterface
 
 if __name__ == "__main__":
     load_dotenv()
@@ -24,6 +25,9 @@ if __name__ == "__main__":
 
     injector: Injector = get_injector()
 
+    robot: RobotInterface = injector.get(RobotInterface)
+    queues: Queues = injector.get(Queues)
+
     threads: List[Thread] = []
 
     state_machine_thread: Thread = Thread(
@@ -32,7 +36,7 @@ if __name__ == "__main__":
     threads.append(state_machine_thread)
 
     uploader: Uploader = Uploader(
-        upload_queue=injector.get(Queues).upload_queue,
+        upload_queue=queues.upload_queue,
         storage_handlers=injector.get(List[StorageInterface]),
     )
 
@@ -42,13 +46,18 @@ if __name__ == "__main__":
     threads.append(uploader_thread)
 
     if settings.MQTT_ENABLED:
-        mqtt_client: MqttClient = MqttClient(mqtt_queue=injector.get(Queues).mqtt_queue)
+        mqtt_client: MqttClient = MqttClient(mqtt_queue=queues.mqtt_queue)
 
         mqtt_thread: Thread = Thread(
             target=mqtt_client.run, name="ISAR MQTT Client", daemon=True
         )
 
         threads.append(mqtt_thread)
+
+        publishers: List[Thread] = robot.get_telemetry_publishers(
+            queue=queues.mqtt_queue, robot_id=settings.ROBOT_ID
+        )
+        threads.extend(publishers)
 
     api: API = injector.get(API)
     api_thread: Thread = Thread(target=api.run_app, name="ISAR API", daemon=True)

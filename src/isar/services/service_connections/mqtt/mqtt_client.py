@@ -1,55 +1,19 @@
 import logging
 import os
-from abc import ABCMeta, abstractmethod
 from queue import Empty, Queue
-from typing import Tuple
 
 import backoff
 from paho.mqtt import client as mqtt
 from paho.mqtt.client import Client
 
 from isar.config.settings import settings
-
-
-class MqttClientInterface(metaclass=ABCMeta):
-    @abstractmethod
-    def publish(
-        self, topic: str, payload: str, qos: int = 0, retain: bool = False
-    ) -> None:
-        """
-        Parameters
-        ----------
-        topic : string
-            MQTT topic to publish to
-        payload : string
-            Payload to send to publish on the topic
-        qos : integer
-            Quality of Service
-        retain : boolean
-            Retain on topic
-
-        Returns
-        -------
-
-        """
-        pass
-
-
-class MqttPublisher(MqttClientInterface):
-    def __init__(self, mqtt_queue: Queue) -> None:
-        self.mqtt_queue: Queue = mqtt_queue
-
-    def publish(
-        self, topic: str, payload: str, qos: int = 0, retain: bool = False
-    ) -> None:
-        queue_message: Tuple[str, str, int, bool] = (topic, payload, qos, retain)
-        self.mqtt_queue.put(queue_message)
+from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 
 class MqttClient(MqttClientInterface):
     def __init__(self, mqtt_queue: Queue) -> None:
         self.logger = logging.getLogger("mqtt_client")
-
+        self.logger.setLevel("INFO")
         self.mqtt_queue: Queue = mqtt_queue
 
         username: str = settings.MQTT_USERNAME

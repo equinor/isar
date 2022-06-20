@@ -15,8 +15,6 @@ from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queues import Queues
 from isar.models.mission import Mission, Task
 from isar.models.mission.status import MissionStatus, TaskStatus
-from isar.services.service_connections.mqtt.mqtt_client import MqttClientInterface
-from isar.services.utilities.json_service import EnhancedJSONEncoder
 from isar.state_machine.states import (
     Idle,
     Initialize,
@@ -31,6 +29,8 @@ from robot_interface.models.initialize.initialize_params import InitializeParams
 from robot_interface.models.mission import StepStatus
 from robot_interface.models.mission.step import Step
 from robot_interface.robot_interface import RobotInterface
+from robot_interface.telemetry.mqtt_client import MqttClientInterface
+from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 class StateMachine(object):
