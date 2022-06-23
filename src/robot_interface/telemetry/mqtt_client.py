@@ -3,6 +3,10 @@ from abc import ABCMeta, abstractmethod
 from queue import Queue
 from typing import Callable, Tuple
 
+from robot_interface.models.exceptions.robot_exceptions import (
+    RobotInvalidTelemetryException,
+)
+
 
 class MqttClientInterface(metaclass=ABCMeta):
     @abstractmethod
@@ -58,7 +62,11 @@ class MqttTelemetryPublisher(MqttClientInterface):
 
     def run(self, robot_id: str) -> None:
         while True:
-            payload: str = self.telemetry_method(robot_id)
+            try:
+                payload: str = self.telemetry_method(robot_id)
+            except RobotInvalidTelemetryException:
+                continue
+
             self.publish(
                 topic=self.topic, payload=payload, qos=self.qos, retain=self.retain
             )
