@@ -16,3 +16,7 @@ class RobotInvalidResponseException(RobotException):
 
 class RobotMapException(RobotException):
     pass
+
+
+class RobotInvalidTelemetryException(RobotException):
+    pass
