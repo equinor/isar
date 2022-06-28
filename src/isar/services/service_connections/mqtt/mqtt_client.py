@@ -38,6 +38,9 @@ class MqttClient(MqttClientInterface):
 
         self.client.enable_logger(logger=self.logger)
 
+        dirname = os.path.dirname(__file__)
+        cert_path = os.path.join(dirname, "../../../config/certs/ca-cert.pem")
+        self.client.tls_set(ca_certs=cert_path)
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
 
