@@ -42,7 +42,7 @@ the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interf
 can be found in [this repository](https://github.com/equinor/isar-robot). Install the repo, i.e:
 
 ```bash
-pip install git+https://@github.com/equinor/isar-robot.git@main
+pip install isar-robot
 ```
 
 Then, ensure the `ISAR_ROBOT_PACKAGE` variable in [settings.env](./src/isar/config/settings.env)
