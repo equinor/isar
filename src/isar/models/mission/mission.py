@@ -107,10 +107,6 @@ class Mission:
     id: Union[UUID, int, str, None] = None
     status: MissionStatus = MissionStatus.NotStarted
     metadata: MissionMetadata = None
-    _iterator: Iterator = None
-
-    def next_task(self) -> Task:
-        return self._iterator.__next__()
 
     def set_unique_id_and_metadata(self) -> None:
         self._set_unique_id()
@@ -131,9 +127,6 @@ class Mission:
 
         if self.metadata is None:
             self.metadata = MissionMetadata(mission_id=self.id)
-
-        if self._iterator is None:
-            self._iterator = iter(self.tasks)
 
     def api_response_dict(self) -> dict:
         return {

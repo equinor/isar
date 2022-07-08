@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     # rights
     MISSION_PLANNER: str = Field(default="local")
 
+    # Determines which task selector module is used by ISAR
+    # Options: [sequential]
+    TASK_SELECTOR: str = Field(default="sequential")
+
     # Determines which storage modules are used by ISAR
     # Multiple storage modules can be chosen
     # Each module will be called when storing results from inspections

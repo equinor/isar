@@ -12,6 +12,10 @@ from transitions import Machine
 from transitions.core import State
 
 from isar.config.settings import settings
+from isar.mission_planner.task_selector_interface import (
+    TaskSelectorInterface,
+    TaskSelectorStop,
+)
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queues import Queues
 from isar.models.mission import Mission, Task
@@ -43,6 +47,7 @@ class StateMachine(object):
         queues: Queues,
         robot: RobotInterface,
         mqtt_publisher: MqttClientInterface,
+        task_selector: TaskSelectorInterface,
         sleep_time: float = settings.FSM_SLEEP_TIME,
         stop_robot_attempts_limit: int = settings.STOP_ROBOT_ATTEMPTS_LIMIT,
         transitions_log_length: int = settings.STATE_TRANSITIONS_LOG_LENGTH,
@@ -70,6 +75,7 @@ class StateMachine(object):
         self.queues: Queues = queues
         self.robot: RobotInterface = robot
         self.mqtt_publisher: Optional[MqttClientInterface] = mqtt_publisher
+        self.task_selector: TaskSelectorInterface = task_selector
 
         # List of states
         self.stop_step_state: State = StopStep(self)
@@ -215,7 +221,7 @@ class StateMachine(object):
 
         self.current_mission.status = MissionStatus.InProgress
         self.publish_mission_status()
-        self.current_task = self.current_mission.next_task()
+        self.current_task = self.task_selector.next_task()
         self.current_task.status = TaskStatus.InProgress
         self.publish_task_status()
         self.update_current_step()
@@ -326,10 +332,10 @@ class StateMachine(object):
         if self.current_task.is_finished():
             self.publish_task_status()
             try:
-                self.current_task = self.current_mission.next_task()
+                self.current_task = self.task_selector.next_task()
                 self.current_task.status = TaskStatus.InProgress
                 self.publish_task_status()
-            except StopIteration:
+            except TaskSelectorStop:
                 # Indicates that all tasks are finished
                 self.current_task = None
 
@@ -355,6 +361,8 @@ class StateMachine(object):
         """Starts a scheduled mission."""
         self.current_mission = mission
         self.initial_pose = initial_pose
+
+        self.task_selector.initialize(tasks=self.current_mission.tasks)
 
     def get_initialize_params(self):
         return InitializeParams(initial_pose=self.initial_pose)
