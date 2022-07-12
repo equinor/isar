@@ -89,8 +89,8 @@ class API:
         authentication_dependency: Security = Security(self.authenticator.get_scheme())
 
         router.add_api_route(
-            "/schedule/start-mission",
-            self.scheduling_controller.start_mission,
+            "/schedule/start-mission/{id}",
+            self.scheduling_controller.start_mission_by_id,
             methods=["POST"],
             dependencies=[authentication_dependency],
             responses={
