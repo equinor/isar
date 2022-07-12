@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from alitra import Pose, Position, Orientation, Frame
 
 
@@ -31,7 +31,7 @@ class InputOrientation(BaseModel):
     y: float
     z: float
     w: float
-    frame_name: str
+    frame_name: str = Field(default="robot")
 
     def to_alitra_orientation(self) -> Orientation:
         return Orientation(
@@ -47,7 +47,7 @@ class InputPosition(BaseModel):
     x: float
     y: float
     z: float
-    frame_name: str
+    frame_name: str = Field(default="robot")
 
     def to_alitra_position(self) -> Position:
         return Position(
@@ -61,7 +61,7 @@ class InputPosition(BaseModel):
 class InputPose(BaseModel):
     position: InputPosition
     orientation: InputOrientation
-    frame_name: str
+    frame_name: str = Field(default="robot")
 
     def to_alitra_pose(self) -> Pose:
         return Pose(
