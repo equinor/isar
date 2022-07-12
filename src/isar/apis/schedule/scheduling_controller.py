@@ -5,7 +5,7 @@ from typing import List, Optional
 
 import numpy as np
 from alitra import Frame, Orientation, Pose, Position
-from fastapi import Body, Path, Query, Response
+from fastapi import Body, Path, Response
 from injector import inject
 from requests import HTTPError
 
@@ -339,25 +339,10 @@ class SchedulingController:
     def drive_to(
         self,
         response: Response,
-        x: float = Query(
-            ...,
-            alias="x-value",
-            description="The target x coordinate",
-        ),
-        y: float = Query(
-            ...,
-            alias="y-value",
-            description="The target y coordinate",
-        ),
-        z: float = Query(
-            ...,
-            alias="z-value",
-            description="The target z coordinate",
-        ),
-        q: List[float] = Query(
-            [0, 0, 0, 1],
-            alias="quaternion",
-            description="The target orientation as a quaternion (x,y,z,w)",
+        target_pose: InputPose = Body(
+            default=None,
+            title="Target Pose",
+            description="The target pose for the drive_to step",
         ),
     ):
         try:
@@ -380,12 +365,7 @@ class SchedulingController:
             response.status_code = HTTPStatus.CONFLICT.value
             return errorMsg
 
-        robot_frame: Frame = Frame("robot")
-        position: Position = Position(x=x, y=y, z=z, frame=robot_frame)
-        orientation: Orientation = Orientation(
-            x=q[0], y=q[1], z=q[2], w=q[3], frame=robot_frame
-        )
-        pose: Pose = Pose(position=position, orientation=orientation, frame=robot_frame)
+        pose: Pose = target_pose.to_alitra_pose()
 
         step: DriveToPose = DriveToPose(pose=pose)
         mission: Mission = Mission(tasks=[Task(steps=[step])])
