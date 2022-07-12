@@ -93,6 +93,7 @@ class API:
             self.scheduling_controller.start_mission_by_id,
             methods=["POST"],
             dependencies=[authentication_dependency],
+            summary="Start a mission with id='id' from the current mission planner",
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully started",
@@ -117,7 +118,7 @@ class API:
             self.scheduling_controller.start_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
-            description="Start the mission provided in JSON format",
+            summary="Start the mission provided in JSON format",
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully started",
@@ -142,6 +143,7 @@ class API:
             self.scheduling_controller.stop_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
+            summary="Stop the current mission",
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully stopped",
@@ -162,6 +164,7 @@ class API:
             self.scheduling_controller.pause_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
+            summary="Pause the current mission",
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully paused",
@@ -182,6 +185,7 @@ class API:
             self.scheduling_controller.resume_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
+            summary="Resume the currently paused mission - if any",
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully resumed",
@@ -202,6 +206,7 @@ class API:
             self.scheduling_controller.drive_to,
             methods=["POST"],
             dependencies=[authentication_dependency],
+            summary="Drive to the provided pose",
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Drive to succesfully started",
