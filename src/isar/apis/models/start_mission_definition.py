@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from alitra import Pose, Position, Orientation, Frame
+from alitra import Position
+from isar.apis.models.models import InputPose, InputPosition
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 
 from isar.models.mission.mission import Mission, Task
@@ -14,56 +15,6 @@ from robot_interface.models.mission.step import (
 )
 
 
-class InputOrientation(BaseModel):
-    x: float
-    y: float
-    z: float
-    w: float
-    frame_name: str
-
-    def to_alitra_orientation(self) -> Orientation:
-        return Orientation(
-            x=self.x,
-            y=self.y,
-            z=self.z,
-            w=self.w,
-            frame=Frame(self.frame_name),
-        )
-
-
-class InputPosition(BaseModel):
-    x: float
-    y: float
-    z: float
-    frame_name: str
-
-    def to_alitra_position(self) -> Position:
-        return Position(
-            x=self.x,
-            y=self.y,
-            z=self.z,
-            frame=Frame(self.frame_name),
-        )
-
-
-class InputPose(BaseModel):
-    orientation: InputOrientation
-    position: InputPosition
-    frame_name: str
-
-    def to_alitra_pose(self) -> Pose:
-        return Pose(
-            position=self.position.to_alitra_position(),
-            orientation=self.orientation.to_alitra_orientation(),
-            frame=Frame(self.frame_name),
-        )
-
-
-# We need to specify our own position/orientation/pose classes that do not contain the "Frame" class
-# because of an bug in generating the OpenAPI specification:
-# https://github.com/tiangolo/fastapi/issues/1505
-# This does not happen if all the classes are 'BaseModel' classes, but the alitra models are 'dataclasses',
-# hence the conversion being done.
 class StartMissionTaskDefinition(BaseModel):
     pose: InputPose
     tag: Optional[str]

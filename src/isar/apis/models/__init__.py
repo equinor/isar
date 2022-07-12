@@ -1,1 +1,1 @@
-from .models import ApiPose, StartMissionResponse
+from .models import InputPose, StartMissionResponse
