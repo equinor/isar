@@ -112,7 +112,31 @@ class API:
                 },
             },
         )
-
+        router.add_api_route(
+            "/schedule/start-mission",
+            self.scheduling_controller.start_mission,
+            methods=["POST"],
+            dependencies=[authentication_dependency],
+            description="Start the mission provided in JSON format",
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Mission succesfully started",
+                    "model": StartMissionResponse,
+                },
+                HTTPStatus.UNPROCESSABLE_ENTITY.value: {
+                    "description": "Invalid body - The JSON is incorrect",
+                },
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Invalid command in the current state",
+                },
+                HTTPStatus.REQUEST_TIMEOUT.value: {
+                    "description": "Timeout - Could not contact state machine",
+                },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error - Current state of state machine unknown",
+                },
+            },
+        )
         router.add_api_route(
             "/schedule/stop-mission",
             self.scheduling_controller.stop_mission,
