@@ -6,8 +6,8 @@ from uuid import UUID, uuid4
 from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from robot_interface.models.mission import (
-    STEPS,
     InspectionStep,
+    STEPS,
     MotionStep,
     Step,
     StepStatus,
