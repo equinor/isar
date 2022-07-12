@@ -8,18 +8,28 @@ from isar.models.mission.mission import Mission, Task
 from robot_interface.models.mission.step import (
     STEPS,
     DriveToPose,
+    InspectionStep,
     TakeImage,
     TakeThermalImage,
     TakeThermalVideo,
     TakeVideo,
 )
 
+inspection_step_types: List[type[InspectionStep]] = [
+    TakeImage,
+    TakeThermalImage,
+    TakeVideo,
+    TakeThermalVideo,
+]
+
 
 class StartMissionTaskDefinition(BaseModel):
     pose: InputPose
     tag: Optional[str]
-    inspection_target: InputPosition = Field(alias="InspectionTarget")
-    sensors_types: List[str] = Field(alias="SensorTypes")
+    inspection_target: InputPosition
+    sensor_types: List[str] = Field(
+        default=[step.type if step.type else None for step in inspection_step_types]
+    )
     video_duration: Optional[float] = Field(default=10)
 
 
@@ -40,7 +50,7 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
                     duration=task.video_duration,
                     target=task.inspection_target,
                 )
-                for sensor in task.sensors_types
+                for sensor in task.sensor_types
             ]
         except (ValueError) as e:
             raise MissionPlannerError(

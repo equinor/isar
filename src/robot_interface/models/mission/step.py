@@ -63,6 +63,7 @@ class InspectionStep(Step):
 
     inspections: List[Inspection] = field(default_factory=list, init=False)
     tag_id: Optional[str] = field(default=None, init=False)
+    type = "inspection_type"
 
     @staticmethod
     def get_inspection_type() -> Type[Inspection]:
