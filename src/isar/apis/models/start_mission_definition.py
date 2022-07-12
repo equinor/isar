@@ -27,8 +27,8 @@ class StartMissionTaskDefinition(BaseModel):
     pose: InputPose
     tag: Optional[str]
     inspection_target: InputPosition
-    sensor_types: List[str] = Field(
-        default=[step.type if step.type else None for step in inspection_step_types]
+    inspection_types: List[str] = Field(
+        default=[step.get_inspection_type().__name__ for step in inspection_step_types]
     )
     video_duration: Optional[float] = Field(default=10)
 
@@ -46,11 +46,11 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
             drive_step: DriveToPose = DriveToPose(pose=task.pose.to_alitra_pose())
             inspection_steps: List[STEPS] = [
                 create_inspection_step(
-                    sensor_type=sensor,
+                    inspection_type=inspection_type,
                     duration=task.video_duration,
                     target=task.inspection_target,
                 )
-                for sensor in task.sensor_types
+                for inspection_type in task.inspection_types
             ]
         except (ValueError) as e:
             raise MissionPlannerError(
@@ -68,19 +68,19 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
 
 
 def create_inspection_step(
-    sensor_type: str, duration: float, target: Position
+    inspection_type: str, duration: float, target: Position
 ) -> STEPS:
     inspection: STEPS
 
-    if sensor_type == TakeImage.type:
+    if inspection_type == TakeImage.get_inspection_type().__name__:
         inspection = TakeImage(target=target)
-    elif sensor_type == TakeVideo.type:
+    elif inspection_type == TakeVideo.get_inspection_type().__name__:
         inspection = TakeVideo(target=target, duration=duration)
-    elif sensor_type == TakeThermalImage.type:
+    elif inspection_type == TakeThermalImage.get_inspection_type().__name__:
         inspection = TakeThermalImage(target=target)
-    elif sensor_type == TakeThermalVideo.type:
+    elif inspection_type == TakeThermalVideo.get_inspection_type().__name__:
         inspection = TakeThermalVideo(target=target, duration=duration)
     else:
-        raise ValueError(f"No step supported for sensor_type {sensor_type}")
+        raise ValueError(f"No step supported for inspection_type ='{inspection_type}'")
 
     return inspection
