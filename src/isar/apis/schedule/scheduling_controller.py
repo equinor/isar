@@ -9,7 +9,7 @@ from fastapi import Body, Path, Query, Response
 from injector import inject
 from requests import HTTPError
 
-from isar.apis.models import ApiPose, StartMissionResponse
+from isar.apis.models import InputPose, StartMissionResponse
 from isar.apis.models.start_mission_definition import (
     StartMissionDefinition,
     to_isar_mission,
@@ -49,12 +49,12 @@ class SchedulingController:
             title="Mission ID",
             description="ID-number for predefined mission",
         ),
-        initial_pose: Optional[ApiPose] = Body(
+        initial_pose: Optional[InputPose] = Body(
             default=None,
             description="The starting point of the mission. Used for initial localization of robot",
             embed=True,
         ),
-        return_pose: Optional[ApiPose] = Body(
+        return_pose: Optional[InputPose] = Body(
             default=None,
             description="End pose of the mission. The robot return to the specified pose after finsihing all inspections",
             embed=True,
@@ -167,12 +167,12 @@ class SchedulingController:
             title="Mission Definition",
             description="Description of the mission in json format",
         ),
-        initial_pose: Optional[ApiPose] = Body(
+        initial_pose: Optional[InputPose] = Body(
             default=None,
             description="The starting point of the mission. Used for initial localization of robot",
             embed=True,
         ),
-        return_pose: Optional[ApiPose] = Body(
+        return_pose: Optional[InputPose] = Body(
             default=None,
             description="End pose of the mission. The robot return to the specified pose after finsihing all inspections",
             embed=True,
@@ -231,40 +231,14 @@ class SchedulingController:
 
         initial_pose_alitra: Optional[Pose]
         if initial_pose:
-            initial_pose_alitra = Pose(
-                position=Position(
-                    x=initial_pose.x,
-                    y=initial_pose.y,
-                    z=initial_pose.z,
-                    frame=Frame("asset"),
-                ),
-                orientation=Orientation.from_euler_array(
-                    euler=np.array(
-                        [initial_pose.roll, initial_pose.pitch, initial_pose.yaw]
-                    ),
-                    frame=Frame("asset"),
-                ),
-                frame=Frame("asset"),
-            )
+            initial_pose_alitra = initial_pose.to_alitra_pose()
         else:
             initial_pose_alitra = None
 
         self.logger.info(f"Starting mission: {mission.id}")
 
         if return_pose:
-            pose: Pose = Pose(
-                position=Position(
-                    x=return_pose.x,
-                    y=return_pose.y,
-                    z=return_pose.z,
-                    frame=Frame("asset"),
-                ),
-                orientation=Orientation.from_euler_array(
-                    np.array([return_pose.roll, return_pose.pitch, return_pose.yaw]),
-                    Frame("asset"),
-                ),
-                frame=Frame("asset"),
-            )
+            pose: Pose = return_pose.to_alitra_pose()
             step: DriveToPose = DriveToPose(pose=pose)
             mission.tasks.append(Task(steps=[step]))
         try:
