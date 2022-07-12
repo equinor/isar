@@ -1,11 +1,11 @@
 import logging
 from http import HTTPStatus
 from queue import Empty
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 from alitra import Frame, Orientation, Pose, Position
-from fastapi import Body, Query, Response
+from fastapi import Body, Path, Query, Response
 from injector import inject
 from requests import HTTPError
 
@@ -36,12 +36,12 @@ class SchedulingController:
         self.scheduling_utilities: SchedulingUtilities = scheduling_utilities
         self.queue_timeout: int = queue_timeout
 
-    def start_mission(
+    def start_mission_by_id(
         self,
         response: Response,
-        mission_id: int = Query(
+        mission_id: int = Path(
             ...,
-            alias="ID",
+            alias="id",
             title="Mission ID",
             description="ID-number for predefined mission",
         ),
@@ -56,7 +56,7 @@ class SchedulingController:
             embed=True,
         ),
     ):
-        self.logger.info("Received request to start new mission")
+        self.logger.info(f"Received request to start mission with id {mission_id}")
         try:
             state: States = self.scheduling_utilities.get_state()
         except Empty:
