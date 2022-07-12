@@ -1,16 +1,26 @@
 from http import HTTPStatus
-from typing import Optional, Tuple
+import json
 
 import pytest
-
+from isar.apis.models.models import InputOrientation, InputPosition
+from fastapi.testclient import TestClient
+from fastapi.encoders import jsonable_encoder
 from isar.apis.security.authentication import Authenticator
+from isar.apis.models import InputPose
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
-from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from tests.mocks.mission_definition import MockMissionDefinition
+
+mock_orientation: InputOrientation = InputOrientation(
+    x=0, y=0, z=0, w=1, frame_name="robot"
+)
+mock_position: InputPosition = InputPosition(x=1, y=1, z=1, frame_name="robot")
+mock_pose: InputPose = InputPose(
+    orientation=mock_orientation, position=mock_position, frame_name="robot"
+)
 
 
 def mock_check_queue(was_mission_started, state_at_request):
@@ -70,7 +80,7 @@ class TestSchedulerRoutes:
             ),
         ],
     )
-    def test_start_mission(
+    def test_start_mission_by_id(
         self,
         client,
         access_token,
@@ -102,7 +112,7 @@ class TestSchedulerRoutes:
         )
 
         response = client.post(
-            f"schedule/start-mission?ID={mission_id}",
+            f"schedule/start-mission/{mission_id}",
             headers={"Authorization": "Bearer {}".format(access_token)},
         )
 
@@ -150,43 +160,48 @@ class TestSchedulerRoutes:
         assert response.status_code == expected_status_code
 
     @pytest.mark.parametrize(
-        "mock_start_mission, mock_get_state,expected_status_code,request_params",
+        "mock_start_mission, mock_get_state,expected_status_code,target_pose",
         [
             (
                 None,
                 States.Idle,
                 HTTPStatus.OK,
-                {"x": 1, "y": 1, "z": 1, "orientation": "0,0,0,1"},
+                mock_pose,
             ),
             (
                 QueueTimeoutError,
                 States.Idle,
                 HTTPStatus.REQUEST_TIMEOUT,
-                {"x": 1, "y": 1, "z": 1, "orientation": "0,0,0,1"},
+                mock_pose,
             ),
             (
                 None,
                 States.Monitor,
                 HTTPStatus.CONFLICT,
-                {"x": 1, "y": 1, "z": 1, "orientation": "0,0,0,1"},
+                mock_pose,
             ),
             (
                 None,
                 States.Idle,
                 HTTPStatus.UNPROCESSABLE_ENTITY,
-                {"x": None, "y": 1, "z": 1, "orientation": "0,0,0,1"},
+                InputPosition(
+                    x=1,
+                    y=1,
+                    z=1,
+                    frame_name="robot",
+                ),
             ),
         ],
     )
     def test_schedule_drive_to(
         self,
-        client,
+        client: TestClient,
         access_token,
         mock_start_mission,
         mock_get_state,
         mocker,
         expected_status_code,
-        request_params,
+        target_pose,
     ):
         mocker.patch.object(
             SchedulingUtilities, "get_state", return_value=mock_get_state
@@ -197,19 +212,12 @@ class TestSchedulerRoutes:
         )
         mocker.patch.object(Authenticator, "should_authenticate", return_value=False)
 
-        query_string = (
-            f"x-value={request_params['x']}&"
-            f"y-value={request_params['y']}&"
-            f"z-value={request_params['z']}&"
-            f"quaternion={request_params['orientation'][0]}&"
-            f"quaternion={request_params['orientation'][2]}&"
-            f"quaternion={request_params['orientation'][4]}&"
-            f"quaternion={request_params['orientation'][6]}"
-        )
+        data: str = json.dumps(jsonable_encoder(target_pose))
 
         response = client.post(
-            f"/schedule/drive-to?{query_string}",
+            url=f"/schedule/drive-to",
             headers={"Authorization": "Bearer {}".format(access_token)},
+            data=data,
         )
 
         assert response.status_code == expected_status_code
