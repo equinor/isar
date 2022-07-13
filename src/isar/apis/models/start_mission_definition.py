@@ -53,14 +53,12 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
                 for inspection_type in task.inspection_types
             ]
         except (ValueError) as e:
-            raise MissionPlannerError(
-                f"Failed to create task with exception message: '{str(e)}'"
-            )
+            raise MissionPlannerError(f"Failed to create task: {str(e)}")
         isar_task: Task = Task(steps=[drive_step, *inspection_steps], tag_id=tag_id)
         isar_tasks.append(isar_task)
 
     if not isar_tasks:
-        raise MissionPlannerError("Empty mission")
+        raise MissionPlannerError("Mission does not contain any valid tasks")
 
     isar_mission: Mission = Mission(tasks=isar_tasks)
 
@@ -81,6 +79,6 @@ def create_inspection_step(
     elif inspection_type == TakeThermalVideo.get_inspection_type().__name__:
         inspection = TakeThermalVideo(target=target, duration=duration)
     else:
-        raise ValueError(f"No step supported for inspection_type ='{inspection_type}'")
+        raise ValueError(f"Inspection type '{inspection_type}' not supported")
 
     return inspection

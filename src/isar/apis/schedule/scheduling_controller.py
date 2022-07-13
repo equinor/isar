@@ -211,9 +211,10 @@ class SchedulingController:
         try:
             mission: Mission = to_isar_mission(mission_definition)
         except MissionPlannerError as e:
-            self.logger.error(e)
-            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
-            return
+            errorMsg = f"Bad Request - Cannot create ISAR mission: {e}"
+            self.logger.warning(errorMsg)
+            response.status_code = HTTPStatus.BAD_REQUEST.value
+            return errorMsg
 
         robot_capable: bool
         missing_functions: List[str]
