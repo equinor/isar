@@ -194,6 +194,8 @@ class Settings(BaseSettings):
 
     # List of MQTT Topics
 
+    TOPIC_ISAR_ROBOT: str = Field(default="robot")
+
     TOPIC_ISAR_STATE: str = Field(default="state")
 
     TOPIC_ISAR_MISSION: str = Field(default="mission")
@@ -203,6 +205,7 @@ class Settings(BaseSettings):
     TOPIC_ISAR_STEP: str = Field(default="step")
 
     @validator(
+        "TOPIC_ISAR_ROBOT",
         "TOPIC_ISAR_STATE",
         "TOPIC_ISAR_MISSION",
         "TOPIC_ISAR_TASK",
