@@ -237,6 +237,68 @@ You can create your own storage module by implementing the [storage interface](.
 and adding your storage module to the selection [here](./src/isar/modules.py). Note that you must add your module as an
 option in the dictionary.
 
+## Task selection
+
+The tasks of a mission are selected based on a task selector module, defined by the `TASK_SELECTOR` configuration variable. The default task selector is `sequential`. When using the default module, tasks are executed in sequential order defined by the current input mission.
+
+### Implement you own task selector module
+
+Custom task selector modules may be added by implementing additional versions of the [task selector interface](./src/isar/mission_planner/task_selector_interface.py).
+
+For every custom module, the interface function `next_task()` must be implemented. All interface implementations by default have access to the list of tasks in the current mission through the member `self.tasks`, however additional variables may be supplied by adding arguments to `next_task()`. To comply with the interface definition, the function should return the next task upon every call, and raise the `TaskSelectorStop` exception when all tasks in the current mission have been completed:
+
+```python
+class CustomTaskSelector(TaskSelectorInterface):
+    ...
+    def next_task(...) -> Task:
+        
+        # Add code here
+        ...
+
+        # Raise `TaskSelectorStop` when all tasks have been completed
+        ...
+```
+
+Optionally, the `initialize()` function may be extended by supplementing the parameter list or function body:
+
+```python
+class CustomTaskSelector(TaskSelectorInterface):
+    ...
+    def initialize(self, tasks: List[Task], ...) -> None:
+        super.initialize(tasks=tasks)
+        
+        # Add supplementary code here
+        ...
+```
+
+A custom task selector may be made available during [module selection](./src/isar/modules.py) by adding it to the series of options in the dictionary of injector modules. It can then be activated by overriding the task selector configuration variable:
+
+```python
+# Add custom task selector module to `modules.py`
+
+class CustomTaskSelectorModule(Module):
+    @provider
+    @singleton
+    def provide_task_selector(self) -> TaskSelectorInterface:
+        return CustomTaskSelector()
+
+...
+
+# Make it available to select during injector instantiation
+
+modules: dict[str, tuple[Module, Union[str, bool]]] = {
+    ...
+    "task_selector": (
+        {
+            "sequential": SequentialTaskSelectorModule,
+            "custom": CustomTaskSelectorModule
+        }
+        ...
+    )
+    ...
+}
+```
+
 ## API authentication
 
 The API has an option to include user authentication. This can be enabled by setting the environment variable
