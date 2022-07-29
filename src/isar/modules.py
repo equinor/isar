@@ -14,6 +14,8 @@ from isar.config.settings import settings
 from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
+from isar.mission_planner.sequential_task_selector import SequentialTaskSelector
+from isar.mission_planner.task_selector_interface import TaskSelectorInterface
 from isar.models.communication.queues.queues import Queues
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
@@ -24,10 +26,7 @@ from isar.storage.local_storage import LocalStorage
 from isar.storage.slimm_storage import SlimmStorage
 from isar.storage.storage_interface import StorageInterface
 from robot_interface.robot_interface import RobotInterface
-from robot_interface.telemetry.mqtt_client import (
-    MqttClientInterface,
-    MqttPublisher,
-)
+from robot_interface.telemetry.mqtt_client import MqttClientInterface, MqttPublisher
 
 
 class APIModule(Module):
@@ -132,8 +131,14 @@ class StateMachineModule(Module):
         queues: Queues,
         robot: RobotInterface,
         mqtt_client: MqttClientInterface,
+        task_selector: TaskSelectorInterface,
     ) -> StateMachine:
-        return StateMachine(queues=queues, robot=robot, mqtt_publisher=mqtt_client)
+        return StateMachine(
+            queues=queues,
+            robot=robot,
+            mqtt_publisher=mqtt_client,
+            task_selector=task_selector,
+        )
 
 
 class UtilitiesModule(Module):
@@ -164,6 +169,13 @@ class MqttModule(Module):
         return None
 
 
+class SequentialTaskSelectorModule(Module):
+    @provider
+    @singleton
+    def provide_task_selector(self) -> TaskSelectorInterface:
+        return SequentialTaskSelector()
+
+
 modules: dict[str, tuple[Module, Union[str, bool]]] = {
     "api": (APIModule, "required"),
     "authentication": (AuthenticationModule, "required"),
@@ -177,6 +189,10 @@ modules: dict[str, tuple[Module, Union[str, bool]]] = {
             "echo": EchoPlannerModule,
         }[settings.MISSION_PLANNER],
         settings.MISSION_PLANNER,
+    ),
+    "task_selector": (
+        {"sequential": SequentialTaskSelectorModule}[settings.TASK_SELECTOR],
+        settings.TASK_SELECTOR,
     ),
     "service": (ServiceModule, "required"),
     "state_machine": (StateMachineModule, "required"),

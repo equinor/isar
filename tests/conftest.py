@@ -7,12 +7,14 @@ from isar.apis.api import API
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
+from isar.mission_planner.task_selector_interface import TaskSelectorInterface
 from isar.models.communication.queues.queues import Queues
 from isar.modules import (
     APIModule,
     LocalPlannerModule,
     QueuesModule,
     RequestHandlerModule,
+    SequentialTaskSelectorModule,
     ServiceModule,
     StateMachineModule,
     UtilitiesModule,
@@ -47,6 +49,7 @@ def injector():
             RequestHandlerModule,
             ServiceModule,
             StateMachineModule,
+            SequentialTaskSelectorModule,
             UtilitiesModule,
         ]
     )
@@ -116,6 +119,7 @@ def state_machine(injector, robot):
         queues=injector.get(Queues),
         robot=robot,
         mqtt_publisher=injector.get(MqttClientInterface),
+        task_selector=injector.get(TaskSelectorInterface),
     )
 
 
