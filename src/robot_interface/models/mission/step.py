@@ -172,6 +172,15 @@ class TakeThermalVideo(InspectionStep):
         return ThermalVideo
 
 
+@dataclass
+class TeleOp(MotionStep):
+    """
+    Step which activates teleoperation
+    """
+
+    type: Literal["teleop"] = "teleop"
+
+
 STEPS = Union[
     DriveToPose,
     DockingProcedure,
@@ -179,4 +188,5 @@ STEPS = Union[
     TakeThermalImage,
     TakeVideo,
     TakeThermalVideo,
+    TeleOp
 ]

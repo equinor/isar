@@ -1,0 +1,65 @@
+{
+    "id": 99,
+    "tasks": [
+        {
+            "steps": [
+                {
+                    "type": "drive_to_pose",
+                    "pose": {
+                        "position": {
+                            "x": 1,
+                            "y": -0.5,
+                            "z": 0,
+                            "frame": "asset"
+                        },
+                        "orientation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1,
+                            "frame": "asset"
+                        },
+                        "frame": "asset"
+                    }
+                }
+            ]
+        },
+        {
+            "steps": [
+                {
+                    "type": "teleop"
+                }
+            ]
+        },
+        {
+            "steps": [
+                {
+                    "type": "drive_to_pose",
+                    "pose": {
+                        "position": {
+                            "x": 0.5,
+                            "y": 0,
+                            "z": 0,
+                            "frame": "asset"
+                        },
+                        "orientation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1,
+                            "frame": "asset"
+                        },
+                        "frame": "asset"
+                    }
+                }
+            ]
+        },
+        {
+            "steps": [
+                {
+                    "type": "teleop"
+                }
+            ]
+        }
+    ]
+}

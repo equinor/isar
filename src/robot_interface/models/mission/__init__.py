@@ -9,4 +9,5 @@ from .step import (
     TakeThermalImage,
     TakeThermalVideo,
     TakeVideo,
+    TeleOp,
 )
