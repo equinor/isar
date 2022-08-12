@@ -167,7 +167,7 @@ class Settings(BaseSettings):
     ROBOT_TYPE: str = Field(default="robot")
 
     # Name or unique ID of robot
-    ROBOT_ID: str = Field(default="william")
+    ROBOT_ID: str = Field(default="R2-D2")
 
     # Data scheme the robot should adhere to
     # Options [DS0001]
