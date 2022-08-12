@@ -11,6 +11,7 @@ from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
 from isar.models.mission import Mission, Task
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+from isar.services.utilities.threaded_request import ThreadedRequest
 from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
@@ -20,6 +21,7 @@ from robot_interface.models.mission.status import StepStatus
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.step import MockStep
+from pytest_mock import MockerFixture
 
 
 class StateMachineThread(object):
@@ -188,3 +190,48 @@ def test_state_machine_with_unsuccessful_collection(
     assert (
         state_machine_thread.state_machine.transitions_list == expected_transitions_list
     )
+
+def test_state_machine_with_successful_mission_stop(
+    injector: Injector, state_machine_thread: StateMachineThread
+    ):
+
+    step: TakeImage = MockStep.take_image_in_coordinate_direction
+    mission: Mission = Mission(tasks=[Task(steps=[step])])
+    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    scheduling_utilities.stop_mission()
+    expected = deque([
+        States.Idle,
+        States.Initialize,
+        States.InitiateStep,
+        States.StopStep,
+        States.Idle
+    ])
+    actual = state_machine_thread.state_machine.transitions_list
+    has_failed: bool = state_machine_thread.state_machine.stop_step_state._lost_connection_robot
+    assert not has_failed
+    assert expected == actual
+
+
+def test_state_machine_with_unsuccsessful_mission_stop(
+    injector: Injector, mocker: MockerFixture, state_machine_thread: StateMachineThread
+    ):
+    step: TakeImage = MockStep.take_image_in_coordinate_direction
+    mission: Mission = Mission(tasks=[Task(steps=[step])])
+    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    mocker.patch.object(ThreadedRequest, "_is_thread_alive", return_value=True)
+    scheduling_utilities.stop_mission()
+    expected = deque([
+        States.Idle,
+        States.Initialize,
+        States.InitiateStep,
+        States.StopStep,
+        States.Idle
+    ])
+    actual = state_machine_thread.state_machine.transitions_list
+    has_failed: bool = state_machine_thread.state_machine.stop_step_state._lost_connection_robot
+    assert has_failed
+    assert expected == actual
