@@ -191,9 +191,10 @@ def test_state_machine_with_unsuccessful_collection(
         state_machine_thread.state_machine.transitions_list == expected_transitions_list
     )
 
+
 def test_state_machine_with_successful_mission_stop(
     injector: Injector, state_machine_thread: StateMachineThread
-    ):
+):
 
     step: TakeImage = MockStep.take_image_in_coordinate_direction
     mission: Mission = Mission(tasks=[Task(steps=[step])])
@@ -201,22 +202,26 @@ def test_state_machine_with_successful_mission_stop(
 
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
     scheduling_utilities.stop_mission()
-    expected = deque([
-        States.Idle,
-        States.Initialize,
-        States.InitiateStep,
-        States.StopStep,
-        States.Idle
-    ])
+    expected = deque(
+        [
+            States.Idle,
+            States.Initialize,
+            States.InitiateStep,
+            States.StopStep,
+            States.Idle,
+        ]
+    )
     actual = state_machine_thread.state_machine.transitions_list
-    has_failed: bool = state_machine_thread.state_machine.stop_step_state._lost_connection_robot
+    has_failed: bool = (
+        state_machine_thread.state_machine.stop_step_state._lost_connection_robot
+    )
     assert not has_failed
     assert expected == actual
 
 
 def test_state_machine_with_unsuccsessful_mission_stop(
     injector: Injector, mocker: MockerFixture, state_machine_thread: StateMachineThread
-    ):
+):
     step: TakeImage = MockStep.take_image_in_coordinate_direction
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
@@ -224,14 +229,18 @@ def test_state_machine_with_unsuccsessful_mission_stop(
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
     mocker.patch.object(ThreadedRequest, "_is_thread_alive", return_value=True)
     scheduling_utilities.stop_mission()
-    expected = deque([
-        States.Idle,
-        States.Initialize,
-        States.InitiateStep,
-        States.StopStep,
-        States.Idle
-    ])
+    expected = deque(
+        [
+            States.Idle,
+            States.Initialize,
+            States.InitiateStep,
+            States.StopStep,
+            States.Idle,
+        ]
+    )
     actual = state_machine_thread.state_machine.transitions_list
-    has_failed: bool = state_machine_thread.state_machine.stop_step_state._lost_connection_robot
+    has_failed: bool = (
+        state_machine_thread.state_machine.stop_step_state._lost_connection_robot
+    )
     assert has_failed
     assert expected == actual
