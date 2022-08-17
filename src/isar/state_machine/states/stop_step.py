@@ -21,7 +21,8 @@ class StopStep(State):
         self.logger = logging.getLogger("state_machine")
         self.stop_thread = None
         self._count_number_retries = 0
-        self._lost_connection_robot = False
+        self._has_failed_current = False
+        self.has_failed_list = []
 
     def start(self):
         self.state_machine.update_state()
@@ -31,6 +32,8 @@ class StopStep(State):
         if self.stop_thread:
             self.stop_thread.wait_for_thread()
         self.stop_thread = None
+        self._count_number_retries = 0
+        self._has_failed_current = False
 
     def _run(self):
         transition: Callable
@@ -45,7 +48,7 @@ class StopStep(State):
             try:
                 self.stop_thread.get_output()
             except ThreadedRequestNotFinishedError:
-                if self._lost_connection_robot:
+                if self._has_failed_current:
                     transition = self.state_machine.mission_stopped
                     self.logger.warning(
                         "Could not communicate request: Reached limit for stop attemps. Cancelled mission and transitioned to idle."
@@ -72,4 +75,5 @@ class StopStep(State):
     def handle_stop_fail(self, retry_limit: int):
         self._count_number_retries += 1
         if self._count_number_retries > retry_limit:
-            self._lost_connection_robot = True
+            self._has_failed_current = True
+            self.has_failed_list.append(True)
