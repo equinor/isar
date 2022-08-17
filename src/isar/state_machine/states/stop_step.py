@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, List
 
 from transitions import State
 
@@ -22,7 +22,7 @@ class StopStep(State):
         self.stop_thread = None
         self._count_number_retries = 0
         self._has_failed_current = False
-        self.has_failed_list = []
+        self.has_failed_list: List[bool] = []
 
     def start(self):
         self.state_machine.update_state()
