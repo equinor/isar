@@ -212,10 +212,8 @@ def test_state_machine_with_successful_mission_stop(
         ]
     )
     actual = state_machine_thread.state_machine.transitions_list
-    has_failed: bool = (
-        state_machine_thread.state_machine.stop_step_state._lost_connection_robot
-    )
-    assert not has_failed
+    failed_list = state_machine_thread.state_machine.stop_step_state.has_failed_list
+    assert not True in failed_list
     assert expected == actual
 
 
@@ -239,8 +237,6 @@ def test_state_machine_with_unsuccsessful_mission_stop(
         ]
     )
     actual = state_machine_thread.state_machine.transitions_list
-    has_failed: bool = (
-        state_machine_thread.state_machine.stop_step_state._lost_connection_robot
-    )
-    assert has_failed
+    failed_list = state_machine_thread.state_machine.stop_step_state.has_failed_list
+    assert True in failed_list
     assert expected == actual
