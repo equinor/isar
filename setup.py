@@ -54,6 +54,7 @@ setup(
             "pytest",
             "requests-mock",
             "sphinx",
+            "pre-commit",
         ]
     },
     python_requires=">=3.9",
