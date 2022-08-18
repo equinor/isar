@@ -10,14 +10,3 @@ repos:
     rev: v0.971
     hooks:
       - id: mypy
-  - repo: https://github.com/PyCQA/flake8
-    rev: 4.0.1
-    hooks:
-      - id: flake8
-        exclude: gen/|\.git|\.hg|\.mypy_cache|\.tox|\.venv|\venv|_build|buck-out|build|dist
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.4
-    hooks:
-      - id: bandit
-        args: ["--ini=.bandit", "--recursive", "-a=file"]
-        exclude: tests|__pycache__|.pytest_cache

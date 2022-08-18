@@ -34,7 +34,7 @@ Verify that you can run the tests:
 ```bash
 pytest .
 ```
-The repository contains a configuration file for installing pre-commit hooks. Currently, [black](https://github.com/psf/black), a mirror of [mypy](https://github.com/pre-commit/mirrors-mypy), [flake8](https://github.com/PyCQA/flake8) and [bandit](https://github.com/PyCQA/bandit) are configured hooks. Install with:
+The repository contains a configuration file for installing pre-commit hooks. Currently, [black](https://github.com/psf/black) and a mirror of [mypy](https://github.com/pre-commit/mirrors-mypy) are configured hooks. Install with:
 
 ```
 pre-commit install
@@ -44,6 +44,11 @@ Verify that pre-commit runs:
 
 ```
 pre-commit
+```
+pre-commit will now run the installed hooks before code is commited to git. To turn pre-commit off, run:
+
+```
+pre-commit uninstall
 ```
 
 ### Robot integration
