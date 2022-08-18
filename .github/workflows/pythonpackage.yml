@@ -33,11 +33,6 @@ jobs:
           black --check .
           mypy .
 
-      - name: Optional linting
-        continue-on-error: true
-        run: |
-          flake8 .
-
       - name: Test with pytest
         run: |
           pytest
