@@ -4,10 +4,10 @@ on:
     branches:
       - main
     types: [closed]
-
+  workflow_dispatch:
 jobs:
   dispatch:
-    if: ${{ github.event.pull_request.merged }}
+    if: ${{ github.event.pull_request.merged || github.event_name == 'workflow_dispatch'}}
     runs-on: ubuntu-latest
     strategy:
       matrix:
