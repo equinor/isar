@@ -5,6 +5,8 @@ from threading import Thread
 from typing import List
 
 import pytest
+import logging
+
 from injector import Injector
 
 from isar.mission_planner.local_planner import LocalPlanner
@@ -22,6 +24,8 @@ from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.step import MockStep
 from pytest_mock import MockerFixture
+
+LOGGER = logging.getLogger("state_machine")
 
 
 class StateMachineThread(object):
@@ -193,13 +197,13 @@ def test_state_machine_with_unsuccessful_collection(
 
 
 def test_state_machine_with_successful_mission_stop(
-    injector: Injector, state_machine_thread: StateMachineThread
+    injector: Injector,
+    state_machine_thread: StateMachineThread,
+    caplog: pytest.LogCaptureFixture,
 ):
-
     step: TakeImage = MockStep.take_image_in_coordinate_direction
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
     scheduling_utilities.stop_mission()
     expected = deque(
@@ -212,18 +216,20 @@ def test_state_machine_with_successful_mission_stop(
         ]
     )
     actual = state_machine_thread.state_machine.transitions_list
-    failed_list = state_machine_thread.state_machine.stop_step_state.has_failed_list
-    assert not True in failed_list
+    unexpected_log = "Could not communicate request: Reached limit for stop attemps. Cancelled mission and transitioned to idle."
+    assert unexpected_log not in caplog.text
     assert expected == actual
 
 
 def test_state_machine_with_unsuccsessful_mission_stop(
-    injector: Injector, mocker: MockerFixture, state_machine_thread: StateMachineThread
+    injector: Injector,
+    mocker: MockerFixture,
+    state_machine_thread: StateMachineThread,
+    caplog: pytest.LogCaptureFixture,
 ):
     step: TakeImage = MockStep.take_image_in_coordinate_direction
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
     mocker.patch.object(ThreadedRequest, "_is_thread_alive", return_value=True)
     scheduling_utilities.stop_mission()
@@ -237,6 +243,6 @@ def test_state_machine_with_unsuccsessful_mission_stop(
         ]
     )
     actual = state_machine_thread.state_machine.transitions_list
-    failed_list = state_machine_thread.state_machine.stop_step_state.has_failed_list
-    assert True in failed_list
+    expected_log = "Could not communicate request: Reached limit for stop attemps. Cancelled mission and transitioned to idle."
+    assert expected_log in caplog.text
     assert expected == actual
