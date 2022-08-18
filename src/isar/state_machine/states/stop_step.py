@@ -20,7 +20,6 @@ class StopStep(State):
         self.logger = logging.getLogger("state_machine")
         self.stop_thread = None
         self._count_number_retries: int = 0
-        self._has_failed_current: bool = False
 
     def start(self):
         self.state_machine.update_state()
@@ -31,7 +30,6 @@ class StopStep(State):
             self.stop_thread.wait_for_thread()
         self.stop_thread = None
         self._count_number_retries = 0
-        self._has_failed_current = False
 
     def _run(self):
         transition: Callable

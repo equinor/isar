@@ -25,8 +25,6 @@ from tests.mocks.robot_interface import MockRobot
 from tests.mocks.step import MockStep
 from pytest_mock import MockerFixture
 
-LOGGER = logging.getLogger("state_machine")
-
 
 class StateMachineThread(object):
     def __init__(self, injector) -> None:
