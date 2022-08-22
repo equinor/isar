@@ -10,11 +10,12 @@ repos:
     rev: v0.971
     hooks:
       - id: mypy
+#This can potentially be a slow pre-commit hook.
   - repo: local
     hooks:
       - id: pytest-check
         name: pytest-check
-        entry: pytest
-        language: system
-        types: [python]
+        entry: venv/bin/pytest 
+        language: script
+        pass_filenames: false
         always_run: true
