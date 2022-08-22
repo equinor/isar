@@ -10,3 +10,11 @@ repos:
     rev: v0.971
     hooks:
       - id: mypy
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest-check
+        entry: pytest
+        language: system
+        types: [python]
+        always_run: true
