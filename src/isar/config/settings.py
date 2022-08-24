@@ -220,8 +220,8 @@ class Settings(BaseSettings):
     @validator("LOG_LEVELS", pre=True, always=True)
     def set_log_levels(cls, v, values) -> dict:
         return {
-            "console": values["API_LOG_LEVEL"],
-            "api": values["CONSOLE_LOG_LEVEL"],
+            "console": values["CONSOLE_LOG_LEVEL"],
+            "api": values["API_LOG_LEVEL"],
             "urllib3": values["URLLIB3_LOG_LEVEL"],
             "uvicorn": values["UVICORN_LOG_LEVEL"],
             "state_machine": values["STATE_MACHINE_LOG_LEVEL"],
