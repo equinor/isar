@@ -208,16 +208,25 @@ class Settings(BaseSettings):
 
     TOPIC_ISAR_STEP: str = Field(default="step")
 
-    LOG_LEVELS: dict = Field(
-        default={
-            "console": "DEBUG",
-            "api": "DEBUG",
-            "urllib3": "WARNING",
-            "uvicorn": "WARNING",
-            "state_machine": "DEBUG",
-            "uploader": "DEBUG",
+    API_LOG_LEVEL: str = Field(default="INFO")
+    CONSOLE_LOG_LEVEL: str = Field(default="INFO")
+    URLLIB3_LOG_LEVEL: str = Field(default="WARNING")
+    UVICORN_LOG_LEVEL: str = Field(default="WARNING")
+    STATE_MACHINE_LOG_LEVEL: str = Field(default="INFO")
+    UPLOADER_LOG_LEVEL: str = Field(default="INFO")
+
+    LOG_LEVELS: dict = Field(default={})
+
+    @validator("LOG_LEVELS", pre=True, always=True)
+    def set_log_levels(cls, v, values) -> dict:
+        return {
+            "console": values["API_LOG_LEVEL"],
+            "api": values["CONSOLE_LOG_LEVEL"],
+            "urllib3": values["URLLIB3_LOG_LEVEL"],
+            "uvicorn": values["UVICORN_LOG_LEVEL"],
+            "state_machine": values["STATE_MACHINE_LOG_LEVEL"],
+            "uploader": values["UPLOADER_LOG_LEVEL"],
         }
-    )
 
     @validator(
         "TOPIC_ISAR_ROBOT",
