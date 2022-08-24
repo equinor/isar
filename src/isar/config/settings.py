@@ -204,6 +204,17 @@ class Settings(BaseSettings):
 
     TOPIC_ISAR_STEP: str = Field(default="step")
 
+    LOG_LEVELS: dict = Field(
+        default={
+            "console": "DEBUG",
+            "api": "DEBUG",
+            "urllib3": "WARNING",
+            "uvicorn": "WARNING",
+            "state_machine": "DEBUG",
+            "uploader": "DEBUG",
+        }
+    )
+
     @validator(
         "TOPIC_ISAR_ROBOT",
         "TOPIC_ISAR_STATE",
