@@ -1,8 +1,8 @@
 from typing import List, Optional, Union
 from uuid import UUID
 
+from alitra import Frame, Orientation, Pose, Position
 from pydantic import BaseModel, Field
-from alitra import Pose, Position, Orientation, Frame
 
 
 class StepResponse(BaseModel):
@@ -21,11 +21,11 @@ class StartMissionResponse(BaseModel):
     tasks: List[TaskResponse]
 
 
-# We need to specify our own position/orientation/pose classes that do not contain the "Frame" class
-# because of an bug in generating the OpenAPI specification:
-# https://github.com/tiangolo/fastapi/issues/1505
-# This does not happen if all the classes are 'BaseModel' classes, but the alitra models are 'dataclasses',
-# hence the conversion being done.
+# We need to specify our own position/orientation/pose classes that do not contain
+# the "Frame" class because of a bug in generating the OpenAPI specification:
+# https://github.com/tiangolo/fastapi/issues/1505 This does not happen if all the
+# classes are 'BaseModel' classes, but the alitra models are 'dataclasses', hence the
+# conversion being done.
 class InputOrientation(BaseModel):
     x: float
     y: float
