@@ -1,14 +1,15 @@
-from pydantic import BaseModel, Field
 from typing import List, Optional
+
 from alitra import Position
+from pydantic import BaseModel, Field
+
 from isar.apis.models.models import InputPose, InputPosition
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
-
 from isar.models.mission.mission import Mission, Task
 from robot_interface.models.mission.step import (
-    STEPS,
     DriveToPose,
     InspectionStep,
+    STEPS,
     TakeImage,
     TakeThermalImage,
     TakeThermalVideo,
@@ -48,7 +49,7 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
                 create_inspection_step(
                     inspection_type=inspection_type,
                     duration=task.video_duration,
-                    target=task.inspection_target,
+                    target=task.inspection_target.to_alitra_position(),
                 )
                 for inspection_type in task.inspection_types
             ]
