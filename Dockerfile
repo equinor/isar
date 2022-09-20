@@ -5,9 +5,6 @@ RUN apt-get install -y git
 
 WORKDIR /app
 
-# Default robot repository
-ARG ROBOT_REPOSITORY_CLONE_URL=https://github.com/equinor/isar-robot.git
-
 ENV VIRTUAL_ENV=/venv
 RUN python -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
@@ -22,18 +19,10 @@ RUN pip install .
 COPY . .
 
 RUN pip install -e .
-RUN pip install git+${ROBOT_REPOSITORY_CLONE_URL}@main
 
 EXPOSE 3000
 
 # Env variable for ISAR to know it is running in docker
 ENV IS_DOCKER=true
-
-# Change user to avoid running as root
-# User needs to have an explicit guid for radix
-RUN useradd -ms /bin/bash --uid 1001 isar
-RUN chown -R 1001 /app
-RUN chmod 755 /app
-USER 1001
 
 CMD python main.py
