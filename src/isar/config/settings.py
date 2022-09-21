@@ -78,6 +78,10 @@ class Settings(BaseSettings):
     # Options: [false true]
     MQTT_ENABLED: bool = Field(default=False)
 
+    # Determines whether certificate based encryption will be used for the MQTT
+    # communication.
+    MQTT_SSL_ENABLED: bool = Field(default=True)
+
     # Determines whether authentication is enabled for the API or not
     # Enabling this requires certain resources available for OAuth2 authentication
     # Currently supported authentication is Azure AD
