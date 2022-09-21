@@ -471,7 +471,7 @@ class StateMachine(object):
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_STATE,
             payload=payload,
-            retain=False,
+            retain=True,
         )
 
     def _log_state_transition(self, next_state):
