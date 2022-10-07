@@ -1,3 +1,4 @@
+import importlib.resources as pkg_resources
 import logging
 import logging.config
 
@@ -9,7 +10,9 @@ from isar.config.settings import settings
 
 def setup_logger():
     log_levels: dict = settings.LOG_LEVELS
-    log_config = yaml.safe_load(open("./src/isar/config/logging.conf"))
+    with pkg_resources.path("isar.config", "logging.conf") as path:
+        log_config = yaml.safe_load(open(path))
+
     log_handler = logging.StreamHandler()
 
     log_handler.setLevel(log_config["root"]["level"])
