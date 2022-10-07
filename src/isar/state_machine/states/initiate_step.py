@@ -82,12 +82,13 @@ class InitiateStep(State):
                 )
                 transition = self.state_machine.step_infeasible
                 break
-            except RobotException:
+            except RobotException as e:
                 self.initiate_step_thread = None
                 self.initiate_step_failure_counter += 1
-                self.logger.info(
+                self.logger.warning(
                     f"Initiating step failed #: "
                     f"{str(self.initiate_step_failure_counter)}"
+                    f"{e}"
                 )
 
             if (
