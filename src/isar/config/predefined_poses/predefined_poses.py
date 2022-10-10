@@ -10,6 +10,21 @@ robot_frame = Frame("robot")
 asset_frame = Frame("asset")
 predefined_poses = {
     #
+    # K-lab VG2
+    #
+    # Big valve straight behind the stairs. East heading
+    "331-LD-525": Pose(
+        position=Position(x=20255.341, y=5313.426, z=14.358, frame=asset_frame),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=asset_frame),
+        frame=asset_frame,
+    ),
+    # Small valve close to utility station. East heading
+    "344-LD-1024": Pose(
+        position=Position(x=20262.871, y=5313.760, z=14.464, frame=asset_frame),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=asset_frame),
+        frame=asset_frame,
+    ),
+    #
     # K-lab inlet area
     #
     "334-LD-0225": Pose(
