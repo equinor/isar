@@ -12,15 +12,27 @@ predefined_poses = {
     #
     # K-lab VG2
     #
+    # View from VG2 towards crane
+    "20-PT-5583": Pose(
+        position=Position(x=20257.979, y=5310.630, z=14.365, frame=asset_frame),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=asset_frame),
+        frame=asset_frame,
+    ),
+    # Open area picture of fuse box
+    "EJE-342-0231": Pose(
+        position=Position(x=20252.559, y=5308.437, z=14.375, frame=asset_frame),
+        orientation=Orientation(x=0, y=0, z=0, w=1, frame=asset_frame),
+        frame=asset_frame,
+    ),
     # Big valve straight behind the stairs. East heading
     "331-LD-525": Pose(
-        position=Position(x=20253.721, y=5312.485, z=14.336, frame=asset_frame),
+        position=Position(x=20254.540, y=5311.651, z=14.321, frame=asset_frame),
         orientation=Orientation(x=0, y=0, z=0, w=1, frame=asset_frame),
         frame=asset_frame,
     ),
     # Small valve close to utility station. East heading
     "344-LD-1024": Pose(
-        position=Position(x=20256.427, y=5310.491, z=14.336, frame=asset_frame),
+        position=Position(x=20260.593, y=5312.311, z=14.418, frame=asset_frame),
         orientation=Orientation(x=0, y=0, z=0, w=1, frame=asset_frame),
         frame=asset_frame,
     ),
