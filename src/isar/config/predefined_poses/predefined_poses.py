@@ -20,7 +20,7 @@ predefined_poses = {
     ),
     # Small valve close to utility station. East heading
     "344-LD-1024": Pose(
-        position=Position(x=20259.673, y=5313.140, z=14.400, frame=asset_frame),
+        position=Position(x=20256.427, y=5310.491, z=14.336, frame=asset_frame),
         orientation=Orientation(x=0, y=0, z=0, w=1, frame=asset_frame),
         frame=asset_frame,
     ),
