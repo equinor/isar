@@ -85,6 +85,11 @@ class Monitor(State):
             )
             return
 
+        if not inspections:
+            self.logger.warning(
+                f"No inspection data retrieved for step {str(current_step.id)[:8]}"
+            )
+
         # A deepcopy is made to freeze the metadata before passing it to another thread
         # through the queue
         mission_metadata: MissionMetadata = deepcopy(
