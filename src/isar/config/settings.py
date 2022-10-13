@@ -218,6 +218,8 @@ class Settings(BaseSettings):
     UVICORN_LOG_LEVEL: str = Field(default="WARNING")
     STATE_MACHINE_LOG_LEVEL: str = Field(default="INFO")
     UPLOADER_LOG_LEVEL: str = Field(default="INFO")
+    MAIN_LOG_LEVEL: str = Field(default="INFO")
+    AZURE_LOG_LEVEL: str = Field(default="WARNING")
 
     LOG_LEVELS: dict = Field(default={})
 
@@ -230,6 +232,8 @@ class Settings(BaseSettings):
             "uvicorn": values["UVICORN_LOG_LEVEL"],
             "state_machine": values["STATE_MACHINE_LOG_LEVEL"],
             "uploader": values["UPLOADER_LOG_LEVEL"],
+            "main": values["MAIN_LOG_LEVEL"],
+            "azure": values["AZURE_LOG_LEVEL"],
         }
 
     @validator(
