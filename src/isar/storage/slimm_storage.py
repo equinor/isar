@@ -79,17 +79,17 @@ class SlimmStorage(StorageInterface):
         )
         multiform_body: MultipartEncoder = MultipartEncoder(
             fields={
-                "Metadata.Mission.MissionId": metadata.mission_id,
-                "Metadata.Mission.StartDate": metadata.mission_date.isoformat(),
-                "Metadata.Mission.EndDate": metadata.mission_date.isoformat(),
-                "Metadata.Geodetic.CoordinateReferenceSystemCode": metadata.coordinate_reference_system,  # noqa: E501
-                "Metadata.Geodetic.VerticalCoordinateReferenceSystemCode": metadata.vertical_reference_system,  # noqa: E501
-                "Metadata.Geodetic.OrientationReferenceSystem": metadata.media_orientation_reference_system,  # noqa: E501
-                "Metadata.SensorCarrier.Id": metadata.robot_id,
-                "InternalClassification": metadata.data_classification,
-                "PlantFacilitySAPCode": metadata.plant_code,
-                "Client": "Equinor",
-                "IsoCountryCode": "NO",
+                "SchemaMetadata.Mission.MissionId": metadata.mission_id,
+                "SchemaMetadata.Mission.StartDate": metadata.mission_date.isoformat(),
+                "SchemaMetadata.Mission.EndDate": metadata.mission_date.isoformat(),
+                "SchemaMetadata.Geodetic.CoordinateReferenceSystemCode": metadata.coordinate_reference_system,  # noqa: E501
+                "SchemaMetadata.Geodetic.VerticalCoordinateReferenceSystemCode": metadata.vertical_reference_system,  # noqa: E501
+                "SchemaMetadata.Geodetic.OrientationReferenceSystem": metadata.media_orientation_reference_system,  # noqa: E501
+                "SchemaMetadata.SensorCarrier.Id": metadata.robot_id,
+                "SchemaMetadata.InternalClassification": metadata.data_classification,
+                "SchemaMetadata.PlantFacilitySAPCode": metadata.plant_code,
+                "SchemaMetadata.Mission.Client": "Equinor",
+                "SchemaMetadata.IsoCountryCode": "NO",
                 "AttachedFileMetadata.X": str(
                     inspection.metadata.time_indexed_pose.pose.position.x
                 ),
