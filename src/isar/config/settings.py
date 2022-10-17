@@ -213,12 +213,13 @@ class Settings(BaseSettings):
     TOPIC_ISAR_STEP: str = Field(default="step")
 
     API_LOG_LEVEL: str = Field(default="INFO")
+    MAIN_LOG_LEVEL: str = Field(default="INFO")
+    MQTT_LOG_LEVEL: str = Field(default="INFO")
+    STATE_MACHINE_LOG_LEVEL: str = Field(default="INFO")
+    UPLOADER_LOG_LEVEL: str = Field(default="INFO")
     CONSOLE_LOG_LEVEL: str = Field(default="INFO")
     URLLIB3_LOG_LEVEL: str = Field(default="WARNING")
     UVICORN_LOG_LEVEL: str = Field(default="WARNING")
-    STATE_MACHINE_LOG_LEVEL: str = Field(default="INFO")
-    UPLOADER_LOG_LEVEL: str = Field(default="INFO")
-    MAIN_LOG_LEVEL: str = Field(default="INFO")
     AZURE_LOG_LEVEL: str = Field(default="WARNING")
 
     LOG_LEVELS: dict = Field(default={})
@@ -226,13 +227,14 @@ class Settings(BaseSettings):
     @validator("LOG_LEVELS", pre=True, always=True)
     def set_log_levels(cls, v, values) -> dict:
         return {
-            "console": values["CONSOLE_LOG_LEVEL"],
             "api": values["API_LOG_LEVEL"],
-            "urllib3": values["URLLIB3_LOG_LEVEL"],
-            "uvicorn": values["UVICORN_LOG_LEVEL"],
+            "main": values["MAIN_LOG_LEVEL"],
+            "mqtt": values["MQTT_LOG_LEVEL"],
             "state_machine": values["STATE_MACHINE_LOG_LEVEL"],
             "uploader": values["UPLOADER_LOG_LEVEL"],
-            "main": values["MAIN_LOG_LEVEL"],
+            "console": values["CONSOLE_LOG_LEVEL"],
+            "urllib3": values["URLLIB3_LOG_LEVEL"],
+            "uvicorn": values["UVICORN_LOG_LEVEL"],
             "azure": values["AZURE_LOG_LEVEL"],
         }
 
