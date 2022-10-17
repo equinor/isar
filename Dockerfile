@@ -16,6 +16,9 @@ RUN mkdir -p src
 COPY setup.py README.md ./
 RUN pip install .
 
+# Install the base isar-robot package
+RUN pip install isar-robot
+
 COPY . .
 
 RUN pip install -e .
