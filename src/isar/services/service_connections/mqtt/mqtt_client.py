@@ -58,7 +58,7 @@ class MqttClient(MqttClientInterface):
         payload: str = json.dumps(
             {
                 "robot_id": settings.ROBOT_ID,
-                "host": settings.API_HOST,
+                "host": settings.API_HOST_VIEWED_EXTERNALLY,
                 "port": settings.API_PORT,
                 "timestamp": datetime.utcnow(),
             },
