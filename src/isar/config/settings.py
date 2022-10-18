@@ -224,6 +224,8 @@ class Settings(BaseSettings):
 
     LOG_LEVELS: dict = Field(default={})
 
+    REQUIRED_ROLE: str = Field(default="Mission.Control")
+
     @validator("LOG_LEVELS", pre=True, always=True)
     def set_log_levels(cls, v, values) -> dict:
         return {
