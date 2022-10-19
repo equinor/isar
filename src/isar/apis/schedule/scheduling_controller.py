@@ -1,7 +1,7 @@
 import logging
 from http import HTTPStatus
 from queue import Empty
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from alitra import Pose
 from fastapi import Body, Path, Response
@@ -9,6 +9,7 @@ from injector import inject
 from requests import HTTPError
 
 from isar.apis.models import InputPose, StartMissionResponse
+from isar.apis.models.models import PauseMissionResponse
 from isar.apis.models.start_mission_definition import (
     StartMissionDefinition,
     to_isar_mission,
@@ -234,7 +235,7 @@ class SchedulingController:
             return error_message
         return StartMissionResponse(**mission.api_response_dict())
 
-    def pause_mission(self, response: Response):
+    def pause_mission(self, response: Response) -> Union[PauseMissionResponse, str]:
         self.logger.info("Received request to pause current mission")
 
         try:
@@ -252,13 +253,16 @@ class SchedulingController:
             return errorMsg
 
         try:
-            self.scheduling_utilities.pause_mission()
+            pause_response: PauseMissionResponse = (
+                self.scheduling_utilities.pause_mission()
+            )
             self.logger.info("OK - Mission successfully paused")
         except QueueTimeoutError:
             errorMsg = "Timeout - Failed to pause mission"
             self.logger.error(errorMsg)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
             return errorMsg
+        return pause_response
 
     def resume_mission(self, response: Response):
         self.logger.info("Received request to resume current mission")
