@@ -21,6 +21,15 @@ class StartMissionResponse(BaseModel):
     tasks: List[TaskResponse]
 
 
+class PauseMissionResponse(BaseModel):
+    mission_id: Union[UUID, int, str, None]
+    mission_status: str
+    task_id: str
+    task_status: str
+    step_id: str
+    step_status: str
+
+
 # We need to specify our own position/orientation/pose classes that do not contain
 # the "Frame" class because of a bug in generating the OpenAPI specification:
 # https://github.com/tiangolo/fastapi/issues/1505 This does not happen if all the

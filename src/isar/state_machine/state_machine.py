@@ -10,6 +10,7 @@ from alitra import Pose
 from injector import Injector, inject
 from transitions import Machine
 from transitions.core import State
+from isar.apis.models.models import PauseMissionResponse
 
 from isar.config.settings import settings
 from isar.mission_planner.task_selector_interface import (
@@ -266,10 +267,19 @@ class StateMachine(object):
 
     def _mission_paused(self) -> None:
         self.logger.info(f"Pausing mission: {self.current_mission.id}")
-        self.queues.pause_mission.output.put(True)
         self.current_mission.status = MissionStatus.Paused
         self.current_task.status = TaskStatus.Paused
         self.current_step.status = StepStatus.NotStarted
+
+        pause_response = PauseMissionResponse(
+            mission_id=self.current_mission.id,
+            mission_status=self.current_mission.status,
+            task_id=self.current_task.id,
+            task_status=self.current_task.status,
+            step_id=self.current_step.id,
+            step_status=self.current_step.status,
+        )
+        self.queues.pause_mission.output.put(pause_response)
         self.publish_mission_status()
         self.publish_task_status()
         self.publish_step_status()
