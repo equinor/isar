@@ -1,9 +1,12 @@
 import json
+import logging
 from pathlib import Path
 from typing import Any, Tuple
 from uuid import UUID
 
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from isar.storage.storage_interface import StorageException
+from robot_interface.models.inspection import ThermalVideo, Video
 from robot_interface.models.inspection.inspection import Image, Inspection, ThermalImage
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
@@ -81,7 +84,16 @@ def get_inspection_type(inspection: Inspection) -> str:
         return "image"
     elif isinstance(inspection, ThermalImage):
         return "thermal"
+    elif isinstance(inspection, Video):
+        return "video"
+    elif isinstance(inspection, ThermalVideo):
+        return "thermal_video"
     else:
-        raise TypeError(
-            f"Inspection must be either Image or ThermalImage. Got {type(inspection)}"
+        logging.getLogger("uploader").warning(
+            f"Failed to upload inspection with ID: {inspection.id}\n "
+            f"This was due to an inspection type ({type(inspection)}) "
+            f"which is not supported by the uploader"
+        )
+        raise StorageException(
+            f"Inspection type not supported by the uploader. Got {type(inspection)}"
         )
