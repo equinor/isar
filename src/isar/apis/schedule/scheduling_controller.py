@@ -9,7 +9,7 @@ from injector import inject
 from requests import HTTPError
 
 from isar.apis.models import InputPose, StartMissionResponse
-from isar.apis.models.models import PauseMissionResponse, ResumeMissionResponse
+from isar.apis.models.models import ControlMissionResponse
 from isar.apis.models.start_mission_definition import (
     StartMissionDefinition,
     to_isar_mission,
@@ -235,7 +235,7 @@ class SchedulingController:
             return error_message
         return StartMissionResponse(**mission.api_response_dict())
 
-    def pause_mission(self, response: Response) -> Union[PauseMissionResponse, str]:
+    def pause_mission(self, response: Response) -> Union[ControlMissionResponse, str]:
         self.logger.info("Received request to pause current mission")
 
         try:
@@ -253,7 +253,7 @@ class SchedulingController:
             return errorMsg
 
         try:
-            pause_response: PauseMissionResponse = (
+            pause_mission_response: ControlMissionResponse = (
                 self.scheduling_utilities.pause_mission()
             )
             self.logger.info("OK - Mission successfully paused")
@@ -262,9 +262,9 @@ class SchedulingController:
             self.logger.error(errorMsg)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
             return errorMsg
-        return pause_response
+        return pause_mission_response
 
-    def resume_mission(self, response: Response) -> Union[ResumeMissionResponse, str]:
+    def resume_mission(self, response: Response) -> Union[ControlMissionResponse, str]:
         self.logger.info("Received request to resume current mission")
         try:
             state: States = self.scheduling_utilities.get_state()
@@ -289,7 +289,7 @@ class SchedulingController:
             return error_message
 
         try:
-            resume_mission_response: ResumeMissionResponse = (
+            resume_mission_response: ControlMissionResponse = (
                 self.scheduling_utilities.resume_mission()
             )
             self.logger.info("OK - Mission successfully resumed")
@@ -300,7 +300,7 @@ class SchedulingController:
             return error_message
         return resume_mission_response
 
-    def stop_mission(self, response: Response):
+    def stop_mission(self, response: Response) -> Union[ControlMissionResponse, str]:
         self.logger.info("Received request to stop current mission")
 
         try:
@@ -320,13 +320,16 @@ class SchedulingController:
             return error_message
 
         try:
-            self.scheduling_utilities.stop_mission()
+            stop_mission_response: ControlMissionResponse = (
+                self.scheduling_utilities.stop_mission()
+            )
             self.logger.info("OK - Mission successfully stopped")
         except QueueTimeoutError:
             error_message = "Timeout - Failed to stop mission"
             self.logger.error(error_message)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
             return error_message
+        return stop_mission_response
 
     def drive_to(
         self,

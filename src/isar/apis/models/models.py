@@ -21,18 +21,13 @@ class StartMissionResponse(BaseModel):
     tasks: List[TaskResponse]
 
 
-class PauseMissionResponse(BaseModel):
+class ControlMissionResponse(BaseModel):
     mission_id: Union[UUID, int, str, None]
     mission_status: str
     task_id: Union[UUID, int, str, None]
     task_status: str
     step_id: Union[UUID, int, str, None]
     step_status: str
-
-
-class ResumeMissionResponse(BaseModel):
-    mission_id: Union[UUID, int, str, None]
-    mission_status: str
 
 
 # We need to specify our own position/orientation/pose classes that do not contain
