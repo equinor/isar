@@ -1,6 +1,7 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Callable
+from typing import Callable, TYPE_CHECKING
+
 from transitions import State
 
 from isar.services.utilities.threaded_request import (
@@ -44,7 +45,9 @@ class StopStep(State):
             try:
                 self.stop_thread.get_output()
             except ThreadedRequestNotFinishedError:
-                if self.handle_stop_fail(retry_limit=50):
+                if self.handle_stop_fail(
+                    retry_limit=self.state_machine.stop_robot_attempts_limit
+                ):
                     transition = self.state_machine.mission_stopped
                     break
                 continue

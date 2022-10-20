@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     INITIATE_STEP_FAILURE_COUNTER_LIMIT: int = Field(default=10)
 
     # Number of attempts to stop the robot before giving up
-    STOP_ROBOT_ATTEMPTS_LIMIT: int = Field(default=10)
+    STOP_ROBOT_ATTEMPTS_LIMIT: int = Field(default=600)
 
     # Number of attempts to stop the robot before giving up
     UPLOAD_FAILURE_ATTEMPTS_LIMIT: int = Field(default=10)
