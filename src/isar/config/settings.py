@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     # Sleep time for while loops in the finite state machine in seconds
     # The sleep is used to throttle the system on every iteration in the loop
-    FSM_SLEEP_TIME: int = Field(default=0.1)
+    FSM_SLEEP_TIME: float = Field(default=0.1)
 
     # Location of JSON files containing predefined missions for the Local Planner to use
     PREDEFINED_MISSIONS_FOLDER: str = Field(
