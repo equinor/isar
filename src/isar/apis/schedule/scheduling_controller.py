@@ -9,7 +9,7 @@ from injector import inject
 from requests import HTTPError
 
 from isar.apis.models import InputPose, StartMissionResponse
-from isar.apis.models.models import PauseMissionResponse
+from isar.apis.models.models import PauseMissionResponse, ResumeMissionResponse
 from isar.apis.models.start_mission_definition import (
     StartMissionDefinition,
     to_isar_mission,
@@ -264,7 +264,7 @@ class SchedulingController:
             return errorMsg
         return pause_response
 
-    def resume_mission(self, response: Response):
+    def resume_mission(self, response: Response) -> Union[ResumeMissionResponse, str]:
         self.logger.info("Received request to resume current mission")
         try:
             state: States = self.scheduling_utilities.get_state()
@@ -289,13 +289,16 @@ class SchedulingController:
             return error_message
 
         try:
-            self.scheduling_utilities.resume_mission()
+            resume_mission_response: ResumeMissionResponse = (
+                self.scheduling_utilities.resume_mission()
+            )
             self.logger.info("OK - Mission successfully resumed")
         except QueueTimeoutError:
             error_message = "Timeout - Failed to resume mission"
             self.logger.error(error_message)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
             return error_message
+        return resume_mission_response
 
     def stop_mission(self, response: Response):
         self.logger.info("Received request to stop current mission")

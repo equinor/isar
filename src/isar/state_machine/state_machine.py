@@ -10,7 +10,11 @@ from alitra import Pose
 from injector import Injector, inject
 from transitions import Machine
 from transitions.core import State
-from isar.apis.models.models import PauseMissionResponse
+from isar.apis.models.models import (
+    PauseMissionResponse,
+    ResumeMissionResponse,
+    StartMissionResponse,
+)
 
 from isar.config.settings import settings
 from isar.mission_planner.task_selector_interface import (
@@ -249,7 +253,11 @@ class StateMachine(object):
         self.current_task.status = TaskStatus.InProgress
         self.publish_mission_status()
         self.publish_task_status()
-        self.queues.resume_mission.output.put(True)
+        resume_mission_response = ResumeMissionResponse(
+            mission_id=self.current_mission.id,
+            mission_status=self.current_mission.status,
+        )
+        self.queues.resume_mission.output.put(resume_mission_response)
         self.current_task.reset_task()
         self.update_current_step()
 
