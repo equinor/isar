@@ -10,11 +10,7 @@ from alitra import Pose
 from injector import Injector, inject
 from transitions import Machine
 from transitions.core import State
-from isar.apis.models.models import (
-    PauseMissionResponse,
-    ResumeMissionResponse,
-    StartMissionResponse,
-)
+from isar.apis.models.models import ControlMissionResponse
 
 from isar.config.settings import settings
 from isar.mission_planner.task_selector_interface import (
@@ -253,11 +249,12 @@ class StateMachine(object):
         self.current_task.status = TaskStatus.InProgress
         self.publish_mission_status()
         self.publish_task_status()
-        resume_mission_response = ResumeMissionResponse(
-            mission_id=self.current_mission.id,
-            mission_status=self.current_mission.status,
+
+        resume_mission_response: ControlMissionResponse = (
+            self._make_control_mission_response()
         )
         self.queues.resume_mission.output.put(resume_mission_response)
+
         self.current_task.reset_task()
         self.update_current_step()
 
@@ -279,15 +276,11 @@ class StateMachine(object):
         self.current_task.status = TaskStatus.Paused
         self.current_step.status = StepStatus.NotStarted
 
-        pause_response = PauseMissionResponse(
-            mission_id=self.current_mission.id,
-            mission_status=self.current_mission.status,
-            task_id=self.current_task.id,
-            task_status=self.current_task.status,
-            step_id=self.current_step.id,
-            step_status=self.current_step.status,
+        paused_mission_response: ControlMissionResponse = (
+            self._make_control_mission_response()
         )
-        self.queues.pause_mission.output.put(pause_response)
+        self.queues.pause_mission.output.put(paused_mission_response)
+
         self.publish_mission_status()
         self.publish_task_status()
         self.publish_step_status()
@@ -308,7 +301,6 @@ class StateMachine(object):
         self.update_current_step()
 
     def _mission_stopped(self) -> None:
-        self.queues.stop_mission.output.put(True)
         self.current_mission.status = MissionStatus.Cancelled
         for task in self.current_mission.tasks:
             for step in task.steps:
@@ -320,6 +312,12 @@ class StateMachine(object):
                 TaskStatus.Paused,
             ]:
                 task.status = TaskStatus.Cancelled
+
+        stopped_mission_response: ControlMissionResponse = (
+            self._make_control_mission_response()
+        )
+        self.queues.stop_mission.output.put(stopped_mission_response)
+
         self.publish_task_status()
         self.publish_step_status()
         self._finalize()
@@ -511,6 +509,16 @@ class StateMachine(object):
         log_statement: str = "\n".join(log_statements)
 
         self.logger.info(f"Mission overview:\n{log_statement}")
+
+    def _make_control_mission_response(self) -> ControlMissionResponse:
+        return ControlMissionResponse(
+            mission_id=self.current_mission.id,
+            mission_status=self.current_mission.status,
+            task_id=self.current_task.id,
+            task_status=self.current_task.status,
+            step_id=self.current_step.id,
+            step_status=self.current_step.status,
+        )
 
 
 def main(injector: Injector):

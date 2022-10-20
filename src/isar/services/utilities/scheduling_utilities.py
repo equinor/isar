@@ -5,8 +5,7 @@ from typing import Any, Optional
 from alitra import Pose
 from injector import inject
 from isar.apis.models.models import (
-    PauseMissionResponse,
-    ResumeMissionResponse,
+    ControlMissionResponse,
     StartMissionResponse,
 )
 
@@ -39,14 +38,14 @@ class SchedulingUtilities:
             self.queues.start_mission,
         )
 
-    def pause_mission(self) -> PauseMissionResponse:
+    def pause_mission(self) -> ControlMissionResponse:
         return self._send_command(True, self.queues.pause_mission)
 
-    def resume_mission(self) -> ResumeMissionResponse:
+    def resume_mission(self) -> ControlMissionResponse:
         return self._send_command(True, self.queues.resume_mission)
 
-    def stop_mission(self) -> None:
-        self._send_command(True, self.queues.stop_mission)
+    def stop_mission(self) -> ControlMissionResponse:
+        return self._send_command(True, self.queues.stop_mission)
 
     def _send_command(self, input: Any, queueio: QueueIO) -> Any:
         queueio.input.put(input)
