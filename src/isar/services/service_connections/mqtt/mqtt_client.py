@@ -13,6 +13,25 @@ from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
+def _on_success(data: dict) -> None:
+    logging.getLogger("mqtt_client").info("Connected to MQTT Broker")
+    logging.getLogger("mqtt_client").debug(
+        f"Elapsed time: {data['elapsed']}, Tries: {data['tries']}"
+    )
+
+
+def _on_backoff(data: dict) -> None:
+    logging.getLogger("mqtt_client").warning(
+        f"Failed to connect, retrying in {data['wait']} seconds"
+    )
+
+
+def _on_giveup(data: dict) -> None:
+    logging.getLogger("mqtt_client").error(
+        "Failed to connect to MQTT Broker within set backoff strategy."
+    )
+
+
 class MqttClient(MqttClientInterface):
     def __init__(self, mqtt_queue: Queue) -> None:
         self.logger = logging.getLogger("mqtt_client")
@@ -87,25 +106,6 @@ class MqttClient(MqttClientInterface):
     def on_disconnect(self, client, userdata, rc):
         if rc != 0:
             self.logger.warning("Unexpected disconnection from MQTT Broker")
-
-    @staticmethod
-    def _on_success(data: dict) -> None:
-        logging.getLogger("mqtt_client").info("Connected to MQTT Broker")
-        logging.getLogger("mqtt_client").debug(
-            f"Elapsed time: {data['elapsed']}, Tries: {data['tries']}"
-        )
-
-    @staticmethod
-    def _on_backoff(data: dict) -> None:
-        logging.getLogger("mqtt_client").warning(
-            f"Failed to connect, retrying in {data['wait']} seconds"
-        )
-
-    @staticmethod
-    def _on_giveup(data: dict) -> None:
-        logging.getLogger("mqtt_client").error(
-            "Failed to connect to MQTT Broker within set backoff strategy."
-        )
 
     @backoff.on_exception(
         backoff.expo,
