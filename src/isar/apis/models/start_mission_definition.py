@@ -7,9 +7,9 @@ from isar.apis.models.models import InputPose, InputPosition
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.mission.mission import Mission, Task
 from robot_interface.models.mission.step import (
+    STEPS,
     DriveToPose,
     InspectionStep,
-    STEPS,
     TakeImage,
     TakeThermalImage,
     TakeThermalVideo,
@@ -50,6 +50,7 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
                     inspection_type=inspection_type,
                     duration=task.video_duration,
                     target=task.inspection_target.to_alitra_position(),
+                    tag_id=tag_id,
                 )
                 for inspection_type in task.inspection_types
             ]
@@ -67,19 +68,27 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
 
 
 def create_inspection_step(
-    inspection_type: str, duration: float, target: Position
+    inspection_type: str, duration: float, target: Position, tag_id: Optional[str]
 ) -> STEPS:
-    inspection: STEPS
+    inspection_step: STEPS
 
     if inspection_type == TakeImage.get_inspection_type().__name__:
-        inspection = TakeImage(target=target)
+        inspection_step = TakeImage(target=target)
+        if tag_id:
+            inspection_step.tag_id = tag_id
     elif inspection_type == TakeVideo.get_inspection_type().__name__:
-        inspection = TakeVideo(target=target, duration=duration)
+        inspection_step = TakeVideo(target=target, duration=duration)
+        if tag_id:
+            inspection_step.tag_id = tag_id
     elif inspection_type == TakeThermalImage.get_inspection_type().__name__:
-        inspection = TakeThermalImage(target=target)
+        inspection_step = TakeThermalImage(target=target)
+        if tag_id:
+            inspection_step.tag_id = tag_id
     elif inspection_type == TakeThermalVideo.get_inspection_type().__name__:
-        inspection = TakeThermalVideo(target=target, duration=duration)
+        inspection_step = TakeThermalVideo(target=target, duration=duration)
+        if tag_id:
+            inspection_step.tag_id = tag_id
     else:
         raise ValueError(f"Inspection type '{inspection_type}' not supported")
 
-    return inspection
+    return inspection_step
