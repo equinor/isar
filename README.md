@@ -342,14 +342,17 @@ turned off but may be activated by setting the environment variable
 ISAR_MQTT_ENABLED = true
 ```
 
-The connection to the broker will be determined by the following configuration values which may all be overwritten
-through the environment.
-
+The connection to the broker will be determined by the following configuration values in ```settings.py```
 ```
 ISAR_MQTT_USERNAME
 ISAR_MQTT_HOST
 ISAR_MQTT_PORT
 ```
+The default values of these are overwritten by the environment in ```settings.env```.
 
-In addition, the `ISAR_MQTT_PASSWORD` environment variable should be available for connection to the broker. If username
-and password is not specified both will default to empty strings.
+
+To specify broker password, add the following environment variable to a .env file in the root of the repository:
+```
+ISAR_MQTT_PASSWORD
+```
+If not specified the password will default to an empty string.
