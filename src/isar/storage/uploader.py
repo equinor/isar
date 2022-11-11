@@ -4,10 +4,11 @@ from datetime import datetime, timedelta
 from queue import Empty, Queue
 from typing import List
 
+from robot_interface.models.inspection.inspection import Inspection
+
 from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageException, StorageInterface
-from robot_interface.models.inspection.inspection import Inspection
 
 
 @dataclass
