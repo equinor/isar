@@ -57,5 +57,5 @@ setup(
             "pre-commit",
         ]
     },
-    python_requires=">=3.9",
+    python_requires=">=3.8",
 )
