@@ -8,10 +8,16 @@ from typing import Deque, List, Optional
 
 from alitra import Pose
 from injector import Injector, inject
+from robot_interface.models.initialize.initialize_params import InitializeParams
+from robot_interface.models.mission import StepStatus
+from robot_interface.models.mission.step import Step
+from robot_interface.robot_interface import RobotInterface
+from robot_interface.telemetry.mqtt_client import MqttClientInterface
+from robot_interface.utilities.json_service import EnhancedJSONEncoder
 from transitions import Machine
 from transitions.core import State
-from isar.apis.models.models import ControlMissionResponse
 
+from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.mission_planner.task_selector_interface import (
     TaskSelectorInterface,
@@ -31,12 +37,6 @@ from isar.state_machine.states import (
     StopStep,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.initialize.initialize_params import InitializeParams
-from robot_interface.models.mission import StepStatus
-from robot_interface.models.mission.step import Step
-from robot_interface.robot_interface import RobotInterface
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 class StateMachine(object):
