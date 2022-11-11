@@ -2,9 +2,11 @@ import logging
 from importlib import import_module
 from logging import Logger
 from types import ModuleType
-from typing import List, Union
+from typing import Dict, List, Tuple, Union
 
 from injector import Injector, Module, multiprovider, provider, singleton
+from robot_interface.robot_interface import RobotInterface
+from robot_interface.telemetry.mqtt_client import MqttClientInterface, MqttPublisher
 
 from isar.apis.api import API
 from isar.apis.schedule.scheduling_controller import SchedulingController
@@ -25,8 +27,6 @@ from isar.storage.blob_storage import BlobStorage
 from isar.storage.local_storage import LocalStorage
 from isar.storage.slimm_storage import SlimmStorage
 from isar.storage.storage_interface import StorageInterface
-from robot_interface.robot_interface import RobotInterface
-from robot_interface.telemetry.mqtt_client import MqttClientInterface, MqttPublisher
 
 
 class APIModule(Module):
@@ -176,7 +176,7 @@ class SequentialTaskSelectorModule(Module):
         return SequentialTaskSelector()
 
 
-modules: dict[str, tuple[Module, Union[str, bool]]] = {
+modules: Dict[str, Tuple[Module, Union[str, bool]]] = {
     "api": (APIModule, "required"),
     "authentication": (AuthenticationModule, "required"),
     "queues": (QueuesModule, "required"),

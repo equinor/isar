@@ -1,7 +1,7 @@
 import logging
 from http import HTTPStatus
 from logging import Logger
-from typing import Union
+from typing import List, Union
 
 import click
 import uvicorn
@@ -65,7 +65,7 @@ class API:
         )
 
         if self.authenticator.should_authenticate():
-            backend_cors_origins: list[Union[str, AnyHttpUrl]] = [
+            backend_cors_origins: List[Union[str, AnyHttpUrl]] = [
                 f"http://{self.host}:{self.port}"
             ]
 
