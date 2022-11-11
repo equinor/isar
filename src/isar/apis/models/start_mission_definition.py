@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Type
 
 from alitra import Position
 from pydantic import BaseModel, Field
@@ -16,7 +16,7 @@ from isar.apis.models.models import InputPose, InputPosition
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.mission.mission import Mission, Task
 
-inspection_step_types: List[InspectionStep] = [
+inspection_step_types: List[Type[InspectionStep]] = [
     TakeImage,
     TakeThermalImage,
     TakeVideo,
