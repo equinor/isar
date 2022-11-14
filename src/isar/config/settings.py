@@ -1,7 +1,10 @@
 import importlib.resources as pkg_resources
+import os
 from typing import List
 
 from pydantic import BaseSettings, Field, validator
+
+from isar.config import predefined_missions
 
 
 class Settings(BaseSettings):
@@ -23,9 +26,8 @@ class Settings(BaseSettings):
     FSM_SLEEP_TIME: float = Field(default=0.1)
 
     # Location of JSON files containing predefined missions for the Local Planner to use
-    PREDEFINED_MISSIONS_FOLDER: str = Field(
-        default="src/isar/config/predefined_missions/"
-    )
+    path = os.path.dirname(predefined_missions.__file__)
+    PREDEFINED_MISSIONS_FOLDER: str = Field(default=path + "/")
 
     # Name of default map transformation
     DEFAULT_MAP: str = Field(default="default_map")
