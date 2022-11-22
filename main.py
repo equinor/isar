@@ -57,7 +57,9 @@ if __name__ == "__main__":
         publishers: List[Thread] = robot.get_telemetry_publishers(
             queue=queues.mqtt_queue, robot_id=settings.ROBOT_ID
         )
-        threads.extend(publishers)
+
+        if publishers:
+            threads.extend(publishers)
 
     api: API = injector.get(API)
     api_thread: Thread = Thread(target=api.run_app, name="ISAR API", daemon=True)
