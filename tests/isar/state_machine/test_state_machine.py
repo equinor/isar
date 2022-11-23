@@ -5,9 +5,8 @@ from threading import Thread
 from typing import List
 
 import pytest
-import logging
-
 from injector import Injector
+from pytest_mock import MockerFixture
 
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
@@ -18,12 +17,12 @@ from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
+from robot_interface.models.exceptions import RobotException
 from robot_interface.models.mission import DriveToPose, Step, TakeImage
 from robot_interface.models.mission.status import StepStatus
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.step import MockStep
-from pytest_mock import MockerFixture
 
 
 class StateMachineThread(object):
@@ -214,7 +213,10 @@ def test_state_machine_with_successful_mission_stop(
         ]
     )
     actual = state_machine_thread.state_machine.transitions_list
-    unexpected_log = "Could not communicate request: Reached limit for stop attemps. Cancelled mission and transitioned to idle."
+    unexpected_log = (
+        "Could not communicate request: Reached limit for stop attempts. "
+        "Cancelled mission and transitioned to idle."
+    )
     assert unexpected_log not in caplog.text
     assert expected == actual
 
@@ -229,7 +231,7 @@ def test_state_machine_with_unsuccsessful_mission_stop(
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-    mocker.patch.object(ThreadedRequest, "_is_thread_alive", return_value=True)
+    mocker.patch.object(ThreadedRequest, "get_output", side_effect=RobotException)
     scheduling_utilities.stop_mission()
     expected = deque(
         [
@@ -241,6 +243,9 @@ def test_state_machine_with_unsuccsessful_mission_stop(
         ]
     )
     actual = state_machine_thread.state_machine.transitions_list
-    expected_log = "Could not communicate request: Reached limit for stop attemps. Cancelled mission and transitioned to idle."
+    expected_log = (
+        "Could not communicate request: Reached limit for stop attempts. "
+        "Cancelled mission and transitioned to idle."
+    )
     assert expected_log in caplog.text
     assert expected == actual
