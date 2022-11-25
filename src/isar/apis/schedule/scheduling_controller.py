@@ -132,9 +132,9 @@ class SchedulingController:
             self.scheduling_utilities.start_mission(
                 mission=mission, initial_pose=initial_pose_alitra
             )
-            self.logger.info("OK - Mission successfully started")
+            self.logger.info("OK - Mission started in ISAR")
         except QueueTimeoutError:
-            error_message = "Timeout - Failed to start mission"
+            error_message = "Timeout - Failed to start mission in ISAR"
             self.logger.error(error_message)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
             return error_message
@@ -232,9 +232,9 @@ class SchedulingController:
             self.scheduling_utilities.start_mission(
                 mission=mission, initial_pose=initial_pose_alitra
             )
-            self.logger.info("OK - Mission successfully started")
+            self.logger.info("OK - Mission started in ISAR")
         except QueueTimeoutError:
-            error_message = "Timeout - Failed to start mission"
+            error_message = "Timeout - Failed to start mission in ISAR"
             self.logger.error(error_message)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
             return error_message
