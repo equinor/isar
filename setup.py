@@ -10,6 +10,11 @@ setup(
     url="https://github.com/equinor/isar",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
+    package_data={
+        "isar": [
+            "config/logging.conf",
+        ]
+    },
     classifiers=[
         "Environment :: Other Environment",
         "Intended Audience :: Developers",
