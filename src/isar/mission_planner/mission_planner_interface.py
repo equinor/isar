@@ -20,3 +20,7 @@ class MissionPlannerInterface(metaclass=ABCMeta):
 
 class MissionPlannerError(Exception):
     pass
+
+
+class MissionNotFoundError(Exception):
+    pass

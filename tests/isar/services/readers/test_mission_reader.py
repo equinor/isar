@@ -4,7 +4,7 @@ import pytest
 from alitra import Frame, Orientation, Pose, Position
 
 from isar.config.settings import settings
-from isar.mission_planner.mission_planner_interface import MissionPlannerError
+from isar.mission_planner.mission_planner_interface import MissionNotFoundError
 from isar.models.mission import Mission, Task
 from robot_interface.models.mission import TakeThermalImage
 from robot_interface.models.mission.step import DriveToPose, Step, TakeImage
@@ -104,7 +104,7 @@ def test_get_mission_by_id(mission_reader):
 
 
 def test_get_mission_by_invalid_id(mission_reader):
-    with pytest.raises(MissionPlannerError):
+    with pytest.raises(MissionNotFoundError):
         mission_reader.get_mission(12345)
 
 

@@ -1,5 +1,4 @@
 import logging
-from dataclasses import asdict
 from pathlib import Path
 
 from alitra import Frame
@@ -7,6 +6,7 @@ from injector import inject
 
 from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import (
+    MissionNotFoundError,
     MissionPlannerError,
     MissionPlannerInterface,
 )
@@ -29,10 +29,12 @@ class LocalPlanner(MissionPlannerInterface):
             mission: Mission = missions[mission_id]["mission"]
             mission.set_unique_id_and_metadata()
             return mission
-        except Exception as e:
-            raise MissionPlannerError(
+        except KeyError as e:
+            raise MissionNotFoundError(
                 f"Could not get mission : {mission_id} - does not exist {e}"
             ) from e
+        except Exception as e:
+            raise MissionPlannerError(f"Could not get mission : {mission_id}") from e
 
     @staticmethod
     def read_mission_from_file(mission_path: Path) -> Mission:
@@ -54,7 +56,6 @@ class LocalPlanner(MissionPlannerInterface):
             mission_name = file.stem
             path_to_file = self.predefined_mission_folder.joinpath(file.name)
             try:
-
                 mission: Mission = self.read_mission_from_file(path_to_file)
             except BaseReaderError as e:
                 logger.warning(

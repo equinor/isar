@@ -16,6 +16,7 @@ from isar.apis.models.start_mission_definition import (
 )
 from isar.config.settings import robot_settings, settings
 from isar.mission_planner.mission_planner_interface import (
+    MissionNotFoundError,
     MissionPlannerError,
     MissionPlannerInterface,
 )
@@ -91,6 +92,10 @@ class SchedulingController:
             self.logger.error(e)
             response.status_code = e.response.status_code
             raise
+        except MissionNotFoundError as e:
+            self.logger.error(e)
+            response.status_code = HTTPStatus.NOT_FOUND.value
+            return
         except MissionPlannerError as e:
             self.logger.error(e)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
