@@ -3,8 +3,6 @@ services:
   isar:
     build:
       context: .
-      args:
-        ROBOT_REPOSITORY_CLONE_URL: https://github.com/equinor/isar-turtlebot.git
     image: isar:latest
     ports:
       - "3000:3000"
