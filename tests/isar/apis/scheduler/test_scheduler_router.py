@@ -272,13 +272,13 @@ class TestDriveTo:
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_void)
     def test_drive_to(self, client: TestClient):
-        response = client.post(url=self.schedule_drive_to_path, content=self.mock_data)
+        response = client.post(url=self.schedule_drive_to_path, data=self.mock_data)
         assert response.status_code == HTTPStatus.OK
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
     def test_drive_to_timeout(self, client: TestClient):
-        response = client.post(url=self.schedule_drive_to_path, content=self.mock_data)
+        response = client.post(url=self.schedule_drive_to_path, data=self.mock_data)
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
             "detail": "Internal Server Error - Failed to start mission in ISAR"
@@ -287,7 +287,7 @@ class TestDriveTo:
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_monitor)
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_void)
     def test_state_machine_in_conflicting_state(self, client: TestClient):
-        response = client.post(url=self.schedule_drive_to_path, content=self.mock_data)
+        response = client.post(url=self.schedule_drive_to_path, data=self.mock_data)
         assert response.status_code == HTTPStatus.CONFLICT
         assert response.json() == {
             "detail": "Conflict - Mission already in progress - State: monitor"

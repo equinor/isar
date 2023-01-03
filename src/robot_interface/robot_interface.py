@@ -6,6 +6,7 @@ from typing import List, Sequence
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission import InspectionStep, Step, StepStatus
+from robot_interface.models.mission.status import RobotStatus
 
 
 class RobotInterface(metaclass=ABCMeta):
@@ -133,6 +134,22 @@ class RobotInterface(metaclass=ABCMeta):
         -------
         List[Thread]
             List containing all threads that will be started to publish telemetry.
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def robot_status(self) -> RobotStatus:
+        """
+        Method which returns an enum indicating if the robot package is able to reach
+        the interface which is used to communicate with the robot. This is further used
+        by ISAR to indicate whether the ISAR instance is fully functional and may be
+        used by other systems.
+
+        Returns
+        -------
+        RobotStatus
+            Enum indicating if the robot may be reached by the isar-robot package.
 
         """
         raise NotImplementedError

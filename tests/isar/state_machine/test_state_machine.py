@@ -29,7 +29,7 @@ class StateMachineThread(object):
     def __init__(self, injector) -> None:
         self.injector: Injector = injector
         self.state_machine: StateMachine = injector.get(StateMachine)
-        self._thread: Thread = Thread(target=main, args=[injector])
+        self._thread: Thread = Thread(target=main, args=[self.state_machine])
         self._thread.daemon = True
         self._thread.start()
 

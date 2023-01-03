@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Deque, List, Optional
 
 from alitra import Pose
-from injector import Injector, inject
+from injector import inject
 from transitions import Machine
 from transitions.core import State
 
@@ -525,7 +525,6 @@ class StateMachine(object):
         )
 
 
-def main(injector: Injector):
+def main(state_machine: StateMachine):
     """Starts a state machine instance."""
-    state_machine = injector.get(StateMachine)
     state_machine.begin()
