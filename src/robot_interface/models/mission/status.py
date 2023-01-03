@@ -7,3 +7,9 @@ class StepStatus(str, Enum):
     InProgress: str = "in_progress"
     Failed: str = "failed"
     Cancelled: str = "cancelled"
+
+
+class RobotStatus(Enum):
+    Available: str = "available"
+    Busy: str = "busy"
+    Offline: str = "offline"

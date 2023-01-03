@@ -5,6 +5,8 @@ from typing import List
 from pydantic import BaseSettings, Field, validator
 
 from isar.config import predefined_missions
+from robot_interface.models.robots.robot_model import RobotModel
+from robot_interface.telemetry.payloads import VideoStream
 
 
 class Settings(BaseSettings):
@@ -49,6 +51,11 @@ class Settings(BaseSettings):
 
     # Number of attempts to stop the robot before giving up
     UPLOAD_FAILURE_MAX_WAIT: int = Field(default=60)
+
+    # ISAR telemetry intervals
+    ROBOT_STATUS_PUBLISH_INTERVAL: int = Field(default=1)
+    ROBOT_INFO_PUBLISH_INTERVAL: int = Field(default=5)
+    ROBOT_API_STATUS_POLL_INTERVAL: int = Field(default=5)
 
     # FastAPI host
     API_HOST_VIEWED_EXTERNALLY: str = Field(default="0.0.0.0")
@@ -179,6 +186,23 @@ class Settings(BaseSettings):
     # Name or unique ID of robot
     ROBOT_ID: str = Field(default="R2-D2")
 
+    # Serial number of the robot ISAR is connected to
+    SERIAL_NUMBER: str = Field(default="0001")
+
+    # Endpoints to reach video streams for the robot
+    VIDEO_STREAMS: List[VideoStream] = Field(
+        default=[
+            VideoStream(
+                name="Front camera",
+                url="http://localhost:5000/stream?topic=/camera/rgb/image_raw",
+            ),
+            VideoStream(
+                name="Rear camera",
+                url="http://localhost:5000/stream?topic=/camera/rgb/image_raw",
+            ),
+        ]
+    )
+
     # Data scheme the robot should adhere to
     # Options [DS0001]
     DATA_SCHEME: str = Field(default="DS0001")
@@ -203,16 +227,12 @@ class Settings(BaseSettings):
     DATA_CLASSIFICATION: str = Field(default="internal")
 
     # List of MQTT Topics
-
-    TOPIC_ISAR_ROBOT: str = Field(default="robot")
-
     TOPIC_ISAR_STATE: str = Field(default="state")
-
     TOPIC_ISAR_MISSION: str = Field(default="mission")
-
     TOPIC_ISAR_TASK: str = Field(default="task")
-
     TOPIC_ISAR_STEP: str = Field(default="step")
+    TOPIC_ISAR_ROBOT_STATUS: str = Field(default="robot_status")
+    TOPIC_ISAR_ROBOT_INFO: str = Field(default="robot_info")
 
     API_LOG_LEVEL: str = Field(default="INFO")
     MAIN_LOG_LEVEL: str = Field(default="INFO")
@@ -243,11 +263,12 @@ class Settings(BaseSettings):
         }
 
     @validator(
-        "TOPIC_ISAR_ROBOT",
         "TOPIC_ISAR_STATE",
         "TOPIC_ISAR_MISSION",
         "TOPIC_ISAR_TASK",
         "TOPIC_ISAR_STEP",
+        "TOPIC_ISAR_ROBOT_STATUS",
+        "TOPIC_ISAR_ROBOT_INFO",
         pre=True,
         always=True,
     )
@@ -278,7 +299,13 @@ class RobotSettings(BaseSettings):
             env_file_path = None
         super().__init__(_env_file=env_file_path)
 
+    # ISAR steps the robot is capable of performing
+    # This should be set in the robot package settings.env file
     CAPABILITIES: List[str] = Field(default=["drive_to_pose", "take_image"])
+
+    # Model of the robot which ISAR is connected to
+    # This should be set in the robot package settings.env file
+    ROBOT_MODEL: RobotModel = Field(default=RobotModel.Robot)
 
     class Config:
         env_file_encoding = "utf-8"

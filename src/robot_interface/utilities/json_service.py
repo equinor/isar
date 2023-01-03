@@ -1,6 +1,7 @@
 import json
 from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
+from enum import Enum
 from typing import Iterator
 from uuid import UUID
 
@@ -26,6 +27,8 @@ class EnhancedJSONEncoder(json.JSONEncoder):
             return o.isoformat()
         if isinstance(o, date):
             return o.isoformat()
+        if isinstance(o, Enum):
+            return o.value
         if isinstance(o, bytes):
             return "<<non-serializable: bytes>>"
         if isinstance(o, Iterator):

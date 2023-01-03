@@ -12,7 +12,13 @@ from isar.config.settings import settings
 from isar.models.communication.queues.queues import Queues
 from isar.modules import get_injector
 from isar.services.service_connections.mqtt.mqtt_client import MqttClient
-from isar.state_machine.state_machine import main
+from isar.services.service_connections.mqtt.robot_info_publisher import (
+    RobotInfoPublisher,
+)
+from isar.services.service_connections.mqtt.robot_status_publisher import (
+    RobotStatusPublisher,
+)
+from isar.state_machine.state_machine import StateMachine, main
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.robot_interface import RobotInterface
@@ -25,13 +31,14 @@ if __name__ == "__main__":
 
     injector: Injector = get_injector()
 
+    state_machine: StateMachine = injector.get(StateMachine)
     robot: RobotInterface = injector.get(RobotInterface)
     queues: Queues = injector.get(Queues)
 
     threads: List[Thread] = []
 
     state_machine_thread: Thread = Thread(
-        target=main, name="ISAR State Machine", args=[injector], daemon=True
+        target=main, name="ISAR State Machine", args=[state_machine], daemon=True
     )
     threads.append(state_machine_thread)
 
@@ -51,13 +58,27 @@ if __name__ == "__main__":
         mqtt_thread: Thread = Thread(
             target=mqtt_client.run, name="ISAR MQTT Client", daemon=True
         )
-
         threads.append(mqtt_thread)
+
+        robot_status: RobotStatusPublisher = RobotStatusPublisher(
+            mqtt_queue=queues.mqtt_queue, robot=robot, state_machine=state_machine
+        )
+        robot_status_thread: Thread = Thread(
+            target=robot_status.run, name="ISAR Robot Status Publisher", daemon=True
+        )
+        threads.append(robot_status_thread)
+
+        robot_info: RobotInfoPublisher = RobotInfoPublisher(
+            mqtt_queue=queues.mqtt_queue
+        )
+        robot_info_thread: Thread = Thread(
+            target=robot_info.run, name="ISAR Robot Info Publisher", daemon=True
+        )
+        threads.append(robot_info_thread)
 
         publishers: List[Thread] = robot.get_telemetry_publishers(
             queue=queues.mqtt_queue, robot_id=settings.ROBOT_ID
         )
-
         if publishers:
             threads.extend(publishers)
 

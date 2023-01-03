@@ -1,7 +1,5 @@
-import json
 import logging
 import os
-from datetime import datetime
 from queue import Empty, Queue
 
 import backoff
@@ -10,7 +8,6 @@ from paho.mqtt.client import Client
 
 from isar.config.settings import settings
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 def _on_success(data: dict) -> None:
@@ -74,21 +71,6 @@ class MqttClient(MqttClientInterface):
     def run(self) -> None:
         self.connect(host=self.host, port=self.port)
         self.client.loop_start()
-        payload: str = json.dumps(
-            {
-                "robot_id": settings.ROBOT_ID,
-                "host": settings.API_HOST_VIEWED_EXTERNALLY,
-                "port": settings.API_PORT,
-                "timestamp": datetime.utcnow(),
-            },
-            cls=EnhancedJSONEncoder,
-        )
-
-        self.publish(
-            topic=settings.TOPIC_ISAR_ROBOT,
-            payload=payload,
-            retain=True,
-        )
 
         while True:
             if not self.client.is_connected():
