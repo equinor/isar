@@ -74,14 +74,7 @@ class SchedulingController:
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return error_message
 
-        if state in [
-            States.Off,
-            States.Initialize,
-            States.InitiateStep,
-            States.StopStep,
-            States.Monitor,
-            States.Paused,
-        ]:
+        if state != States.Idle:
             error_message = f"Conflict - Mission already in progress  - State: {state}"
             self.logger.warning(error_message)
             response.status_code = HTTPStatus.CONFLICT.value
@@ -183,14 +176,7 @@ class SchedulingController:
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return error_message
 
-        if state in [
-            States.Off,
-            States.Initialize,
-            States.InitiateStep,
-            States.StopStep,
-            States.Monitor,
-            States.Paused,
-        ]:
+        if state != States.Idle:
             error_message = f"Conflict - Mission already in progress - State: {state}"
             self.logger.warning(error_message)
             response.status_code = HTTPStatus.CONFLICT.value
@@ -253,12 +239,9 @@ class SchedulingController:
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return errorMsg
 
-        if state in [
-            States.Off,
-            States.Idle,
-            States.StopStep,
-            States.Paused,
-            States.Initialize,
+        if state not in [
+            States.Monitor,
+            States.InitiateStep,
         ]:
             errorMsg = (
                 f"Conflict - Pause command received in invalid state - State: {state}"
@@ -291,14 +274,7 @@ class SchedulingController:
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return error_message
 
-        if state in [
-            States.Off,
-            States.Idle,
-            States.InitiateStep,
-            States.Monitor,
-            States.StopStep,
-            States.Initialize,
-        ]:
+        if state != States.Paused:
             error_message = (
                 f"Conflict - Resume command received in invalid state - State: {state}"
             )
@@ -370,14 +346,7 @@ class SchedulingController:
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return error_message
 
-        if state in [
-            States.Off,
-            States.Initialize,
-            States.InitiateStep,
-            States.StopStep,
-            States.Monitor,
-            States.Paused,
-        ]:
+        if state != States.Idle:
             error_message = (
                 f"Conflict - DriveTo command received in invalid state - State: {state}"
             )

@@ -12,10 +12,10 @@ missions.
 
 Steps:
 
-* Install
-* Integrate a robot
-* Run the ISAR server
-* Run a robot mission
+- Install
+- Integrate a robot
+- Run the ISAR server
+- Run a robot mission
 
 ### Install
 
@@ -34,6 +34,7 @@ Verify that you can run the tests:
 ```bash
 pytest .
 ```
+
 The repository contains a configuration file for installing pre-commit hooks. Currently, [black](https://github.com/psf/black) and a mirror of [mypy](https://github.com/pre-commit/mirrors-mypy) are configured hooks. Install with:
 
 ```
@@ -45,6 +46,7 @@ Verify that pre-commit runs:
 ```
 pre-commit
 ```
+
 pre-commit will now run the installed hooks before code is commited to git. To turn pre-commit off, run:
 
 ```
@@ -136,10 +138,13 @@ There are two methods of specifying configuration.
    Every configuration variable is defined in [settings.py](./src/isar/config/settings.py), and they may all be
    overwritten by specifying the variables in the environment instead. Note that the configuration variable must be
    prefixed with `ISAR_` when specified in the environment. So for the `MISSION_PLANNER`configuration variable:
+
    ```shell
    export ISAR_MISSION_PLANNER=echo
    ```
+
    This means ISAR will use the `echo` mission planner module.
+
 2. Adding environment variables through [settings.env](./src/isar/config/settings.env).
 
    By adding environment variables with the prefix `ISAR_` to the [settings.env](./src/isar/config/settings.env) file
@@ -201,15 +206,25 @@ The system consists of two main components.
 The state machine handles interaction with the robots API and monitors the execution of missions. It also enables
 interacting with the robot before, during and after missions.
 
-The state machine is based on the [transitions](https://github.com/pytransitions/transitions) package for Python. The
-main states are:
+The state machine is based on the [transitions](https://github.com/pytransitions/transitions) package for Python. An visualization of the state machine can be seen below:
+![State Machine](./docs/state_machine_diagram.png)
 
-- Idle: The robot is in an idle state and ready to perform new missions.
-- InitiateStep: The state machine has received a mission and initiates a step for the robot.
-- Monitor: The robot has received a mission from the state machine, and the state machine is monitoring the current
-  mission.
-- Finalize: The state machine has finished the mission, received a request to abort, or an event has occurred which
-  requires the mission to be canceled. Once finished the state machine will return to idle.
+In general the states
+
+```
+States.Off,
+States.Initialize,
+States.InitiateStep,
+States.StopStep,
+States.Monitor,
+States.Paused,
+```
+
+indicates that the state machine is already running. For running a mission the state machine need to be in the state
+
+```
+States.Idle
+```
 
 ### FastAPI
 
@@ -267,7 +282,7 @@ For every custom module, the interface function `next_task()` must be implemente
 class CustomTaskSelector(TaskSelectorInterface):
     ...
     def next_task(...) -> Task:
-        
+
         # Add code here
         ...
 
@@ -282,7 +297,7 @@ class CustomTaskSelector(TaskSelectorInterface):
     ...
     def initialize(self, tasks: List[Task], ...) -> None:
         super.initialize(tasks=tasks)
-        
+
         # Add supplementary code here
         ...
 ```
@@ -342,17 +357,20 @@ turned off but may be activated by setting the environment variable
 ISAR_MQTT_ENABLED = true
 ```
 
-The connection to the broker will be determined by the following configuration values in ```settings.py```
+The connection to the broker will be determined by the following configuration values in `settings.py`
+
 ```
 ISAR_MQTT_USERNAME
 ISAR_MQTT_HOST
 ISAR_MQTT_PORT
 ```
-The default values of these are overwritten by the environment in ```settings.env```.
 
+The default values of these are overwritten by the environment in `settings.env`.
 
 To specify broker password, add the following environment variable to a .env file in the root of the repository:
+
 ```
 ISAR_MQTT_PASSWORD
 ```
+
 If not specified the password will default to an empty string.
