@@ -37,7 +37,7 @@ class StopStep(State):
         while True:
             if not self.stop_thread:
                 self.stop_thread = ThreadedRequest(self.state_machine.robot.stop)
-                self.stop_thread.start_thread()
+                self.stop_thread.start_thread(name="State Machine Stop Robot")
 
             if self.state_machine.should_stop_mission():
                 self.state_machine.stopped = True
