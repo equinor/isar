@@ -11,11 +11,11 @@ class ThreadedRequest:
         self._exception: Optional[Exception] = None
         self._exception_lock: Lock = Lock()
 
-    def start_thread(self, *request_args) -> bool:
+    def start_thread(self, *request_args, **kwargs) -> bool:
         if self._is_thread_alive():
             return False
         self._output = None
-        self._thread = Thread(target=self._thread_func, args=request_args)
+        self._thread = Thread(target=self._thread_func, args=request_args, **kwargs)
         self._thread.start()
         return True
 

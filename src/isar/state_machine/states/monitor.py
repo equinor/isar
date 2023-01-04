@@ -52,7 +52,9 @@ class Monitor(State):
                 self.step_status_thread = ThreadedRequest(
                     self.state_machine.robot.step_status
                 )
-                self.step_status_thread.start_thread()
+                self.step_status_thread.start_thread(
+                    name="State Machine Monitor Current Step"
+                )
 
             try:
                 step_status: StepStatus = self.step_status_thread.get_output()
@@ -66,7 +68,10 @@ class Monitor(State):
 
             if self._step_finished(step=self.state_machine.current_step):
                 get_inspections_thread = ThreadedRequest(self._process_finished_step)
-                get_inspections_thread.start_thread(self.state_machine.current_step)
+                get_inspections_thread.start_thread(
+                    self.state_machine.current_step,
+                    name="State Machine Get Inspections",
+                )
                 transition = self.state_machine.step_finished
                 break
 

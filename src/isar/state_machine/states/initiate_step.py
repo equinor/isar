@@ -65,7 +65,10 @@ class InitiateStep(State):
                 self.initiate_step_thread = ThreadedRequest(
                     self.state_machine.robot.initiate_step
                 )
-                self.initiate_step_thread.start_thread(self.state_machine.current_step)
+                self.initiate_step_thread.start_thread(
+                    self.state_machine.current_step,
+                    name="State Machine Initiate Step",
+                )
 
             try:
                 self.initiate_step_thread.get_output()
