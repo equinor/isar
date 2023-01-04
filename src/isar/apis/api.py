@@ -93,6 +93,7 @@ class API:
             "/schedule/start-mission/{id}",
             self.scheduling_controller.start_mission_by_id,
             methods=["POST"],
+            deprecated=True,
             dependencies=[authentication_dependency],
             summary="Start a mission with id='id' from the current mission planner",
             responses={
