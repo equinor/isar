@@ -8,12 +8,6 @@ from typing import Deque, List, Optional
 
 from alitra import Pose
 from injector import Injector, inject
-from robot_interface.models.initialize.initialize_params import InitializeParams
-from robot_interface.models.mission import StepStatus
-from robot_interface.models.mission.step import Step
-from robot_interface.robot_interface import RobotInterface
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
 from transitions import Machine
 from transitions.core import State
 
@@ -37,6 +31,12 @@ from isar.state_machine.states import (
     StopStep,
 )
 from isar.state_machine.states_enum import States
+from robot_interface.models.initialize.initialize_params import InitializeParams
+from robot_interface.models.mission import StepStatus
+from robot_interface.models.mission.step import Step
+from robot_interface.robot_interface import RobotInterface
+from robot_interface.telemetry.mqtt_client import MqttClientInterface
+from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 class StateMachine(object):
@@ -97,15 +97,15 @@ class StateMachine(object):
             self.paused_state,
         ]
 
-        self.machine = Machine(
-            self,
-            states=self.states,
-            initial="off",
-            queued=True,
-        )
-
+        self.machine = Machine(self, states=self.states, initial="off", queued=True)
         self.machine.add_transitions(
             [
+                {
+                    "trigger": "start_machine",
+                    "source": self.off_state,
+                    "dest": self.idle_state,
+                    "before": self._off,
+                },
                 {
                     "trigger": "step_initiated",
                     "source": self.initiate_step_state,
@@ -241,6 +241,9 @@ class StateMachine(object):
         )
 
     def _pause(self) -> None:
+        return
+
+    def _off(self) -> None:
         return
 
     def _resume(self) -> None:
