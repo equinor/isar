@@ -65,7 +65,8 @@ class Monitor(State):
             self.state_machine.current_step.status = step_status
 
             if self._step_finished(step=self.state_machine.current_step):
-                self._process_finished_step(step=self.state_machine.current_step)
+                get_inspections_thread = ThreadedRequest(self._process_finished_step)
+                get_inspections_thread.start_thread(self.state_machine.current_step)
                 transition = self.state_machine.step_finished
                 break
 
