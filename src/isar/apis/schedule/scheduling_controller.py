@@ -75,13 +75,14 @@ class SchedulingController:
             return error_message
 
         if state in [
+            States.Off,
             States.Initialize,
             States.InitiateStep,
             States.StopStep,
             States.Monitor,
             States.Paused,
         ]:
-            error_message = "Conflict - Mission already in progress"
+            error_message = f"Conflict - Mission already in progress  - State: {state}"
             self.logger.warning(error_message)
             response.status_code = HTTPStatus.CONFLICT.value
             return error_message
@@ -183,13 +184,14 @@ class SchedulingController:
             return error_message
 
         if state in [
+            States.Off,
             States.Initialize,
             States.InitiateStep,
             States.StopStep,
             States.Monitor,
             States.Paused,
         ]:
-            error_message = "Conflict - Mission already in progress"
+            error_message = f"Conflict - Mission already in progress - State: {state}"
             self.logger.warning(error_message)
             response.status_code = HTTPStatus.CONFLICT.value
             return error_message
@@ -251,8 +253,16 @@ class SchedulingController:
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return errorMsg
 
-        if state in [States.Idle, States.StopStep, States.Paused, States.Initialize]:
-            errorMsg = "Conflict - Pause command received in invalid state"
+        if state in [
+            States.Off,
+            States.Idle,
+            States.StopStep,
+            States.Paused,
+            States.Initialize,
+        ]:
+            errorMsg = (
+                f"Conflict - Pause command received in invalid state - State: {state}"
+            )
             self.logger.warning(errorMsg)
             response.status_code = HTTPStatus.CONFLICT.value
             return errorMsg
@@ -282,13 +292,16 @@ class SchedulingController:
             return error_message
 
         if state in [
+            States.Off,
             States.Idle,
             States.InitiateStep,
             States.Monitor,
             States.StopStep,
             States.Initialize,
         ]:
-            error_message = "Conflict - Resume command received in invalid state"
+            error_message = (
+                f"Conflict - Resume command received in invalid state - State: {state}"
+            )
             self.logger.warning(error_message)
             response.status_code = HTTPStatus.CONFLICT.value
             return error_message
@@ -318,8 +331,10 @@ class SchedulingController:
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR.value
             return error_message
 
-        if state in [States.Idle, States.Initialize]:
-            error_message = "Conflict - Stop command received in invalid state"
+        if state in [States.Off, States.Idle]:
+            error_message = (
+                f"Conflict - Stop command received in invalid state - State: {state}"
+            )
             self.logger.warning(error_message)
             response.status_code = HTTPStatus.CONFLICT.value
             return error_message
@@ -356,13 +371,16 @@ class SchedulingController:
             return error_message
 
         if state in [
+            States.Off,
             States.Initialize,
             States.InitiateStep,
             States.StopStep,
             States.Monitor,
             States.Paused,
         ]:
-            error_message = "Conflict - DriveTo command received in invalid state"
+            error_message = (
+                f"Conflict - DriveTo command received in invalid state - State: {state}"
+            )
             self.logger.warning(error_message)
             response.status_code = HTTPStatus.CONFLICT.value
             return error_message
