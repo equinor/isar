@@ -9,7 +9,7 @@ from injector import inject
 from requests import HTTPError
 
 from isar.apis.models import InputPose, StartMissionResponse
-from isar.apis.models.models import ControlMissionResponse
+from isar.apis.models.models import ControlMissionResponse, RobotInfoResponse
 from isar.apis.models.start_mission_definition import (
     StartMissionDefinition,
     to_isar_mission,
@@ -380,3 +380,12 @@ class SchedulingController:
             self.logger.error(error_message)
             response.status_code = HTTPStatus.REQUEST_TIMEOUT.value
             return error_message
+
+    def get_info(self, response: Response):
+        return RobotInfoResponse(
+            robot_package=settings.ROBOT_PACKAGE,
+            robot_id=settings.ROBOT_ID,
+            robot_map_name=settings.DEFAULT_MAP,
+            robot_capabilities=robot_settings.CAPABILITIES,
+            plant_short_name=settings.STID_PLANT_NAME,
+        )
