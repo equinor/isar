@@ -79,6 +79,8 @@ class API:
 
         app.include_router(router=self._create_scheduler_router())
 
+        app.include_router(router=self._create_info_router())
+
         return app
 
     def _create_scheduler_router(self) -> APIRouter:
@@ -224,6 +226,22 @@ class API:
 
         return router
 
+    def _create_info_router(self) -> APIRouter:
+
+        router: APIRouter = APIRouter(tags=["Info"])
+
+        authentication_dependency: Security = Security(self.authenticator.get_scheme())
+
+        router.add_api_route(
+            "/info/robot-settings",
+            self.scheduling_controller.get_info,
+            methods=["GET"],
+            dependencies=[authentication_dependency],
+            summary="Information about the robot-settings",
+        )
+
+        return router
+
     def _log_startup_message(self) -> None:
         address_format = "%s://%s:%d/docs"
         message = f"Uvicorn running on {address_format} (Press CTRL+C to quit)"
@@ -233,7 +251,6 @@ class API:
             + click.style(address_format, bold=True)
             + " (Press CTRL+C to quit)"
         )
-
         self.logger.info(
             message,
             protocol,
