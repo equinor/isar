@@ -11,7 +11,7 @@ from fastapi.routing import APIRouter
 from injector import inject
 from pydantic import AnyHttpUrl
 
-from isar.apis.models.models import StartMissionResponse
+from isar.apis.models.models import StartMissionResponse, ControlMissionResponse
 from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.settings import settings
@@ -149,6 +149,7 @@ class API:
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully stopped",
+                    "model": ControlMissionResponse,
                 },
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
@@ -170,6 +171,7 @@ class API:
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully paused",
+                    "model": ControlMissionResponse,
                 },
                 HTTPStatus.REQUEST_TIMEOUT.value: {
                     "description": "Timeout - Could not contact state machine",
@@ -191,6 +193,7 @@ class API:
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully resumed",
+                    "model": ControlMissionResponse,
                 },
                 HTTPStatus.REQUEST_TIMEOUT.value: {
                     "description": "Timeout - Could not contact state machine",
