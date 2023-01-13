@@ -51,6 +51,7 @@ setup(
         "dev": [
             "black",
             "flake8",
+            "mock",
             "mypy",
             "myst-parser",
             "pre-commit",

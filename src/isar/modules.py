@@ -5,8 +5,6 @@ from types import ModuleType
 from typing import Dict, List, Tuple, Union
 
 from injector import Injector, Module, multiprovider, provider, singleton
-from robot_interface.robot_interface import RobotInterface
-from robot_interface.telemetry.mqtt_client import MqttClientInterface, MqttPublisher
 
 from isar.apis.api import API
 from isar.apis.schedule.scheduling_controller import SchedulingController
@@ -27,6 +25,8 @@ from isar.storage.blob_storage import BlobStorage
 from isar.storage.local_storage import LocalStorage
 from isar.storage.slimm_storage import SlimmStorage
 from isar.storage.storage_interface import StorageInterface
+from robot_interface.robot_interface import RobotInterface
+from robot_interface.telemetry.mqtt_client import MqttClientInterface, MqttPublisher
 
 
 class APIModule(Module):
@@ -43,10 +43,9 @@ class APIModule(Module):
     @singleton
     def provide_scheduling_controller(
         self,
-        mission_planner: MissionPlannerInterface,
         scheduling_utilities: SchedulingUtilities,
     ) -> SchedulingController:
-        return SchedulingController(mission_planner, scheduling_utilities)
+        return SchedulingController(scheduling_utilities)
 
 
 class AuthenticationModule(Module):
@@ -144,8 +143,10 @@ class StateMachineModule(Module):
 class UtilitiesModule(Module):
     @provider
     @singleton
-    def provide_scheduling_utilities(self, queues: Queues) -> SchedulingUtilities:
-        return SchedulingUtilities(queues)
+    def provide_scheduling_utilities(
+        self, queues: Queues, mission_planner: MissionPlannerInterface
+    ) -> SchedulingUtilities:
+        return SchedulingUtilities(queues, mission_planner)
 
 
 class ServiceModule(Module):
