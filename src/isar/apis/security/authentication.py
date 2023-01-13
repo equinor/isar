@@ -31,8 +31,8 @@ azure_scheme = SingleTenantAzureAuthorizationCodeBearer(
 
 async def validate_has_role(user: User = Depends(azure_scheme)) -> None:
     """
-    Validate that a user has the `role` role in order to access the API.
-    Raises a 401 authentication error if not.
+    Validate if the user has the required role in order to access the API.
+    Raises a 401 authorization error if not.
     """
     if settings.REQUIRED_ROLE not in user.roles:
         raise InvalidAuth(
