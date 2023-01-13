@@ -11,7 +11,7 @@ from fastapi.routing import APIRouter
 from injector import inject
 from pydantic import AnyHttpUrl
 
-from isar.apis.models.models import StartMissionResponse, ControlMissionResponse
+from isar.apis.models.models import ControlMissionResponse, StartMissionResponse
 from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.settings import settings
@@ -90,8 +90,8 @@ class API:
         authentication_dependency: Security = Security(self.authenticator.get_scheme())
 
         router.add_api_route(
-            "/schedule/start-mission/{id}",
-            self.scheduling_controller.start_mission_by_id,
+            path="/schedule/start-mission/{id}",
+            endpoint=self.scheduling_controller.start_mission_by_id,
             methods=["POST"],
             deprecated=True,
             dependencies=[authentication_dependency],
@@ -116,8 +116,8 @@ class API:
             },
         )
         router.add_api_route(
-            "/schedule/start-mission",
-            self.scheduling_controller.start_mission,
+            path="/schedule/start-mission",
+            endpoint=self.scheduling_controller.start_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
             summary="Start the mission provided in JSON format",
@@ -141,8 +141,8 @@ class API:
             },
         )
         router.add_api_route(
-            "/schedule/stop-mission",
-            self.scheduling_controller.stop_mission,
+            path="/schedule/stop-mission",
+            endpoint=self.scheduling_controller.stop_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
             summary="Stop the current mission",
@@ -163,8 +163,8 @@ class API:
             },
         )
         router.add_api_route(
-            "/schedule/pause-mission",
-            self.scheduling_controller.pause_mission,
+            path="/schedule/pause-mission",
+            endpoint=self.scheduling_controller.pause_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
             summary="Pause the current mission",
@@ -185,8 +185,8 @@ class API:
             },
         )
         router.add_api_route(
-            "/schedule/resume-mission",
-            self.scheduling_controller.resume_mission,
+            path="/schedule/resume-mission",
+            endpoint=self.scheduling_controller.resume_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
             summary="Resume the currently paused mission - if any",
@@ -207,8 +207,8 @@ class API:
             },
         )
         router.add_api_route(
-            "/schedule/drive-to",
-            self.scheduling_controller.drive_to,
+            path="/schedule/drive-to",
+            endpoint=self.scheduling_controller.drive_to,
             methods=["POST"],
             dependencies=[authentication_dependency],
             summary="Drive to the provided pose",
@@ -237,8 +237,8 @@ class API:
         authentication_dependency: Security = Security(self.authenticator.get_scheme())
 
         router.add_api_route(
-            "/info/robot-settings",
-            self.scheduling_controller.get_info,
+            path="/info/robot-settings",
+            endpoint=self.scheduling_controller.get_info,
             methods=["GET"],
             dependencies=[authentication_dependency],
             summary="Information about the robot-settings",
