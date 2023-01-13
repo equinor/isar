@@ -3,11 +3,12 @@ from datetime import datetime
 from typing import Iterator, List, Optional, Union
 from uuid import UUID, uuid4
 
+from isar.apis.models.models import StartMissionResponse, TaskResponse
 from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from robot_interface.models.mission import (
-    InspectionStep,
     STEPS,
+    InspectionStep,
     MotionStep,
     Step,
     StepStatus,
@@ -91,14 +92,14 @@ class Task:
         if self._iterator is None:
             self._iterator = iter(self.steps)
 
-    def api_response_dict(self):
-        return {
-            "id": self.id,
-            "tag_id": self.tag_id,
-            "steps": list(
+    def api_response(self) -> TaskResponse:
+        return TaskResponse(
+            id=self.id,
+            tag_id=self.tag_id,
+            steps=list(
                 map(lambda x: {"id": x.id, "type": x.__class__.__name__}, self.steps)
             ),
-        }
+        )
 
 
 @dataclass
@@ -128,8 +129,8 @@ class Mission:
         if self.metadata is None:
             self.metadata = MissionMetadata(mission_id=self.id)
 
-    def api_response_dict(self) -> dict:
-        return {
-            "id": self.id,
-            "tasks": [task.api_response_dict() for task in self.tasks],
-        }
+    def api_response(self) -> StartMissionResponse:
+        return StartMissionResponse(
+            id=self.id,
+            tasks=[task.api_response() for task in self.tasks],
+        )
