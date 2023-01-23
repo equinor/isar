@@ -154,7 +154,7 @@ class SchedulingUtilities:
             error_message = "Timeout - Failed to start mission in ISAR"
             self.logger.error(error_message)
             raise HTTPException(
-                status_code=HTTPStatus.REQUEST_TIMEOUT, detail=error_message
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
         self.logger.info("OK - Mission started in ISAR")
 
@@ -172,7 +172,7 @@ class SchedulingUtilities:
             error_message = "Timeout - Failed to pause mission"
             self.logger.error(error_message)
             raise HTTPException(
-                status_code=HTTPStatus.REQUEST_TIMEOUT, detail=error_message
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
         finally:
             self.logger.info("OK - Mission successfully paused")
@@ -191,7 +191,7 @@ class SchedulingUtilities:
             error_message = "Timeout - Failed to resume mission"
             self.logger.error(error_message)
             raise HTTPException(
-                status_code=HTTPStatus.REQUEST_TIMEOUT, detail=error_message
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
         finally:
             self.logger.info("OK - Mission successfully resumed")
@@ -212,7 +212,7 @@ class SchedulingUtilities:
             error_message = "Timeout - Failed to stop mission"
             self.logger.error(error_message)
             raise HTTPException(
-                status_code=HTTPStatus.REQUEST_TIMEOUT, detail=error_message
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
         self.logger.info("OK - Mission successfully stopped")
         return stop_mission_response

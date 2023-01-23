@@ -76,7 +76,7 @@ class TestStartMissionByID:
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
     def test_start_mission_timeout(self, client: TestClient):
         response = client.post(url=f"{self.schedule_start_mission_path}/1")
-        assert response.status_code == HTTPStatus.REQUEST_TIMEOUT
+        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
             "detail": "Timeout - Failed to start mission in ISAR"
         }
@@ -140,7 +140,7 @@ class TestStartMission:
             url=self.schedule_start_mission_path,
             json=jsonable_encoder(self.mock_start_mission_content),
         )
-        assert response.status_code == HTTPStatus.REQUEST_TIMEOUT
+        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
             "detail": "Timeout - Failed to start mission in ISAR"
         }
@@ -183,7 +183,7 @@ class TestPauseMission:
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
     def test_pause_mission_timeout(self, client: TestClient):
         response = client.post(url=self.schedule_pause_mission_path)
-        assert response.status_code == HTTPStatus.REQUEST_TIMEOUT
+        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {"detail": "Timeout - Failed to pause mission"}
 
 
@@ -211,7 +211,7 @@ class TestResumeMission:
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
     def test_resume_mission_timeout(self, client: TestClient):
         response = client.post(url=self.schedule_resume_mission_path)
-        assert response.status_code == HTTPStatus.REQUEST_TIMEOUT
+        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {"detail": "Timeout - Failed to resume mission"}
 
 
@@ -257,7 +257,7 @@ class TestStopMission:
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
     def test_stop_mission_timeout(self, client: TestClient):
         response = client.post(url=self.schedule_stop_mission_path)
-        assert response.status_code == HTTPStatus.REQUEST_TIMEOUT
+        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 class TestDriveTo:
@@ -275,7 +275,7 @@ class TestDriveTo:
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
     def test_drive_to_timeout(self, client: TestClient):
         response = client.post(url=self.schedule_drive_to_path, content=self.mock_data)
-        assert response.status_code == HTTPStatus.REQUEST_TIMEOUT
+        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
             "detail": "Timeout - Failed to start mission in ISAR"
         }
