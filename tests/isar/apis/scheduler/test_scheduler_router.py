@@ -78,7 +78,7 @@ class TestStartMissionByID:
         response = client.post(url=f"{self.schedule_start_mission_path}/1")
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
-            "detail": "Timeout - Failed to start mission in ISAR"
+            "detail": "Internal server error - Failed to start mission in ISAR"
         }
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
@@ -142,7 +142,7 @@ class TestStartMission:
         )
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
-            "detail": "Timeout - Failed to start mission in ISAR"
+            "detail": "Internal server error - Failed to start mission in ISAR"
         }
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
@@ -184,7 +184,9 @@ class TestPauseMission:
     def test_pause_mission_timeout(self, client: TestClient):
         response = client.post(url=self.schedule_pause_mission_path)
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
-        assert response.json() == {"detail": "Timeout - Failed to pause mission"}
+        assert response.json() == {
+            "detail": "Internal server error - Failed to pause mission"
+        }
 
 
 class TestResumeMission:
@@ -212,7 +214,9 @@ class TestResumeMission:
     def test_resume_mission_timeout(self, client: TestClient):
         response = client.post(url=self.schedule_resume_mission_path)
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
-        assert response.json() == {"detail": "Timeout - Failed to resume mission"}
+        assert response.json() == {
+            "detail": "Internal server error - Failed to resume mission"
+        }
 
 
 class TestStopMission:
@@ -277,7 +281,7 @@ class TestDriveTo:
         response = client.post(url=self.schedule_drive_to_path, content=self.mock_data)
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
-            "detail": "Timeout - Failed to start mission in ISAR"
+            "detail": "Internal server error - Failed to start mission in ISAR"
         }
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_monitor)
