@@ -151,7 +151,7 @@ class SchedulingUtilities:
                 self.queues.start_mission,
             )
         except QueueTimeoutError:
-            error_message = "Timeout - Failed to start mission in ISAR"
+            error_message = "Internal server error - Failed to start mission in ISAR"
             self.logger.error(error_message)
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
@@ -169,7 +169,7 @@ class SchedulingUtilities:
         try:
             return self._send_command(True, self.queues.pause_mission)
         except QueueTimeoutError:
-            error_message = "Timeout - Failed to pause mission"
+            error_message = "Internal server error - Failed to pause mission"
             self.logger.error(error_message)
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
@@ -188,7 +188,7 @@ class SchedulingUtilities:
         try:
             return self._send_command(True, self.queues.resume_mission)
         except QueueTimeoutError:
-            error_message = "Timeout - Failed to resume mission"
+            error_message = "Internal server error - Failed to resume mission"
             self.logger.error(error_message)
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
@@ -209,7 +209,7 @@ class SchedulingUtilities:
                 True, self.queues.stop_mission
             )
         except QueueTimeoutError:
-            error_message = "Timeout - Failed to stop mission"
+            error_message = "Internal server error - Failed to stop mission"
             self.logger.error(error_message)
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
@@ -226,5 +226,5 @@ class SchedulingUtilities:
             )
         except QueueTimeoutError as e:
             QueueUtilities.clear_queue(queueio.input)
-            self.logger.error("Timeout while communicating with state machine")
+            self.logger.error("No output received for command to state machine")
             raise e
