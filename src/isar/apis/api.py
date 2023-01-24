@@ -107,9 +107,6 @@ class API:
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
                 },
-                HTTPStatus.REQUEST_TIMEOUT.value: {
-                    "description": "Timeout - Could not contact state machine",
-                },
                 HTTPStatus.INTERNAL_SERVER_ERROR.value: {
                     "description": "Internal Server Error - Current state of state machine unknown",
                 },
@@ -132,9 +129,6 @@ class API:
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
                 },
-                HTTPStatus.REQUEST_TIMEOUT.value: {
-                    "description": "Timeout - Could not contact state machine",
-                },
                 HTTPStatus.INTERNAL_SERVER_ERROR.value: {
                     "description": "Internal Server Error - Current state of state machine unknown",
                 },
@@ -154,9 +148,6 @@ class API:
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
                 },
-                HTTPStatus.REQUEST_TIMEOUT.value: {
-                    "description": "Timeout - Could not contact state machine",
-                },
                 HTTPStatus.INTERNAL_SERVER_ERROR.value: {
                     "description": "Internal Server Error - Current state of state machine unknown",
                 },
@@ -172,9 +163,6 @@ class API:
                 HTTPStatus.OK.value: {
                     "description": "Mission succesfully paused",
                     "model": ControlMissionResponse,
-                },
-                HTTPStatus.REQUEST_TIMEOUT.value: {
-                    "description": "Timeout - Could not contact state machine",
                 },
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
@@ -195,9 +183,6 @@ class API:
                     "description": "Mission succesfully resumed",
                     "model": ControlMissionResponse,
                 },
-                HTTPStatus.REQUEST_TIMEOUT.value: {
-                    "description": "Timeout - Could not contact state machine",
-                },
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
                 },
@@ -215,9 +200,6 @@ class API:
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Drive to succesfully started",
-                },
-                HTTPStatus.REQUEST_TIMEOUT.value: {
-                    "description": "Timeout - Could not contact state machine",
                 },
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
