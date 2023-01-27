@@ -375,6 +375,7 @@ class StateMachine(object):
         self.current_step = None
         self.current_task = None
         self.current_mission = None
+        self.initial_pose = None
 
     def start_mission(self, mission: Mission, initial_pose: Pose):
         """Starts a scheduled mission."""
