@@ -25,7 +25,6 @@ class API:
         scheduling_controller: SchedulingController,
         port: int = settings.API_PORT,
     ) -> None:
-
         self.authenticator: Authenticator = authenticator
         self.scheduling_controller: SchedulingController = scheduling_controller
         self.host: str = "0.0.0.0"  # Locking uvicorn to use 0.0.0.0
@@ -84,7 +83,6 @@ class API:
         return app
 
     def _create_scheduler_router(self) -> APIRouter:
-
         router: APIRouter = APIRouter(tags=["Scheduler"])
 
         authentication_dependency: Security = Security(self.authenticator.get_scheme())
@@ -213,7 +211,6 @@ class API:
         return router
 
     def _create_info_router(self) -> APIRouter:
-
         router: APIRouter = APIRouter(tags=["Info"])
 
         authentication_dependency: Security = Security(self.authenticator.get_scheme())

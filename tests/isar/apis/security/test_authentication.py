@@ -49,7 +49,6 @@ class TestAuthentication:
         expected_output,
         expected_status_code,
     ):
-
         response = client_auth.post(
             f"schedule/{query_string}",
             headers={"Authorization": "Bearer " + token},

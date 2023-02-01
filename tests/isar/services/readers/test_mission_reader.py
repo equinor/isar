@@ -78,8 +78,8 @@ def test_read_mission_from_file(mission_reader):
         expected_mission.metadata.data_classification
         == mission.metadata.data_classification
     )
-    for (expected_task, task) in zip(expected_tasks, mission.tasks):
-        for (expected_step, step) in zip(expected_task.steps, task.steps):
+    for expected_task, task in zip(expected_tasks, mission.tasks):
+        for expected_step, step in zip(expected_task.steps, task.steps):
             if isinstance(expected_step, DriveToPose) and isinstance(step, DriveToPose):
                 assert expected_step.pose == step.pose
             if isinstance(expected_step, TakeImage) and isinstance(step, TakeImage):

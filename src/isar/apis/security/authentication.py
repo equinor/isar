@@ -1,11 +1,10 @@
 import logging
 
-
 from fastapi import Depends
-from fastapi_azure_auth.exceptions import InvalidAuth
-from fastapi_azure_auth.user import User
 from fastapi.security.base import SecurityBase
 from fastapi_azure_auth import SingleTenantAzureAuthorizationCodeBearer
+from fastapi_azure_auth.exceptions import InvalidAuth
+from fastapi_azure_auth.user import User
 from pydantic import BaseModel
 
 from isar.config.settings import settings
