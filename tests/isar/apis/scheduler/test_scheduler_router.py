@@ -78,7 +78,7 @@ class TestStartMissionByID:
         response = client.post(url=f"{self.schedule_start_mission_path}/1")
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
-            "detail": "Internal server error - Failed to start mission in ISAR"
+            "detail": "Internal Server Error - Failed to start mission in ISAR"
         }
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
@@ -142,7 +142,7 @@ class TestStartMission:
         )
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
-            "detail": "Internal server error - Failed to start mission in ISAR"
+            "detail": "Internal Server Error - Failed to start mission in ISAR"
         }
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
@@ -185,7 +185,7 @@ class TestPauseMission:
         response = client.post(url=self.schedule_pause_mission_path)
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
-            "detail": "Internal server error - Failed to pause mission"
+            "detail": "Internal Server Error - Failed to pause mission"
         }
 
 
@@ -215,7 +215,7 @@ class TestResumeMission:
         response = client.post(url=self.schedule_resume_mission_path)
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
-            "detail": "Internal server error - Failed to resume mission"
+            "detail": "Internal Server Error - Failed to resume mission"
         }
 
 
@@ -281,7 +281,7 @@ class TestDriveTo:
         response = client.post(url=self.schedule_drive_to_path, content=self.mock_data)
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
-            "detail": "Internal server error - Failed to start mission in ISAR"
+            "detail": "Internal Server Error - Failed to start mission in ISAR"
         }
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_monitor)
