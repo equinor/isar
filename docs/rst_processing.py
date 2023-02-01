@@ -3,7 +3,6 @@ from pathlib import Path
 src_dir = Path("source/api")
 
 for file in src_dir.iterdir():
-
     print(f"Processing .rst-file: {file}")
 
     with open(file, "r") as f:

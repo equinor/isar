@@ -2,6 +2,10 @@ from typing import List, Optional, Type
 
 from alitra import Position
 from pydantic import BaseModel, Field
+
+from isar.apis.models.models import InputPose, InputPosition
+from isar.mission_planner.mission_planner_interface import MissionPlannerError
+from isar.models.mission.mission import Mission, Task
 from robot_interface.models.mission.step import (
     STEPS,
     DriveToPose,
@@ -11,10 +15,6 @@ from robot_interface.models.mission.step import (
     TakeThermalVideo,
     TakeVideo,
 )
-
-from isar.apis.models.models import InputPose, InputPosition
-from isar.mission_planner.mission_planner_interface import MissionPlannerError
-from isar.models.mission.mission import Mission, Task
 
 inspection_step_types: List[Type[InspectionStep]] = [
     TakeImage,
@@ -54,7 +54,7 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
                 )
                 for inspection_type in task.inspection_types
             ]
-        except (ValueError) as e:
+        except ValueError as e:
             raise MissionPlannerError(f"Failed to create task: {str(e)}")
         isar_task: Task = Task(steps=[drive_step, *inspection_steps], tag_id=tag_id)
         isar_tasks.append(isar_task)
