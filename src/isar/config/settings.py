@@ -195,10 +195,12 @@ class Settings(BaseSettings):
             VideoStream(
                 name="Front camera",
                 url="http://localhost:5000/stream?topic=/camera/rgb/image_raw",
+                type="turtlebot",
             ),
             VideoStream(
                 name="Rear camera",
                 url="http://localhost:5000/stream?topic=/camera/rgb/image_raw",
+                type="turtlebot",
             ),
         ]
     )
