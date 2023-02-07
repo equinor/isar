@@ -60,19 +60,23 @@ if __name__ == "__main__":
         )
         threads.append(mqtt_thread)
 
-        robot_status: RobotStatusPublisher = RobotStatusPublisher(
+        robot_status_publisher: RobotStatusPublisher = RobotStatusPublisher(
             mqtt_queue=queues.mqtt_queue, robot=robot, state_machine=state_machine
         )
         robot_status_thread: Thread = Thread(
-            target=robot_status.run, name="ISAR Robot Status Publisher", daemon=True
+            target=robot_status_publisher.run,
+            name="ISAR Robot Status Publisher",
+            daemon=True,
         )
         threads.append(robot_status_thread)
 
-        robot_info: RobotInfoPublisher = RobotInfoPublisher(
+        robot_info_publisher: RobotInfoPublisher = RobotInfoPublisher(
             mqtt_queue=queues.mqtt_queue
         )
         robot_info_thread: Thread = Thread(
-            target=robot_info.run, name="ISAR Robot Info Publisher", daemon=True
+            target=robot_info_publisher.run,
+            name="ISAR Robot Info Publisher",
+            daemon=True,
         )
         threads.append(robot_info_thread)
 
