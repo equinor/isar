@@ -27,6 +27,7 @@ class TelemetryBatteryPayload:
 class VideoStream:
     name: str
     url: str
+    type: str
 
 
 @dataclass
