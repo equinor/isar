@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 # Did you write your own isar-robot package and would like to have it included here?
 # Open a pull request to the ISAR repository!
 class RobotModel(Enum):
