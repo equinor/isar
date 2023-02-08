@@ -1,0 +1,136 @@
+{
+    "mission_definition": {
+        "tasks": [
+            {
+                "pose": {
+                    "position": {
+                        "x": -3.6,
+                        "y": 4,
+                        "z": 0,
+                        "frame": "asset"
+                    },
+                    "orientation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": -0.7286672256879113,
+                        "w": -0.6848660759820616,
+                        "frame": "asset"
+                    },
+                    "frame_name": "asset"
+                },
+                "tag": "1-A",
+                "inspections": [
+                    {
+                        "type": "Image",
+                        "inspection_target": {
+                            "x": -4.7,
+                            "y": 4.9,
+                            "z": 0,
+                            "frame": "robot"
+                        },
+                        "analysis_types": [
+                            "CarSeal",
+                            "Rust"
+                        ],
+                        "metadata": {
+                            "zoom": "2x"
+                        }
+                    },
+                    {
+                        "type": "ThermalImage",
+                        "inspection_target": {
+                            "x": -4.7,
+                            "y": 4.9,
+                            "z": 0,
+                            "frame": "robot"
+                        },
+                        "analysis_types": [
+                            "GasDetection"
+                        ]
+                    }
+                ]
+            },
+            {
+                "pose": {
+                    "position": {
+                        "x": 4.7,
+                        "y": 3,
+                        "z": 0,
+                        "frame": "asset"
+                    },
+                    "orientation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0.5769585,
+                        "w": 0.8167734,
+                        "frame": "asset"
+                    },
+                    "frame_name": "asset"
+                },
+                "tag": "2-B",
+                "inspections": [
+                    {
+                        "type": "Image",
+                        "inspection_target": {
+                            "x": 5.6,
+                            "y": 5.2,
+                            "z": 0,
+                            "frame": "robot"
+                        },
+                        "analysis_types": [
+                            "ColdSpot",
+                            "HotSpot"
+                        ]
+                    }
+                ]
+            },
+            {
+                "pose": {
+                    "position": {
+                        "x": 0.95,
+                        "y": 2.6,
+                        "z": 0,
+                        "frame": "asset"
+                    },
+                    "orientation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": -0.6992469,
+                        "w": 0.7148802,
+                        "frame": "asset"
+                    },
+                    "frame_name": "asset"
+                },
+                "tag": "3-C",
+                "inspections": [
+                    {
+                        "type": "Image",
+                        "inspection_target": {
+                            "x": 5.6,
+                            "y": 5.2,
+                            "z": 0,
+                            "frame": "robot"
+                        },
+                        "analysis_types": [
+                            "ColdSpot",
+                            "HotSpot"
+                        ]
+                    },
+                    {
+                        "type": "ThermalImage",
+                        "inspection_target": {
+                            "x": 1.9,
+                            "y": 1.9,
+                            "z": 0,
+                            "frame": "robot"
+                        },
+                        "analysis_types": [
+                            "ColdSpot",
+                            "HotSpot"
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 from alitra import Frame, Pose, Position
 from azure.identity import DefaultAzureCredential

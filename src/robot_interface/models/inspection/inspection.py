@@ -1,7 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Type
+from typing import List, Optional, Type
 from uuid import UUID, uuid4
 
 from alitra import Pose
@@ -18,8 +18,9 @@ class InspectionMetadata(ABC):
     start_time: datetime
     time_indexed_pose: TimeIndexedPose
     file_type: str
+    analysis: Optional[List] = field(default_factory=list, init=False)
     tag_id: Optional[str] = field(default=None, init=False)
-    additional: Optional[dict] = field(default=None, init=False)
+    additional: Optional[dict] = field(default_factory=dict, init=False)
 
 
 @dataclass
@@ -51,6 +52,10 @@ class Inspection:
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:
         return InspectionMetadata
+
+    @staticmethod
+    def get_metadata_type_str() -> str:
+        return str(Inspection.get_metadata_type().__name__)
 
 
 @dataclass
