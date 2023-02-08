@@ -1,0 +1,98 @@
+{
+    "mission_definition": {
+        "tasks": [
+            {
+                "pose": {
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "frame_name": "robot"
+                    },
+                    "orientation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1,
+                        "frame_name": "robot"
+                    },
+                    "frame_name": "robot"
+                },
+                "tag": "1-A",
+                "inspections": [
+                    {
+                        "type": "Image",
+                        "inspection_target": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "frame_name": "robot"
+                        },
+                        "analysis_types": [
+                            "CarSeal",
+                            "Rust"
+                        ],
+                        "metadata": {
+                            "zoom": "2x"
+                        }
+                    },
+                    {
+                        "type": "ThermalVideo",
+                        "inspection_target": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "frame_name": "robot"
+                        },
+                        "analysis_types": [
+                            "GasDetection"
+                        ],
+                        "duration": 10
+                    }
+                ]
+            },
+            {
+                "pose": {
+                    "position": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1,
+                        "frame_name": "robot"
+                    },
+                    "orientation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1,
+                        "frame_name": "robot"
+                    },
+                    "frame_name": "robot"
+                },
+                "inspections": [
+                    {
+                        "type": "ThermalImage",
+                        "inspection_target": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "frame_name": "robot"
+                        },
+                        "analysis_types": [
+                            "ColdSpot",
+                            "HotSpot"
+                        ]
+                    },
+                    {
+                        "type": "Video",
+                        "inspection_target": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "frame_name": "robot"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -17,8 +17,10 @@ class MissionMetadata:
     source_url: Optional[str] = None
     plant_code: str = settings.PLANT_CODE
     plant_name: str = settings.PLANT_NAME
+    plant_short_name: str = settings.PLANT_SHORT_NAME
     media_orientation_reference_system: str = (
         settings.MEDIA_ORIENTATION_REFERENCE_SYSTEM
     )
     robot_id: str = settings.ROBOT_ID
+    robot_model: str = settings.ROBOT_TYPE
     mission_date: date = datetime.utcnow().date()

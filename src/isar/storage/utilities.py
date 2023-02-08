@@ -14,12 +14,10 @@ from robot_interface.utilities.json_service import EnhancedJSONEncoder
 def construct_local_paths(
     inspection: Inspection, metadata: MissionMetadata
 ) -> Tuple[Path, Path]:
-    inspection_type: str = get_inspection_type(inspection=inspection)
-
     folder: Path = Path(str(metadata.mission_id))
     filename: str = get_filename(
         mission_id=metadata.mission_id,
-        inspection_type=inspection_type,
+        inspection_type=inspection.get_metadata_type_str(),
         inspection_id=inspection.id,
     )
 
@@ -77,23 +75,3 @@ def get_filename(
     inspection_id: UUID,
 ) -> str:
     return f"{mission_id}_{inspection_type}_{inspection_id}"
-
-
-def get_inspection_type(inspection: Inspection) -> str:
-    if isinstance(inspection, Image):
-        return "image"
-    elif isinstance(inspection, ThermalImage):
-        return "thermal"
-    elif isinstance(inspection, Video):
-        return "video"
-    elif isinstance(inspection, ThermalVideo):
-        return "thermal_video"
-    else:
-        logging.getLogger("uploader").warning(
-            f"Failed to upload inspection with ID: {inspection.id}\n "
-            f"This was due to an inspection type ({type(inspection)}) "
-            f"which is not supported by the uploader"
-        )
-        raise StorageException(
-            f"Inspection type not supported by the uploader. Got {type(inspection)}"
-        )

@@ -7,7 +7,9 @@ from isar.apis.models.models import (
     TaskResponse,
 )
 from isar.apis.models.start_mission_definition import (
+    InspectionTypes,
     StartMissionDefinition,
+    StartMissionInspectionDefinition,
     StartMissionTaskDefinition,
 )
 from isar.models.mission import Mission, Task
@@ -37,6 +39,11 @@ class MockMissionDefinition:
             ),
         ],
     )
+    mock_start_mission_inspection_definition = StartMissionInspectionDefinition(
+        type=InspectionTypes.image,
+        inspection_target=mock_input_target_position,
+        analysis_types=["analysis"],
+    )
     mock_start_mission_response = StartMissionResponse(
         id=default_mission.id,
         tasks=[
@@ -56,9 +63,7 @@ class MockMissionDefinition:
             StartMissionTaskDefinition(
                 pose=mock_input_pose,
                 tag="dummy_tag",
-                inspection_target=mock_input_target_position,
-                inspection_types=["Image"],
-                video_duration=None,
+                inspections=[mock_start_mission_inspection_definition],
             ),
         ]
     )

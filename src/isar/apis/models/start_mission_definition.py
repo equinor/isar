@@ -1,4 +1,5 @@
-from typing import List, Optional, Type
+from enum import Enum
+from typing import List, Optional
 
 from alitra import Position
 from pydantic import BaseModel, Field
@@ -9,29 +10,32 @@ from isar.models.mission.mission import Mission, Task
 from robot_interface.models.mission.step import (
     STEPS,
     DriveToPose,
-    InspectionStep,
     TakeImage,
     TakeThermalImage,
     TakeThermalVideo,
     TakeVideo,
 )
 
-inspection_step_types: List[Type[InspectionStep]] = [
-    TakeImage,
-    TakeThermalImage,
-    TakeVideo,
-    TakeThermalVideo,
-]
+
+class InspectionTypes(str, Enum):
+    image = "Image"
+    thermal_image = "ThermalImage"
+    video = "Video"
+    thermal_video = "ThermalVideo"
+
+
+class StartMissionInspectionDefinition(BaseModel):
+    type: InspectionTypes = Field(default=InspectionTypes.image)
+    inspection_target: InputPosition
+    analysis_types: Optional[List]
+    duration: Optional[float]
+    metadata: Optional[dict]
 
 
 class StartMissionTaskDefinition(BaseModel):
     pose: InputPose
     tag: Optional[str]
-    inspection_target: InputPosition
-    inspection_types: List[str] = Field(
-        default=[step.get_inspection_type().__name__ for step in inspection_step_types]
-    )
-    video_duration: Optional[float] = Field(default=10)
+    inspections: List[StartMissionInspectionDefinition]
 
 
 class StartMissionDefinition(BaseModel):
@@ -47,12 +51,14 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
             drive_step: DriveToPose = DriveToPose(pose=task.pose.to_alitra_pose())
             inspection_steps: List[STEPS] = [
                 create_inspection_step(
-                    inspection_type=inspection_type,
-                    duration=task.video_duration,
-                    target=task.inspection_target.to_alitra_position(),
+                    inspection_type=inspection.type,
+                    duration=inspection.duration,
+                    target=inspection.inspection_target.to_alitra_position(),
                     tag_id=tag_id,
+                    analysis=inspection.analysis_types,
+                    metadata=inspection.metadata,
                 )
-                for inspection_type in task.inspection_types
+                for inspection in task.inspections
             ]
         except ValueError as e:
             raise MissionPlannerError(f"Failed to create task: {str(e)}")
@@ -68,27 +74,30 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
 
 
 def create_inspection_step(
-    inspection_type: str, duration: float, target: Position, tag_id: Optional[str]
+    inspection_type: InspectionTypes,
+    duration: float,
+    target: Position,
+    analysis: Optional[List],
+    tag_id: Optional[str],
+    metadata: Optional[dict],
 ) -> STEPS:
     inspection_step: STEPS
-
-    if inspection_type == TakeImage.get_inspection_type().__name__:
+    if inspection_type == InspectionTypes.image.value:
         inspection_step = TakeImage(target=target)
-        if tag_id:
-            inspection_step.tag_id = tag_id
-    elif inspection_type == TakeVideo.get_inspection_type().__name__:
+    elif inspection_type == InspectionTypes.video.value:
         inspection_step = TakeVideo(target=target, duration=duration)
-        if tag_id:
-            inspection_step.tag_id = tag_id
-    elif inspection_type == TakeThermalImage.get_inspection_type().__name__:
+    elif inspection_type == InspectionTypes.thermal_image.value:
         inspection_step = TakeThermalImage(target=target)
-        if tag_id:
-            inspection_step.tag_id = tag_id
-    elif inspection_type == TakeThermalVideo.get_inspection_type().__name__:
+    elif inspection_type == InspectionTypes.thermal_video.value:
         inspection_step = TakeThermalVideo(target=target, duration=duration)
-        if tag_id:
-            inspection_step.tag_id = tag_id
     else:
         raise ValueError(f"Inspection type '{inspection_type}' not supported")
+
+    if tag_id:
+        inspection_step.tag_id = tag_id
+    if analysis:
+        inspection_step.analysis = analysis
+    if metadata:
+        inspection_step.metadata = metadata
 
     return inspection_step

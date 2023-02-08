@@ -151,14 +151,14 @@ class Settings(BaseSettings):
     ECHO_API_URL: str = Field(default="https://echohubapi.equinor.com/api")
 
     # Client ID for SLIMM App Registration
-    SLIMM_CLIENT_ID: str = Field(default="94c048cc-58e9-4570-85c0-4028c50ab6f3")
+    SLIMM_CLIENT_ID: str = Field(default="c630ca4d-d8d6-45ab-8cc6-68a363d0de9e")
 
     # Scope for access to SLIMM Ingestion API
     SLIMM_APP_SCOPE: str = Field(default=".default")
 
     # URL for SLIMM endpoint
     SLIMM_API_URL: str = Field(
-        default="https://slimmingestapitest.azurewebsites.net/SpatialIngest"
+        default="https://scinspectioningestapitest.azurewebsites.net/Ingest"
     )
 
     # Whether the results should be copied directly into the SLIMM datalake or only the
