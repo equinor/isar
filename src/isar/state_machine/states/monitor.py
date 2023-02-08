@@ -1,7 +1,7 @@
 import logging
 import time
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable, Optional, Sequence, Tuple
+from typing import Callable, Optional, Sequence, TYPE_CHECKING, Tuple
 
 from injector import inject
 from transitions import State
@@ -21,31 +21,31 @@ if TYPE_CHECKING:
 
 class Monitor(State):
     @inject
-    def __init__(self, state_machine: "StateMachine"):
+    def __init__(self, state_machine: "StateMachine") -> None:
         super().__init__(name="monitor", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
 
         self.logger = logging.getLogger("state_machine")
         self.step_status_thread: Optional[ThreadedRequest] = None
 
-    def start(self):
+    def start(self) -> None:
         self.state_machine.update_state()
         self._run()
 
-    def stop(self):
+    def stop(self) -> None:
         if self.step_status_thread:
             self.step_status_thread.wait_for_thread()
         self.step_status_thread = None
 
-    def _run(self):
+    def _run(self) -> None:
         transition: Callable
         while True:
             if self.state_machine.should_stop_mission():
-                transition = self.state_machine.stop
+                transition = self.state_machine.stop  # type: ignore
                 break
 
             if self.state_machine.should_pause_mission():
-                transition = self.state_machine.pause
+                transition = self.state_machine.pause  # type: ignore
                 break
 
             if not self.step_status_thread:
@@ -72,7 +72,7 @@ class Monitor(State):
                     self.state_machine.current_step,
                     name="State Machine Get Inspections",
                 )
-                transition = self.state_machine.step_finished
+                transition = self.state_machine.step_finished  # type: ignore
                 break
 
             self.step_status_thread = None
@@ -80,7 +80,7 @@ class Monitor(State):
 
         transition()
 
-    def _queue_inspections_for_upload(self, current_step: InspectionStep):
+    def _queue_inspections_for_upload(self, current_step: InspectionStep) -> None:
         try:
             inspections: Sequence[
                 Inspection

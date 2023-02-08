@@ -9,11 +9,11 @@ from robot_interface.models.inspection.inspection import Inspection
 
 
 class LocalStorage(StorageInterface):
-    def __init__(self):
+    def __init__(self) -> None:
         self.root_folder: Path = Path(settings.LOCAL_STORAGE_PATH)
         self.logger = logging.getLogger("uploader")
 
-    def store(self, inspection: Inspection, metadata: MissionMetadata):
+    def store(self, inspection: Inspection, metadata: MissionMetadata) -> None:
         local_path, local_metadata_path = construct_local_paths(
             inspection=inspection, metadata=metadata
         )

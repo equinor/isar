@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, Optional, TYPE_CHECKING
 
 from transitions import State
 
@@ -15,24 +15,24 @@ if TYPE_CHECKING:
 
 
 class StopStep(State):
-    def __init__(self, state_machine: "StateMachine"):
+    def __init__(self, state_machine: "StateMachine") -> None:
         super().__init__(name="stop_step", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
-        self.stop_thread = None
+        self.stop_thread: Optional[ThreadedRequest] = None
         self._count_number_retries: int = 0
 
-    def start(self):
+    def start(self) -> None:
         self.state_machine.update_state()
         self._run()
 
-    def stop(self):
+    def stop(self) -> None:
         if self.stop_thread:
             self.stop_thread.wait_for_thread()
         self.stop_thread = None
         self._count_number_retries = 0
 
-    def _run(self):
+    def _run(self) -> None:
         transition: Callable
         while True:
             if not self.stop_thread:
@@ -52,16 +52,16 @@ class StopStep(State):
                 if self.handle_stop_fail(
                     retry_limit=self.state_machine.stop_robot_attempts_limit
                 ):
-                    transition = self.state_machine.mission_stopped
+                    transition = self.state_machine.mission_stopped  # type: ignore
                     break
 
                 self.logger.warning("Failed to stop robot. Retrying.")
                 self.stop_thread = None
                 continue
             if self.state_machine.stopped:
-                transition = self.state_machine.mission_stopped
+                transition = self.state_machine.mission_stopped  # type: ignore
             else:
-                transition = self.state_machine.mission_paused
+                transition = self.state_machine.mission_paused  # type: ignore
             break
 
         transition()

@@ -17,7 +17,7 @@ class RobotInfoPublisher:
         while True:
             payload: RobotInfoPayload = RobotInfoPayload(
                 robot_name=settings.ROBOT_ID,
-                robot_model=robot_settings.ROBOT_MODEL,
+                robot_model=robot_settings.ROBOT_MODEL,  # type: ignore
                 robot_serial_number=settings.SERIAL_NUMBER,
                 video_streams=settings.VIDEO_STREAMS,
                 host=settings.API_HOST_VIEWED_EXTERNALLY,

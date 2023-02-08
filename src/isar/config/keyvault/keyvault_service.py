@@ -1,5 +1,6 @@
 import logging
 import traceback
+from typing import Union
 
 from azure.core.exceptions import (
     ClientAuthenticationError,
@@ -52,16 +53,17 @@ class Keyvault:
             traceback.print_exc()
             raise KeyvaultError  # type: ignore
 
-    def get_secret_client(self):
+    def get_secret_client(self) -> SecretClient:
         try:
+            credential: Union[ClientSecretCredential, DefaultAzureCredential]
             if self.client_id and self.client_secret and self.tenant_id:
-                credential: ClientSecretCredential = ClientSecretCredential(
+                credential = ClientSecretCredential(
                     tenant_id=self.tenant_id,
                     client_id=self.client_id,
                     client_secret=self.client_secret,
                 )
             else:
-                credential: DefaultAzureCredential = DefaultAzureCredential()
+                credential = DefaultAzureCredential()
         except ClientAuthenticationError:
             self.logger.error("Failed to authenticate to Azure.")
             traceback.print_exc()

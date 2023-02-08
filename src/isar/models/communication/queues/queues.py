@@ -6,7 +6,7 @@ from isar.models.communication.queues.status_queue import StatusQueue
 
 
 class Queues:
-    def __init__(self):
+    def __init__(self) -> None:
         self.start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
         self.stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
         self.pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)

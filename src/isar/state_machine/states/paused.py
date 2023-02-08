@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Callable
+from typing import Callable, TYPE_CHECKING
 
 from transitions import State
 
@@ -9,24 +9,24 @@ if TYPE_CHECKING:
 
 
 class Paused(State):
-    def __init__(self, state_machine: "StateMachine"):
+    def __init__(self, state_machine: "StateMachine") -> None:
         super().__init__(name="paused", on_enter=self.start)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
 
-    def start(self):
+    def start(self) -> None:
         self.state_machine.update_state()
         self._run()
 
-    def _run(self):
+    def _run(self) -> None:
         transition: Callable
         while True:
             if self.state_machine.should_stop_mission():
-                transition = self.state_machine.mission_stopped
+                transition = self.state_machine.mission_stopped  # type: ignore
                 break
 
             if self.state_machine.should_resume_mission():
-                transition = self.state_machine.resume
+                transition = self.state_machine.resume  # type: ignore
                 break
 
             time.sleep(self.state_machine.sleep_time)

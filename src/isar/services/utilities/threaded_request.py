@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 
 class ThreadedRequest:
-    def __init__(self, request_func: Any) -> None:
+    def __init__(self, request_func: Any):
         self._thread: Optional[Thread] = None
         self._request_func: Any = request_func
         self._output: Optional[Any] = None

@@ -30,7 +30,7 @@ class SlimmStorage(StorageInterface):
 
         self.url: str = settings.SLIMM_API_URL
 
-    def store(self, inspection: Inspection, metadata: MissionMetadata):
+    def store(self, inspection: Inspection, metadata: MissionMetadata) -> None:
         token: str = self.credentials.get_token(self.request_scope).token
 
         request_url: str = f"{self.url}/UploadSingleFile"
@@ -54,7 +54,7 @@ class SlimmStorage(StorageInterface):
             token=token,
         )
 
-    def _ingest(self, inspection, multiform_body, request_url, token):
+    def _ingest(self, inspection, multiform_body, request_url, token) -> None:
         try:
             self.request_handler.post(
                 url=request_url,
@@ -73,7 +73,9 @@ class SlimmStorage(StorageInterface):
             raise StorageException from e
 
     @staticmethod
-    def _construct_multiform_request(filename, inspection, metadata):
+    def _construct_multiform_request(
+        filename, inspection, metadata
+    ) -> MultipartEncoder:
         array_of_orientation = (
             inspection.metadata.time_indexed_pose.pose.orientation.to_quat_array().tolist()
         )

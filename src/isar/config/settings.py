@@ -307,7 +307,7 @@ class RobotSettings(BaseSettings):
 
     # Model of the robot which ISAR is connected to
     # This should be set in the robot package settings.env file
-    ROBOT_MODEL: RobotModel = Field(default=RobotModel.Robot)
+    ROBOT_MODEL: RobotModel = Field(default=RobotModel.Robot)  # type: ignore
 
     class Config:
         env_file_encoding = "utf-8"
