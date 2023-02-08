@@ -8,7 +8,7 @@ from uvicorn.logging import ColourizedFormatter
 from isar.config.settings import settings
 
 
-def setup_logger():
+def setup_logger() -> None:
     log_levels: dict = settings.LOG_LEVELS
     with pkg_resources.path("isar.config", "logging.conf") as path:
         log_config = yaml.safe_load(open(path))

@@ -4,11 +4,10 @@ from datetime import datetime, timedelta
 from queue import Empty, Queue
 from typing import List
 
-from robot_interface.models.inspection.inspection import Inspection
-
 from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageException, StorageInterface
+from robot_interface.models.inspection.inspection import Inspection
 
 
 @dataclass
@@ -19,7 +18,7 @@ class UploaderQueueItem:
     _retry_count: int
     _next_retry_time: datetime = datetime.utcnow()
 
-    def increment_retry(self, max_wait_time: int):
+    def increment_retry(self, max_wait_time: int) -> None:
         self._retry_count += 1
         seconds_until_retry: int = min(2**self._retry_count, max_wait_time)
         self._next_retry_time = datetime.utcnow() + timedelta(
@@ -85,7 +84,7 @@ class Uploader:
             except Empty:
                 continue
 
-    def _upload(self, upload_item: UploaderQueueItem):
+    def _upload(self, upload_item: UploaderQueueItem) -> None:
         try:
             upload_item.storage_handler.store(
                 inspection=upload_item.inspection, metadata=upload_item.mission_metadata
@@ -112,7 +111,7 @@ class Uploader:
                     f"{str(upload_item.inspection.id)[:8]}. Aborting upload."
                 )
 
-    def _process_upload_queue(self):
+    def _process_upload_queue(self) -> None:
         ready_items: List[UploaderQueueItem] = [
             x for x in self._internal_upload_queue if x.is_ready_for_upload()
         ]

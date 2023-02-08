@@ -6,7 +6,7 @@ from isar.models.communication.queues import Queues, StatusQueue
 
 
 class TestQueues:
-    def test_queues(self):
+    def test_queues(self) -> None:
         queues = Queues()
         assert queues.start_mission is not None
         assert (
@@ -28,20 +28,20 @@ class TestQueues:
         )
 
 
-def test_staus_queue_empty():
+def test_staus_queue_empty() -> None:
     status_queue: StatusQueue = StatusQueue()
     with pytest.raises(Empty):
         status_queue.check()
 
 
-def test_status_queue_check():
+def test_status_queue_check() -> None:
     status_queue: StatusQueue = StatusQueue()
     status_queue.update("Test")
     assert status_queue.check() == "Test"
     assert status_queue._qsize() == 1
 
 
-def test_status_queue_update():
+def test_status_queue_update() -> None:
     status_queue: StatusQueue = StatusQueue()
     status_queue.update("Test")
     status_queue.update("New Test")

@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Optional
+from typing import Optional, TYPE_CHECKING
 
 from transitions import State
 
@@ -11,19 +11,19 @@ if TYPE_CHECKING:
 
 
 class Idle(State):
-    def __init__(self, state_machine: "StateMachine"):
+    def __init__(self, state_machine: "StateMachine") -> None:
         super().__init__(name="idle", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
 
-    def start(self):
+    def start(self) -> None:
         self.state_machine.update_state()
         self._run()
 
-    def stop(self):
+    def stop(self) -> None:
         pass
 
-    def _run(self):
+    def _run(self) -> None:
         while True:
             start_mission: Optional[
                 StartMissionMessage
@@ -33,7 +33,7 @@ class Idle(State):
                     mission=start_mission.mission,
                     initial_pose=start_mission.initial_pose,
                 )
-                transition = self.state_machine.mission_started
+                transition = self.state_machine.mission_started  # type: ignore
                 break
             time.sleep(self.state_machine.sleep_time)
 

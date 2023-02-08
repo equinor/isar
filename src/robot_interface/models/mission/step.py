@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, List, Literal, Optional, Type, Union
 from uuid import UUID, uuid4
@@ -24,7 +23,7 @@ class Step:
     id: UUID = field(default_factory=uuid4, init=False)
     status: StepStatus = field(default=StepStatus.NotStarted, init=False)
 
-    def __str__(self):
+    def __str__(self) -> str:
         def add_indent(text: str) -> str:
             return "".join("  " + line for line in text.splitlines(True))
 

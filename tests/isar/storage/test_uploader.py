@@ -51,7 +51,7 @@ def uploader_thread(injector) -> UploaderThread:
     return UploaderThread(injector=injector)
 
 
-def test_should_upload_from_queue(uploader_thread):
+def test_should_upload_from_queue(uploader_thread) -> None:
     mission: Mission = Mission([])
     inspection: Inspection = Inspection(ARBITRARY_IMAGE_METADATA)
     message: Tuple[Inspection, MissionMetadata] = (
@@ -63,7 +63,7 @@ def test_should_upload_from_queue(uploader_thread):
     assert uploader_thread.uploader.storage_handlers[0].blob_exists(inspection)
 
 
-def test_should_retry_failed_upload_from_queue(uploader_thread, mocker):
+def test_should_retry_failed_upload_from_queue(uploader_thread, mocker) -> None:
     mission: Mission = Mission([])
     inspection: Inspection = Inspection(ARBITRARY_IMAGE_METADATA)
     message: Tuple[Inspection, MissionMetadata] = (

@@ -120,7 +120,7 @@ def test_get_echo_mission(
     mock_stid_side_effect,
     mock_stid,
     expected_return,
-):
+) -> None:
     mocker.patch.object(EchoPlanner, "_mission_plan", return_value=mock_return)
     mocker.patch.object(
         StidService,
