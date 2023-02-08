@@ -184,7 +184,8 @@ modules: Dict[str, Tuple[Module, Union[str, bool]]] = {
     "queues": (QueuesModule, "required"),
     "request_handler": (RequestHandlerModule, "required"),
     "robot_package": (RobotModule, settings.ROBOT_PACKAGE),
-    "robot_id": (RobotModule, settings.ROBOT_ID),
+    "isar_id": (RobotModule, settings.ISAR_ID),
+    "robot_name": (RobotModule, settings.ROBOT_NAME),
     "mission_planner": (
         {
             "default": LocalPlannerModule,

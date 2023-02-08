@@ -44,7 +44,8 @@ def construct_metadata_file(
             "mission_id": metadata.mission_id,
             "plant_name": metadata.plant_name,
             "mission_date": metadata.mission_date,
-            "robot_id": metadata.robot_id,
+            "isar_id": metadata.isar_id,
+            "robot_name": metadata.robot_name,
         },
         "data": [
             {

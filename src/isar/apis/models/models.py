@@ -32,7 +32,8 @@ class ControlMissionResponse(BaseModel):
 
 class RobotInfoResponse(BaseModel):
     robot_package: str
-    robot_id: str
+    isar_id: str
+    robot_name: str
     robot_capabilities: List[str]
     robot_map_name: str
     plant_short_name: str

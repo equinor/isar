@@ -16,7 +16,8 @@ class RobotInfoPublisher:
     def run(self) -> None:
         while True:
             payload: RobotInfoPayload = RobotInfoPayload(
-                robot_name=settings.ROBOT_ID,
+                isar_id=settings.ISAR_ID,
+                robot_name=settings.ROBOT_NAME,
                 robot_model=robot_settings.ROBOT_MODEL,  # type: ignore
                 robot_serial_number=settings.SERIAL_NUMBER,
                 video_streams=settings.VIDEO_STREAMS,

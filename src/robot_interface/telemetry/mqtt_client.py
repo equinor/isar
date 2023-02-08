@@ -60,10 +60,12 @@ class MqttTelemetryPublisher(MqttClientInterface):
         self.qos: int = qos
         self.retain: bool = retain
 
-    def run(self, robot_id: str) -> None:
+    def run(self, isar_id: str, robot_name: str) -> None:
         while True:
             try:
-                payload: str = self.telemetry_method(robot_id)
+                payload: str = self.telemetry_method(
+                    isar_id=isar_id, robot_name=robot_name
+                )
             except RobotInvalidTelemetryException:
                 continue
 

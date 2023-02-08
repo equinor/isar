@@ -118,13 +118,15 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_telemetry_publishers(self, queue: Queue, robot_id: str) -> List[Thread]:
+    def get_telemetry_publishers(
+        self, queue: Queue, isar_id: str, robot_name: str
+    ) -> List[Thread]:
         """
         Set up telemetry publisher threads to publish regular updates for pose, battery
         level etc. from the robot to the MQTT broker. The publishers on the robot side
         will use the queue to pass messages to the MQTT Client on the ISAR side.
 
-        The robot_id is passed to the robot to ensure the messages are published to the
+        The isar_id is passed to the robot to ensure the messages are published to the
         correct topics.
 
         Note that this functionality will only be utilized if MQTT is enabled in the

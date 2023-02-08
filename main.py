@@ -80,7 +80,9 @@ if __name__ == "__main__":
         threads.append(robot_info_thread)
 
         publishers: List[Thread] = robot.get_telemetry_publishers(
-            queue=queues.mqtt_queue, robot_id=settings.ROBOT_ID
+            queue=queues.mqtt_queue,
+            robot_name=settings.ROBOT_NAME,
+            isar_id=settings.ISAR_ID,
         )
         if publishers:
             threads.extend(publishers)

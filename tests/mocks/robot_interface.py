@@ -53,7 +53,9 @@ class MockRobot(RobotInterface):
     def initialize(self, params: InitializeParams) -> None:
         return
 
-    def get_telemetry_publishers(self, queue: Queue, robot_id: str) -> List[Thread]:
+    def get_telemetry_publishers(
+        self, queue: Queue, isar_id: str, robot_name: str
+    ) -> List[Thread]:
         return []
 
     def robot_status(self) -> RobotStatus:
