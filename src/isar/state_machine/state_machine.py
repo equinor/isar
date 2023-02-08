@@ -436,7 +436,8 @@ class StateMachine(object):
             return
         payload: str = json.dumps(
             {
-                "robot_id": settings.ROBOT_ID,
+                "isar_id": settings.ISAR_ID,
+                "robot_name": settings.ROBOT_NAME,
                 "mission_id": self.current_mission.id if self.current_mission else None,
                 "status": self.current_mission.status if self.current_mission else None,
                 "timestamp": datetime.utcnow(),
@@ -456,7 +457,8 @@ class StateMachine(object):
             return
         payload: str = json.dumps(
             {
-                "robot_id": settings.ROBOT_ID,
+                "isar_id": settings.ISAR_ID,
+                "robot_name": settings.ROBOT_NAME,
                 "mission_id": self.current_mission.id if self.current_mission else None,
                 "task_id": self.current_task.id if self.current_task else None,
                 "status": self.current_task.status if self.current_task else None,
@@ -477,7 +479,8 @@ class StateMachine(object):
             return
         payload: str = json.dumps(
             {
-                "robot_id": settings.ROBOT_ID,
+                "isar_id": settings.ISAR_ID,
+                "robot_name": settings.ROBOT_NAME,
                 "mission_id": self.current_mission.id if self.current_mission else None,
                 "task_id": self.current_task.id if self.current_task else None,
                 "step_id": self.current_step.id if self.current_step else None,
@@ -501,7 +504,8 @@ class StateMachine(object):
             return
         payload: str = json.dumps(
             {
-                "robot_id": settings.ROBOT_ID,
+                "isar_id": settings.ISAR_ID,
+                "robot_name": settings.ROBOT_NAME,
                 "state": self.current_state,
                 "timestamp": datetime.utcnow(),
             },

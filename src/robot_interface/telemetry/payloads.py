@@ -11,14 +11,16 @@ from robot_interface.models.mission.status import RobotStatus
 @dataclass
 class TelemetryPosePayload:
     pose: Pose
-    robot_id: str
+    isar_id: str
+    robot_name: str
     timestamp: datetime
 
 
 @dataclass
 class TelemetryBatteryPayload:
     battery_level: float
-    robot_id: str
+    isar_id: str
+    robot_name: str
     timestamp: datetime
 
 
@@ -31,6 +33,7 @@ class VideoStream:
 
 @dataclass
 class RobotStatusPayload:
+    isar_id: str
     robot_name: str
     robot_status: RobotStatus
     current_isar_state: State
@@ -42,6 +45,7 @@ class RobotStatusPayload:
 
 @dataclass
 class RobotInfoPayload:
+    isar_id: str
     robot_name: str
     robot_model: str
     robot_serial_number: str

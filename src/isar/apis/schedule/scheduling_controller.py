@@ -222,7 +222,8 @@ class SchedulingController:
     def get_info(self):
         return RobotInfoResponse(
             robot_package=settings.ROBOT_PACKAGE,
-            robot_id=settings.ROBOT_ID,
+            isar_id=settings.ISAR_ID,
+            robot_name=settings.ROBOT_NAME,
             robot_map_name=settings.DEFAULT_MAP,
             robot_capabilities=robot_settings.CAPABILITIES,
             plant_short_name=settings.STID_PLANT_NAME,

@@ -188,8 +188,11 @@ class Settings(BaseSettings):
     # Type of robot ISAR is monitoring
     ROBOT_TYPE: str = Field(default="robot")
 
-    # Name or unique ID of robot
-    ROBOT_ID: str = Field(default="R2-D2")
+    # Name of robot
+    ROBOT_NAME: str = Field(default="Placebot")
+
+    # Unique identifier for this ISAR instance. Note that this should be a generated UUID.
+    ISAR_ID: str = Field(default="00000000-0000-0000-0000-000000000000")
 
     # Serial number of the robot ISAR is connected to
     SERIAL_NUMBER: str = Field(default="0001")
@@ -292,7 +295,7 @@ class Settings(BaseSettings):
         always=True,
     )
     def prefix_isar_topics(cls, v, values):
-        return f"isar/{values['ROBOT_ID']}/{v}"
+        return f"isar/{values['ISAR_ID']}/{v}"
 
     class Config:
         with pkg_resources.path("isar.config", "settings.env") as path:

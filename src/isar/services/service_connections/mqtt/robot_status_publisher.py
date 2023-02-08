@@ -52,7 +52,8 @@ class RobotStatusPublisher:
             )
 
             payload: RobotStatusPayload = RobotStatusPayload(
-                robot_name=settings.ROBOT_ID,
+                isar_id=settings.ISAR_ID,
+                robot_name=settings.ROBOT_NAME,
                 robot_status=combined_status,
                 current_isar_state=self.state_machine.current_state,
                 current_mission_id=self.state_machine.current_mission.id

@@ -124,10 +124,10 @@ class Mission:
 
     def _set_unique_id(self) -> None:
         plant_short_name: str = settings.PLANT_SHORT_NAME
-        robot_id: str = settings.ROBOT_ID
+        robot_name: str = settings.ROBOT_NAME
         now: datetime = datetime.utcnow()
         self.id = (
-            f"{plant_short_name.upper()}{robot_id.upper()}"
+            f"{plant_short_name.upper()}{robot_name.upper()}"
             f"{now.strftime('%d%m%Y%H%M%S%f')[:-3]}"
         )
 

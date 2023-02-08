@@ -109,7 +109,7 @@ class SlimmStorage(StorageInterface):
                 "Geodetic.CoordinateReferenceSystemCode": metadata.coordinate_reference_system,  # noqa: E501
                 "Geodetic.VerticalCoordinateReferenceSystemCode": metadata.vertical_reference_system,  # noqa: E501
                 "Geodetic.OrientationReferenceSystem": metadata.media_orientation_reference_system,  # noqa: E501
-                "SensorCarrier.SensorCarrierId": metadata.robot_id,
+                "SensorCarrier.SensorCarrierId": metadata.isar_id,
                 "SensorCarrier.ModelName": metadata.robot_model,
                 "Mission.MissionId": metadata.mission_id,
                 "Mission.Client": "Equinor",
@@ -150,7 +150,7 @@ class SlimmStorage(StorageInterface):
                 "Geodetic.CoordinateReferenceSystemCode": metadata.coordinate_reference_system,  # noqa: E501
                 "Geodetic.VerticalCoordinateReferenceSystemCode": metadata.vertical_reference_system,  # noqa: E501
                 "Geodetic.OrientationReferenceSystem": metadata.media_orientation_reference_system,  # noqa: E501
-                "SensorCarrier.SensorCarrierId": metadata.robot_id,
+                "SensorCarrier.SensorCarrierId": metadata.isar_id,
                 "SensorCarrier.ModelName": metadata.robot_model,
                 "Mission.MissionId": metadata.mission_id,
                 "Mission.Client": "Equinor",
