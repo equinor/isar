@@ -5,16 +5,25 @@ from typing import List, Union
 
 import click
 import uvicorn
-from fastapi import FastAPI, Security
+from fastapi import FastAPI, Security, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRouter
 from injector import inject
 from pydantic import AnyHttpUrl
 
+from opencensus.ext.azure.trace_exporter import AzureExporter
+from opencensus.trace.samplers import ProbabilitySampler
+from opencensus.trace.tracer import Tracer
+from opencensus.trace.span import SpanKind
+from opencensus.trace.attributes_helper import COMMON_ATTRIBUTES
+
 from isar.apis.models.models import ControlMissionResponse, StartMissionResponse
 from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.settings import settings
+
+HTTP_URL = COMMON_ATTRIBUTES["HTTP_URL"]
+HTTP_STATUS_CODE = COMMON_ATTRIBUTES["HTTP_STATUS_CODE"]
 
 
 class API:
@@ -75,6 +84,8 @@ class API:
                 allow_methods=["*"],
                 allow_headers=["*"],
             )
+
+        self._add_request_logging_middleware(app)
 
         app.include_router(router=self._create_scheduler_router())
 
@@ -241,3 +252,24 @@ class API:
             self.port,
             extra={"color_message": color_message},
         )
+
+    def _add_request_logging_middleware(self, app: FastAPI) -> None:
+        @app.middleware("http")
+        async def middlewareOpencensus(request: Request, call_next):
+            tracer = Tracer(
+                exporter=AzureExporter(),
+                sampler=ProbabilitySampler(1.0),
+            )
+            with tracer.span("main") as span:
+                span.span_kind = SpanKind.SERVER
+
+                response = await call_next(request)
+
+                tracer.add_attribute_to_current_span(
+                    attribute_key=HTTP_STATUS_CODE, attribute_value=response.status_code
+                )
+                tracer.add_attribute_to_current_span(
+                    attribute_key=HTTP_URL, attribute_value=str(request.url)
+                )
+
+            return response
