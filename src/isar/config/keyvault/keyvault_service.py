@@ -21,6 +21,7 @@ class Keyvault:
         client_secret: str = None,
         tenant_id: str = None,
     ):
+        self.name = keyvault_name
         self.url = "https://" + keyvault_name + ".vault.azure.net"
         self.client_id = client_id
         self.client_secret = client_secret
@@ -33,14 +34,20 @@ class Keyvault:
         try:
             secret: KeyVaultSecret = secret_client.get_secret(name=secret_name)
         except ResourceNotFoundError:
-            self.logger.error("Secret was not found in keyvault.")
-            traceback.print_exc()
+            self.logger.error(
+                "Secret '%s' was not found in keyvault '%s'.",
+                secret_name,
+                self.name,
+                exc_info=True,
+            )
             raise KeyvaultError  # type: ignore
         except HttpResponseError:
             self.logger.error(
-                "An error occurred while retrieving a secret from keyvault."
+                "An error occurred while retrieving the secret '%s' from keyvault '%s'.",
+                secret_name,
+                self.name,
+                exc_info=True,
             )
-            traceback.print_exc()
             raise KeyvaultError  # type: ignore
 
         return secret
@@ -50,8 +57,12 @@ class Keyvault:
         try:
             secret_client.set_secret(name=secret_name, value=secret_value)
         except HttpResponseError:
-            self.logger.error("An error occurred while setting a secret in keyvault.")
-            traceback.print_exc()
+            self.logger.error(
+                "An error occurred while setting secret '%s' in keyvault '%s'.",
+                secret_name,
+                self.name,
+                exc_info=True,
+            )
             raise KeyvaultError  # type: ignore
 
     def get_secret_client(self) -> SecretClient:
@@ -66,9 +77,10 @@ class Keyvault:
                     )
                 else:
                     credential = DefaultAzureCredential()
-            except ClientAuthenticationError as e:
+            except ClientAuthenticationError:
                 self.logger.error(
-                    "Failed to authenticate to Azure while connecting to KeyVault", e
+                    "Failed to authenticate to Azure while connecting to KeyVault",
+                    exc_info=True,
                 )
                 raise KeyvaultError
 
