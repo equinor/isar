@@ -27,7 +27,7 @@ class API:
     ) -> None:
         self.authenticator: Authenticator = authenticator
         self.scheduling_controller: SchedulingController = scheduling_controller
-        self.host: str = "0.0.0.0"  # Locking uvicorn to use 0.0.0.0
+        self.host: str = "localhost"  # Locking uvicorn to use 0.0.0.0
         self.port: int = port
 
         self.logger: Logger = logging.getLogger("api")
