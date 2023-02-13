@@ -1,6 +1,7 @@
 import logging
 from http import HTTPStatus
 from logging import Logger
+import os
 from typing import List, Union
 
 import click
@@ -20,6 +21,9 @@ from opencensus.trace.attributes_helper import COMMON_ATTRIBUTES
 from isar.apis.models.models import ControlMissionResponse, StartMissionResponse
 from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
+from isar.config.configuration_error import ConfigurationError
+from isar.config.keyvault.keyvault_error import KeyvaultError
+from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 
 HTTP_URL = COMMON_ATTRIBUTES["HTTP_URL"]
@@ -32,14 +36,16 @@ class API:
         self,
         authenticator: Authenticator,
         scheduling_controller: SchedulingController,
+        keyvault_client: Keyvault,
         port: int = settings.API_PORT,
         azure_ai_logging_enabled: bool = settings.LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED,
     ) -> None:
         self.authenticator: Authenticator = authenticator
         self.scheduling_controller: SchedulingController = scheduling_controller
+        self.keyvault_client: Keyvault = keyvault_client
         self.host: str = "0.0.0.0"  # Locking uvicorn to use 0.0.0.0
         self.port: int = port
-        self.azure_ai_logging_enabled = azure_ai_logging_enabled
+        self.azure_ai_logging_enabled: bool = azure_ai_logging_enabled
 
         self.logger: Logger = logging.getLogger("api")
 
@@ -257,10 +263,22 @@ class API:
         )
 
     def _add_request_logging_middleware(self, app: FastAPI) -> None:
+        connection_string: str
+        try:
+            connection_string = self.keyvault_client.get_secret(
+                "application-insights-connection-string"
+            ).value
+        except KeyvaultError:
+            message: str = (
+                "Missing connection string for Application Insights in key vault. "
+            )
+            self.logger.critical(message)
+            raise ConfigurationError(message)
+
         @app.middleware("http")
         async def middlewareOpencensus(request: Request, call_next):
             tracer = Tracer(
-                exporter=AzureExporter(),
+                exporter=AzureExporter(connection_string=connection_string),
                 sampler=ProbabilitySampler(1.0),
             )
             with tracer.span("main") as span:

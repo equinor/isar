@@ -4,10 +4,13 @@ import logging.config
 import yaml
 from uvicorn.logging import ColourizedFormatter
 from opencensus.ext.azure.log_exporter import AzureLogHandler
+from isar.config.configuration_error import ConfigurationError
+from isar.config.keyvault.keyvault_error import KeyvaultError
+from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 
 
-def setup_loggers() -> None:
+def setup_loggers(keyvault: Keyvault) -> None:
     log_levels: dict = settings.LOG_LEVELS
     with pkg_resources.path("isar.config", "logging.conf") as path:
         log_config = yaml.safe_load(open(path))
@@ -18,7 +21,9 @@ def setup_loggers() -> None:
     if settings.LOG_HANDLER_LOCAL_ENABLED:
         handlers.append(configure_console_handler(log_config=log_config))
     if settings.LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED:
-        handlers.append(configure_azure_handler(log_config=log_config))
+        handlers.append(
+            configure_azure_handler(log_config=log_config, keyvault=keyvault)
+        )
 
     for log_handler in handlers:
         for loggers in log_config["loggers"].keys():
@@ -40,8 +45,17 @@ def configure_console_handler(log_config: dict) -> logging.Handler:
     return handler
 
 
-def configure_azure_handler(log_config: dict) -> logging.Handler:
-    # Automatically gets connection string from env variable 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-    handler = AzureLogHandler()
+def configure_azure_handler(log_config: dict, keyvault: Keyvault) -> logging.Handler:
+    connection_string: str
+    try:
+        connection_string = keyvault.get_secret(
+            "application-insights-connection-string"
+        ).value
+    except KeyvaultError:
+        message: str = f"CRITICAL ERROR: Missing connection string for Application Insights in key vault '{keyvault.name}'."
+        print(f"\n{message} \n")
+        raise ConfigurationError(message)
+
+    handler = AzureLogHandler(connection_string=connection_string)
     handler.setLevel(log_config["root"]["level"])
     return handler
