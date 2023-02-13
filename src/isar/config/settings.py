@@ -119,7 +119,7 @@ class Settings(BaseSettings):
     MQTT_PORT: int = Field(default=1883)
 
     # Keyvault name
-    KEYVAULT: str = Field(default="EqRobotKeyVault")
+    KEYVAULT_NAME: str = Field(default="EqRobotKeyVault")
 
     # URL to storage account for Azure Blob Storage
     BLOB_STORAGE_ACCOUNT_URL: str = Field(

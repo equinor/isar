@@ -153,7 +153,7 @@ class ServiceModule(Module):
     @provider
     @singleton
     def provide_keyvault(self) -> Keyvault:
-        return Keyvault(keyvault_name=settings.KEYVAULT)
+        return Keyvault(keyvault_name=settings.KEYVAULT_NAME)
 
     @provider
     @singleton
