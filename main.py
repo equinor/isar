@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from injector import Injector
 
 from isar.apis.api import API
+from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.log import setup_loggers
 from isar.config.settings import settings
 from isar.models.communication.queues.queues import Queues
@@ -26,10 +27,11 @@ from robot_interface.robot_interface import RobotInterface
 if __name__ == "__main__":
     load_dotenv()
 
-    setup_loggers()
-    logger: Logger = logging.getLogger("main")
-
     injector: Injector = get_injector()
+
+    keyvault_client = injector.get(Keyvault)
+    setup_loggers(keyvault=keyvault_client)
+    logger: Logger = logging.getLogger("main")
 
     state_machine: StateMachine = injector.get(StateMachine)
     robot: RobotInterface = injector.get(RobotInterface)

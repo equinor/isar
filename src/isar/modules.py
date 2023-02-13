@@ -36,8 +36,9 @@ class APIModule(Module):
         self,
         authenticator: Authenticator,
         scheduling_controller: SchedulingController,
+        keyvault: Keyvault,
     ) -> API:
-        return API(authenticator, scheduling_controller)
+        return API(authenticator, scheduling_controller, keyvault)
 
     @provider
     @singleton

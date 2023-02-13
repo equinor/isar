@@ -16,9 +16,6 @@ services:
       # Password for connection with MQTT Broker
       - ISAR_MQTT_PASSWORD
 
-      # Connection string for Azure Application Insights
-      - APPLICATIONINSIGHTS_CONNECTION_STRING
-
       # Selected robot package
       - ISAR_ROBOT_PACKAGE=isar_turtlebot
 

@@ -32,4 +32,3 @@ spec:
       secrets:
         - AZURE_CLIENT_SECRET
         - MQTT_PASSWORD
-        - APPLICATIONINSIGHTS_CONNECTION_STRING
