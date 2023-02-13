@@ -26,6 +26,7 @@ class Keyvault:
         self.client_secret = client_secret
         self.tenant_id = tenant_id
         self.logger = logging.getLogger("API")
+        self.client: SecretClient = None
 
     def get_secret(self, secret_name: str) -> KeyVaultSecret:
         secret_client: SecretClient = self.get_secret_client()
@@ -54,20 +55,22 @@ class Keyvault:
             raise KeyvaultError  # type: ignore
 
     def get_secret_client(self) -> SecretClient:
-        try:
-            credential: Union[ClientSecretCredential, DefaultAzureCredential]
-            if self.client_id and self.client_secret and self.tenant_id:
-                credential = ClientSecretCredential(
-                    tenant_id=self.tenant_id,
-                    client_id=self.client_id,
-                    client_secret=self.client_secret,
+        if self.client == None:
+            try:
+                credential: Union[ClientSecretCredential, DefaultAzureCredential]
+                if self.client_id and self.client_secret and self.tenant_id:
+                    credential = ClientSecretCredential(
+                        tenant_id=self.tenant_id,
+                        client_id=self.client_id,
+                        client_secret=self.client_secret,
+                    )
+                else:
+                    credential = DefaultAzureCredential()
+            except ClientAuthenticationError as e:
+                self.logger.error(
+                    "Failed to authenticate to Azure while connecting to KeyVault", e
                 )
-            else:
-                credential = DefaultAzureCredential()
-        except ClientAuthenticationError:
-            self.logger.error("Failed to authenticate to Azure.")
-            traceback.print_exc()
-            raise KeyvaultError
+                raise KeyvaultError
 
-        secret_client = SecretClient(vault_url=self.url, credential=credential)
-        return secret_client
+            self.client = SecretClient(vault_url=self.url, credential=credential)
+        return self.client
