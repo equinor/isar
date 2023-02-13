@@ -236,6 +236,18 @@ class Settings(BaseSettings):
     TOPIC_ISAR_ROBOT_STATUS: str = Field(default="robot_status")
     TOPIC_ISAR_ROBOT_INFO: str = Field(default="robot_info")
 
+    # Logging
+
+    #   Log handlers
+    # Determines which log handlers are used by ISAR
+    # Multiple log handlers can be chosen
+    # Each handler will be called when logging
+    # Selecting a different log handler than local may require certain access rights:
+    #    - The Azure AI logger requires the 'APPLICATIONINSIGHTS_CONNECTION_STRING' to be set as an environment variable.
+    LOG_HANDLER_LOCAL_ENABLED: bool = Field(default=True)
+    LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED: bool = Field(default=False)
+
+    #   Log levels
     API_LOG_LEVEL: str = Field(default="INFO")
     MAIN_LOG_LEVEL: str = Field(default="INFO")
     MQTT_LOG_LEVEL: str = Field(default="INFO")

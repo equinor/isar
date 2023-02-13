@@ -33,11 +33,13 @@ class API:
         authenticator: Authenticator,
         scheduling_controller: SchedulingController,
         port: int = settings.API_PORT,
+        azure_ai_logging_enabled: bool = settings.LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED,
     ) -> None:
         self.authenticator: Authenticator = authenticator
         self.scheduling_controller: SchedulingController = scheduling_controller
         self.host: str = "0.0.0.0"  # Locking uvicorn to use 0.0.0.0
         self.port: int = port
+        self.azure_ai_logging_enabled = azure_ai_logging_enabled
 
         self.logger: Logger = logging.getLogger("api")
 
@@ -85,7 +87,8 @@ class API:
                 allow_headers=["*"],
             )
 
-        self._add_request_logging_middleware(app)
+        if self.azure_ai_logging_enabled:
+            self._add_request_logging_middleware(app)
 
         app.include_router(router=self._create_scheduler_router())
 

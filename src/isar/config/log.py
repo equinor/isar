@@ -15,8 +15,10 @@ def setup_loggers() -> None:
     logging.config.dictConfig(log_config)
 
     handlers = []
-    handlers.append(configure_console_handler(log_config=log_config))
-    handlers.append(configure_azure_handler(log_config=log_config))
+    if settings.LOG_HANDLER_LOCAL_ENABLED:
+        handlers.append(configure_console_handler(log_config=log_config))
+    if settings.LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED:
+        handlers.append(configure_azure_handler(log_config=log_config))
 
     for log_handler in handlers:
         for loggers in log_config["loggers"].keys():
