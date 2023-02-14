@@ -262,7 +262,15 @@ class StateMachine(object):
         self.update_current_step()
 
     def _mission_finished(self) -> None:
-        self.current_mission.status = MissionStatus.Completed
+        fail_statuses: List[TaskStatus] = [
+            TaskStatus.Cancelled,
+            TaskStatus.Failed,
+            TaskStatus.PartiallySuccessful,
+        ]
+        if any(task.status in fail_statuses for task in self.current_mission.tasks):
+            self.current_mission.status = MissionStatus.PartiallySuccessful
+        else:
+            self.current_mission.status = MissionStatus.Successful
         self._finalize()
 
     def _mission_started(self) -> None:
