@@ -3,19 +3,19 @@ from enum import Enum
 
 class MissionStatus(str, Enum):
     NotStarted: str = "not_started"
-    Started: str = "started"
     InProgress: str = "in_progress"
+    Paused: str = "paused"
     Failed: str = "failed"
     Cancelled: str = "cancelled"
-    Completed: str = "completed"
-    Paused: str = "paused"
+    Successful: str = "successful"
+    PartiallySuccessful: str = "partially_successful"
 
 
 class TaskStatus(str, Enum):
     NotStarted: str = "not_started"
     InProgress: str = "in_progress"
-    PartiallySuccessful: str = "partially_successful"
+    Paused: str = "paused"
     Failed: str = "failed"
     Cancelled: str = "cancelled"
     Successful: str = "successful"
-    Paused: str = "paused"
+    PartiallySuccessful: str = "partially_successful"
