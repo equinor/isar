@@ -17,7 +17,7 @@ def construct_local_paths(
     folder: Path = Path(str(metadata.mission_id))
     filename: str = get_filename(
         mission_id=metadata.mission_id,
-        inspection_type=inspection.get_metadata_type_str(),
+        inspection_type=type(inspection).__name__,
         inspection_id=inspection.id,
     )
 
