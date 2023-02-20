@@ -3,7 +3,6 @@ from logging import Logger
 from threading import Thread
 from typing import List
 
-from dotenv import load_dotenv
 from injector import Injector
 
 from isar.apis.api import API
@@ -25,8 +24,6 @@ from isar.storage.uploader import Uploader
 from robot_interface.robot_interface import RobotInterface
 
 if __name__ == "__main__":
-    load_dotenv()
-
     injector: Injector = get_injector()
 
     keyvault_client = injector.get(Keyvault)

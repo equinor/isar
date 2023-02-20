@@ -3,4 +3,5 @@ from .robot_exceptions import (
     RobotException,
     RobotInfeasibleStepException,
     RobotInvalidResponseException,
+    RobotLowBatteryException,
 )

@@ -1,7 +1,7 @@
 import importlib.resources as pkg_resources
 import os
 from typing import List
-
+from dotenv import load_dotenv
 from pydantic import BaseSettings, Field, validator
 
 from isar.config import predefined_missions
@@ -299,6 +299,7 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
+load_dotenv()
 settings = Settings()
 
 

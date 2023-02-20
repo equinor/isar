@@ -20,3 +20,8 @@ class RobotMapException(RobotException):
 
 class RobotInvalidTelemetryException(RobotException):
     pass
+
+
+class RobotLowBatteryException(RobotException):
+    def __init__(self, battery_level):
+        self.battery_level = battery_level
