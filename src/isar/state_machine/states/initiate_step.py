@@ -12,7 +12,9 @@ from isar.services.utilities.threaded_request import (
 from robot_interface.models.exceptions import (
     RobotException,
     RobotInfeasibleStepException,
+    RobotLowBatteryException,
 )
+
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -82,6 +84,16 @@ class InitiateStep(State):
                 )
                 transition = self.state_machine.step_infeasible  # type: ignore
                 break
+
+            except RobotLowBatteryException as e:
+                self.logger.warning(
+                    f"Battery too low to perform step"
+                    f"{type(self.state_machine.current_step).__name__}"
+                    f"Current Battery Level: {str(e.battery_level)}"
+                )
+                transition = self.state_machine.initiate_step_failed  # type: ignore
+                break
+
             except RobotException as e:
                 self.initiate_step_thread = None
                 self.initiate_step_failure_counter += 1
@@ -90,7 +102,6 @@ class InitiateStep(State):
                     f"{str(self.initiate_step_failure_counter)}"
                     f"{e}"
                 )
-
             if (
                 self.initiate_step_failure_counter
                 >= self.initiate_step_failure_counter_limit

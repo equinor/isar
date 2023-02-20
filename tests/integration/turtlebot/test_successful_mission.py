@@ -74,7 +74,7 @@ def uploader_thread(injector_turtlebot) -> UploaderThread:
 
 
 @pytest.fixture(autouse=True)
-def run_before_and_after_tests():  # type: ignore
+def run_before_and_after_tests() -> None:  # type: ignore
     results_folder: Path = Path("tests/results")
     yield
 
