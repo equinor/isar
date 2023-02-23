@@ -301,8 +301,10 @@ class StateMachine(object):
 
     def _initiate_step_failed(self) -> None:
         self.current_step.status = StepStatus.Failed
+        self.current_task.status = TaskStatus.Failed
         self.current_mission.status = MissionStatus.Failed
         self.publish_step_status()
+        self.publish_task_status()
         self._finalize()
 
     def _step_infeasible(self) -> None:
