@@ -265,9 +265,15 @@ class StateMachine(object):
         fail_statuses: List[TaskStatus] = [
             TaskStatus.Cancelled,
             TaskStatus.Failed,
-            TaskStatus.PartiallySuccessful,
         ]
-        if any(task.status in fail_statuses for task in self.current_mission.tasks):
+        partially_fail_statuses = fail_statuses + [TaskStatus.PartiallySuccessful]
+
+        if all(task.status in fail_statuses for task in self.current_mission.tasks):
+            self.current_mission.status = MissionStatus.Failed
+        elif any(
+            task.status in partially_fail_statuses
+            for task in self.current_mission.tasks
+        ):
             self.current_mission.status = MissionStatus.PartiallySuccessful
         else:
             self.current_mission.status = MissionStatus.Successful
@@ -302,7 +308,6 @@ class StateMachine(object):
     def _initiate_step_failed(self) -> None:
         self.current_step.status = StepStatus.Failed
         self.current_task.status = TaskStatus.Failed
-        self.current_mission.status = MissionStatus.Failed
         self.publish_step_status()
         self.publish_task_status()
         self._finalize()
