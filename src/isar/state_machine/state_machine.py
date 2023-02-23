@@ -307,7 +307,7 @@ class StateMachine(object):
 
     def _initiate_step_failed(self) -> None:
         self.current_step.status = StepStatus.Failed
-        _ = self.current_task.is_finished()
+        self.current_task.update_task_status()
         self.current_mission.status = MissionStatus.Failed
         self.publish_step_status()
         self.publish_task_status()
@@ -365,6 +365,7 @@ class StateMachine(object):
 
     def update_current_task(self):
         if self.current_task.is_finished():
+            self.current_task.update_task_status()
             self.publish_task_status()
             try:
                 self.current_task = self.task_selector.next_task()
