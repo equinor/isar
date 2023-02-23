@@ -5,6 +5,7 @@ from queue import Queue
 from threading import Thread
 
 from isar.config.settings import settings
+from isar.state_machine.states_enum import States
 from isar.state_machine.state_machine import StateMachine
 from robot_interface.models.mission.status import RobotStatus
 from robot_interface.robot_interface import RobotInterface
@@ -21,6 +22,17 @@ class RobotStatusPublisher:
         self.robot: RobotInterface = robot
         self.state_machine: StateMachine = state_machine
 
+    def _get_combined_robot_status(
+        self, robot_status: RobotStatus, current_state: States
+    ) -> RobotStatus:
+        if robot_status == RobotStatus.Offline:
+            return RobotStatus.Offline
+        elif current_state == States.Idle and robot_status == RobotStatus.Available:
+            return RobotStatus.Available
+        elif current_state != States.Idle or robot_status == RobotStatus.Busy:
+            return RobotStatus.Busy
+        return None
+
     def run(self) -> None:
         robot_status_monitor: RobotStatusMonitor = RobotStatusMonitor(robot=self.robot)
         robot_status_thread: Thread = Thread(
@@ -31,9 +43,14 @@ class RobotStatusPublisher:
         robot_status_thread.start()
 
         while True:
+            combined_status: RobotStatus = self._get_combined_robot_status(
+                robot_status=robot_status_monitor.robot_status,
+                current_state=self.state_machine.current_state,
+            )
+
             payload: RobotStatusPayload = RobotStatusPayload(
                 robot_name=settings.ROBOT_ID,
-                robot_status=robot_status_monitor.robot_status,
+                robot_status=combined_status,
                 current_isar_state=self.state_machine.current_state,
                 current_mission_id=self.state_machine.current_mission.id
                 if self.state_machine.current_mission
