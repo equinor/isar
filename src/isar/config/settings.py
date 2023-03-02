@@ -1,6 +1,7 @@
 import importlib.resources as pkg_resources
 import os
 from typing import List
+
 from dotenv import load_dotenv
 from pydantic import BaseSettings, Field, validator
 
@@ -10,6 +11,9 @@ from robot_interface.telemetry.payloads import VideoStream
 
 
 class Settings(BaseSettings):
+    # The run mode of the robot (stepwise or full mission)
+    RUN_MISSION_STEPWISE: bool = Field(default=True)
+
     # Determines which robot package ISAR will attempt to import
     # Name must match with an installed python package in the local environment
     ROBOT_PACKAGE: str = Field(default="isar_robot")
