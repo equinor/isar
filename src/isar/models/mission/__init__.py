@@ -1,2 +1,2 @@
-from .mission import Mission, Task
-from .status import MissionStatus, TaskStatus
+from robot_interface.models.mission.mission import Mission, Task
+from robot_interface.models.mission.status import MissionStatus, TaskStatus

@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import List
 
-from isar.models.mission import Task
+from robot_interface.models.mission.task import Task
 
 
 class TaskSelectorInterface(metaclass=ABCMeta):

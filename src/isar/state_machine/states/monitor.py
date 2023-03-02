@@ -99,7 +99,7 @@ class Monitor(State):
         # A deepcopy is made to freeze the metadata before passing it to another thread
         # through the queue
         mission_metadata: MissionMetadata = deepcopy(
-            self.state_machine.current_mission.metadata
+            self.state_machine.current_mission_metadata
         )
 
         for inspection in inspections:

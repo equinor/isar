@@ -14,7 +14,7 @@ from starlette.testclient import TestClient
 
 from isar.apis.api import API
 from isar.config.settings import settings
-from isar.models.mission import Mission
+from robot_interface.models.mission.mission import Mission
 from isar.modules import (
     APIModule,
     LocalPlannerModule,

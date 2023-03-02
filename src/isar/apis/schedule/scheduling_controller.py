@@ -14,7 +14,9 @@ from isar.apis.models.start_mission_definition import (
 )
 from isar.config.settings import robot_settings, settings
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
-from isar.models.mission import Mission, Task
+from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.task import Task
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission import DriveToPose
@@ -73,7 +75,7 @@ class SchedulingController:
         self.scheduling_utilities.start_mission(
             mission=mission, initial_pose=initial_pose_alitra
         )
-        return mission.api_response()
+        return self._api_response(mission)
 
     def start_mission(
         self,
@@ -132,11 +134,13 @@ class SchedulingController:
             initial_pose.to_alitra_pose() if initial_pose else None
         )
 
+        metadata: MissionMetadata(mission.id)
+
         self.logger.info(f"Starting mission: {mission.id}")
         self.scheduling_utilities.start_mission(
-            mission=mission, initial_pose=initial_pose_alitra
+            mission=mission, mission_metadata=metadata, initial_pose=initial_pose_alitra
         )
-        return mission.api_response()
+        return self._api_response(mission)
 
     def pause_mission(self) -> ControlMissionResponse:
         self.logger.info("Received request to pause current mission")
@@ -217,7 +221,7 @@ class SchedulingController:
             f"Starting drive to mission with ISAR Mission ID: '{mission.id}'"
         )
         self.scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-        return mission.api_response()
+        return self._api_response(mission)
 
     def get_info(self):
         return RobotInfoResponse(
@@ -226,4 +230,10 @@ class SchedulingController:
             robot_map_name=settings.DEFAULT_MAP,
             robot_capabilities=robot_settings.CAPABILITIES,
             plant_short_name=settings.STID_PLANT_NAME,
+        )
+
+    def _api_response(self, mission: Mission, task: Task) -> StartMissionResponse:
+        return StartMissionResponse(
+            id=mission.id,
+            tasks=[task.api_response() for task in mission.tasks],
         )

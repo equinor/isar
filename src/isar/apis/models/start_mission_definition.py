@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from isar.apis.models.models import InputPose, InputPosition
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
-from isar.models.mission.mission import Mission, Task
+from robot_interface.models.mission.mission import Mission, Task
 from robot_interface.models.mission.step import (
     STEPS,
     DriveToPose,

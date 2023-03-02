@@ -20,7 +20,8 @@ from isar.mission_planner.task_selector_interface import (
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queues import Queues
 from isar.models.mission import Mission, Task
-from isar.models.mission.status import MissionStatus, TaskStatus
+from robot_interface.models.mission.status import MissionStatus, TaskStatus
+from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.state_machine.states import (
     Idle,
     Initialize,
@@ -194,6 +195,7 @@ class StateMachine(object):
 
         self.stopped: bool = False
         self.current_mission: Optional[Mission] = None
+        self.current_mission_metadata: Optional[MissionMetadata] = None
         self.current_task: Optional[Task] = None
         self.current_step: Optional[Step] = None
         self.initial_pose: Optional[Pose] = None
@@ -307,7 +309,8 @@ class StateMachine(object):
 
     def _initiate_step_failed(self) -> None:
         self.current_step.status = StepStatus.Failed
-        self.current_task.status = TaskStatus.Failed
+        self.current_task.update_task_status()
+        self.current_mission.status = MissionStatus.Failed
         self.publish_step_status()
         self.publish_task_status()
         self._finalize()
@@ -364,6 +367,7 @@ class StateMachine(object):
 
     def update_current_task(self):
         if self.current_task.is_finished():
+            self.current_task.update_task_status()
             self.publish_task_status()
             try:
                 self.current_task = self.task_selector.next_task()

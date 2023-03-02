@@ -8,7 +8,7 @@ from alitra import Frame, Orientation, Pose, Position
 from injector import Injector
 
 from isar.models.communication.queues.queues import Queues
-from isar.models.mission import Mission
+from robot_interface.models.mission.mission import Mission
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader

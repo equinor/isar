@@ -18,7 +18,9 @@ from isar.mission_planner.mission_planner_interface import (
 )
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues import QueueIO, Queues, QueueTimeoutError
-from isar.models.mission.mission import Mission
+from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from robot_interface.models import mission
+from robot_interface.models.mission.mission import Mission
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.state_machine.states_enum import States
 
@@ -135,7 +137,12 @@ class SchedulingUtilities:
 
         return is_state_machine_ready_to_receive_mission
 
-    def start_mission(self, mission: Mission, initial_pose: Optional[Pose]) -> None:
+    def start_mission(
+        self,
+        mission: Mission,
+        mission_metadata: MissionMetadata,  # type: ignore
+        initial_pose: Optional[Pose],
+    ) -> None:
         """Start mission
 
         Raises
@@ -146,7 +153,9 @@ class SchedulingUtilities:
         try:
             self._send_command(
                 StartMissionMessage(
-                    mission=deepcopy(mission), initial_pose=initial_pose
+                    mission=deepcopy(mission),
+                    mission_metadata=mission_metadata,
+                    initial_pose=initial_pose,
                 ),
                 self.queues.start_mission,
             )
