@@ -19,7 +19,6 @@ from robot_interface.models.mission.task import Task
 @dataclass
 class Mission:
     tasks: List[Task]
-    plant_short_name: UUID
     id: Union[UUID, int, str, None] = None
     status: MissionStatus = MissionStatus.NotStarted
 

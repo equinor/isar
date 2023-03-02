@@ -288,6 +288,10 @@ class TestDriveTo:
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_void)
     def test_state_machine_in_conflicting_state(self, client: TestClient):
         response = client.post(url=self.schedule_drive_to_path, data=self.mock_data)
+        print(
+            "#################################################################################",
+            response.status_code,
+        )
         assert response.status_code == HTTPStatus.CONFLICT
         assert response.json() == {
             "detail": "Conflict - Mission already in progress - State: monitor"

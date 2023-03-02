@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from typing import Iterator, List, Optional
 from uuid import UUID, uuid4
 
-from isar.apis.models.models import TaskResponse
 from robot_interface.models.mission import (
     InspectionStep,
     MotionStep,
@@ -96,12 +95,3 @@ class Task:
     def __post_init__(self) -> None:
         if self._iterator is None:
             self._iterator = iter(self.steps)
-
-    def api_response(self) -> TaskResponse:
-        return TaskResponse(
-            id=self.id,
-            tag_id=self.tag_id,
-            steps=list(
-                map(lambda x: {"id": x.id, "type": x.__class__.__name__}, self.steps)
-            ),
-        )

@@ -154,7 +154,7 @@ class SchedulingUtilities:
             self._send_command(
                 StartMissionMessage(
                     mission=deepcopy(mission),
-                    mission_metadata=mission_metadata,
+                    mission_metadata=deepcopy(mission_metadata),
                     initial_pose=initial_pose,
                 ),
                 self.queues.start_mission,

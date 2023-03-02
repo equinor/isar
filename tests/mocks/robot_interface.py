@@ -15,6 +15,7 @@ from robot_interface.models.inspection.inspection import (
 from robot_interface.models.mission import InspectionStep, Step, StepStatus
 from robot_interface.models.mission.status import RobotStatus
 from robot_interface.robot_interface import RobotInterface
+from robot_interface.models.mission.mission import Mission
 
 
 class MockRobot(RobotInterface):
@@ -35,6 +36,9 @@ class MockRobot(RobotInterface):
         self.stop_return_value: bool = stop
         self.robot_pose_return_value: Pose = pose
         self.robot_status_return_value: RobotStatus = robot_status
+
+    def initiate_mission(self, mission: Mission) -> None:
+        return
 
     def initiate_step(self, step: Step) -> None:
         return

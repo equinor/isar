@@ -7,6 +7,7 @@ from fastapi import Body, HTTPException, Path
 from injector import inject
 
 from isar.apis.models import InputPose, StartMissionResponse
+from isar.apis.models.models import TaskResponse
 from isar.apis.models.models import ControlMissionResponse, RobotInfoResponse
 from isar.apis.models.start_mission_definition import (
     StartMissionDefinition,
@@ -72,8 +73,9 @@ class SchedulingController:
         )
 
         self.logger.info(f"Starting mission with ISAR Mission ID: '{mission.id}'")
+        metadata: MissionMetadata = MissionMetadata(mission.id)
         self.scheduling_utilities.start_mission(
-            mission=mission, initial_pose=initial_pose_alitra
+            mission=mission, initial_pose=initial_pose_alitra, mission_metadata=metadata
         )
         return self._api_response(mission)
 
@@ -134,8 +136,7 @@ class SchedulingController:
             initial_pose.to_alitra_pose() if initial_pose else None
         )
 
-        metadata: MissionMetadata(mission.id)
-
+        metadata: MissionMetadata = MissionMetadata(mission.id)
         self.logger.info(f"Starting mission: {mission.id}")
         self.scheduling_utilities.start_mission(
             mission=mission, mission_metadata=metadata, initial_pose=initial_pose_alitra
@@ -216,11 +217,14 @@ class SchedulingController:
         pose: Pose = target_pose.to_alitra_pose()
         step: DriveToPose = DriveToPose(pose=pose)
         mission: Mission = Mission(tasks=[Task(steps=[step])])
-
+        task: Task = Task(steps=[step])
+        metadata: MissionMetadata = MissionMetadata(mission.id)
         self.logger.info(
             f"Starting drive to mission with ISAR Mission ID: '{mission.id}'"
         )
-        self.scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+        self.scheduling_utilities.start_mission(
+            mission=mission, initial_pose=None, mission_metadata=metadata
+        )
         return self._api_response(mission)
 
     def get_info(self):
@@ -232,8 +236,17 @@ class SchedulingController:
             plant_short_name=settings.STID_PLANT_NAME,
         )
 
-    def _api_response(self, mission: Mission, task: Task) -> StartMissionResponse:
+    def _api_response(self, mission: Mission) -> StartMissionResponse:
         return StartMissionResponse(
             id=mission.id,
-            tasks=[task.api_response() for task in mission.tasks],
+            tasks=[self._task_api_response(task) for task in mission.tasks],
+        )
+
+    def _task_api_response(self, task: Task) -> TaskResponse:
+        return TaskResponse(
+            id=task.id,
+            tag_id=task.tag_id,
+            steps=list(
+                map(lambda x: {"id": x.id, "type": x.__class__.__name__}, task.steps)
+            ),
         )

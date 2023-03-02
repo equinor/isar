@@ -12,7 +12,8 @@ from isar.apis.models.start_mission_definition import (
     StartMissionInspectionDefinition,
     StartMissionTaskDefinition,
 )
-from isar.models.mission import Mission, Task
+from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.task import Task
 from tests.mocks.step import MockStep
 
 

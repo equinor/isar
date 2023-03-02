@@ -19,7 +19,8 @@ from isar.mission_planner.task_selector_interface import (
 )
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queues import Queues
-from isar.models.mission import Mission, Task
+from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.task import Task
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.state_machine.states import (
