@@ -7,14 +7,13 @@ from isar.apis.models.models import StartMissionResponse, TaskResponse
 from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from robot_interface.models.mission import (
-    STEPS,
     InspectionStep,
     MotionStep,
+    STEPS,
     Step,
     StepStatus,
 )
 from robot_interface.models.mission.step import DriveToPose
-
 from .status import MissionStatus, TaskStatus
 
 
@@ -36,8 +35,7 @@ class Task:
         for step in self.steps:
             if step.status is StepStatus.Failed and isinstance(step, MotionStep):
                 # One motion step has failed meaning the task as a whole should be
-                # aborted
-                self.status = TaskStatus.Failed
+                # considered as failed
                 return True
 
             elif (step.status is StepStatus.Failed) and isinstance(
@@ -46,7 +44,6 @@ class Task:
                 # It should be possible to perform several inspections per task. If
                 # one out of many inspections fail the task is considered as
                 # partially successful.
-                self.status = TaskStatus.PartiallySuccessful
                 continue
 
             elif step.status is StepStatus.Successful:
@@ -56,17 +53,28 @@ class Task:
                 # Not all steps have been completed yet
                 return False
 
-        # Check if the task has been marked as partially successful by having one or
-        # more inspection steps fail
+        return True
+
+    def update_task_status(self) -> None:
+        for step in self.steps:
+            if step.status is StepStatus.Failed and isinstance(step, MotionStep):
+                self.status = TaskStatus.Failed
+                return
+
+            elif (step.status is StepStatus.Failed) and isinstance(
+                step, InspectionStep
+            ):
+                self.status = TaskStatus.PartiallySuccessful
+                continue
+
+            elif step.status is StepStatus.Successful:
+                continue
+
         if self.status is not TaskStatus.PartiallySuccessful:
-            # All steps have been completed
             self.status = TaskStatus.Successful
 
-        # Set the task to failed if all inspection steps failed
         elif self._all_inspection_steps_failed():
             self.status = TaskStatus.Failed
-
-        return True
 
     def reset_task(self):
         for step in self.steps:
