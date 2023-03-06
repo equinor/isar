@@ -98,7 +98,7 @@ class SlimmStorage(StorageInterface):
         filename: str, inspection: Inspection, metadata: MissionMetadata
     ):
         array_of_orientation = (
-            inspection.metadata.time_indexed_pose.pose.orientation.to_quat_array().tolist()
+            inspection.metadata.pose.orientation.to_quat_array().tolist()
         )
         multiform_body: MultipartEncoder = MultipartEncoder(
             fields={
@@ -114,15 +114,9 @@ class SlimmStorage(StorageInterface):
                 "Mission.MissionId": metadata.mission_id,
                 "Mission.Client": "Equinor",
                 "ImageMetadata.Timestamp": inspection.metadata.start_time.isoformat(),  # noqa: E501
-                "ImageMetadata.X": str(
-                    inspection.metadata.time_indexed_pose.pose.position.x
-                ),
-                "ImageMetadata.Y": str(
-                    inspection.metadata.time_indexed_pose.pose.position.y
-                ),
-                "ImageMetadata.Y": str(
-                    inspection.metadata.time_indexed_pose.pose.position.z
-                ),
+                "ImageMetadata.X": str(inspection.metadata.pose.position.x),
+                "ImageMetadata.Y": str(inspection.metadata.pose.position.y),
+                "ImageMetadata.Y": str(inspection.metadata.pose.position.z),
                 "ImageMetadata.CameraOrientation1": str(array_of_orientation[0]),
                 "ImageMetadata.CameraOrientation2": str(array_of_orientation[1]),
                 "ImageMetadata.CameraOrientation3": str(array_of_orientation[2]),
@@ -145,7 +139,7 @@ class SlimmStorage(StorageInterface):
         metadata: MissionMetadata,
     ):
         array_of_orientation = (
-            inspection.metadata.time_indexed_pose.pose.orientation.to_quat_array().tolist()
+            inspection.metadata.pose.orientation.to_quat_array().tolist()
         )
         multiform_body: MultipartEncoder = MultipartEncoder(
             fields={
@@ -162,15 +156,9 @@ class SlimmStorage(StorageInterface):
                 "Mission.Client": "Equinor",
                 "VideoMetadata.Timestamp": inspection.metadata.start_time.isoformat(),  # noqa: E501
                 "VideoMetadata.Duration": str(inspection.metadata.duration),  # type: ignore
-                "VideoMetadata.X": str(
-                    inspection.metadata.time_indexed_pose.pose.position.x
-                ),
-                "VideoMetadata.Y": str(
-                    inspection.metadata.time_indexed_pose.pose.position.y
-                ),
-                "VideoMetadata.Y": str(
-                    inspection.metadata.time_indexed_pose.pose.position.z
-                ),
+                "VideoMetadata.X": str(inspection.metadata.pose.position.x),
+                "VideoMetadata.Y": str(inspection.metadata.pose.position.y),
+                "VideoMetadata.Y": str(inspection.metadata.pose.position.z),
                 "VideoMetadata.CameraOrientation1": str(array_of_orientation[0]),
                 "VideoMetadata.CameraOrientation2": str(array_of_orientation[1]),
                 "VideoMetadata.CameraOrientation3": str(array_of_orientation[2]),

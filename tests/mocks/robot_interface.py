@@ -10,7 +10,6 @@ from robot_interface.models.inspection.inspection import (
     Image,
     ImageMetadata,
     Inspection,
-    TimeIndexedPose,
 )
 from robot_interface.models.mission import InspectionStep, Step, StepStatus
 from robot_interface.models.mission.status import RobotStatus
@@ -63,13 +62,10 @@ class MockRobot(RobotInterface):
 def mock_image_metadata() -> ImageMetadata:
     return ImageMetadata(
         datetime.now(),
-        TimeIndexedPose(
-            Pose(
-                Position(0, 0, 0, Frame("robot")),
-                Orientation(0, 0, 0, 1, Frame("robot")),
-                Frame("robot"),
-            ),
-            datetime.now(),
+        Pose(
+            Position(0, 0, 0, Frame("robot")),
+            Orientation(0, 0, 0, 1, Frame("robot")),
+            Frame("robot"),
         ),
         file_type="jpg",
     )

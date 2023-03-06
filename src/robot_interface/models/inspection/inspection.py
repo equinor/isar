@@ -1,22 +1,16 @@
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional, Type
+from typing import List, Optional
 from uuid import UUID, uuid4
 
 from alitra import Pose
 
 
 @dataclass
-class TimeIndexedPose:
-    pose: Pose
-    time: datetime
-
-
-@dataclass
 class InspectionMetadata(ABC):
     start_time: datetime
-    time_indexed_pose: TimeIndexedPose
+    pose: Pose
     file_type: str
     analysis: Optional[List] = field(default_factory=list, init=False)
     tag_id: Optional[str] = field(default=None, init=False)
