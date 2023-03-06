@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission import Mission
 
 
 class MissionPlannerInterface(metaclass=ABCMeta):

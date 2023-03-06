@@ -14,7 +14,6 @@ from starlette.testclient import TestClient
 
 from isar.apis.api import API
 from isar.config.settings import settings
-from robot_interface.models.mission.mission import Mission
 from isar.modules import (
     APIModule,
     LocalPlannerModule,
@@ -28,7 +27,7 @@ from isar.modules import (
 )
 from isar.services.readers.base_reader import BaseReader
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission import DriveToPose
+from robot_interface.models.mission import DriveToPose, Mission
 from tests.isar.state_machine.test_state_machine import (
     StateMachineThread,
     UploaderThread,

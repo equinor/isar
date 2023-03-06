@@ -3,14 +3,14 @@ from typing import Iterator, List, Optional
 from uuid import UUID, uuid4
 
 from robot_interface.models.mission import (
+    STEPS,
+    DriveToPose,
     InspectionStep,
     MotionStep,
-    STEPS,
     Step,
     StepStatus,
+    TaskStatus,
 )
-from robot_interface.models.mission.step import DriveToPose
-from robot_interface.models.mission.status import TaskStatus
 
 
 @dataclass

@@ -5,11 +5,15 @@ from alitra import Frame, Orientation, Pose, Position
 
 from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import MissionNotFoundError
-from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import Task
-from robot_interface.models.mission import TakeThermalImage
-from robot_interface.models.mission.step import DriveToPose, Step, TakeImage
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from robot_interface.models.mission import (
+    DriveToPose,
+    Mission,
+    Step,
+    TakeImage,
+    TakeThermalImage,
+    Task,
+)
 
 
 @pytest.mark.parametrize(

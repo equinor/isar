@@ -12,10 +12,14 @@ from robot_interface.models.inspection.inspection import (
     Inspection,
     TimeIndexedPose,
 )
-from robot_interface.models.mission import InspectionStep, Step, StepStatus
-from robot_interface.models.mission.status import RobotStatus
+from robot_interface.models.mission import (
+    InspectionStep,
+    Mission,
+    RobotStatus,
+    Step,
+    StepStatus,
+)
 from robot_interface.robot_interface import RobotInterface
-from robot_interface.models.mission.mission import Mission
 
 
 class MockRobot(RobotInterface):

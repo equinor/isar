@@ -8,7 +8,6 @@ from alitra import Frame, Orientation, Pose, Position
 from injector import Injector
 
 from isar.models.communication.queues.queues import Queues
-from robot_interface.models.mission.mission import Mission
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
@@ -17,6 +16,7 @@ from robot_interface.models.inspection.inspection import (
     Inspection,
     TimeIndexedPose,
 )
+from robot_interface.models.mission import Mission
 
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(

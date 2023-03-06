@@ -13,12 +13,16 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
     MissionPlannerInterface,
 )
-from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import Task
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.service_connections.stid.stid_service import StidService
-from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalImage
+from robot_interface.models.mission import (
+    DriveToPose,
+    Mission,
+    TakeImage,
+    TakeThermalImage,
+    Task,
+)
 from robot_interface.models.mission.step import TakeThermalVideo, TakeVideo
 
 

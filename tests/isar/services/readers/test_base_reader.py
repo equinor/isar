@@ -4,9 +4,8 @@ from typing import Any
 import pytest
 from alitra import Pose
 
-from robot_interface.models.mission.mission import Mission
 from isar.services.readers.base_reader import BaseReader
-from robot_interface.models.mission import Step
+from robot_interface.models.mission import Mission, Step
 from tests.mocks.mission_definition import MockMissionDefinition
 from tests.mocks.pose import MockPose
 from tests.mocks.step import MockStep

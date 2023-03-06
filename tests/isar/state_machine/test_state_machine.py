@@ -10,8 +10,7 @@ from pytest_mock import MockerFixture
 
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
-from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import Task
+from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.services.utilities.threaded_request import ThreadedRequest
 from isar.state_machine.state_machine import StateMachine, main
@@ -19,12 +18,17 @@ from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.exceptions import RobotException
-from robot_interface.models.mission import DriveToPose, Step, TakeImage
-from robot_interface.models.mission.status import StepStatus
+from robot_interface.models.mission import (
+    DriveToPose,
+    Mission,
+    Step,
+    StepStatus,
+    TakeImage,
+    Task,
+)
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.step import MockStep
-from isar.models.mission_metadata.mission_metadata import MissionMetadata
 
 
 class StateMachineThread(object):

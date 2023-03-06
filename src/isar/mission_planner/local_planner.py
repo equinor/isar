@@ -11,8 +11,8 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerInterface,
 )
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from robot_interface.models.mission.mission import Mission
 from isar.services.readers.base_reader import BaseReader, BaseReaderError
+from robot_interface.models.mission import Mission
 
 logger = logging.getLogger("api")
 

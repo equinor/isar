@@ -7,8 +7,11 @@ from fastapi import Body, HTTPException, Path
 from injector import inject
 
 from isar.apis.models import InputPose, StartMissionResponse
-from isar.apis.models.models import TaskResponse
-from isar.apis.models.models import ControlMissionResponse, RobotInfoResponse
+from isar.apis.models.models import (
+    ControlMissionResponse,
+    RobotInfoResponse,
+    TaskResponse,
+)
 from isar.apis.models.start_mission_definition import (
     StartMissionDefinition,
     to_isar_mission,
@@ -16,11 +19,9 @@ from isar.apis.models.start_mission_definition import (
 from isar.config.settings import robot_settings, settings
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import Task
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission import DriveToPose
+from robot_interface.models.mission import DriveToPose, Mission, Task
 
 
 class SchedulingController:

@@ -1,9 +1,7 @@
 import pytest
 
-from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import Task
 from isar.state_machine.states.monitor import Monitor
-from robot_interface.models.mission import Step, StepStatus, TakeImage
+from robot_interface.models.mission import Mission, Step, StepStatus, TakeImage, Task
 from tests.mocks.step import MockStep
 
 

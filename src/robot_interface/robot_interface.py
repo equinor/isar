@@ -5,9 +5,13 @@ from typing import List, Sequence
 
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
-from robot_interface.models.mission import InspectionStep, Step, StepStatus
-from robot_interface.models.mission.status import RobotStatus
-from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission import (
+    InspectionStep,
+    Mission,
+    RobotStatus,
+    Step,
+    StepStatus,
+)
 
 
 class RobotInterface(metaclass=ABCMeta):

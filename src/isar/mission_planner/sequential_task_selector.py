@@ -4,7 +4,7 @@ from isar.mission_planner.task_selector_interface import (
     TaskSelectorInterface,
     TaskSelectorStop,
 )
-from robot_interface.models.mission.task import Task
+from robot_interface.models.mission import Task
 
 
 class SequentialTaskSelector(TaskSelectorInterface):
