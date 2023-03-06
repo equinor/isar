@@ -53,12 +53,12 @@ def construct_metadata_file(
                     {
                         "file_name": filename,
                         "timestamp": inspection.metadata.start_time,
-                        "x": inspection.metadata.time_indexed_pose.pose.position.x,
-                        "y": inspection.metadata.time_indexed_pose.pose.position.y,
-                        "z": inspection.metadata.time_indexed_pose.pose.position.z,
+                        "x": inspection.metadata.pose.position.x,
+                        "y": inspection.metadata.pose.position.y,
+                        "z": inspection.metadata.pose.position.z,
                         "tag": inspection.metadata.tag_id,
                         "additional_media_metadata": {
-                            "orientation": inspection.metadata.time_indexed_pose.pose.orientation.to_quat_array()  # noqa: E501
+                            "orientation": inspection.metadata.pose.orientation.to_quat_array()  # noqa: E501
                         },
                     }
                 ],

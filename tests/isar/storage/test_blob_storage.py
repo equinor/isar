@@ -2,18 +2,15 @@ from datetime import datetime
 
 from alitra import Frame, Orientation, Pose, Position
 
-from robot_interface.models.inspection.inspection import ImageMetadata, TimeIndexedPose
+from robot_interface.models.inspection.inspection import ImageMetadata
 
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(
     datetime.now(),
-    TimeIndexedPose(
-        Pose(
-            Position(0, 0, 0, Frame("asset")),
-            Orientation(0, 0, 0, 1, Frame("asset")),
-            Frame("asset"),
-        ),
-        datetime.now(),
+    Pose(
+        Position(0, 0, 0, Frame("asset")),
+        Orientation(0, 0, 0, 1, Frame("asset")),
+        Frame("asset"),
     ),
     file_type="jpg",
 )
