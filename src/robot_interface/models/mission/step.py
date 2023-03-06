@@ -3,7 +3,6 @@ from typing import Any, List, Literal, Optional, Type, Union
 
 from alitra import Pose, Position
 
-from isar.services.utilities.uuid_string_factory import uuid4_string
 from robot_interface.models.inspection import (
     Audio,
     Image,
@@ -13,6 +12,7 @@ from robot_interface.models.inspection import (
     Video,
 )
 from robot_interface.models.mission.status import StepStatus
+from robot_interface.utilities.uuid_string_factory import uuid4_string
 
 
 @dataclass

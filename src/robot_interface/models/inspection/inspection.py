@@ -5,7 +5,7 @@ from typing import List, Optional, Type
 
 from alitra import Pose
 
-from isar.services.utilities.uuid_string_factory import uuid4_string
+from robot_interface.utilities.uuid_string_factory import uuid4_string
 
 
 @dataclass

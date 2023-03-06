@@ -1,12 +1,9 @@
 import json
-import logging
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Tuple
 
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from isar.storage.storage_interface import StorageException
-from robot_interface.models.inspection import ThermalVideo, Video
-from robot_interface.models.inspection.inspection import Image, Inspection, ThermalImage
+from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 

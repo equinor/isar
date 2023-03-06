@@ -1,21 +1,15 @@
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Iterator, List, Optional, Union
+from typing import Iterator, List, Optional
 
-from isar.apis.models.models import StartMissionResponse, TaskResponse
-from isar.config.settings import settings
-from isar.models.mission_metadata.mission_metadata import MissionMetadata
-from isar.services.utilities.uuid_string_factory import uuid4_string
-from robot_interface.models.mission import (
-    STEPS,
+from robot_interface.models.mission.status import StepStatus, TaskStatus
+from robot_interface.models.mission.step import (
+    DriveToPose,
     InspectionStep,
     MotionStep,
+    STEPS,
     Step,
-    StepStatus,
 )
-from robot_interface.models.mission.step import DriveToPose
-
-from .status import MissionStatus, TaskStatus
+from robot_interface.utilities.uuid_string_factory import uuid4_string
 
 
 @dataclass
@@ -100,46 +94,3 @@ class Task:
     def __post_init__(self) -> None:
         if self._iterator is None:
             self._iterator = iter(self.steps)
-
-    def api_response(self) -> TaskResponse:
-        return TaskResponse(
-            id=self.id,
-            tag_id=self.tag_id,
-            steps=list(
-                map(lambda x: {"id": x.id, "type": x.__class__.__name__}, self.steps)
-            ),
-        )
-
-
-@dataclass
-class Mission:
-    tasks: List[Task]
-    id: str = field(default_factory=uuid4_string, init=True)
-    status: MissionStatus = MissionStatus.NotStarted
-    metadata: MissionMetadata = None
-
-    def set_unique_id_and_metadata(self) -> None:
-        self._set_unique_id()
-        self.metadata = MissionMetadata(mission_id=self.id)
-
-    def _set_unique_id(self) -> None:
-        plant_short_name: str = settings.PLANT_SHORT_NAME
-        robot_name: str = settings.ROBOT_NAME
-        now: datetime = datetime.utcnow()
-        self.id = (
-            f"{plant_short_name.upper()}{robot_name.upper()}"
-            f"{now.strftime('%d%m%Y%H%M%S%f')[:-3]}"
-        )
-
-    def __post_init__(self) -> None:
-        if self.id is None:
-            self._set_unique_id()
-
-        if self.metadata is None:
-            self.metadata = MissionMetadata(mission_id=self.id)
-
-    def api_response(self) -> StartMissionResponse:
-        return StartMissionResponse(
-            id=self.id,
-            tasks=[task.api_response() for task in self.tasks],
-        )

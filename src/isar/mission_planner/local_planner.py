@@ -10,8 +10,8 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
     MissionPlannerInterface,
 )
-from isar.models.mission import Mission
 from isar.services.readers.base_reader import BaseReader, BaseReaderError
+from robot_interface.models.mission.mission import Mission
 
 logger = logging.getLogger("api")
 
@@ -27,7 +27,6 @@ class LocalPlanner(MissionPlannerInterface):
             raise MissionPlannerError("There were no predefined missions")
         try:
             mission: Mission = missions[mission_id]["mission"]
-            mission.set_unique_id_and_metadata()
             return mission
         except KeyError as e:
             raise MissionNotFoundError(

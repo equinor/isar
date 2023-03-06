@@ -116,7 +116,7 @@ class SlimmStorage(StorageInterface):
                 "ImageMetadata.Timestamp": inspection.metadata.start_time.isoformat(),  # noqa: E501
                 "ImageMetadata.X": str(inspection.metadata.pose.position.x),
                 "ImageMetadata.Y": str(inspection.metadata.pose.position.y),
-                "ImageMetadata.Y": str(inspection.metadata.pose.position.z),
+                "ImageMetadata.Z": str(inspection.metadata.pose.position.z),
                 "ImageMetadata.CameraOrientation1": str(array_of_orientation[0]),
                 "ImageMetadata.CameraOrientation2": str(array_of_orientation[1]),
                 "ImageMetadata.CameraOrientation3": str(array_of_orientation[2]),
@@ -158,7 +158,7 @@ class SlimmStorage(StorageInterface):
                 "VideoMetadata.Duration": str(inspection.metadata.duration),  # type: ignore
                 "VideoMetadata.X": str(inspection.metadata.pose.position.x),
                 "VideoMetadata.Y": str(inspection.metadata.pose.position.y),
-                "VideoMetadata.Y": str(inspection.metadata.pose.position.z),
+                "VideoMetadata.Z": str(inspection.metadata.pose.position.z),
                 "VideoMetadata.CameraOrientation1": str(array_of_orientation[0]),
                 "VideoMetadata.CameraOrientation2": str(array_of_orientation[1]),
                 "VideoMetadata.CameraOrientation3": str(array_of_orientation[2]),
