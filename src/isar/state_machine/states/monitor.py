@@ -13,7 +13,7 @@ from isar.services.utilities.threaded_request import (
 )
 from robot_interface.models.exceptions import RobotException
 from robot_interface.models.inspection.inspection import Inspection
-from robot_interface.models.mission import InspectionStep, Step, StepStatus
+from robot_interface.models.mission.step import InspectionStep, Step, StepStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -99,7 +99,7 @@ class Monitor(State):
         # A deepcopy is made to freeze the metadata before passing it to another thread
         # through the queue
         mission_metadata: MissionMetadata = deepcopy(
-            self.state_machine.current_mission.metadata
+            self.state_machine.current_mission_metadata
         )
 
         for inspection in inspections:

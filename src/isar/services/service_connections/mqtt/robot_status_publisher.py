@@ -90,4 +90,4 @@ class RobotStatusMonitor:
                 self.logger.warning(
                     "Failed to get robot status due to a communication exception"
                 )
-                time.sleep(settings.ROBOT_API_STATUS_POLL_INTERVAL)
+            time.sleep(settings.ROBOT_API_STATUS_POLL_INTERVAL)

@@ -3,8 +3,8 @@ from typing import List, Union
 import pytest
 
 from isar.apis.models.start_mission_definition import get_duplicate_ids
-from isar.models.mission.mission import Task
 from robot_interface.models.mission.step import STEPS, Step
+from robot_interface.models.mission.task import Task
 
 task_1: Task = Task([], tag_id=None, id="123")
 task_2: Task = Task([], tag_id=None, id="123")

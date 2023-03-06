@@ -5,12 +5,33 @@ from typing import List, Sequence
 
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
-from robot_interface.models.mission import InspectionStep, Step, StepStatus
-from robot_interface.models.mission.status import RobotStatus
+from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.status import RobotStatus, StepStatus
+from robot_interface.models.mission.step import InspectionStep, Step
 
 
 class RobotInterface(metaclass=ABCMeta):
     """Interface to communicate with robots."""
+
+    @abstractmethod
+    def initiate_mission(self, mission: Mission) -> None:
+        """Send a mission to the robot and initiate execution of the mission
+
+        Parameters
+        ----------
+        mission: Mission
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RobotException
+            If the mission is not initiated.
+
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def initiate_step(self, step: Step) -> None:

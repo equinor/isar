@@ -4,10 +4,15 @@ from requests import RequestException
 
 from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
-from isar.models.mission import Mission
 from isar.services.service_connections.stid.stid_service import StidService
-from robot_interface.models.mission import DriveToPose, TakeImage, TakeThermalImage
-from robot_interface.models.mission.step import TakeThermalVideo, TakeVideo
+from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.step import (
+    DriveToPose,
+    TakeImage,
+    TakeThermalImage,
+    TakeThermalVideo,
+    TakeVideo,
+)
 
 
 @pytest.mark.parametrize(

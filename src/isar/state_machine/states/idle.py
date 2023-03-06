@@ -31,6 +31,7 @@ class Idle(State):
             if start_mission:
                 self.state_machine.start_mission(
                     mission=start_mission.mission,
+                    mission_metadata=start_mission.mission_metadata,
                     initial_pose=start_mission.initial_pose,
                 )
                 transition = self.state_machine.mission_started  # type: ignore
