@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from logging import Logger
 from threading import Thread
 from typing import List
@@ -94,6 +95,9 @@ if __name__ == "__main__":
         thread.start()
         logger.info(f"Started thread: {thread.name}")
 
-    for thread in threads:
-        thread.join()
-        logger.info(f"Joined thread: {thread.name}")
+    while True:
+        for thread in threads:
+            if not thread.is_alive():
+                logger.critical("Thread '%s' failed - ISAR shutting down", thread.name)
+                exit(1)
+        time.sleep(state_machine.sleep_time)
