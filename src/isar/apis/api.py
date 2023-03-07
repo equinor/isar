@@ -1,22 +1,21 @@
 import logging
+import os
 from http import HTTPStatus
 from logging import Logger
-import os
 from typing import List, Union
 
 import click
 import uvicorn
-from fastapi import FastAPI, Security, Request
+from fastapi import FastAPI, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRouter
 from injector import inject
-from pydantic import AnyHttpUrl
-
 from opencensus.ext.azure.trace_exporter import AzureExporter
-from opencensus.trace.samplers import ProbabilitySampler
-from opencensus.trace.tracer import Tracer
-from opencensus.trace.span import SpanKind
 from opencensus.trace.attributes_helper import COMMON_ATTRIBUTES
+from opencensus.trace.samplers import ProbabilitySampler
+from opencensus.trace.span import SpanKind
+from opencensus.trace.tracer import Tracer
+from pydantic import AnyHttpUrl
 
 from isar.apis.models.models import ControlMissionResponse, StartMissionResponse
 from isar.apis.schedule.scheduling_controller import SchedulingController
@@ -76,7 +75,7 @@ class API:
             swagger_ui_oauth2_redirect_url="/oauth2-redirect",
             swagger_ui_init_oauth={
                 "usePkceWithAuthorizationCodeGrant": True,
-                "clientId": self.authenticator.openapi_client_id,
+                "clientId": settings.AZURE_CLIENT_ID,
             },
         )
 

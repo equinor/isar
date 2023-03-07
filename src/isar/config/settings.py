@@ -111,9 +111,6 @@ class Settings(BaseSettings):
         print("Using environment variable for AZURE_CLIENT_ID")
         AZURE_CLIENT_ID = os.environ[azure_client_id_name]
 
-    # Client ID for the OpenAPI client
-    OPENAPI_CLIENT_ID: str = Field(default="5f412c20-8c36-4c69-898f-d2b5051f5fb6")
-
     # MQTT username
     # The username and password is set by the MQTT broker and must be known in advance
     # The password should be set as an environment variable "MQTT_PASSWORD"
