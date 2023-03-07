@@ -103,6 +103,13 @@ class Settings(BaseSettings):
 
     # Client ID for ISAR
     AZURE_CLIENT_ID: str = Field(default="fd384acd-5c1b-4c44-a1ac-d41d720ed0fe")
+    # If AZURE_CLIENT_ID is set as an environment variable, overwrite this despite missing prefix.
+    # This is done to avoid double config of ISAR_AZURE_CLIENT_ID and AZURE_CLIENT_ID.
+    # We need the latter as an environment variable for the EnvironmentCredential method for AzureAD.
+    azure_client_id_name: str = "AZURE_CLIENT_ID"
+    if os.environ.get(azure_client_id_name) is not None:
+        print("Using environment variable for AZURE_CLIENT_ID")
+        AZURE_CLIENT_ID = os.environ[azure_client_id_name]
 
     # Client ID for the OpenAPI client
     OPENAPI_CLIENT_ID: str = Field(default="5f412c20-8c36-4c69-898f-d2b5051f5fb6")
