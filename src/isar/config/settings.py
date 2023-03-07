@@ -101,8 +101,8 @@ class Settings(BaseSettings):
     # Tenant ID for the Azure tenant with your Azure Active Directory application
     AZURE_TENANT_ID: str = Field(default="3aa4a235-b6e2-48d5-9195-7fcf05b459b0")
 
-    # Client ID for the API client
-    APP_CLIENT_ID: str = Field(default="fd384acd-5c1b-4c44-a1ac-d41d720ed0fe")
+    # Client ID for ISAR
+    AZURE_CLIENT_ID: str = Field(default="fd384acd-5c1b-4c44-a1ac-d41d720ed0fe")
 
     # Client ID for the OpenAPI client
     OPENAPI_CLIENT_ID: str = Field(default="5f412c20-8c36-4c69-898f-d2b5051f5fb6")

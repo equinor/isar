@@ -21,10 +21,10 @@ class NoSecurity(SecurityBase):
 
 
 azure_scheme = SingleTenantAzureAuthorizationCodeBearer(
-    app_client_id=settings.APP_CLIENT_ID,
+    app_client_id=settings.AZURE_CLIENT_ID,
     tenant_id=settings.AZURE_TENANT_ID,
     scopes={
-        f"api://{settings.APP_CLIENT_ID}/user_impersonation": "user_impersonation",
+        f"api://{settings.AZURE_CLIENT_ID}/user_impersonation": "user_impersonation",
     },
 )
 
@@ -32,7 +32,7 @@ azure_scheme = SingleTenantAzureAuthorizationCodeBearer(
 async def validate_has_role(user: User = Depends(azure_scheme)) -> None:
     """
     Validate if the user has the required role in order to access the API.
-    Raises a 401 authorization error if not.
+    Raises a 403 authorization error if not.
     """
     if settings.REQUIRED_ROLE not in user.roles:
         raise InvalidAuth(
