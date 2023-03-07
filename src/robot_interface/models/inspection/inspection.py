@@ -1,7 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Type
 from uuid import UUID, uuid4
 
 from alitra import Pose
@@ -43,22 +43,42 @@ class Inspection:
     metadata: InspectionMetadata
     data: Optional[bytes] = field(default=None, init=False)
 
+    @staticmethod
+    def get_metadata_type() -> Type[InspectionMetadata]:
+        return InspectionMetadata
+
 
 @dataclass
 class Image(Inspection):
     metadata: ImageMetadata
+
+    @staticmethod
+    def get_metadata_type() -> Type[InspectionMetadata]:
+        return ImageMetadata
 
 
 @dataclass
 class ThermalImage(Inspection):
     metadata: ThermalImageMetadata
 
+    @staticmethod
+    def get_metadata_type() -> Type[InspectionMetadata]:
+        return ThermalImageMetadata
+
 
 @dataclass
 class Video(Inspection):
     metadata: VideoMetadata
 
+    @staticmethod
+    def get_metadata_type() -> Type[InspectionMetadata]:
+        return VideoMetadata
+
 
 @dataclass
 class ThermalVideo(Inspection):
     metadata: ThermalVideoMetadata
+
+    @staticmethod
+    def get_metadata_type() -> Type[InspectionMetadata]:
+        return ThermalVideoMetadata
