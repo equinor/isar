@@ -43,11 +43,9 @@ async def validate_has_role(user: User = Depends(azure_scheme)) -> None:
 class Authenticator:
     def __init__(
         self,
-        openapi_client_id: str = settings.OPENAPI_CLIENT_ID,
         authentication_enabled: bool = settings.AUTHENTICATION_ENABLED,
     ) -> None:
         self.logger = logging.getLogger("api")
-        self.openapi_client_id: str = openapi_client_id
         self.authentication_enabled: bool = authentication_enabled
         enabled_string = "enabled" if self.authentication_enabled else "disabled"
         self.logger.info(f"API authentication is {enabled_string}")
