@@ -1,6 +1,7 @@
 import json
 import re
 from http import HTTPStatus
+from typing import List
 
 import mock
 import pytest
@@ -8,7 +9,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
-from isar.apis.models.models import ControlMissionResponse
+from isar.apis.models.models import ControlMissionResponse, StartMissionResponse
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
@@ -108,6 +109,21 @@ class TestStartMission:
     schedule_start_mission_path = "/schedule/start-mission"
     mock_start_mission_definition = MockMissionDefinition.mock_start_mission_definition
     mock_start_mission_content = {"mission_definition": mock_start_mission_definition}
+    mock_start_mission_with_task_ids_content = {
+        "mission_definition": MockMissionDefinition.mock_start_mission_definition_task_ids
+    }
+    mock_start_mission_with_step_ids_content = {
+        "mission_definition": MockMissionDefinition.mock_start_mission_definition_step_ids
+    }
+    mock_start_mission_duplicate_task_ids_content = {
+        "mission_definition": MockMissionDefinition.mock_start_mission_definition_with_duplicate_task_ids
+    }
+    mock_start_mission_duplicate_step_ids_content = {
+        "mission_definition": MockMissionDefinition.mock_start_mission_definition_with_duplicate_step_ids
+    }
+    mock_start_mission_duplicate_step_ids_cross_task_content = {
+        "mission_definition": MockMissionDefinition.mock_start_mission_definition_with_duplicate_step_ids_cross_tasks
+    }
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
     @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
@@ -157,6 +173,76 @@ class TestStartMission:
         )
         assert re.search("drive_to_pose", response_detail)
         assert re.search("take_image", response_detail)
+
+    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
+    @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
+    def test_mission_with_input_task_ids(self, client: TestClient):
+        expected_ids: List[str] = []
+        for task in self.mock_start_mission_with_task_ids_content[
+            "mission_definition"
+        ].tasks:
+            expected_ids.append(task.id)
+
+        response = client.post(
+            url=self.schedule_start_mission_path,
+            json=jsonable_encoder(self.mock_start_mission_with_task_ids_content),
+        )
+        assert response.status_code == HTTPStatus.OK
+        start_mission_response: dict = response.json()
+        for task in start_mission_response["tasks"]:
+            assert task["id"] in expected_ids
+
+    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
+    @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
+    def test_mission_with_input_step_ids(self, client: TestClient):
+        expected_inspection_ids: List[str] = []
+        for task in self.mock_start_mission_with_step_ids_content[
+            "mission_definition"
+        ].tasks:
+            for inspection in task.inspections:
+                expected_inspection_ids.append(inspection.id)
+
+        response = client.post(
+            url=self.schedule_start_mission_path,
+            json=jsonable_encoder(self.mock_start_mission_with_step_ids_content),
+        )
+        assert response.status_code == HTTPStatus.OK
+        start_mission_response: dict = response.json()
+        for task in start_mission_response["tasks"]:
+            for step in task["steps"]:
+                type: str = step["type"]
+                is_inspection_step: bool = type.lower().find("drive") == -1
+                if is_inspection_step:
+                    assert step["id"] in expected_inspection_ids
+
+    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
+    @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
+    def test_mission_with_duplicate_task_ids(self, client: TestClient):
+        response = client.post(
+            url=self.schedule_start_mission_path,
+            json=jsonable_encoder(self.mock_start_mission_duplicate_task_ids_content),
+        )
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
+    @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
+    def test_mission_with_duplicate_step_ids(self, client: TestClient):
+        response = client.post(
+            url=self.schedule_start_mission_path,
+            json=jsonable_encoder(self.mock_start_mission_duplicate_step_ids_content),
+        )
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
+    @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
+    def test_mission_with_duplicate_step_ids_cross_tasks(self, client: TestClient):
+        response = client.post(
+            url=self.schedule_start_mission_path,
+            json=jsonable_encoder(
+                self.mock_start_mission_duplicate_step_ids_cross_task_content
+            ),
+        )
+        assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 class TestPauseMission:
