@@ -36,8 +36,8 @@ class RobotStatusPayload:
     robot_status: RobotStatus
     current_isar_state: State
     current_mission_id: Union[UUID, int, str, None]
-    current_task_id: UUID
-    current_step_id: UUID
+    current_task_id: Union[UUID, str]
+    current_step_id: Union[UUID, str]
     timestamp: datetime
 
 

@@ -15,7 +15,7 @@ class Step:
     Base class for all steps in a mission.
     """
 
-    id: UUID = field(default_factory=uuid4, init=False)
+    id: Union[UUID, str] = field(default_factory=uuid4, init=False)
     status: StepStatus = field(default=StepStatus.NotStarted, init=False)
 
     def __str__(self) -> str:
