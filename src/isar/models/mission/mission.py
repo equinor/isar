@@ -7,13 +7,14 @@ from isar.apis.models.models import StartMissionResponse, TaskResponse
 from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from robot_interface.models.mission import (
+    STEPS,
     InspectionStep,
     MotionStep,
-    STEPS,
     Step,
     StepStatus,
 )
 from robot_interface.models.mission.step import DriveToPose
+
 from .status import MissionStatus, TaskStatus
 
 
@@ -22,7 +23,7 @@ class Task:
     steps: List[STEPS]
     status: TaskStatus = field(default=TaskStatus.NotStarted, init=False)
     tag_id: Optional[str] = field(default=None)
-    id: UUID = field(default_factory=uuid4, init=False)
+    id: Union[UUID, str] = field(default_factory=uuid4, init=True)
     _iterator: Iterator = None
 
     def next_step(self) -> Step:
