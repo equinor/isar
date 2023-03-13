@@ -2,7 +2,6 @@ import json
 import logging
 from pathlib import Path
 from typing import Any, Tuple
-from uuid import UUID
 
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageException
@@ -70,8 +69,8 @@ def construct_metadata_file(
 
 
 def get_filename(
-    mission_id: Any,
+    mission_id: str,
     inspection_type: str,
-    inspection_id: UUID,
+    inspection_id: str,
 ) -> str:
     return f"{mission_id}_{inspection_type}_{inspection_id}"

@@ -1,32 +1,31 @@
 from typing import List, Optional, Union
-from uuid import UUID
 
 from alitra import Frame, Orientation, Pose, Position
 from pydantic import BaseModel, Field
 
 
 class StepResponse(BaseModel):
-    id: UUID
+    id: str
     type: str
 
 
 class TaskResponse(BaseModel):
-    id: UUID
+    id: str
     tag_id: Optional[str]
     steps: List[StepResponse]
 
 
 class StartMissionResponse(BaseModel):
-    id: Union[UUID, int, str, None]
+    id: str
     tasks: List[TaskResponse]
 
 
 class ControlMissionResponse(BaseModel):
-    mission_id: Union[UUID, int, str, None]
+    mission_id: str
     mission_status: str
-    task_id: Union[UUID, int, str, None]
+    task_id: str
     task_status: str
-    step_id: Union[UUID, int, str, None]
+    step_id: str
     step_status: str
 
 

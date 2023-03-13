@@ -35,7 +35,7 @@ class EchoPlanner(MissionPlannerInterface):
         )
         self.logger = logging.getLogger("api")
 
-    def get_mission(self, mission_id: int) -> Mission:
+    def get_mission(self, mission_id: str) -> Mission:
         """
         Retrieve robot mission from echo mission planner with specified id.
         :param mission_id: Unique id of echo mission plan
@@ -80,7 +80,7 @@ class EchoPlanner(MissionPlannerInterface):
 
         return mission
 
-    def _mission_plan(self, mission_id: int) -> dict:
+    def _mission_plan(self, mission_id: str) -> dict:
         """
         Get mission plan from echo planner.
         :param mission_id: Unique id of echo mission plan

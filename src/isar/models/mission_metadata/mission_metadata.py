@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Optional, Union
-from uuid import UUID
 
 from isar.config.settings import settings
 
@@ -10,7 +9,7 @@ additional_meta: dict = {}
 
 @dataclass
 class MissionMetadata:
-    mission_id: Union[UUID, int, str, None]
+    mission_id: str
     coordinate_reference_system: str = settings.COORDINATE_REFERENCE_SYSTEM
     vertical_reference_system: str = settings.VERTICAL_REFERENCE_SYSTEM
     data_classification: str = settings.DATA_CLASSIFICATION

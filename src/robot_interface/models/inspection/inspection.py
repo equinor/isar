@@ -2,9 +2,10 @@ from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional, Type
-from uuid import UUID, uuid4
 
 from alitra import Pose
+
+from isar.services.utilities.uuid_string_factory import uuid4_string
 
 
 @dataclass
@@ -39,7 +40,7 @@ class ThermalVideoMetadata(InspectionMetadata):
 
 @dataclass
 class Inspection:
-    id: UUID = field(default_factory=uuid4, init=False)
+    id: str = field(default_factory=uuid4_string, init=False)
     metadata: InspectionMetadata
     data: Optional[bytes] = field(default=None, init=False)
 

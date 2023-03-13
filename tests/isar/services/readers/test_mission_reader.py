@@ -99,13 +99,13 @@ def test_get_invalid_mission(mission_reader, mission_path) -> None:
 
 
 def test_get_mission_by_id(mission_reader) -> None:
-    output = mission_reader.get_mission(1)
+    output = mission_reader.get_mission("1")
     assert isinstance(output, Mission)
 
 
 def test_get_mission_by_invalid_id(mission_reader) -> None:
     with pytest.raises(MissionNotFoundError):
-        mission_reader.get_mission(12345)
+        mission_reader.get_mission("12345")
 
 
 def test_valid_predefined_missions_files(mission_reader) -> None:
