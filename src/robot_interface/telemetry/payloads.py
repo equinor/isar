@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Union
-from uuid import UUID
 
 from alitra import Pose
 from transitions import State
@@ -35,9 +34,9 @@ class RobotStatusPayload:
     robot_name: str
     robot_status: RobotStatus
     current_isar_state: State
-    current_mission_id: Union[UUID, int, str, None]
-    current_task_id: Union[UUID, str]
-    current_step_id: Union[UUID, str]
+    current_mission_id: str
+    current_task_id: str
+    current_step_id: str
     timestamp: datetime
 
 

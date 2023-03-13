@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Iterator, List, Optional, Union
-from uuid import UUID, uuid4
 
 from isar.apis.models.models import StartMissionResponse, TaskResponse
 from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from isar.services.utilities.uuid_string_factory import uuid4_string
 from robot_interface.models.mission import (
     STEPS,
     InspectionStep,
@@ -23,7 +23,7 @@ class Task:
     steps: List[STEPS]
     status: TaskStatus = field(default=TaskStatus.NotStarted, init=False)
     tag_id: Optional[str] = field(default=None)
-    id: Union[UUID, str] = field(default_factory=uuid4, init=True)
+    id: str = field(default_factory=uuid4_string, init=True)
     _iterator: Iterator = None
 
     def next_step(self) -> Step:
@@ -114,7 +114,7 @@ class Task:
 @dataclass
 class Mission:
     tasks: List[Task]
-    id: Union[UUID, int, str, None] = None
+    id: str = field(default_factory=uuid4_string, init=True)
     status: MissionStatus = MissionStatus.NotStarted
     metadata: MissionMetadata = None
 

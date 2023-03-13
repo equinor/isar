@@ -60,7 +60,7 @@ class SchedulingUtilities:
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
 
-    def get_mission(self, mission_id: int) -> Mission:
+    def get_mission(self, mission_id: str) -> Mission:
         """Get the mission with mission_id from the current mission planner
 
         Raises

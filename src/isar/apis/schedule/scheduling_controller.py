@@ -31,7 +31,7 @@ class SchedulingController:
 
     def start_mission_by_id(
         self,
-        mission_id: int = Path(
+        mission_id: str = Path(
             ...,
             alias="id",
             title="Mission ID",

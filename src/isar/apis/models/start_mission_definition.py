@@ -1,6 +1,5 @@
 from enum import Enum
 from typing import List, Optional, Union
-from uuid import UUID
 
 from alitra import Position
 from pydantic import BaseModel, Field
@@ -139,7 +138,7 @@ def get_duplicate_ids(items: Union[List[Task], List[STEPS]]) -> List[str]:
     unique_ids: List[str] = []
     duplicate_ids: List[str] = []
     for item in items:
-        id: str = str(item.id)
+        id: str = item.id
         if id not in unique_ids:
             unique_ids.append(id)
         else:

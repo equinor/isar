@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 from typing import Any, List, Literal, Optional, Type, Union
-from uuid import UUID, uuid4
 
 from alitra import Pose, Position
 
+from isar.services.utilities.uuid_string_factory import uuid4_string
 from robot_interface.models.inspection import Image, ThermalImage, ThermalVideo, Video
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.status import StepStatus
@@ -15,7 +15,7 @@ class Step:
     Base class for all steps in a mission.
     """
 
-    id: Union[UUID, str] = field(default_factory=uuid4, init=False)
+    id: str = field(default_factory=uuid4_string, init=False)
     status: StepStatus = field(default=StepStatus.NotStarted, init=False)
 
     def __str__(self) -> str:
