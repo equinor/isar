@@ -481,6 +481,9 @@ class StateMachine(object):
                 "mission_id": self.current_mission.id if self.current_mission else None,
                 "task_id": self.current_task.id if self.current_task else None,
                 "step_id": self.current_step.id if self.current_step else None,
+                "step_type": self.current_step.__class__.__name__
+                if self.current_step
+                else None,
                 "status": self.current_step.status if self.current_step else None,
                 "timestamp": datetime.utcnow(),
             },
