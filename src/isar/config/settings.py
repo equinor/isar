@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     # Name must match with an installed python package in the local environment
     ROBOT_PACKAGE: str = Field(default="isar_robot")
 
+    # The run mode of the robot (stepwise or full mission)
+    RUN_MISSION_STEPWISE: bool = Field(default=True)
+
     # Determines the local path in which results from missions are stored
     LOCAL_STORAGE_PATH: str = Field(default="./results")
 

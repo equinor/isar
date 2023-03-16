@@ -51,6 +51,7 @@ class StateMachine(object):
         mqtt_publisher: MqttClientInterface,
         task_selector: TaskSelectorInterface,
         sleep_time: float = settings.FSM_SLEEP_TIME,
+        stepwise_mission: bool = settings.RUN_MISSION_STEPWISE,
         stop_robot_attempts_limit: int = settings.STOP_ROBOT_ATTEMPTS_LIMIT,
         transitions_log_length: int = settings.STATE_TRANSITIONS_LOG_LENGTH,
     ):
@@ -78,6 +79,7 @@ class StateMachine(object):
         self.robot: RobotInterface = robot
         self.mqtt_publisher: Optional[MqttClientInterface] = mqtt_publisher
         self.task_selector: TaskSelectorInterface = task_selector
+        self.stepwise_mission: bool = stepwise_mission
 
         # List of states
         self.stop_step_state: State = StopStep(self)
