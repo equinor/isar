@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Union
+from typing import List
 
 from alitra import Pose
 from transitions import State
@@ -9,19 +9,25 @@ from robot_interface.models.mission.status import RobotStatus
 
 
 @dataclass
-class TelemetryPosePayload:
-    pose: Pose
+class TelemetryPayload:
     isar_id: str
     robot_name: str
     timestamp: datetime
 
 
 @dataclass
-class TelemetryBatteryPayload:
+class TelemetryPosePayload(TelemetryPayload):
+    pose: Pose
+
+
+@dataclass
+class TelemetryBatteryPayload(TelemetryPayload):
     battery_level: float
-    isar_id: str
-    robot_name: str
-    timestamp: datetime
+
+
+@dataclass
+class TelemetryPressurePayload(TelemetryPayload):
+    pressure_level: float
 
 
 @dataclass
