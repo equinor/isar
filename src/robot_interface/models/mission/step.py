@@ -4,8 +4,14 @@ from typing import Any, List, Literal, Optional, Type, Union
 from alitra import Pose, Position
 
 from isar.services.utilities.uuid_string_factory import uuid4_string
-from robot_interface.models.inspection import Image, ThermalImage, ThermalVideo, Video
-from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.inspection import (
+    Audio,
+    Image,
+    Inspection,
+    ThermalImage,
+    ThermalVideo,
+    Video,
+)
 from robot_interface.models.mission.status import StepStatus
 
 
@@ -166,6 +172,23 @@ class TakeThermalVideo(InspectionStep):
         return ThermalVideo
 
 
+@dataclass
+class RecordAudio(InspectionStep):
+    """
+    Step which causes the robot to record a video at its position, facing the target.
+
+    Duration of audio is given in seconds.
+    """
+
+    target: Position
+    duration: float
+    type: Literal["record_audio"] = "record_audio"
+
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return Audio
+
+
 STEPS = Union[
     DriveToPose,
     DockingProcedure,
@@ -173,4 +196,5 @@ STEPS = Union[
     TakeThermalImage,
     TakeVideo,
     TakeThermalVideo,
+    RecordAudio,
 ]

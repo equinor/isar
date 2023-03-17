@@ -10,6 +10,7 @@ from isar.models.mission.mission import Mission, Task
 from robot_interface.models.mission.step import (
     STEPS,
     DriveToPose,
+    RecordAudio,
     TakeImage,
     TakeThermalImage,
     TakeThermalVideo,
@@ -22,6 +23,7 @@ class InspectionTypes(str, Enum):
     thermal_image = "ThermalImage"
     video = "Video"
     thermal_video = "ThermalVideo"
+    audio = "Audio"
 
 
 class StartMissionInspectionDefinition(BaseModel):
@@ -119,6 +121,8 @@ def create_inspection_step(
         inspection_step = TakeThermalImage(target=target)
     elif inspection_type == InspectionTypes.thermal_video.value:
         inspection_step = TakeThermalVideo(target=target, duration=duration)
+    elif inspection_type == InspectionTypes.audio.value:
+        inspection_step = RecordAudio(target=target, duration=duration)
     else:
         raise ValueError(f"Inspection type '{inspection_type}' not supported")
 
