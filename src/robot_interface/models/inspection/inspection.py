@@ -39,6 +39,11 @@ class ThermalVideoMetadata(InspectionMetadata):
 
 
 @dataclass
+class AudioMetadata(InspectionMetadata):
+    duration: Optional[float] = field(default=None)
+
+
+@dataclass
 class Inspection:
     id: str = field(default_factory=uuid4_string, init=False)
     metadata: InspectionMetadata
@@ -83,3 +88,12 @@ class ThermalVideo(Inspection):
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:
         return ThermalVideoMetadata
+
+
+@dataclass
+class Audio(Inspection):
+    metadata: AudioMetadata
+
+    @staticmethod
+    def get_metadata_type() -> Type[InspectionMetadata]:
+        return AudioMetadata

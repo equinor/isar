@@ -1,4 +1,5 @@
 from .inspection import (
+    Audio,
     Image,
     ImageMetadata,
     Inspection,
