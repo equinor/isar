@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Callable, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Optional
 
 from transitions import State
 
@@ -14,9 +14,9 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class StopStep(State):
+class Stop(State):
     def __init__(self, state_machine: "StateMachine") -> None:
-        super().__init__(name="stop_step", on_enter=self.start, on_exit=self.stop)
+        super().__init__(name="stop", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
         self.stop_thread: Optional[ThreadedRequest] = None

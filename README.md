@@ -214,8 +214,8 @@ In general the states
 ```
 States.Off,
 States.Initialize,
-States.InitiateStep,
-States.StopStep,
+States.Initiate,
+States.Stop,
 States.Monitor,
 States.Paused,
 ```

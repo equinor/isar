@@ -23,11 +23,11 @@ from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.state_machine.states import (
     Idle,
     Initialize,
-    InitiateStep,
+    Initiate,
     Monitor,
     Off,
     Paused,
-    StopStep,
+    Stop,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.initialize.initialize_params import InitializeParams
@@ -82,21 +82,21 @@ class StateMachine(object):
         self.stepwise_mission: bool = stepwise_mission
 
         # List of states
-        self.stop_step_state: State = StopStep(self)
+        self.stop_state: State = Stop(self)
         self.paused_state: State = Paused(self)
         self.idle_state: State = Idle(self)
         self.initialize_state: State = Initialize(self)
         self.monitor_state: State = Monitor(self)
-        self.initiate_step_state: State = InitiateStep(self)
+        self.initiate_state: State = Initiate(self)
         self.off_state: State = Off(self)
 
         self.states: List[State] = [
             self.off_state,
             self.idle_state,
             self.initialize_state,
-            self.initiate_step_state,
+            self.initiate_state,
             self.monitor_state,
-            self.stop_step_state,
+            self.stop_state,
             self.paused_state,
         ]
 
@@ -110,27 +110,27 @@ class StateMachine(object):
                     "before": self._off,
                 },
                 {
-                    "trigger": "step_initiated",
-                    "source": self.initiate_step_state,
+                    "trigger": "initiated",
+                    "source": self.initiate_state,
                     "dest": self.monitor_state,
-                    "before": self._step_initiated,
+                    "before": self._initiated,
                 },
                 {
                     "trigger": "pause",
-                    "source": [self.initiate_step_state, self.monitor_state],
-                    "dest": self.stop_step_state,
+                    "source": [self.initiate_state, self.monitor_state],
+                    "dest": self.stop_state,
                     "before": self._pause,
                 },
                 {
                     "trigger": "stop",
-                    "source": [self.initiate_step_state, self.monitor_state],
-                    "dest": self.stop_step_state,
+                    "source": [self.initiate_state, self.monitor_state],
+                    "dest": self.stop_state,
                     "before": self._stop,
                 },
                 {
                     "trigger": "mission_finished",
                     "source": [
-                        self.initiate_step_state,
+                        self.initiate_state,
                     ],
                     "dest": self.idle_state,
                     "before": self._mission_finished,
@@ -144,7 +144,7 @@ class StateMachine(object):
                 {
                     "trigger": "initialization_successful",
                     "source": self.initialize_state,
-                    "dest": self.initiate_step_state,
+                    "dest": self.initiate_state,
                     "before": self._initialization_successful,
                 },
                 {
@@ -156,36 +156,36 @@ class StateMachine(object):
                 {
                     "trigger": "resume",
                     "source": self.paused_state,
-                    "dest": self.initiate_step_state,
+                    "dest": self.initiate_state,
                     "before": self._resume,
                 },
                 {
                     "trigger": "step_finished",
                     "source": self.monitor_state,
-                    "dest": self.initiate_step_state,
+                    "dest": self.initiate_state,
                     "before": self._step_finished,
                 },
                 {
                     "trigger": "mission_paused",
-                    "source": self.stop_step_state,
+                    "source": self.stop_state,
                     "dest": self.paused_state,
                     "before": self._mission_paused,
                 },
                 {
-                    "trigger": "step_infeasible",
-                    "source": self.initiate_step_state,
-                    "dest": self.initiate_step_state,
-                    "before": self._step_infeasible,
+                    "trigger": "initiate_infeasible",
+                    "source": self.initiate_state,
+                    "dest": self.initiate_state,
+                    "before": self._initiate_infeasible,
                 },
                 {
-                    "trigger": "initiate_step_failed",
-                    "source": self.initiate_step_state,
+                    "trigger": "initiate_failed",
+                    "source": self.initiate_state,
                     "dest": self.idle_state,
-                    "before": self._initiate_step_failed,
+                    "before": self._initiate_failed,
                 },
                 {
                     "trigger": "mission_stopped",
-                    "source": [self.stop_step_state, self.paused_state],
+                    "source": [self.stop_state, self.paused_state],
                     "dest": self.idle_state,
                     "before": self._mission_stopped,
                 },
@@ -235,7 +235,7 @@ class StateMachine(object):
         self.queues.start_mission.output.put(False)
         self._finalize()
 
-    def _step_initiated(self) -> None:
+    def _initiated(self) -> None:
         self.current_step.status = StepStatus.InProgress
         self.publish_step_status()
         self.logger.info(
@@ -309,7 +309,7 @@ class StateMachine(object):
     def _stop(self) -> None:
         self.stopped = True
 
-    def _initiate_step_failed(self) -> None:
+    def _initiate_failed(self) -> None:
         self.current_step.status = StepStatus.Failed
         self.current_task.update_task_status()
         self.current_mission.status = MissionStatus.Failed
@@ -317,7 +317,7 @@ class StateMachine(object):
         self.publish_task_status()
         self._finalize()
 
-    def _step_infeasible(self) -> None:
+    def _initiate_infeasible(self) -> None:
         self.current_step.status = StepStatus.Failed
         self.publish_step_status()
         self.update_current_task()

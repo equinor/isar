@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Callable, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Optional
 
 from transitions import State
 
@@ -15,32 +15,31 @@ from robot_interface.models.exceptions import (
     RobotLowBatteryException,
 )
 
-
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class InitiateStep(State):
+class Initiate(State):
     def __init__(self, state_machine: "StateMachine") -> None:
-        super().__init__(name="initiate_step", on_enter=self.start, on_exit=self.stop)
+        super().__init__(name="initiate", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
-        self.initiate_step_failure_counter: int = 0
-        self.initiate_step_failure_counter_limit: int = (
-            settings.INITIATE_STEP_FAILURE_COUNTER_LIMIT
+        self.initiate_failure_counter: int = 0
+        self.initiate_failure_counter_limit: int = (
+            settings.INITIATE_FAILURE_COUNTER_LIMIT
         )
         self.logger = logging.getLogger("state_machine")
 
-        self.initiate_step_thread: Optional[ThreadedRequest] = None
+        self.initiate_thread: Optional[ThreadedRequest] = None
 
     def start(self) -> None:
         self.state_machine.update_state()
         self._run()
 
     def stop(self) -> None:
-        self.initiate_step_failure_counter = 0
-        if self.initiate_step_thread:
-            self.initiate_step_thread.wait_for_thread()
-        self.initiate_step_thread = None
+        self.initiate_failure_counter = 0
+        if self.initiate_thread:
+            self.initiate_thread.wait_for_thread()
+        self.initiate_thread = None
 
     def _run(self) -> None:
         transition: Callable
@@ -60,18 +59,18 @@ class InitiateStep(State):
                 transition = self.state_machine.mission_finished  # type: ignore
                 break
 
-            if not self.initiate_step_thread:
-                self.initiate_step_thread = ThreadedRequest(
+            if not self.initiate_thread:
+                self.initiate_thread = ThreadedRequest(
                     self.state_machine.robot.initiate_step
                 )
-                self.initiate_step_thread.start_thread(
+                self.initiate_thread.start_thread(
                     self.state_machine.current_step,
                     name="State Machine Initiate Step",
                 )
 
             try:
-                self.initiate_step_thread.get_output()
-                transition = self.state_machine.step_initiated  # type: ignore
+                self.initiate_thread.get_output()
+                transition = self.state_machine.initiated  # type: ignore
                 break
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
@@ -82,7 +81,7 @@ class InitiateStep(State):
                     f"{type(self.state_machine.current_step).__name__}"
                     f"Invalid step: {str(self.state_machine.current_step.id)[:8]}"
                 )
-                transition = self.state_machine.step_infeasible  # type: ignore
+                transition = self.state_machine.initiate_infeasible  # type: ignore
                 break
 
             except RobotLowBatteryException as e:
@@ -91,27 +90,24 @@ class InitiateStep(State):
                     f"{type(self.state_machine.current_step).__name__}"
                     f"Current Battery Level: {str(e.battery_level)}"
                 )
-                transition = self.state_machine.initiate_step_failed  # type: ignore
+                transition = self.state_machine.initiate__failed  # type: ignore
                 break
 
             except RobotException as e:
-                self.initiate_step_thread = None
-                self.initiate_step_failure_counter += 1
+                self.initiate_thread = None
+                self.initiate_failure_counter += 1
                 self.logger.warning(
                     f"Initiating step failed #: "
-                    f"{str(self.initiate_step_failure_counter)}"
+                    f"{str(self.initiate_failure_counter)}"
                     f"{e}"
                 )
-            if (
-                self.initiate_step_failure_counter
-                >= self.initiate_step_failure_counter_limit
-            ):
+            if self.initiate_failure_counter >= self.initiate_failure_counter_limit:
                 self.logger.error(
                     f"Failed to initiate step after "
-                    f"{self.initiate_step_failure_counter_limit} attempts. "
+                    f"{self.initiate_failure_counter_limit} attempts. "
                     f"Cancelling mission."
                 )
-                transition = self.state_machine.initiate_step_failed  # type: ignore
+                transition = self.state_machine.initiate_failed  # type: ignore
                 break
 
             time.sleep(self.state_machine.sleep_time)

@@ -308,11 +308,11 @@ class TestResumeMission:
 class TestStopMission:
     schedule_stop_mission_path = "/schedule/stop-mission"
     valid_states = [
-        States.InitiateStep,
+        States.Initiate,
         States.Initialize,
         States.Monitor,
         States.Paused,
-        States.StopStep,
+        States.Stop,
     ]
 
     @pytest.mark.parametrize("state", valid_states)
