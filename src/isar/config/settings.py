@@ -44,8 +44,8 @@ class Settings(BaseSettings):
     # Determines the number of state transitions that are kept in the log
     STATE_TRANSITIONS_LOG_LENGTH: int = Field(default=20)
 
-    # Number of attempts to initiate a step before cancelling
-    INITIATE_STEP_FAILURE_COUNTER_LIMIT: int = Field(default=10)
+    # Number of attempts to initiate a step or mission before cancelling
+    INITIATE_FAILURE_COUNTER_LIMIT: int = Field(default=10)
 
     # Number of attempts to stop the robot before giving up
     STOP_ROBOT_ATTEMPTS_LIMIT: int = Field(default=10)

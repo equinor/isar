@@ -103,9 +103,9 @@ def test_state_machine_transitions(injector, state_machine_thread) -> None:
         [
             States.Idle,
             States.Initialize,
-            States.InitiateStep,
+            States.Initiate,
             States.Monitor,
-            States.InitiateStep,
+            States.Initiate,
             States.Idle,
         ]
     )
@@ -134,9 +134,9 @@ def test_state_machine_failed_dependency(
         [
             States.Idle,
             States.Initialize,
-            States.InitiateStep,
+            States.Initiate,
             States.Monitor,
-            States.InitiateStep,
+            States.Initiate,
             States.Idle,
         ]
     )
@@ -163,9 +163,9 @@ def test_state_machine_with_successful_collection(
         [
             States.Idle,
             States.Initialize,
-            States.InitiateStep,
+            States.Initiate,
             States.Monitor,
-            States.InitiateStep,
+            States.Initiate,
             States.Idle,
         ]
     )
@@ -196,9 +196,9 @@ def test_state_machine_with_unsuccessful_collection(
         [
             States.Idle,
             States.Initialize,
-            States.InitiateStep,
+            States.Initiate,
             States.Monitor,
-            States.InitiateStep,
+            States.Initiate,
             States.Idle,
         ]
     )
@@ -227,8 +227,8 @@ def test_state_machine_with_successful_mission_stop(
         [
             States.Idle,
             States.Initialize,
-            States.InitiateStep,
-            States.StopStep,
+            States.Initiate,
+            States.Stop,
             States.Idle,
         ]
     )
@@ -260,8 +260,8 @@ def test_state_machine_with_unsuccsessful_mission_stop(
         [
             States.Idle,
             States.Initialize,
-            States.InitiateStep,
-            States.StopStep,
+            States.Initiate,
+            States.Stop,
             States.Idle,
         ]
     )
