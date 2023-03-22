@@ -20,6 +20,7 @@ from isar.storage.uploader import Uploader
 from robot_interface.models.exceptions import RobotException
 from robot_interface.models.mission import DriveToPose, Step, TakeImage
 from robot_interface.models.mission.status import StepStatus
+from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import MockRobot
 from tests.mocks.step import MockStep
@@ -38,8 +39,9 @@ class UploaderThread(object):
     def __init__(self, injector) -> None:
         self.injector: Injector = injector
         self.uploader: Uploader = Uploader(
-            upload_queue=self.injector.get(Queues).upload_queue,
+            queues=self.injector.get(Queues),
             storage_handlers=injector.get(List[StorageInterface]),
+            mqtt_publisher=injector.get(MqttClientInterface),
         )
         self._thread: Thread = Thread(target=self.uploader.run)
         self._thread.daemon = True

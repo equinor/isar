@@ -13,6 +13,7 @@ from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import ImageMetadata, Inspection
+from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(
@@ -31,8 +32,9 @@ class UploaderThread(object):
     def __init__(self, injector) -> None:
         self.injector: Injector = injector
         self.uploader: Uploader = Uploader(
-            upload_queue=self.injector.get(Queues).upload_queue,
+            queues=self.injector.get(Queues),
             storage_handlers=injector.get(List[StorageInterface]),
+            mqtt_publisher=injector.get(MqttClientInterface),
         )
         self._thread: Thread = Thread(target=self.uploader.run)
         self._thread.daemon = True
