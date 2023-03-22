@@ -25,6 +25,7 @@ from isar.storage.blob_storage import BlobStorage
 from isar.storage.local_storage import LocalStorage
 from isar.storage.slimm_storage import SlimmStorage
 from isar.storage.storage_interface import StorageInterface
+from isar.storage.uploader import Uploader
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface, MqttPublisher
 
@@ -138,6 +139,22 @@ class StateMachineModule(Module):
             robot=robot,
             mqtt_publisher=mqtt_client,
             task_selector=task_selector,
+        )
+
+
+class UploaderModule(Module):
+    @provider
+    @singleton
+    def provide_uploader(
+        self,
+        queues: Queues,
+        storage_handlers: List[StorageInterface],
+        mqtt_client: MqttClientInterface,
+    ) -> Uploader:
+        return Uploader(
+            queues=queues,
+            storage_handlers=storage_handlers,
+            mqtt_publisher=mqtt_client,
         )
 
 

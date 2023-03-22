@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 from logging import Logger
 from threading import Thread
@@ -21,7 +20,6 @@ from isar.services.service_connections.mqtt.robot_status_publisher import (
     RobotStatusPublisher,
 )
 from isar.state_machine.state_machine import StateMachine, main
-from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.robot_interface import RobotInterface
 
@@ -33,6 +31,7 @@ if __name__ == "__main__":
     logger: Logger = logging.getLogger("main")
 
     state_machine: StateMachine = injector.get(StateMachine)
+    uploader: Uploader = injector.get(Uploader)
     robot: RobotInterface = injector.get(RobotInterface)
     queues: Queues = injector.get(Queues)
 
@@ -42,11 +41,6 @@ if __name__ == "__main__":
         target=main, name="ISAR State Machine", args=[state_machine], daemon=True
     )
     threads.append(state_machine_thread)
-
-    uploader: Uploader = Uploader(
-        upload_queue=queues.upload_queue,
-        storage_handlers=injector.get(List[StorageInterface]),
-    )
 
     uploader_thread: Thread = Thread(
         target=uploader.run, name="ISAR Uploader", daemon=True
