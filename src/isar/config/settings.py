@@ -7,7 +7,8 @@ from pydantic import BaseSettings, Field, validator
 
 from isar.config import predefined_missions
 from robot_interface.models.robots.robot_model import RobotModel
-from robot_interface.telemetry.payloads import VideoStream
+from robot_interface.telemetry.payloads import AssetDeck, VideoStream
+from alitra import Pose, Frame, Orientation, Position
 
 
 class Settings(BaseSettings):
@@ -209,6 +210,32 @@ class Settings(BaseSettings):
                 name="Rear camera",
                 url="http://localhost:5000/videostream/rear",
                 type="turtlebot",
+            ),
+        ]
+    )
+
+    # Available decks for the robot with default localization pose
+    AVAILABLE_DECKS: List[AssetDeck] = Field(
+        default=[
+            AssetDeck(
+                deck_name="Placeholder deck 1",
+                default_localization_pose=Pose(
+                    position=Position(x=1, y=1, z=1, frame=Frame(name="asset")),
+                    orientation=Orientation(
+                        x=0, y=0, z=0, w=1, frame=Frame(name="asset")
+                    ),
+                    frame=Frame(name="asset"),
+                ),
+            ),
+            AssetDeck(
+                deck_name="Placeholder deck 2",
+                default_localization_pose=Pose(
+                    position=Position(x=2, y=2, z=2, frame=Frame(name="asset")),
+                    orientation=Orientation(
+                        x=0, y=0, z=0, w=1, frame=Frame(name="asset")
+                    ),
+                    frame=Frame(name="asset"),
+                ),
             ),
         ]
     )

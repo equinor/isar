@@ -38,6 +38,12 @@ class VideoStream:
 
 
 @dataclass
+class AssetDeck:
+    deck_name: str
+    default_localization_pose: Pose
+
+
+@dataclass
 class RobotStatusPayload:
     isar_id: str
     robot_name: str
@@ -56,6 +62,7 @@ class RobotInfoPayload:
     robot_model: str
     robot_serial_number: str
     video_streams: List[VideoStream]
+    available_decks: List[AssetDeck]
     host: str
     port: int
     timestamp: datetime
