@@ -111,6 +111,16 @@ class DockingProcedure(MotionStep):
 
 
 @dataclass
+class Localize(MotionStep):
+    """
+    Step which causes the robot to localize
+    """
+
+    localization_pose: Pose
+    type: Literal["localize"] = "localize"
+
+
+@dataclass
 class TakeImage(InspectionStep):
     """
     Step which causes the robot to take an image towards the given coordinate.
@@ -192,6 +202,7 @@ class RecordAudio(InspectionStep):
 STEPS = Union[
     DriveToPose,
     DockingProcedure,
+    Localize,
     TakeImage,
     TakeThermalImage,
     TakeVideo,
