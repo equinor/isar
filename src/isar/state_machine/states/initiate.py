@@ -90,7 +90,7 @@ class Initiate(State):
                     f"{type(self.state_machine.current_step).__name__}"
                     f"Current Battery Level: {str(e.battery_level)}"
                 )
-                transition = self.state_machine.initiate__failed  # type: ignore
+                transition = self.state_machine.initiate_failed  # type: ignore
                 break
 
             except RobotException as e:
