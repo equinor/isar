@@ -90,8 +90,41 @@ empty_mission: Mission = Mission([], None)
 
 
 def test_state_machine_transitions(injector, state_machine_thread) -> None:
-    step: Step = DriveToPose(pose=MockPose.default_pose)
-    mission: Mission = Mission(tasks=[Task(steps=[step])])  # type: ignore
+    step_1: Step = DriveToPose(pose=MockPose.default_pose)
+    step_2: Step = TakeImage(target=MockPose.default_pose.position)
+    mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
+    metadata: MissionMetadata = MissionMetadata(mission.id)
+    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+    scheduling_utilities.start_mission(
+        mission=mission, initial_pose=None, mission_metadata=metadata
+    )
+
+    time.sleep(3)
+    expected_transitions_list = deque(
+        [
+            States.Idle,
+            States.Initialize,
+            States.Initiate,
+            States.Monitor,
+            States.Initiate,
+            States.Monitor,
+            States.Initiate,
+            States.Idle,
+        ]
+    )
+    assert (
+        state_machine_thread.state_machine.transitions_list == expected_transitions_list
+    )
+
+
+def test_state_machine_transitions_when_running_full_mission(
+    injector, state_machine_thread
+) -> None:
+    state_machine_thread.state_machine.stepwise_mission = False
+
+    step_1: Step = DriveToPose(pose=MockPose.default_pose)
+    step_2: Step = TakeImage(target=MockPose.default_pose.position)
+    mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
     metadata: MissionMetadata = MissionMetadata(mission.id)
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(

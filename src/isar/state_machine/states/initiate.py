@@ -11,12 +11,10 @@ from isar.services.utilities.threaded_request import (
 )
 from robot_interface.models.exceptions import (
     RobotException,
+    RobotInfeasibleMissionException,
     RobotInfeasibleStepException,
     RobotLowBatteryException,
     RobotLowPressureException,
-)
-from robot_interface.models.exceptions.robot_exceptions import (
-    RobotInfeasibleMissionException,
 )
 
 if TYPE_CHECKING:

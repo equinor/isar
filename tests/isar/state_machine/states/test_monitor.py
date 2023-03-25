@@ -42,7 +42,12 @@ def test_should_only_upload_if_status_is_completed(
     mission: Mission = Mission(tasks=[task])
 
     monitor.state_machine.current_mission = mission
-    monitor._process_finished_step(step)
+    monitor.state_machine.current_task = task
+    monitor.state_machine.current_step = step
+
+    if monitor._should_upload_inspections():
+        monitor._queue_inspections_for_upload(step)
+
     assert monitor.state_machine.queues.upload_queue.empty() == (
         not should_queue_upload
     )
