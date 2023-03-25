@@ -53,7 +53,7 @@ class Monitor(State):
                     self.state_machine.robot.step_status
                 )
                 self.step_status_thread.start_thread(
-                    name="State Machine Monitor Current Step"
+                    name="State Machine Monitor Current Status"
                 )
 
             try:
