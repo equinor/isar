@@ -6,7 +6,7 @@ from typing import List, Sequence
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import RobotStatus, StepStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus, StepStatus
 from robot_interface.models.mission.step import InspectionStep, Step
 
 
@@ -16,6 +16,10 @@ class RobotInterface(metaclass=ABCMeta):
     @abstractmethod
     def initiate_mission(self, mission: Mission) -> None:
         """Send a mission to the robot and initiate execution of the mission
+
+        This function should be used in combination with the mission_status function
+        if the robot is designed to run full missions and not in a stepwise
+        configuration.
 
         Parameters
         ----------
@@ -29,13 +33,40 @@ class RobotInterface(metaclass=ABCMeta):
         ------
         RobotException
             If the mission is not initiated.
+        NotImplementedError
+            If the robot is designed for stepwise mission execution.
 
         """
         raise NotImplementedError
 
+    def mission_status(self) -> MissionStatus:
+        """Gets the status of the currently active mission on the robot
+
+        This function should be used in combination with the initiate_mission function
+        if the robot is designed to run full missions and not in a stepwise
+        configuration.
+
+        Returns
+        -------
+        MissionStatus
+            Status of the executing mission on the robot.
+
+        Raises
+        ------
+        RobotException
+            If the mission status could not be retrieved.
+        NotImplementedError
+            If the robot is designed for stepwise mission execution.
+
+        """
+
     @abstractmethod
     def initiate_step(self, step: Step) -> None:
         """Send a step to the robot and initiate the execution of the step
+
+        This function should be used in combination with the step_status function
+        if the robot is designed to run stepwise missions and not in a full mission
+        configuration.
 
         Parameters
         ----------
@@ -50,6 +81,8 @@ class RobotInterface(metaclass=ABCMeta):
         ------
         RobotException
             If the step is not initiated.
+        NotImplementedError
+            If the robot is designed for full mission execution.
 
         """
         raise NotImplementedError
@@ -58,19 +91,21 @@ class RobotInterface(metaclass=ABCMeta):
     def step_status(self) -> StepStatus:
         """Gets the status of the currently active step on robot.
 
-        Parameters
-        ----------
-        None
+        This function should be used in combination with the initiate_step function
+        if the robot is designed to run stepwise missions and not in a full mission
+        configuration.
 
         Returns
         -------
         StepStatus
             Status of the execution of current step.
 
-        Raises:
+        Raises
         ------
         RobotException
-            If the step status can't be retrieved.
+            If the step status could not be retrieved.
+        NotImplementedError
+            If the robot is designed for full mission execution.
 
         """
         raise NotImplementedError
@@ -78,10 +113,6 @@ class RobotInterface(metaclass=ABCMeta):
     @abstractmethod
     def stop(self) -> None:
         """Stops the execution of the current step and stops the movement of the robot.
-
-        Parameters
-        ----------
-        None
 
         Returns
         -------

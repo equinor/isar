@@ -12,7 +12,7 @@ from robot_interface.models.inspection.inspection import (
     Inspection,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import RobotStatus, StepStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus, StepStatus
 from robot_interface.models.mission.step import InspectionStep, Step
 from robot_interface.robot_interface import RobotInterface
 
@@ -20,7 +20,7 @@ from robot_interface.robot_interface import RobotInterface
 class MockRobot(RobotInterface):
     def __init__(
         self,
-        initiate_step: bool = True,
+        mission_status: MissionStatus = MissionStatus.Successful,
         step_status: StepStatus = StepStatus.Successful,
         stop: bool = True,
         pose: Pose = Pose(
@@ -30,7 +30,7 @@ class MockRobot(RobotInterface):
         ),
         robot_status: RobotStatus = RobotStatus.Available,
     ):
-        self.initiate_step_return_value: bool = initiate_step
+        self.mission_status_return_value: MissionStatus = mission_status
         self.step_status_return_value: StepStatus = step_status
         self.stop_return_value: bool = stop
         self.robot_pose_return_value: Pose = pose
@@ -38,6 +38,9 @@ class MockRobot(RobotInterface):
 
     def initiate_mission(self, mission: Mission) -> None:
         return
+
+    def mission_status(self) -> MissionStatus:
+        return self.mission_status_return_value
 
     def initiate_step(self, step: Step) -> None:
         return

@@ -166,6 +166,12 @@ class StateMachine(object):
                     "before": self._step_finished,
                 },
                 {
+                    "trigger": "full_mission_finished",
+                    "source": self.monitor_state,
+                    "dest": self.initiate_state,
+                    "before": self._full_mission_finished,
+                },
+                {
                     "trigger": "mission_paused",
                     "source": self.stop_state,
                     "dest": self.paused_state,
@@ -228,7 +234,7 @@ class StateMachine(object):
         self.publish_mission_status()
         self.current_task = self.task_selector.next_task()
         self.current_task.status = TaskStatus.InProgress
-        self.publish_task_status()
+        self.publish_task_status(task=self.current_task)
         self.update_current_step()
 
     def _initialization_failed(self) -> None:
@@ -236,13 +242,19 @@ class StateMachine(object):
         self._finalize()
 
     def _initiated(self) -> None:
-        self.current_step.status = StepStatus.InProgress
-        self.publish_step_status()
-        self.logger.info(
-            f"Successfully initiated "
-            f"{type(self.current_step).__name__} "
-            f"step: {str(self.current_step.id)[:8]}"
-        )
+        if self.stepwise_mission:
+            self.current_step.status = StepStatus.InProgress
+            self.publish_step_status(step=self.current_step)
+            self.logger.info(
+                f"Successfully initiated "
+                f"{type(self.current_step).__name__} "
+                f"step: {str(self.current_step.id)[:8]}"
+            )
+        else:
+            self.logger.info(
+                f"Successfully initiated full mission with ID: "
+                f"{str(self.current_mission.id)[:8]}"
+            )
 
     def _pause(self) -> None:
         return
@@ -255,7 +267,7 @@ class StateMachine(object):
         self.current_mission.status = MissionStatus.InProgress
         self.current_task.status = TaskStatus.InProgress
         self.publish_mission_status()
-        self.publish_task_status()
+        self.publish_task_status(task=self.current_task)
 
         resume_mission_response: ControlMissionResponse = (
             self._make_control_mission_response()
@@ -287,9 +299,34 @@ class StateMachine(object):
         return
 
     def _step_finished(self) -> None:
-        self.publish_step_status()
+        self.publish_step_status(step=self.current_step)
         self.update_current_task()
         self.update_current_step()
+
+    def _full_mission_finished(self) -> None:
+        self.current_task = None
+        step_status: StepStatus = StepStatus.Failed
+        task_status: TaskStatus = TaskStatus.Failed
+
+        if self.current_mission.status == MissionStatus.Failed:
+            step_status = StepStatus.Failed
+            task_status = TaskStatus.Failed
+        elif self.current_mission.status == MissionStatus.Cancelled:
+            step_status = StepStatus.Cancelled
+            task_status = TaskStatus.Cancelled
+        elif (
+            self.current_mission.status == MissionStatus.Successful
+            or self.current_mission.status == MissionStatus.PartiallySuccessful
+        ):
+            step_status = StepStatus.Successful
+            task_status = TaskStatus.Successful
+
+        for task in self.current_mission.tasks:
+            task.status = task_status
+            for step in task.steps:
+                step.status = step_status
+                self.publish_step_status(step=step)
+            self.publish_task_status(task=task)
 
     def _mission_paused(self) -> None:
         self.logger.info(f"Pausing mission: {self.current_mission.id}")
@@ -303,8 +340,8 @@ class StateMachine(object):
         self.queues.pause_mission.output.put(paused_mission_response)
 
         self.publish_mission_status()
-        self.publish_task_status()
-        self.publish_step_status()
+        self.publish_task_status(task=self.current_task)
+        self.publish_step_status(step=self.current_step)
 
     def _stop(self) -> None:
         self.stopped = True
@@ -313,15 +350,16 @@ class StateMachine(object):
         self.current_step.status = StepStatus.Failed
         self.current_task.update_task_status()
         self.current_mission.status = MissionStatus.Failed
-        self.publish_step_status()
-        self.publish_task_status()
+        self.publish_step_status(step=self.current_step)
+        self.publish_task_status(task=self.current_task)
         self._finalize()
 
     def _initiate_infeasible(self) -> None:
-        self.current_step.status = StepStatus.Failed
-        self.publish_step_status()
-        self.update_current_task()
-        self.update_current_step()
+        if self.stepwise_mission:
+            self.current_step.status = StepStatus.Failed
+            self.publish_step_status(step=self.current_step)
+            self.update_current_task()
+            self.update_current_step()
 
     def _mission_stopped(self) -> None:
         self.current_mission.status = MissionStatus.Cancelled
@@ -341,8 +379,8 @@ class StateMachine(object):
         )
         self.queues.stop_mission.output.put(stopped_mission_response)
 
-        self.publish_task_status()
-        self.publish_step_status()
+        self.publish_task_status(task=self.current_task)
+        self.publish_step_status(step=self.current_step)
         self._finalize()
 
     #################################################################################
@@ -370,11 +408,11 @@ class StateMachine(object):
     def update_current_task(self):
         if self.current_task.is_finished():
             self.current_task.update_task_status()
-            self.publish_task_status()
+            self.publish_task_status(task=self.current_task)
             try:
                 self.current_task = self.task_selector.next_task()
                 self.current_task.status = TaskStatus.InProgress
-                self.publish_task_status()
+                self.publish_task_status(task=self.current_task)
             except TaskSelectorStop:
                 # Indicates that all tasks are finished
                 self.current_task = None
@@ -458,8 +496,8 @@ class StateMachine(object):
             retain=False,
         )
 
-    def publish_task_status(self) -> None:
-        """Publishes the current task status to the MQTT Broker"""
+    def publish_task_status(self, task: Task) -> None:
+        """Publishes the task status to the MQTT Broker"""
         if not self.mqtt_publisher:
             return
         payload: str = json.dumps(
@@ -467,8 +505,8 @@ class StateMachine(object):
                 "isar_id": settings.ISAR_ID,
                 "robot_name": settings.ROBOT_NAME,
                 "mission_id": self.current_mission.id if self.current_mission else None,
-                "task_id": self.current_task.id if self.current_task else None,
-                "status": self.current_task.status if self.current_task else None,
+                "task_id": task.id if task else None,
+                "status": task.status if task else None,
                 "timestamp": datetime.utcnow(),
             },
             cls=EnhancedJSONEncoder,
@@ -480,8 +518,8 @@ class StateMachine(object):
             retain=False,
         )
 
-    def publish_step_status(self) -> None:
-        """Publishes the current step status to the MQTT Broker"""
+    def publish_step_status(self, step: Step) -> None:
+        """Publishes the step status to the MQTT Broker"""
         if not self.mqtt_publisher:
             return
         payload: str = json.dumps(
@@ -490,11 +528,9 @@ class StateMachine(object):
                 "robot_name": settings.ROBOT_NAME,
                 "mission_id": self.current_mission.id if self.current_mission else None,
                 "task_id": self.current_task.id if self.current_task else None,
-                "step_id": self.current_step.id if self.current_step else None,
-                "step_type": self.current_step.__class__.__name__
-                if self.current_step
-                else None,
-                "status": self.current_step.status if self.current_step else None,
+                "step_id": step.id if step else None,
+                "step_type": step.__class__.__name__ if step else None,
+                "status": step.status if step else None,
                 "timestamp": datetime.utcnow(),
             },
             cls=EnhancedJSONEncoder,

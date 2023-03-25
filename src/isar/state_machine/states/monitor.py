@@ -1,7 +1,7 @@
 import logging
 import time
 from copy import deepcopy
-from typing import Callable, Optional, Sequence, TYPE_CHECKING, Tuple
+from typing import Callable, Optional, Sequence, TYPE_CHECKING, Tuple, Union
 
 from injector import inject
 from transitions import State
@@ -13,6 +13,8 @@ from isar.services.utilities.threaded_request import (
 )
 from robot_interface.models.exceptions import RobotException
 from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.status import MissionStatus
 from robot_interface.models.mission.step import InspectionStep, Step, StepStatus
 
 if TYPE_CHECKING:
@@ -49,36 +51,60 @@ class Monitor(State):
                 break
 
             if not self.step_status_thread:
-                self.step_status_thread = ThreadedRequest(
-                    self.state_machine.robot.step_status
-                )
-                self.step_status_thread.start_thread(
-                    name="State Machine Monitor Current Status"
-                )
+                if self.state_machine.stepwise_mission:
+                    self._run_get_status_thread(
+                        status_function=self.state_machine.robot.step_status,
+                        thread_name="State Machine Monitor Get Step Status",
+                    )
+                else:
+                    self._run_get_status_thread(
+                        status_function=self.state_machine.robot.mission_status,
+                        thread_name="State Machine Monitor Get Mission Status",
+                    )
 
             try:
-                step_status: StepStatus = self.step_status_thread.get_output()
+                status: Union[
+                    StepStatus, MissionStatus
+                ] = self.step_status_thread.get_output()
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
             except RobotException:
-                step_status = StepStatus.Failed
+                status = StepStatus.Failed
 
-            self.state_machine.current_step.status = step_status
+            if self.state_machine.stepwise_mission and isinstance(status, StepStatus):
+                self.state_machine.current_step.status = status
+            elif isinstance(status, MissionStatus):
+                self.state_machine.current_mission.status = status
 
-            if self._step_finished(step=self.state_machine.current_step):
-                get_inspections_thread = ThreadedRequest(self._process_finished_step)
+            if self._should_upload_inspections():
+                get_inspections_thread = ThreadedRequest(
+                    self._queue_inspections_for_upload
+                )
                 get_inspections_thread.start_thread(
                     self.state_machine.current_step,
                     name="State Machine Get Inspections",
                 )
-                transition = self.state_machine.step_finished  # type: ignore
-                break
+
+            if self.state_machine.stepwise_mission:
+                if self._step_finished(self.state_machine.current_step):
+                    transition = self.state_machine.step_finished  # type: ignore
+                    break
+            else:
+                if self._mission_finished(self.state_machine.current_mission):
+                    transition = self.state_machine.full_mission_finished  # type: ignore
+                    break
 
             self.step_status_thread = None
             time.sleep(self.state_machine.sleep_time)
 
         transition()
+
+    def _run_get_status_thread(
+        self, status_function: Callable, thread_name: str
+    ) -> None:
+        self.step_status_thread = ThreadedRequest(request_func=status_function)
+        self.step_status_thread.start_thread(name=thread_name)
 
     def _queue_inspections_for_upload(self, current_step: InspectionStep) -> None:
         try:
@@ -86,9 +112,16 @@ class Monitor(State):
                 Inspection
             ] = self.state_machine.robot.get_inspections(step=current_step)
         except Exception as e:
-            self.logger.error(
-                f"Error getting inspections for step {str(current_step.id)[:8]}: {e}"
-            )
+            if self.state_machine.stepwise_mission:
+                self.logger.error(
+                    f"Error getting inspections for step "
+                    f"{str(current_step.id)[:8]}: {e}"
+                )
+            else:
+                self.logger.error(
+                    f"Error getting inspections for mission "
+                    f"{str(self.state_machine.current_mission.id)[:8]}: {e}"
+                )
             return
 
         if not inspections:
@@ -124,6 +157,29 @@ class Monitor(State):
             finished = True
         return finished
 
-    def _process_finished_step(self, step: Step) -> None:
-        if step.status == StepStatus.Successful and isinstance(step, InspectionStep):
-            self._queue_inspections_for_upload(current_step=step)
+    @staticmethod
+    def _mission_finished(mission: Mission) -> bool:
+        if (
+            mission.status == MissionStatus.Successful
+            or mission.status == MissionStatus.PartiallySuccessful
+            or mission.status == MissionStatus.Failed
+        ):
+            return True
+        return False
+
+    def _should_upload_inspections(self) -> bool:
+        if self.state_machine.stepwise_mission:
+            step: Step = self.state_machine.current_step
+            return (
+                self._step_finished(step)
+                and step.status == StepStatus.Successful
+                and isinstance(step, InspectionStep)
+            )
+        else:
+            mission_status: MissionStatus = self.state_machine.current_mission.status
+            if (
+                mission_status == MissionStatus.Successful
+                or mission_status == MissionStatus.PartiallySuccessful
+            ):
+                return True
+            return False
