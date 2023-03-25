@@ -10,6 +10,10 @@ class RobotInfeasibleStepException(RobotException):
     pass
 
 
+class RobotInfeasibleMissionException(RobotException):
+    pass
+
+
 class RobotInvalidResponseException(RobotException):
     pass
 

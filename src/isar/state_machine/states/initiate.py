@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import Any, Callable, Optional, TYPE_CHECKING
 
 from transitions import State
 
@@ -14,6 +14,9 @@ from robot_interface.models.exceptions import (
     RobotInfeasibleStepException,
     RobotLowBatteryException,
     RobotLowPressureException,
+)
+from robot_interface.models.exceptions.robot_exceptions import (
+    RobotInfeasibleMissionException,
 )
 
 if TYPE_CHECKING:
@@ -61,13 +64,18 @@ class Initiate(State):
                 break
 
             if not self.initiate_thread:
-                self.initiate_thread = ThreadedRequest(
-                    self.state_machine.robot.initiate_step
-                )
-                self.initiate_thread.start_thread(
-                    self.state_machine.current_step,
-                    name="State Machine Initiate Step",
-                )
+                if self.state_machine.stepwise_mission:
+                    self._run_initiate_thread(
+                        initiate_function=self.state_machine.robot.initiate_step,
+                        function_argument=self.state_machine.current_step,
+                        thread_name="State Machine Initiate Step",
+                    )
+                else:
+                    self._run_initiate_thread(
+                        initiate_function=self.state_machine.robot.initiate_mission,
+                        function_argument=self.state_machine.current_mission,
+                        thread_name="State Machine Initiate Mission",
+                    )
 
             try:
                 self.initiate_thread.get_output()
@@ -81,6 +89,14 @@ class Initiate(State):
                     f"Failed to initiate "
                     f"{type(self.state_machine.current_step).__name__}"
                     f"Invalid step: {str(self.state_machine.current_step.id)[:8]}"
+                )
+                transition = self.state_machine.initiate_infeasible  # type: ignore
+                break
+
+            except RobotInfeasibleMissionException:
+                self.logger.warning(
+                    f"Failed to initiate mission "
+                    f"{str(self.state_machine.current_mission.id)[:8]}"
                 )
                 transition = self.state_machine.initiate_infeasible  # type: ignore
                 break
@@ -107,13 +123,13 @@ class Initiate(State):
                 self.initiate_thread = None
                 self.initiate_failure_counter += 1
                 self.logger.warning(
-                    f"Initiating step failed #: "
-                    f"{str(self.initiate_failure_counter)}"
-                    f"{e}"
+                    f"Initiating step failed #: {str(self.initiate_failure_counter)} "
+                    f"times. \n{e}"
                 )
+
             if self.initiate_failure_counter >= self.initiate_failure_counter_limit:
                 self.logger.error(
-                    f"Failed to initiate step after "
+                    f"Mission will be cancelled as initiate failed after "
                     f"{self.initiate_failure_counter_limit} attempts. "
                     f"Cancelling mission."
                 )
@@ -123,3 +139,13 @@ class Initiate(State):
             time.sleep(self.state_machine.sleep_time)
 
         transition()
+
+    def _run_initiate_thread(
+        self, initiate_function: Callable, function_argument: Any, thread_name: str
+    ) -> None:
+        self.initiate_thread = ThreadedRequest(request_func=initiate_function)
+
+        self.initiate_thread.start_thread(
+            function_argument,
+            name=thread_name,
+        )
