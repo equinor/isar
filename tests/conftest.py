@@ -1,5 +1,4 @@
 import pytest
-from fastapi.routing import APIRouter
 from fastapi.testclient import TestClient
 from injector import Injector
 
@@ -81,11 +80,6 @@ def app(injector):
 
 
 @pytest.fixture()
-def api_router():
-    return APIRouter
-
-
-@pytest.fixture()
 def client(app):
     client = TestClient(app)
     return client
@@ -101,11 +95,6 @@ def client_auth(injector_auth):
 @pytest.fixture()
 def access_token():
     return "DummyToken"
-
-
-@pytest.fixture()
-def runner(app):
-    return app.test_cli_runner()
 
 
 @pytest.fixture()
