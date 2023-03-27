@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import Callable, Optional, TYPE_CHECKING
 
 from transitions import State
 
@@ -9,6 +9,7 @@ from isar.services.utilities.threaded_request import (
     ThreadedRequestNotFinishedError,
 )
 from robot_interface.models.exceptions import RobotException
+from robot_interface.models.exceptions.robot_exceptions import ErrorDescription
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -48,14 +49,19 @@ class Stop(State):
                 time.sleep(self.state_machine.sleep_time)
                 continue
 
-            except RobotException:
+            except RobotException as e:
                 if self.handle_stop_fail(
-                    retry_limit=self.state_machine.stop_robot_attempts_limit
+                    retry_limit=self.state_machine.stop_robot_attempts_limit,
+                    error_description=e.error_description,
                 ):
                     transition = self.state_machine.mission_stopped  # type: ignore
                     break
 
-                self.logger.warning("Failed to stop robot. Retrying.")
+                self.logger.warning(
+                    f"\nFailed to stop robot because {e.error_description.short_text}"
+                    f"\nAttempting to stop the robot again"
+                )
+
                 self.stop_thread = None
                 continue
             if self.state_machine.stopped:
@@ -66,13 +72,20 @@ class Stop(State):
 
         transition()
 
-    def handle_stop_fail(self, retry_limit: int) -> bool:
+    def handle_stop_fail(
+        self, retry_limit: int, error_description: ErrorDescription
+    ) -> bool:
         self._count_number_retries += 1
         if self._count_number_retries > retry_limit:
-            self.logger.warning(
-                "Could not communicate request: Reached limit for stop attempts. "
-                "Cancelled mission and transitioned to idle."
+            self.state_machine.current_step.error_description = error_description
+
+            self.logger.error(
+                f"\nFailed to stop the robot after {retry_limit} attempts because "
+                f"{error_description.short_text}"
+                f"\nBe aware that the robot may still be moving even though a stop has "
+                "been attempted"
             )
+
             return True
         time.sleep(self.state_machine.sleep_time)
         return False
