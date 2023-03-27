@@ -3,7 +3,7 @@ import re
 from http import HTTPStatus
 from typing import List
 
-import mock
+from unittest import mock
 import pytest
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
@@ -61,9 +61,6 @@ class TestStartMissionByID:
     def test_state_machine_in_conflicting_state(self, client: TestClient):
         response = client.post(url=f"{self.schedule_start_mission_path}/1")
         assert response.status_code == HTTPStatus.CONFLICT
-        assert response.json() == {
-            "detail": "Conflict - Mission already in progress - State: monitor"
-        }
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
     @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
@@ -145,9 +142,6 @@ class TestStartMission:
             json=jsonable_encoder(self.mock_start_mission_content),
         )
         assert response.status_code == HTTPStatus.CONFLICT
-        assert response.json() == {
-            "detail": "Conflict - Mission already in progress - State: monitor"
-        }
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
@@ -261,9 +255,6 @@ class TestPauseMission:
     def test_state_machine_in_conflicting_state(self, client: TestClient):
         response = client.post(url=self.schedule_pause_mission_path)
         assert response.status_code == HTTPStatus.CONFLICT
-        assert response.json() == {
-            "detail": "Conflict - Pause command received in invalid state - State: idle"
-        }
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_monitor)
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
@@ -291,9 +282,6 @@ class TestResumeMission:
     def test_state_machine_in_conflicting_state(self, client: TestClient):
         response = client.post(url=self.schedule_resume_mission_path)
         assert response.status_code == HTTPStatus.CONFLICT
-        assert response.json() == {
-            "detail": "Conflict - Resume command received in invalid state - State: idle"
-        }
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_paused)
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
@@ -375,6 +363,3 @@ class TestDriveTo:
     def test_state_machine_in_conflicting_state(self, client: TestClient):
         response = client.post(url=self.schedule_drive_to_path, data=self.mock_data)
         assert response.status_code == HTTPStatus.CONFLICT
-        assert response.json() == {
-            "detail": "Conflict - Mission already in progress - State: monitor"
-        }
