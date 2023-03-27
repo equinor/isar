@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from alitra import Frame, Orientation, Pose, Position
 from pydantic import BaseModel, Field
@@ -38,11 +38,6 @@ class RobotInfoResponse(BaseModel):
     plant_short_name: str
 
 
-# We need to specify our own position/orientation/pose classes that do not contain
-# the "Frame" class because of a bug in generating the OpenAPI specification:
-# https://github.com/tiangolo/fastapi/issues/1505 This does not happen if all the
-# classes are 'BaseModel' classes, but the alitra models are 'dataclasses', hence the
-# conversion being done.
 class InputOrientation(BaseModel):
     x: float
     y: float
