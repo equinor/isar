@@ -80,11 +80,13 @@ class Initiate(State):
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
-            except RobotInfeasibleStepException:
+            except RobotInfeasibleStepException as e:
+                self.state_machine.current_step.error_description = e.error_description
                 self.logger.warning(
-                    f"Failed to initiate "
-                    f"{type(self.state_machine.current_step).__name__}"
-                    f"Invalid step: {str(self.state_machine.current_step.id)[:8]}"
+                    f"Failed to initiate step "
+                    f"{str(self.state_machine.current_step.id)[:8]} after retrying "
+                    f"{self.initiate_failure_counter} times because "
+                    f"{e.error_description.short_text}"
                 )
                 transition = self.state_machine.initiate_infeasible  # type: ignore
                 break
@@ -101,18 +103,21 @@ class Initiate(State):
                 self.initiate_thread = None
                 self.initiate_failure_counter += 1
                 self.logger.warning(
-                    f"Initiating step failed #: {str(self.initiate_failure_counter)} "
-                    f"times. \n{e}"
+                    f"Initiating step failed #: "
+                    f"{str(self.initiate_failure_counter)}"
                 )
 
-            if self.initiate_failure_counter >= self.initiate_failure_counter_limit:
-                self.logger.error(
-                    f"Mission will be cancelled as initiate failed after "
-                    f"{self.initiate_failure_counter_limit} attempts. "
-                    f"Cancelling mission."
-                )
-                transition = self.state_machine.initiate_failed  # type: ignore
-                break
+                if self.initiate_failure_counter >= self.initiate_failure_counter_limit:
+                    self.state_machine.current_step.error_description = (
+                        e.error_description
+                    )
+                    self.logger.error(
+                        f"Mission will be cancelled after failing to initiate step "
+                        f"{self.initiate_failure_counter_limit} times "
+                        f"because {e.error_description.short_text}"
+                    )
+                    transition = self.state_machine.initiate_failed  # type: ignore
+                    break
 
             time.sleep(self.state_machine.sleep_time)
 
