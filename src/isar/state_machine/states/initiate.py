@@ -13,6 +13,7 @@ from robot_interface.models.exceptions import (
     RobotException,
     RobotInfeasibleStepException,
     RobotLowBatteryException,
+    RobotLowPressureException,
 )
 
 if TYPE_CHECKING:
@@ -89,6 +90,15 @@ class Initiate(State):
                     f"Battery too low to perform step"
                     f"{type(self.state_machine.current_step).__name__}"
                     f"Current Battery Level: {str(e.battery_level)}"
+                )
+                transition = self.state_machine.initiate_failed  # type: ignore
+                break
+
+            except RobotLowPressureException as e:
+                self.logger.warning(
+                    f"Pressure too low to perform step"
+                    f"{type(self.state_machine.current_step).__name__}"
+                    f"Current Pressure Level: {str(e.pressure_level)}"
                 )
                 transition = self.state_machine.initiate_failed  # type: ignore
                 break
