@@ -20,11 +20,11 @@ from robot_interface.models.mission.task import Task
 
 
 class InspectionTypes(str, Enum):
-    image = "Image"
-    thermal_image = "ThermalImage"
-    video = "Video"
-    thermal_video = "ThermalVideo"
-    audio = "Audio"
+    image: str = "Image"
+    thermal_image: str = "ThermalImage"
+    video: str = "Video"
+    thermal_video: str = "ThermalVideo"
+    audio: str = "Audio"
 
 
 class StartMissionInspectionDefinition(BaseModel):
