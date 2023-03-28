@@ -226,6 +226,24 @@ class API:
                 },
             },
         )
+        router.add_api_route(
+            path="/schedule/start-localization-mission",
+            endpoint=self.scheduling_controller.start_localization_mission,
+            methods=["POST"],
+            dependencies=[authentication_dependency],
+            summary="Localize at the provided pose",
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Localization succesfully started",
+                },
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Invalid command in the current state",
+                },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error - Current state of state machine unknown",
+                },
+            },
+        )
 
         return router
 
