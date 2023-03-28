@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from alitra import Position
 from pydantic import BaseModel, Field
@@ -113,19 +113,20 @@ def create_inspection_step(
     metadata: Optional[dict],
     id: Optional[str],
 ) -> STEPS:
-    inspection_step: STEPS
-    if inspection_type == InspectionTypes.image.value:
-        inspection_step = TakeImage(target=target)
-    elif inspection_type == InspectionTypes.video.value:
-        inspection_step = TakeVideo(target=target, duration=duration)
-    elif inspection_type == InspectionTypes.thermal_image.value:
-        inspection_step = TakeThermalImage(target=target)
-    elif inspection_type == InspectionTypes.thermal_video.value:
-        inspection_step = TakeThermalVideo(target=target, duration=duration)
-    elif inspection_type == InspectionTypes.audio.value:
-        inspection_step = RecordAudio(target=target, duration=duration)
-    else:
+    inspection_step_dict: Dict[str, Any] = {
+        InspectionTypes.image.value: TakeImage(target=target),
+        InspectionTypes.video.value: TakeVideo(target=target, duration=duration),
+        InspectionTypes.thermal_image.value: TakeThermalImage(target=target),
+        InspectionTypes.thermal_video.value: TakeThermalVideo(
+            target=target, duration=duration
+        ),
+        InspectionTypes.audio.value: RecordAudio(target=target, duration=duration),
+    }
+
+    if inspection_type not in inspection_step_dict:
         raise ValueError(f"Inspection type '{inspection_type}' not supported")
+    else:
+        inspection_step = inspection_step_dict[inspection_type]
 
     if tag_id:
         inspection_step.tag_id = tag_id
