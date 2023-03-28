@@ -22,7 +22,7 @@ from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.step import DriveToPose
+from robot_interface.models.mission.step import DriveToPose, Localize
 from robot_interface.models.mission.task import Task
 
 
@@ -223,6 +223,33 @@ class SchedulingController:
         metadata: MissionMetadata = MissionMetadata(mission.id)
         self.logger.info(
             f"Starting drive to mission with ISAR Mission ID: '{mission.id}'"
+        )
+        self.scheduling_utilities.start_mission(
+            mission=mission, initial_pose=None, mission_metadata=metadata
+        )
+        return self._api_response(mission)
+
+    def start_localization_mission(
+        self,
+        localization_pose: InputPose = Body(
+            default=None,
+            embed=True,
+            title="Localization Pose",
+            description="The current position of the robot",
+        ),
+    ) -> StartMissionResponse:
+        self.logger.info("Received request to start new localization mission")
+
+        state: States = self.scheduling_utilities.get_state()
+
+        self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
+
+        pose: Pose = localization_pose.to_alitra_pose()
+        step: Localize = Localize(localization_pose=pose)
+        mission: Mission = Mission(tasks=[Task(steps=[step])])
+        metadata: MissionMetadata = MissionMetadata(mission.id)
+        self.logger.info(
+            f"Starting localization mission with ISAR Mission ID: '{mission.id}'"
         )
         self.scheduling_utilities.start_mission(
             mission=mission, initial_pose=None, mission_metadata=metadata
