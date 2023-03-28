@@ -25,3 +25,8 @@ class RobotInvalidTelemetryException(RobotException):
 class RobotLowBatteryException(RobotException):
     def __init__(self, battery_level):
         self.battery_level = battery_level
+
+
+class RobotLowPressureException(RobotException):
+    def __init__(self, pressure_level):
+        self.pressure_level = pressure_level
