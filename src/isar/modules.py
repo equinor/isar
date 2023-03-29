@@ -11,7 +11,6 @@ from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
-from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.mission_planner.sequential_task_selector import SequentialTaskSelector
@@ -110,20 +109,6 @@ class LocalPlannerModule(Module):
         return LocalPlanner()
 
 
-class EchoPlannerModule(Module):
-    @provider
-    @singleton
-    def provide_echo_planner(
-        self,
-        request_handler: RequestHandler,
-        stid_service: StidService,
-    ) -> MissionPlannerInterface:
-        return EchoPlanner(
-            request_handler=request_handler,
-            stid_service=stid_service,
-        )
-
-
 class StateMachineModule(Module):
     @provider
     @singleton
@@ -203,14 +188,7 @@ modules: Dict[str, Tuple[Module, Union[str, bool]]] = {
     "robot_package": (RobotModule, settings.ROBOT_PACKAGE),
     "isar_id": (RobotModule, settings.ISAR_ID),
     "robot_name": (RobotModule, settings.ROBOT_NAME),
-    "mission_planner": (
-        {
-            "default": LocalPlannerModule,
-            "local": LocalPlannerModule,
-            "echo": EchoPlannerModule,
-        }[settings.MISSION_PLANNER],
-        settings.MISSION_PLANNER,
-    ),
+    "mission_planner": (LocalPlannerModule, settings.MISSION_PLANNER),
     "task_selector": (
         {"sequential": SequentialTaskSelectorModule}[settings.TASK_SELECTOR],
         settings.TASK_SELECTOR,

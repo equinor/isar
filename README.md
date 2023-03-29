@@ -137,13 +137,13 @@ There are two methods of specifying configuration.
 
    Every configuration variable is defined in [settings.py](./src/isar/config/settings.py), and they may all be
    overwritten by specifying the variables in the environment instead. Note that the configuration variable must be
-   prefixed with `ISAR_` when specified in the environment. So for the `MISSION_PLANNER`configuration variable:
+   prefixed with `ISAR_` when specified in the environment. So for the `ROBOT_PACKAGE`configuration variable:
 
    ```shell
-   export ISAR_MISSION_PLANNER=echo
+   export ISAR_ROBOT_PACKAGE=isar_turtlebot
    ```
 
-   This means ISAR will use the `echo` mission planner module.
+   This means ISAR will connect to `isar_turtlebot` robot package.
 
 2. Adding environment variables through [settings.env](./src/isar/config/settings.env).
 
@@ -234,19 +234,7 @@ FastAPI-framework is split into routers where the endpoint operations are define
 
 ## Mission planner
 
-The mission planner that is currently in use is defined by the `ISAR_MISSION_PLANNER` configuration variable. This can
-be changed by overriding the configuration through an environment variable. The available options are
-
-```
-ISAR_MISSION_PLANNER = local
-ISAR_MISSION_PLANNER = echo
-```
-
-By default, the `local` planner is used.
-
-### Implement your own planner
-
-You can create your own mission planner by implementing
+The mission planner that is currently in use is a local mission planner, where missions are specified in a json file. You can create your own mission planner by implementing
 the [mission planner interface](./src/isar/mission_planner/mission_planner_interface.py) and adding your planner to the
 selection [here](./src/isar/modules.py). Note that you must add your module as an option in the dictionary.
 

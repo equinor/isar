@@ -4,7 +4,6 @@ from injector import Injector
 
 from isar.apis.api import API
 from isar.config.keyvault.keyvault_service import Keyvault
-from isar.mission_planner.echo_planner import EchoPlanner
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.task_selector_interface import TaskSelectorInterface
 from isar.models.communication.queues.queues import Queues
@@ -135,11 +134,6 @@ def request_handler(injector):
 @pytest.fixture()
 def stid_service(injector):
     return injector.get(StidService)
-
-
-@pytest.fixture()
-def echo_service(injector):
-    return injector.get(EchoPlanner)
 
 
 @pytest.fixture()
