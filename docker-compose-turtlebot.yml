@@ -8,7 +8,7 @@ services:
       - "3000:3000"
     environment:
       # Client ID, Tenant ID and Client Secret for the Azure App Registration used to connect with blob storage,
-      # SLIMM storage and Echo Planner.
+      # and SLIMM storage.
       - AZURE_CLIENT_ID
       - AZURE_TENANT_ID
       - AZURE_CLIENT_SECRET

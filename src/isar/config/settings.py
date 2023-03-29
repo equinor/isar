@@ -68,9 +68,6 @@ class Settings(BaseSettings):
     API_PORT: int = Field(default=3000)
 
     # Determines which mission planner module is used by ISAR
-    # Options: [local echo]
-    # Selecting a different mission planner module than local may require certain access
-    # rights
     MISSION_PLANNER: str = Field(default="local")
 
     # Determines which task selector module is used by ISAR
@@ -148,15 +145,6 @@ class Settings(BaseSettings):
 
     # Plant name for the facility which STID should look for tags in
     STID_PLANT_NAME: str = Field(default="kaa")
-
-    # Client ID for Echo App Registration
-    ECHO_CLIENT_ID: str = Field(default="bf0b2569-e09c-42f0-8095-5a52a873eb7b")
-
-    # Scope for access to Echo API
-    ECHO_APP_SCOPE: str = Field(default=".default")
-
-    # URL for Echo endpoint
-    ECHO_API_URL: str = Field(default="https://echohubapi.equinor.com/api")
 
     # Client ID for SLIMM App Registration
     SLIMM_CLIENT_ID: str = Field(default="c630ca4d-d8d6-45ab-8cc6-68a363d0de9e")
