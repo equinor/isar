@@ -1,9 +1,11 @@
 import importlib.resources as pkg_resources
 import logging
 import logging.config
+
 import yaml
-from uvicorn.logging import ColourizedFormatter
 from opencensus.ext.azure.log_exporter import AzureLogHandler
+from uvicorn.logging import ColourizedFormatter
+
 from isar.config.configuration_error import ConfigurationError
 from isar.config.keyvault.keyvault_error import KeyvaultError
 from isar.config.keyvault.keyvault_service import Keyvault

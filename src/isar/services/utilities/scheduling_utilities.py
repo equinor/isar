@@ -17,7 +17,7 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerInterface,
 )
 from isar.models.communication.message import StartMissionMessage
-from isar.models.communication.queues import QueueIO, QueueTimeoutError, Queues
+from isar.models.communication.queues import QueueIO, Queues, QueueTimeoutError
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.state_machine.states_enum import States

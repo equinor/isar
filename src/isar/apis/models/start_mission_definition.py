@@ -8,9 +8,9 @@ from isar.apis.models.models import InputPose, InputPosition
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.step import (
+    STEPS,
     DriveToPose,
     RecordAudio,
-    STEPS,
     TakeImage,
     TakeThermalImage,
     TakeThermalVideo,

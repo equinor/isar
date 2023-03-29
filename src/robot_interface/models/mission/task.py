@@ -3,10 +3,10 @@ from typing import Iterator, List, Optional
 
 from robot_interface.models.mission.status import StepStatus, TaskStatus
 from robot_interface.models.mission.step import (
+    STEPS,
     DriveToPose,
     InspectionStep,
     MotionStep,
-    STEPS,
     Step,
 )
 from robot_interface.utilities.uuid_string_factory import uuid4_string
