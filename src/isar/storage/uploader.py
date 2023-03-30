@@ -1,3 +1,4 @@
+import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -12,6 +13,7 @@ from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageException, StorageInterface
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
+from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 @dataclass
@@ -92,9 +94,10 @@ class Uploader:
             except Empty:
                 continue
 
-    def _upload(self, upload_item: UploaderQueueItem) -> None:
+    def _upload(self, upload_item: UploaderQueueItem) -> str:
+        inspection_path = ""
         try:
-            upload_item.storage_handler.store(
+            inspection_path = upload_item.storage_handler.store(
                 inspection=upload_item.inspection, metadata=upload_item.mission_metadata
             )
             self.logger.info(
@@ -118,10 +121,36 @@ class Uploader:
                     f"exceeded max retries to upload inspection: "
                     f"{str(upload_item.inspection.id)[:8]}. Aborting upload."
                 )
+        return inspection_path
 
     def _process_upload_queue(self) -> None:
         ready_items: List[UploaderQueueItem] = [
             x for x in self._internal_upload_queue if x.is_ready_for_upload()
         ]
         for item in ready_items:
-            self._upload(item)
+            inspection_path = self._upload(item)
+            self._publish_inspection_path(
+                inspection=item.inspection, inspection_path=inspection_path
+            )
+
+    def _publish_inspection_path(
+        self, inspection: Inspection, inspection_path: str
+    ) -> None:
+        """Publishes the image url to the MQTT Broker"""
+        if not self.mqtt_publisher:
+            return
+        payload: str = json.dumps(
+            {
+                "isar_id": settings.ISAR_ID,
+                "robot_name": settings.ROBOT_NAME,
+                "step_id": inspection.id,
+                "inspection_path": inspection_path,
+                "timestamp": datetime.utcnow(),
+            },
+            cls=EnhancedJSONEncoder,
+        )
+        self.mqtt_publisher.publish(
+            topic=settings.TOPIC_ISAR_INSPECTION_RESULT,
+            payload=payload,
+            retain=False,
+        )

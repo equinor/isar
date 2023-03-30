@@ -232,6 +232,7 @@ class Settings(BaseSettings):
     TOPIC_ISAR_MISSION: str = Field(default="mission")
     TOPIC_ISAR_TASK: str = Field(default="task")
     TOPIC_ISAR_STEP: str = Field(default="step")
+    TOPIC_ISAR_INSPECTION_RESULT = Field(default="inspection_result")
     TOPIC_ISAR_ROBOT_STATUS: str = Field(default="robot_status")
     TOPIC_ISAR_ROBOT_INFO: str = Field(default="robot_info")
 
@@ -282,6 +283,7 @@ class Settings(BaseSettings):
         "TOPIC_ISAR_STEP",
         "TOPIC_ISAR_ROBOT_STATUS",
         "TOPIC_ISAR_ROBOT_INFO",
+        "TOPIC_ISAR_INSPECTION_RESULT",
         pre=True,
         always=True,
     )

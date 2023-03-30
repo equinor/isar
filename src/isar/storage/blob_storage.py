@@ -31,7 +31,7 @@ class BlobStorage(StorageInterface):
 
         self.logger = logging.getLogger("uploader")
 
-    def store(self, inspection: Inspection, metadata: MissionMetadata):
+    def store(self, inspection: Inspection, metadata: MissionMetadata) -> str:
         local_path, local_metadata_path = construct_local_paths(
             inspection=inspection, metadata=metadata
         )
@@ -40,13 +40,13 @@ class BlobStorage(StorageInterface):
             inspection=inspection, metadata=metadata, filename=local_path.name
         )
 
-        self._upload_file(path=local_path, data=inspection.data)
         self._upload_file(path=local_metadata_path, data=metadata_bytes)
+        return self._upload_file(path=local_path, data=inspection.data)
 
-    def _upload_file(self, path: Path, data: bytes):
+    def _upload_file(self, path: Path, data: bytes) -> str:
         blob_client = self._get_blob_client(path)
         try:
-            blob_client.upload_blob(data=data)
+            blob_properties = blob_client.upload_blob(data=data)
         except ResourceExistsError as e:
             self.logger.error(
                 f"Blob {path.as_posix()} already exists in container. Error: {e}"
@@ -55,6 +55,7 @@ class BlobStorage(StorageInterface):
         except Exception as e:
             self.logger.error("An unexpected error occurred while uploading blob")
             raise StorageException from e
+        return blob_properties["etag"]
 
     def _get_blob_service_client(self) -> BlobServiceClient:
         try:

@@ -13,7 +13,7 @@ class LocalStorage(StorageInterface):
         self.root_folder: Path = Path(settings.LOCAL_STORAGE_PATH)
         self.logger = logging.getLogger("uploader")
 
-    def store(self, inspection: Inspection, metadata: MissionMetadata) -> None:
+    def store(self, inspection: Inspection, metadata: MissionMetadata) -> str:
         local_path, local_metadata_path = construct_local_paths(
             inspection=inspection, metadata=metadata
         )
@@ -43,3 +43,4 @@ class LocalStorage(StorageInterface):
                 "An unexpected error occurred while writing to local storage"
             )
             raise StorageException from e
+        return str(absolute_path)

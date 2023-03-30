@@ -31,7 +31,7 @@ class SlimmStorage(StorageInterface):
 
         self.url: str = settings.SLIMM_API_URL
 
-    def store(self, inspection: Inspection, metadata: MissionMetadata):
+    def store(self, inspection: Inspection, metadata: MissionMetadata) -> str:
         filename: str = get_filename(
             mission_id=metadata.mission_id,
             inspection_type=type(inspection).__name__,
@@ -39,41 +39,42 @@ class SlimmStorage(StorageInterface):
         )
         filename = f"{filename}.{inspection.metadata.file_type}"
         if type(inspection) in [Video, ThermalVideo]:
-            self._store_video(filename, inspection, metadata)
+            inspection_path = self._store_video(filename, inspection, metadata)
         else:
-            self._store_image(filename, inspection, metadata)
+            inspection_path = self._store_image(filename, inspection, metadata)
+        return inspection_path
 
     def _store_image(
         self, filename: str, inspection: Inspection, metadata: MissionMetadata
-    ):
+    ) -> str:
         multiform_body: MultipartEncoder = self._construct_multiform_request_image(
             filename=filename, inspection=inspection, metadata=metadata
         )
         request_url: str = f"{self.url}/UploadSingleImage"
-        self._ingest(
+        inspection_path = self._ingest(
             inspection=inspection,
             multiform_body=multiform_body,
             request_url=request_url,
         )
-        return
+        return inspection_path
 
     def _store_video(
         self, filename: str, inspection: Inspection, metadata: MissionMetadata
-    ):
+    ) -> str:
         multiform_body: MultipartEncoder = self._construct_multiform_request_video(
             filename=filename, inspection=inspection, metadata=metadata
         )
         request_url = f"{self.url}/UploadSingleVideo"
-        self._ingest(
+        inspection_path = self._ingest(
             inspection=inspection,
             multiform_body=multiform_body,
             request_url=request_url,
         )
-        return
+        return inspection_path
 
     def _ingest(
         self, inspection: Inspection, multiform_body: MultipartEncoder, request_url: str
-    ):
+    ) -> str:
         token: str = self.credentials.get_token(self.request_scope).token
         try:
             response = self.request_handler.post(
@@ -92,6 +93,8 @@ class SlimmStorage(StorageInterface):
                 f"request exception"
             )
             raise StorageException from e
+        data = json.loads(response.content)
+        return data["guid"]
 
     @staticmethod
     def _construct_multiform_request_image(
