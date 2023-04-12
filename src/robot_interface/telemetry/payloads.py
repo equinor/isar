@@ -21,6 +21,16 @@ class TelemetryPosePayload(TelemetryPayload):
 
 
 @dataclass
+class TelemetryBatteryPayload(TelemetryPayload):
+    battery_level: float
+
+
+@dataclass
+class TelemetryPressurePayload(TelemetryPayload):
+    pressure_level: float
+
+
+@dataclass
 class VideoStream:
     name: str
     url: str
