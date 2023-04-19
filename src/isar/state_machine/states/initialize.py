@@ -51,10 +51,7 @@ class Initialize(State):
                 time.sleep(self.state_machine.sleep_time)
                 continue
             except RobotException as e:
-                self.state_machine.current_step.error_description = e.error_description
-                self.logger.error(
-                    f"Failed to initialize robot because {e.error_description.short_text}"
-                )
+                self.logger.error(f"Initialization of robot failed. Error: {e}")
                 transition = self.state_machine.initialization_failed  # type: ignore
                 break
 

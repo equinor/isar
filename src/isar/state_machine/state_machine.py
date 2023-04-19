@@ -30,7 +30,6 @@ from isar.state_machine.states import (
     Stop,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.exceptions.robot_exceptions import ErrorDescription
 from robot_interface.models.initialize.initialize_params import InitializeParams
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, StepStatus, TaskStatus
@@ -219,7 +218,24 @@ class StateMachine(object):
     #################################################################################
     # Transition Callbacks
     def _initialization_successful(self) -> None:
-        return
+        self.queues.start_mission.output.put(True)
+        self.logger.info(
+            f"Initialization successful. Starting new mission: {self.current_mission.id}"
+        )
+        self.log_step_overview(mission=self.current_mission)
+
+        # This is a workaround to enable the Flotilla repository to write the mission to
+        # its database before the publishing from ISAR starts. This is not a permanent
+        # solution and should be further addressed in the following issue.
+        # https://github.com/equinor/flotilla/issues/226
+        time.sleep(2)
+
+        self.current_mission.status = MissionStatus.InProgress
+        self.publish_mission_status()
+        self.current_task = self.task_selector.next_task()
+        self.current_task.status = TaskStatus.InProgress
+        self.publish_task_status(task=self.current_task)
+        self.update_current_step()
 
     def _initialization_failed(self) -> None:
         self.queues.start_mission.output.put(False)
@@ -249,9 +265,7 @@ class StateMachine(object):
     def _resume(self) -> None:
         self.logger.info(f"Resuming mission: {self.current_mission.id}")
         self.current_mission.status = MissionStatus.InProgress
-        self.current_mission.error_description = None
         self.current_task.status = TaskStatus.InProgress
-
         self.publish_mission_status()
         self.publish_task_status(task=self.current_task)
 
@@ -271,10 +285,6 @@ class StateMachine(object):
         partially_fail_statuses = fail_statuses + [TaskStatus.PartiallySuccessful]
 
         if all(task.status in fail_statuses for task in self.current_mission.tasks):
-            self.current_mission.error_description = ErrorDescription(
-                full_text=f"The mission failed because all tasks in the mission failed",
-                short_text="all tasks in the mission failed",
-            )
             self.current_mission.status = MissionStatus.Failed
         elif any(
             task.status in partially_fail_statuses
@@ -286,24 +296,7 @@ class StateMachine(object):
         self._finalize()
 
     def _mission_started(self) -> None:
-        self.queues.start_mission.output.put(True)
-        self.logger.info(
-            f"Initialization successful. Starting new mission: {self.current_mission.id}"
-        )
-        self.log_step_overview(mission=self.current_mission)
-
-        # This is a workaround to enable the Flotilla repository to write the mission to
-        # its database before the publishing from ISAR starts. This is not a permanent
-        # solution and should be further addressed in the following issue.
-        # https://github.com/equinor/flotilla/issues/226
-        time.sleep(2)
-
-        self.current_mission.status = MissionStatus.InProgress
-        self.publish_mission_status()
-        self.current_task = self.task_selector.next_task()
-        self.current_task.status = TaskStatus.InProgress
-        self.publish_task_status(task=self.current_task)
-        self.update_current_step()
+        return
 
     def _step_finished(self) -> None:
         self.publish_step_status(step=self.current_step)
@@ -370,7 +363,6 @@ class StateMachine(object):
 
     def _mission_stopped(self) -> None:
         self.current_mission.status = MissionStatus.Cancelled
-
         for task in self.current_mission.tasks:
             for step in task.steps:
                 if step.status in [StepStatus.NotStarted, StepStatus.InProgress]:
@@ -487,20 +479,12 @@ class StateMachine(object):
     def publish_mission_status(self) -> None:
         if not self.mqtt_publisher:
             return
-
-        error_description: Optional[ErrorDescription] = None
-        if self.current_mission:
-            if self.current_mission.error_description:
-                error_description = self.current_mission.error_description
         payload: str = json.dumps(
             {
                 "isar_id": settings.ISAR_ID,
                 "robot_name": settings.ROBOT_NAME,
                 "mission_id": self.current_mission.id if self.current_mission else None,
                 "status": self.current_mission.status if self.current_mission else None,
-                "error_description": error_description.full_text
-                if error_description
-                else None,
                 "timestamp": datetime.utcnow(),
             },
             cls=EnhancedJSONEncoder,
@@ -516,12 +500,6 @@ class StateMachine(object):
         """Publishes the task status to the MQTT Broker"""
         if not self.mqtt_publisher:
             return
-
-        error_description: Optional[ErrorDescription] = None
-        if self.current_task:
-            if self.current_task.error_description:
-                error_description = self.current_task.error_description
-
         payload: str = json.dumps(
             {
                 "isar_id": settings.ISAR_ID,
@@ -529,9 +507,6 @@ class StateMachine(object):
                 "mission_id": self.current_mission.id if self.current_mission else None,
                 "task_id": task.id if task else None,
                 "status": task.status if task else None,
-                "error_description": error_description.full_text
-                if error_description
-                else None,
                 "timestamp": datetime.utcnow(),
             },
             cls=EnhancedJSONEncoder,
@@ -547,12 +522,6 @@ class StateMachine(object):
         """Publishes the step status to the MQTT Broker"""
         if not self.mqtt_publisher:
             return
-
-        error_description: Optional[ErrorDescription] = None
-        if self.current_step:
-            if self.current_step.error_description:
-                error_description = self.current_step.error_description
-
         payload: str = json.dumps(
             {
                 "isar_id": settings.ISAR_ID,
@@ -562,9 +531,6 @@ class StateMachine(object):
                 "step_id": step.id if step else None,
                 "step_type": step.__class__.__name__ if step else None,
                 "status": step.status if step else None,
-                "error_description": error_description.full_text
-                if error_description
-                else None,
                 "timestamp": datetime.utcnow(),
             },
             cls=EnhancedJSONEncoder,

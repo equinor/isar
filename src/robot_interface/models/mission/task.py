@@ -1,13 +1,12 @@
 from dataclasses import dataclass, field
 from typing import Iterator, List, Optional
 
-from robot_interface.models.exceptions.robot_exceptions import ErrorDescription
 from robot_interface.models.mission.status import StepStatus, TaskStatus
 from robot_interface.models.mission.step import (
+    STEPS,
     DriveToPose,
     InspectionStep,
     MotionStep,
-    STEPS,
     Step,
 )
 from robot_interface.utilities.uuid_string_factory import uuid4_string
@@ -17,7 +16,6 @@ from robot_interface.utilities.uuid_string_factory import uuid4_string
 class Task:
     steps: List[STEPS]
     status: TaskStatus = field(default=TaskStatus.NotStarted, init=False)
-    error_description: Optional[ErrorDescription] = field(default=None, init=False)
     tag_id: Optional[str] = field(default=None)
     id: str = field(default_factory=uuid4_string, init=True)
     _iterator: Iterator = None
@@ -55,27 +53,12 @@ class Task:
     def update_task_status(self) -> None:
         for step in self.steps:
             if step.status is StepStatus.Failed and isinstance(step, MotionStep):
-                self.error_description = ErrorDescription(
-                    full_text=f"Inspection "
-                    f"{'of ' + self.tag_id if self.tag_id else ''}failed because the "
-                    f"robot could not navigate to the desired location",
-                    short_text="the robot was not able to navigate to the desired "
-                    "location",
-                )
                 self.status = TaskStatus.Failed
                 return
 
             elif (step.status is StepStatus.Failed) and isinstance(
                 step, InspectionStep
             ):
-                self.error_description = ErrorDescription(
-                    full_text=f"Inspection {'of ' + self.tag_id if self.tag_id else ''}"
-                    f"was partially successful because one or more inspection "
-                    f"steps failed",
-                    short_text=f"the inspection "
-                    f"{'of ' + self.tag_id if self.tag_id else ' '} failed for one or "
-                    f"more inspections",
-                )
                 self.status = TaskStatus.PartiallySuccessful
                 continue
 
@@ -86,19 +69,10 @@ class Task:
             self.status = TaskStatus.Successful
 
         elif self._all_inspection_steps_failed():
-            self.error_description = ErrorDescription(
-                full_text=f"Inspection {'of ' + self.tag_id if self.tag_id else ''}"
-                f"failed as all inspection steps failed",
-                short_text=f"the inspection "
-                f"{'of ' + self.tag_id if self.tag_id else ' '} failed for "
-                f"all inspection steps",
-            )
             self.status = TaskStatus.Failed
 
     def reset_task(self):
-        self.error_description = None
         for step in self.steps:
-            step.error_description = None
             if isinstance(step, DriveToPose):
                 step.status = StepStatus.NotStarted
             elif (
