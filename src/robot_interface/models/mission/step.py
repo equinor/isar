@@ -3,6 +3,7 @@ from typing import Any, List, Literal, Optional, Type, Union
 
 from alitra import Pose, Position
 
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.inspection import (
     Audio,
     Image,
@@ -23,6 +24,7 @@ class Step:
 
     id: str = field(default_factory=uuid4_string, init=False)
     status: StepStatus = field(default=StepStatus.NotStarted, init=False)
+    error_message: Optional[ErrorMessage] = field(default=None, init=False)
 
     def __str__(self) -> str:
         def add_indent(text: str) -> str:

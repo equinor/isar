@@ -10,7 +10,10 @@ from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
 )
-from robot_interface.models.exceptions import RobotException
+from robot_interface.models.exceptions.robot_exceptions import (
+    ErrorMessage,
+    RobotException,
+)
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
@@ -68,7 +71,16 @@ class Monitor(State):
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
-            except RobotException:
+            except RobotException as e:
+                self.state_machine.current_step.error_message = ErrorMessage(
+                    error_reason=e.error_reason, error_description=e.error_description
+                )
+                self.logger.error(
+                    f"\nMonitoring step {self.state_machine.current_step.id[:8]} failed "
+                    f"because: {e.error_description}"
+                    f"\nThe step will be marked as failed but the mission continues "
+                    f"execution"
+                )
                 status = StepStatus.Failed
 
             if self.state_machine.stepwise_mission and isinstance(status, StepStatus):
@@ -113,6 +125,16 @@ class Monitor(State):
             inspections: Sequence[
                 Inspection
             ] = self.state_machine.robot.get_inspections(step=current_step)
+        except RobotException as e:
+            current_step.error_message = ErrorMessage(
+                error_reason=e.error_reason, error_description=e.error_description
+            )
+
+            self.logger.error(
+                f"Failed to retrieve inspections for step "
+                f"{current_step.id} because: {e.error_description}"
+            )
+            return
         except Exception as e:
             if self.state_machine.stepwise_mission:
                 self.logger.error(
@@ -147,7 +169,9 @@ class Monitor(State):
     def _step_finished(self, step: Step) -> bool:
         finished: bool = False
         if step.status == StepStatus.Failed:
-            self.logger.warning(f"Step: {str(step.id)[:8]} failed")
+            self.logger.warning(
+                f"Step: {str(step.id)[:8]} was reported as failed by the robot"
+            )
             finished = True
         elif step.status == StepStatus.Successful:
             self.logger.info(

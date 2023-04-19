@@ -9,7 +9,10 @@ from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
 )
-from robot_interface.models.exceptions import RobotException
+from robot_interface.models.exceptions.robot_exceptions import (
+    ErrorMessage,
+    RobotException,
+)
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -51,7 +54,12 @@ class Initialize(State):
                 time.sleep(self.state_machine.sleep_time)
                 continue
             except RobotException as e:
-                self.logger.error(f"Initialization of robot failed. Error: {e}")
+                self.state_machine.current_step.error_message = ErrorMessage(
+                    error_reason=e.error_reason, error_description=e.error_description
+                )
+                self.logger.error(
+                    f"Failed to initialize robot because: {e.error_description}"
+                )
                 transition = self.state_machine.initialization_failed  # type: ignore
                 break
 
