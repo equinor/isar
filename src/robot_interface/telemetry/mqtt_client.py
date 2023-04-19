@@ -3,7 +3,9 @@ from abc import ABCMeta, abstractmethod
 from queue import Queue
 from typing import Callable, Tuple
 
-from robot_interface.models.exceptions import RobotException
+from robot_interface.models.exceptions.robot_exceptions import (
+    RobotTelemetryException,
+)
 
 
 class MqttClientInterface(metaclass=ABCMeta):
@@ -64,7 +66,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
                 payload: str = self.telemetry_method(
                     isar_id=isar_id, robot_name=robot_name
                 )
-            except RobotException:
+            except RobotTelemetryException:
                 continue
 
             self.publish(

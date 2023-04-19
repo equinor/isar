@@ -9,7 +9,9 @@ from threading import Thread
 from isar.config.settings import settings
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states_enum import States
-from robot_interface.models.exceptions import RobotCommunicationException
+from robot_interface.models.exceptions.robot_exceptions import (
+    RobotCommunicationException,
+)
 from robot_interface.models.mission.status import RobotStatus
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttPublisher

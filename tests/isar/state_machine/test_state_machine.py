@@ -11,12 +11,14 @@ from pytest_mock import MockerFixture
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from isar.services.utilities.threaded_request import ThreadedRequest
 from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
-from robot_interface.models.exceptions import RobotException
+from robot_interface.models.exceptions.robot_exceptions import (
+    ErrorReason,
+    RobotException,
+)
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import StepStatus
 from robot_interface.models.mission.step import DriveToPose, Step, TakeImage
@@ -258,7 +260,7 @@ def test_state_machine_with_successful_mission_stop(
     assert expected == actual
 
 
-def test_state_machine_with_unsuccsessful_mission_stop(
+def test_state_machine_with_unsuccessful_mission_stop(
     injector: Injector,
     mocker: MockerFixture,
     state_machine_thread: StateMachineThread,
@@ -268,10 +270,15 @@ def test_state_machine_with_unsuccsessful_mission_stop(
     mission: Mission = Mission(tasks=[Task(steps=[step])])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+    mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.InProgress)
+    mocker.patch.object(
+        MockRobot, "stop", side_effect=_mock_robot_exception_with_message
+    )
+
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
-    mocker.patch.object(ThreadedRequest, "get_output", side_effect=RobotException)
     scheduling_utilities.stop_mission()
+
     expected = deque(
         [
             States.Idle,
@@ -283,8 +290,15 @@ def test_state_machine_with_unsuccsessful_mission_stop(
     )
     actual = state_machine_thread.state_machine.transitions_list
     expected_log = (
-        "Could not communicate request: Reached limit for stop attempts. "
-        "Cancelled mission and transitioned to idle."
+        "Be aware that the robot may still be "
+        "moving even though a stop has been attempted"
     )
     assert expected_log in caplog.text
     assert expected == actual
+
+
+def _mock_robot_exception_with_message() -> RobotException:
+    raise RobotException(
+        error_reason=ErrorReason.RobotUnknownErrorException,
+        error_description="This is an example error description",
+    )
