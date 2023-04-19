@@ -1,15 +1,5 @@
-from dataclasses import dataclass
-
-
-@dataclass
-class ErrorDescription:
-    full_text: str
-    short_text: str
-
-
 class RobotException(Exception):
-    def __init__(self, error_description: ErrorDescription = None):
-        self.error_description: ErrorDescription = error_description
+    pass
 
 
 class RobotCommunicationException(RobotException):
