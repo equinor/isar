@@ -32,16 +32,16 @@ class BlobStorage(StorageInterface):
         self.logger = logging.getLogger("uploader")
 
     def store(self, inspection: Inspection, metadata: MissionMetadata) -> str:
-        local_path, local_metadata_path = construct_paths(
+        data_path, metadata_path = construct_paths(
             inspection=inspection, metadata=metadata
         )
 
         metadata_bytes: bytes = construct_metadata_file(
-            inspection=inspection, metadata=metadata, filename=local_path.name
+            inspection=inspection, metadata=metadata, filename=data_path.name
         )
 
-        self._upload_file(path=local_metadata_path, data=metadata_bytes)
-        return self._upload_file(path=local_path, data=inspection.data)
+        self._upload_file(path=metadata_path, data=metadata_bytes)
+        return self._upload_file(path=data_path, data=inspection.data)
 
     def _upload_file(self, path: Path, data: bytes) -> str:
         blob_client = self._get_blob_client(path)

@@ -33,9 +33,7 @@ class SlimmStorage(StorageInterface):
 
     def store(self, inspection: Inspection, metadata: MissionMetadata) -> str:
         filename: str = get_filename(
-            mission_id=metadata.mission_id,
-            inspection_type=type(inspection).__name__,
-            inspection_id=inspection.id,
+            inspection=inspection,
         )
         filename = f"{filename}.{inspection.metadata.file_type}"
         if type(inspection) in [Video, ThermalVideo]:
