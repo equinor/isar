@@ -1,4 +1,5 @@
 import json
+import time
 from pathlib import Path
 from typing import Tuple
 
@@ -10,12 +11,8 @@ from robot_interface.utilities.json_service import EnhancedJSONEncoder
 def construct_paths(
     inspection: Inspection, metadata: MissionMetadata
 ) -> Tuple[Path, Path]:
-    folder: Path = Path(str(metadata.mission_id))
-    filename: str = get_filename(
-        mission_id=metadata.mission_id,
-        inspection_type=type(inspection).__name__,
-        inspection_id=inspection.id,
-    )
+    folder: Path = Path(get_foldername(metadata=metadata))
+    filename: str = get_filename(inspection=inspection)
 
     inspection_path: Path = folder.joinpath(
         f"{filename}.{inspection.metadata.file_type}"
@@ -46,7 +43,7 @@ def construct_metadata_file(
         },
         "data": [
             {
-                "folder": f"/{metadata.mission_id}",
+                "folder": f"/{get_foldername(metadata=metadata)}",
                 "files": [
                     {
                         "file_name": filename,
@@ -68,8 +65,13 @@ def construct_metadata_file(
 
 
 def get_filename(
-    mission_id: str,
-    inspection_type: str,
-    inspection_id: str,
+    inspection: Inspection,
 ) -> str:
-    return f"{mission_id}_{inspection_type}_{inspection_id}"
+    inspection_type: str = type(inspection).__name__
+    tag: str = inspection.metadata.tag_id if inspection.metadata.tag_id else "no-tag"
+    epoch_time: int = int(time.time())
+    return f"{tag}__{inspection_type}__{epoch_time}"
+
+
+def get_foldername(metadata: MissionMetadata) -> str:
+    return f"{metadata.mission_date}__{metadata.plant_short_name}__{metadata.mission_name}__{metadata.mission_id}"
