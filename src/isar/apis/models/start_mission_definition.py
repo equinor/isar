@@ -30,7 +30,7 @@ class InspectionTypes(str, Enum):
 class StartMissionInspectionDefinition(BaseModel):
     type: InspectionTypes = Field(default=InspectionTypes.image)
     inspection_target: InputPosition
-    analysis_types: Optional[List]
+    analysis_types: Optional[str]
     duration: Optional[float]
     metadata: Optional[dict]
     id: Optional[str]
@@ -108,7 +108,7 @@ def create_inspection_step(
     inspection_type: InspectionTypes,
     duration: float,
     target: Position,
-    analysis: Optional[List],
+    analysis: Optional[str],
     tag_id: Optional[str],
     metadata: Optional[dict],
     id: Optional[str],

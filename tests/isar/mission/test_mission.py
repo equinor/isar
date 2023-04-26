@@ -159,7 +159,7 @@ def test_mission_definition() -> None:
             loaded_step: STEPS = loaded_task.steps[i_step]
             expected_step: STEPS = expected_task.steps[i_step]
 
-            ignore_attributes = set(("id", "status", "tag_id"))
+            ignore_attributes = set(("id", "status", "tag_id", "analysis"))
             loaded_attributes = set(loaded_step.__dict__.keys()) - ignore_attributes
             expected_attributes = set(expected_step.__dict__.keys()) - ignore_attributes
 

@@ -43,19 +43,19 @@ class MockMissionDefinition:
     mock_start_mission_inspection_definition = StartMissionInspectionDefinition(
         type=InspectionTypes.image,
         inspection_target=mock_input_target_position,
-        analysis_types=["analysis"],
+        analysis_types="analysis",
     )
     mock_start_mission_inspection_definition_id_123 = StartMissionInspectionDefinition(
         type=InspectionTypes.image,
         inspection_target=mock_input_target_position,
-        analysis_types=["analysis"],
+        analysis_types="analysis",
         id="123",
     )
     mock_start_mission_inspection_definition_id_123456 = (
         StartMissionInspectionDefinition(
             type=InspectionTypes.image,
             inspection_target=mock_input_target_position,
-            analysis_types=["analysis"],
+            analysis_types="analysis",
             id="123456",
         )
     )
