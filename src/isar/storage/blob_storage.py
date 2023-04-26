@@ -9,7 +9,7 @@ from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageException, StorageInterface
-from isar.storage.utilities import construct_local_paths, construct_metadata_file
+from isar.storage.utilities import construct_metadata_file, construct_paths
 from robot_interface.models.inspection.inspection import Inspection
 
 
@@ -32,7 +32,7 @@ class BlobStorage(StorageInterface):
         self.logger = logging.getLogger("uploader")
 
     def store(self, inspection: Inspection, metadata: MissionMetadata) -> str:
-        local_path, local_metadata_path = construct_local_paths(
+        local_path, local_metadata_path = construct_paths(
             inspection=inspection, metadata=metadata
         )
 
