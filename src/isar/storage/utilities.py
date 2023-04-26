@@ -7,7 +7,7 @@ from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
-def construct_local_paths(
+def construct_paths(
     inspection: Inspection, metadata: MissionMetadata
 ) -> Tuple[Path, Path]:
     folder: Path = Path(str(metadata.mission_id))
