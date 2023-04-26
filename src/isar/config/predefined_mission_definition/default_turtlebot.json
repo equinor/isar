@@ -28,10 +28,8 @@
                             "z": 0,
                             "frame": "robot"
                         },
-                        "analysis_types": [
-                            "CarSeal",
-                            "Rust"
-                        ],
+                        "analysis_types": "CarSeal, Rust"
+                        ,
                         "metadata": {
                             "zoom": "2x"
                         }
@@ -44,9 +42,7 @@
                             "z": 0,
                             "frame": "robot"
                         },
-                        "analysis_types": [
-                            "GasDetection"
-                        ]
+                        "analysis_types": "GasDetection"
                     }
                 ]
             },
@@ -77,10 +73,8 @@
                             "z": 0,
                             "frame": "robot"
                         },
-                        "analysis_types": [
-                            "ColdSpot",
-                            "HotSpot"
-                        ]
+                        "analysis_types": "ColdSpot, HotSpot"
+                        
                     }
                 ]
             },
@@ -111,10 +105,7 @@
                             "z": 0,
                             "frame": "robot"
                         },
-                        "analysis_types": [
-                            "ColdSpot",
-                            "HotSpot"
-                        ]
+                        "analysis_types": "ColdSpot, HotSpot"
                     },
                     {
                         "type": "ThermalImage",
@@ -124,10 +115,7 @@
                             "z": 0,
                             "frame": "robot"
                         },
-                        "analysis_types": [
-                            "ColdSpot",
-                            "HotSpot"
-                        ]
+                        "analysis_types": "ColdSpot, HotSpot"
                     }
                 ]
             }

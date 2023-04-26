@@ -13,7 +13,7 @@ class InspectionMetadata(ABC):
     start_time: datetime
     pose: Pose
     file_type: str
-    analysis: Optional[List] = field(default_factory=list, init=False)
+    analysis: Optional[str] = field(default=None, init=False)
     tag_id: Optional[str] = field(default=None, init=False)
     additional: Optional[dict] = field(default_factory=dict, init=False)
 
