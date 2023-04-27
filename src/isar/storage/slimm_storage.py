@@ -158,7 +158,8 @@ class SlimmStorage(StorageInterface):
                 "Mission.MissionId": metadata.mission_id,
                 "Mission.Client": "Equinor",
                 "VideoMetadata.Timestamp": inspection.metadata.start_time.isoformat(),  # noqa: E501
-                "VideoMetadata.Duration": str(inspection.metadata.duration),  # type: ignore
+                # Converting to int because SLIMM expects an int, while we use floats in operations.
+                "VideoMetadata.Duration": str(int(inspection.metadata.duration)),  # type: ignore
                 "VideoMetadata.X": str(inspection.metadata.pose.position.x),
                 "VideoMetadata.Y": str(inspection.metadata.pose.position.y),
                 "VideoMetadata.Z": str(inspection.metadata.pose.position.z),
