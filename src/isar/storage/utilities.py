@@ -38,6 +38,7 @@ def construct_metadata_file(
         "media_orientation_reference_system": metadata.media_orientation_reference_system,  # noqa: E501
         "additional_meta": {
             "mission_id": metadata.mission_id,
+            "mission_name": metadata.mission_name,
             "plant_name": metadata.plant_name,
             "mission_date": metadata.mission_date,
             "isar_id": metadata.isar_id,
