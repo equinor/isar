@@ -109,6 +109,9 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
     else:
         isar_mission.name = _build_mission_name()
 
+    if mission_definition.id:
+        isar_mission.id = mission_definition.id
+
     return isar_mission
 
 
