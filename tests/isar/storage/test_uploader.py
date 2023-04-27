@@ -12,12 +12,8 @@ from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import ImageMetadata, Inspection
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
-from robot_interface.models.inspection.inspection import (
-    ImageMetadata,
-    Inspection,
-)
 from robot_interface.models.mission.mission import Mission
+from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(
@@ -53,7 +49,9 @@ def uploader_thread(injector) -> UploaderThread:
 def test_should_upload_from_queue(uploader_thread) -> None:
     mission: Mission = Mission([])
     inspection: Inspection = Inspection(ARBITRARY_IMAGE_METADATA)
-    metadata: MissionMetadata = MissionMetadata(mission.id)
+    metadata: MissionMetadata = MissionMetadata(
+        mission_id=mission.id, mission_name=mission.name
+    )
     message: Tuple[Inspection, MissionMetadata] = (
         inspection,
         metadata,
@@ -67,7 +65,9 @@ def test_should_upload_from_queue(uploader_thread) -> None:
 def test_should_retry_failed_upload_from_queue(uploader_thread, mocker) -> None:
     mission: Mission = Mission([])
     inspection: Inspection = Inspection(ARBITRARY_IMAGE_METADATA)
-    metadata: MissionMetadata = MissionMetadata(mission.id)
+    metadata: MissionMetadata = MissionMetadata(
+        mission_id=mission.id, mission_name=mission.name
+    )
     message: Tuple[Inspection, MissionMetadata] = (
         inspection,
         metadata,

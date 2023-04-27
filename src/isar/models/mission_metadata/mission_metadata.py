@@ -10,6 +10,7 @@ additional_meta: dict = {}
 @dataclass
 class MissionMetadata:
     mission_id: str
+    mission_name: str
     coordinate_reference_system: str = settings.COORDINATE_REFERENCE_SYSTEM
     vertical_reference_system: str = settings.VERTICAL_REFERENCE_SYSTEM
     data_classification: str = settings.DATA_CLASSIFICATION

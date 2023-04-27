@@ -76,7 +76,9 @@ class SchedulingController:
         )
 
         self.logger.info(f"Starting mission with ISAR Mission ID: '{mission.id}'")
-        metadata: MissionMetadata = MissionMetadata(mission.id)
+        metadata: MissionMetadata = MissionMetadata(
+            mission_id=mission.id, mission_name=mission.name
+        )
         self.scheduling_utilities.start_mission(
             mission=mission, initial_pose=initial_pose_alitra, mission_metadata=metadata
         )
@@ -139,7 +141,9 @@ class SchedulingController:
             initial_pose.to_alitra_pose() if initial_pose else None
         )
 
-        metadata: MissionMetadata = MissionMetadata(mission.id)
+        metadata: MissionMetadata = MissionMetadata(
+            mission_id=mission.id, mission_name=mission.name
+        )
         self.logger.info(f"Starting mission: {mission.id}")
         self.scheduling_utilities.start_mission(
             mission=mission, mission_metadata=metadata, initial_pose=initial_pose_alitra
@@ -220,7 +224,9 @@ class SchedulingController:
         pose: Pose = target_pose.to_alitra_pose()
         step: DriveToPose = DriveToPose(pose=pose)
         mission: Mission = Mission(tasks=[Task(steps=[step])])
-        metadata: MissionMetadata = MissionMetadata(mission.id)
+        metadata: MissionMetadata = MissionMetadata(
+            mission_id=mission.id, mission_name=mission.name
+        )
         self.logger.info(
             f"Starting drive to mission with ISAR Mission ID: '{mission.id}'"
         )
@@ -247,7 +253,9 @@ class SchedulingController:
         pose: Pose = localization_pose.to_alitra_pose()
         step: Localize = Localize(localization_pose=pose)
         mission: Mission = Mission(tasks=[Task(steps=[step])])
-        metadata: MissionMetadata = MissionMetadata(mission.id)
+        metadata: MissionMetadata = MissionMetadata(
+            mission_id=mission.id, mission_name=mission.name
+        )
         self.logger.info(
             f"Starting localization mission with ISAR Mission ID: '{mission.id}'"
         )

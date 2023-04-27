@@ -69,7 +69,9 @@ def test_read_mission_from_file(mission_reader) -> None:
 
     expected_tasks = [task_1, task_2, task_3, task_4]
     expected_mission: Mission = Mission(tasks=expected_tasks)
-    expected_metadata: MissionMetadata = MissionMetadata(expected_mission.id)
+    expected_metadata: MissionMetadata = MissionMetadata(
+        expected_mission.id, expected_mission.name
+    )
     mission: Mission = mission_reader.read_mission_from_file(
         Path("./tests/test_data/test_mission_working.json")
     )
