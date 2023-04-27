@@ -1,3 +1,4 @@
+import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
@@ -5,6 +6,7 @@ from alitra import Position
 from pydantic import BaseModel, Field
 
 from isar.apis.models.models import InputPose, InputPosition
+from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.step import (
@@ -46,6 +48,7 @@ class StartMissionTaskDefinition(BaseModel):
 class StartMissionDefinition(BaseModel):
     tasks: List[StartMissionTaskDefinition]
     id: Optional[str]
+    name: Optional[str]
 
 
 def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
@@ -101,6 +104,11 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
 
     isar_mission: Mission = Mission(tasks=isar_tasks)
 
+    if mission_definition.name:
+        isar_mission.name = mission_definition.name
+    else:
+        isar_mission.name = _build_mission_name()
+
     return isar_mission
 
 
@@ -151,3 +159,7 @@ def get_duplicate_ids(items: Union[List[Task], List[STEPS]]) -> List[str]:
             duplicate_ids.append(id)
 
     return duplicate_ids
+
+
+def _build_mission_name() -> str:
+    return f"{settings.PLANT_SHORT_NAME}{settings.ROBOT_NAME}{int(time.time())}"

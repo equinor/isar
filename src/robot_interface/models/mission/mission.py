@@ -10,6 +10,7 @@ from robot_interface.utilities.uuid_string_factory import uuid4_string
 class Mission:
     tasks: List[Task]
     id: str = field(default_factory=uuid4_string, init=True)
+    name: str = ""
     status: MissionStatus = MissionStatus.NotStarted
 
     def _set_unique_id(self) -> None:
