@@ -22,7 +22,7 @@ Steps:
 For local development, please fork the repository. Then, clone and install in the repository root folder:
 
 ```
-git clone https://github.com/equinor/isar
+git clone https://github.com/<path_to_parent>/isar
 cd isar
 pip install -e .[dev]
 ```
