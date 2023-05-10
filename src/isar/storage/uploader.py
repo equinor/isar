@@ -9,7 +9,7 @@ from injector import inject
 
 from isar.config.settings import settings
 from isar.models.communication.queues import Queues
-from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from robot_interface.models.mission.mission import Mission
 from isar.storage.storage_interface import StorageException, StorageInterface
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
@@ -19,7 +19,7 @@ from robot_interface.utilities.json_service import EnhancedJSONEncoder
 @dataclass
 class UploaderQueueItem:
     inspection: Inspection
-    mission_metadata: MissionMetadata
+    mission: Mission
     storage_handler: StorageInterface
     _retry_count: int
     _next_retry_time: datetime = datetime.utcnow()
@@ -78,17 +78,17 @@ class Uploader:
         self.logger.info("Started uploader")
         while True:
             inspection: Inspection
-            mission_metadata: MissionMetadata
+            mission: Mission
             try:
                 if self._internal_upload_queue:
                     self._process_upload_queue()
 
-                inspection, mission_metadata = self.upload_queue.get(timeout=1)
+                inspection, mission = self.upload_queue.get(timeout=1)
 
                 # If new item from thread queue, add one per handler to internal queue:
                 for storage_handler in self.storage_handlers:
                     new_item: UploaderQueueItem = UploaderQueueItem(
-                        inspection, mission_metadata, storage_handler, _retry_count=-1
+                        inspection, mission, storage_handler, _retry_count=-1
                     )
                     self._internal_upload_queue.append(new_item)
             except Empty:
@@ -98,7 +98,7 @@ class Uploader:
         inspection_path = ""
         try:
             inspection_path = upload_item.storage_handler.store(
-                inspection=upload_item.inspection, metadata=upload_item.mission_metadata
+                inspection=upload_item.inspection, mission=upload_item.mission
             )
             self.logger.info(
                 f"Storage handler: {type(upload_item.storage_handler).__name__} "

@@ -8,7 +8,7 @@ from alitra import Frame, Orientation, Pose, Position
 from injector import Injector
 
 from isar.models.communication.queues.queues import Queues
-from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from robot_interface.models.mission.mission import Mission
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import ImageMetadata, Inspection
@@ -49,10 +49,10 @@ def uploader_thread(injector) -> UploaderThread:
 def test_should_upload_from_queue(uploader_thread) -> None:
     mission: Mission = Mission([])
     inspection: Inspection = Inspection(ARBITRARY_IMAGE_METADATA)
-    metadata: MissionMetadata = MissionMetadata(
+    metadata: Mission = Mission(
         mission_id=mission.id, mission_name=mission.name
     )
-    message: Tuple[Inspection, MissionMetadata] = (
+    message: Tuple[Inspection, Mission] = (
         inspection,
         metadata,
     )
@@ -65,10 +65,10 @@ def test_should_upload_from_queue(uploader_thread) -> None:
 def test_should_retry_failed_upload_from_queue(uploader_thread, mocker) -> None:
     mission: Mission = Mission([])
     inspection: Inspection = Inspection(ARBITRARY_IMAGE_METADATA)
-    metadata: MissionMetadata = MissionMetadata(
+    metadata: Mission = Mission(
         mission_id=mission.id, mission_name=mission.name
     )
-    message: Tuple[Inspection, MissionMetadata] = (
+    message: Tuple[Inspection, Mission] = (
         inspection,
         metadata,
     )

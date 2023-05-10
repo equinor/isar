@@ -3,15 +3,16 @@ import time
 from pathlib import Path
 from typing import Tuple
 
-from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from robot_interface.models.mission.mission import Mission
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
+from isar.config.settings import settings
+from datetime import date, datetime
 
-def construct_paths(
-    inspection: Inspection, metadata: MissionMetadata
-) -> Tuple[Path, Path]:
-    folder: Path = Path(get_foldername(metadata=metadata))
+
+def construct_paths(inspection: Inspection, mission: Mission) -> Tuple[Path, Path]:
+    folder: Path = Path(get_foldername(mission=mission))
     filename: str = get_filename(inspection=inspection)
 
     inspection_path: Path = folder.joinpath(
@@ -24,26 +25,26 @@ def construct_paths(
 
 
 def construct_metadata_file(
-    inspection: Inspection, metadata: MissionMetadata, filename: str
+    inspection: Inspection, mission: Mission, filename: str
 ) -> bytes:
     data: dict = {
-        "coordinate_reference_system": metadata.coordinate_reference_system,
-        "vertical_reference_system": metadata.vertical_reference_system,
-        "data_classification": metadata.data_classification,
+        "coordinate_reference_system": settings.COORDINATE_REFERENCE_SYSTEM,
+        "vertical_reference_system": settings.VERTICAL_REFERENCE_SYSTEM,
+        "data_classification": settings.DATA_CLASSIFICATION,
         "source_url": None,
-        "plant_code": metadata.plant_code,
-        "media_orientation_reference_system": metadata.media_orientation_reference_system,  # noqa: E501
+        "plant_code": settings.PLANT_CODE,
+        "media_orientation_reference_system": settings.MEDIA_ORIENTATION_REFERENCE_SYSTEM,  # noqa: E501
         "additional_meta": {
-            "mission_id": metadata.mission_id,
-            "mission_name": metadata.mission_name,
-            "plant_name": metadata.plant_name,
-            "mission_date": metadata.mission_date,
-            "isar_id": metadata.isar_id,
-            "robot_name": metadata.robot_name,
+            "mission_id": mission.id,
+            "mission_name": mission.name,
+            "plant_name": settings.PLANT_NAME,
+            "mission_date": datetime.utcnow().date(),
+            "isar_id": settings.ISAR_ID,
+            "robot_name": settings.ROBOT_NAME,
         },
         "data": [
             {
-                "folder": f"/{get_foldername(metadata=metadata)}",
+                "folder": f"/{get_foldername(mission=mission)}",
                 "files": [
                     {
                         "file_name": filename,
@@ -73,5 +74,5 @@ def get_filename(
     return f"{tag}__{inspection_type}__{epoch_time}"
 
 
-def get_foldername(metadata: MissionMetadata) -> str:
-    return f"{metadata.mission_date}__{metadata.plant_short_name}__{metadata.mission_name}__{metadata.mission_id}"
+def get_foldername(mission: Mission) -> str:
+    return f"{datetime.utcnow().date()}__{settings.PLANT_SHORT_NAME}__{mission.name}__{mission.id}"
