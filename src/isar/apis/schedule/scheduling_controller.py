@@ -18,7 +18,6 @@ from isar.apis.models.start_mission_definition import (
 )
 from isar.config.settings import robot_settings, settings
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
-from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
@@ -76,12 +75,11 @@ class SchedulingController:
         )
 
         self.logger.info(f"Starting mission with ISAR Mission ID: '{mission.id}'")
-        metadata: MissionMetadata = MissionMetadata(
-            mission_id=mission.id, mission_name=mission.name
-        )
+
         self.scheduling_utilities.start_mission(
-            mission=mission, initial_pose=initial_pose_alitra, mission_metadata=metadata
+            mission=mission, initial_pose=initial_pose_alitra
         )
+
         return self._api_response(mission)
 
     def start_mission(
@@ -141,12 +139,9 @@ class SchedulingController:
             initial_pose.to_alitra_pose() if initial_pose else None
         )
 
-        metadata: MissionMetadata = MissionMetadata(
-            mission_id=mission.id, mission_name=mission.name
-        )
         self.logger.info(f"Starting mission: {mission.id}")
         self.scheduling_utilities.start_mission(
-            mission=mission, mission_metadata=metadata, initial_pose=initial_pose_alitra
+            mission=mission, initial_pose=initial_pose_alitra
         )
         return self._api_response(mission)
 
@@ -224,15 +219,11 @@ class SchedulingController:
         pose: Pose = target_pose.to_alitra_pose()
         step: DriveToPose = DriveToPose(pose=pose)
         mission: Mission = Mission(tasks=[Task(steps=[step])])
-        metadata: MissionMetadata = MissionMetadata(
-            mission_id=mission.id, mission_name=mission.name
-        )
+
         self.logger.info(
             f"Starting drive to mission with ISAR Mission ID: '{mission.id}'"
         )
-        self.scheduling_utilities.start_mission(
-            mission=mission, initial_pose=None, mission_metadata=metadata
-        )
+        self.scheduling_utilities.start_mission(mission=mission, initial_pose=None)
         return self._api_response(mission)
 
     def start_localization_mission(
@@ -253,14 +244,13 @@ class SchedulingController:
         pose: Pose = localization_pose.to_alitra_pose()
         step: Localize = Localize(localization_pose=pose)
         mission: Mission = Mission(tasks=[Task(steps=[step])])
-        metadata: MissionMetadata = MissionMetadata(
-            mission_id=mission.id, mission_name=mission.name
-        )
+
         self.logger.info(
             f"Starting localization mission with ISAR Mission ID: '{mission.id}'"
         )
         self.scheduling_utilities.start_mission(
-            mission=mission, initial_pose=None, mission_metadata=metadata
+            mission=mission,
+            initial_pose=None,
         )
         return self._api_response(mission)
 

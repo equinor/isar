@@ -5,7 +5,6 @@ from alitra import Frame, Orientation, Pose, Position
 
 from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import MissionNotFoundError
-from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.step import (
     DriveToPose,
@@ -69,14 +68,11 @@ def test_read_mission_from_file(mission_reader) -> None:
 
     expected_tasks = [task_1, task_2, task_3, task_4]
     expected_mission: Mission = Mission(tasks=expected_tasks)
-    expected_metadata: MissionMetadata = MissionMetadata(
-        expected_mission.id, expected_mission.name
-    )
     mission: Mission = mission_reader.read_mission_from_file(
         Path("./tests/test_data/test_mission_working.json")
     )
 
-    assert expected_metadata.data_classification == MissionMetadata.data_classification
+    assert expected_mission.data_classification == Mission.data_classification
     for expected_task, task in zip(expected_tasks, mission.tasks):
         for expected_step, step in zip(expected_task.steps, task.steps):
             if isinstance(expected_step, DriveToPose) and isinstance(step, DriveToPose):

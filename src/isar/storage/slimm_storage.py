@@ -7,7 +7,7 @@ from requests import HTTPError, RequestException
 from requests_toolbelt import MultipartEncoder
 
 from isar.config.settings import settings
-from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from robot_interface.models.mission.mission import Mission
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.storage.storage_interface import StorageException, StorageInterface
@@ -31,22 +31,22 @@ class SlimmStorage(StorageInterface):
 
         self.url: str = settings.SLIMM_API_URL
 
-    def store(self, inspection: Inspection, metadata: MissionMetadata) -> str:
+    def store(self, inspection: Inspection, mission: Mission) -> str:
         filename: str = get_filename(
             inspection=inspection,
         )
         filename = f"{filename}.{inspection.metadata.file_type}"
         if type(inspection) in [Video, ThermalVideo]:
-            inspection_path = self._store_video(filename, inspection, metadata)
+            inspection_path = self._store_video(filename, inspection, mission)
         else:
-            inspection_path = self._store_image(filename, inspection, metadata)
+            inspection_path = self._store_image(filename, inspection, mission)
         return inspection_path
 
     def _store_image(
-        self, filename: str, inspection: Inspection, metadata: MissionMetadata
+        self, filename: str, inspection: Inspection, mission: Mission
     ) -> str:
         multiform_body: MultipartEncoder = self._construct_multiform_request_image(
-            filename=filename, inspection=inspection, metadata=metadata
+            filename=filename, inspection=inspection, mission=mission
         )
         request_url: str = f"{self.url}/UploadSingleImage"
         inspection_path = self._ingest(
@@ -57,10 +57,10 @@ class SlimmStorage(StorageInterface):
         return inspection_path
 
     def _store_video(
-        self, filename: str, inspection: Inspection, metadata: MissionMetadata
+        self, filename: str, inspection: Inspection, mission: Mission
     ) -> str:
         multiform_body: MultipartEncoder = self._construct_multiform_request_video(
-            filename=filename, inspection=inspection, metadata=metadata
+            filename=filename, inspection=inspection, mission=mission
         )
         request_url = f"{self.url}/UploadSingleVideo"
         inspection_path = self._ingest(
@@ -96,23 +96,23 @@ class SlimmStorage(StorageInterface):
 
     @staticmethod
     def _construct_multiform_request_image(
-        filename: str, inspection: Inspection, metadata: MissionMetadata
+        filename: str, inspection: Inspection, mission: Mission
     ):
         array_of_orientation = (
             inspection.metadata.pose.orientation.to_quat_array().tolist()
         )
         multiform_body: MultipartEncoder = MultipartEncoder(
             fields={
-                "PlantFacilitySAPCode": metadata.plant_code,
-                "InstCode": metadata.plant_short_name,
-                "InternalClassification": metadata.data_classification,
+                "PlantFacilitySAPCode": settings.PLANT_CODE,
+                "InstCode": settings.PLANT_SHORT_NAME,
+                "InternalClassification": settings.DATA_CLASSIFICATION,
                 "IsoCountryCode": "NO",
-                "Geodetic.CoordinateReferenceSystemCode": metadata.coordinate_reference_system,  # noqa: E501
-                "Geodetic.VerticalCoordinateReferenceSystemCode": metadata.vertical_reference_system,  # noqa: E501
-                "Geodetic.OrientationReferenceSystem": metadata.media_orientation_reference_system,  # noqa: E501
-                "SensorCarrier.SensorCarrierId": metadata.isar_id,
-                "SensorCarrier.ModelName": metadata.robot_model,
-                "Mission.MissionId": metadata.mission_id,
+                "Geodetic.CoordinateReferenceSystemCode": settings.COORDINATE_REFERENCE_SYSTEM,  # noqa: E501
+                "Geodetic.VerticalCoordinateReferenceSystemCode": settings.VERTICAL_REFERENCE_SYSTEM,  # noqa: E501
+                "Geodetic.OrientationReferenceSystem": settings.MEDIA_ORIENTATION_REFERENCE_SYSTEM,  # noqa: E501
+                "SensorCarrier.SensorCarrierId": settings.ISAR_ID,
+                "SensorCarrier.ModelName": settings.ROBOT_TYPE,
+                "Mission.MissionId": mission.id,
                 "Mission.Client": "Equinor",
                 "ImageMetadata.Timestamp": inspection.metadata.start_time.isoformat(),  # noqa: E501
                 "ImageMetadata.X": str(inspection.metadata.pose.position.x),
@@ -139,23 +139,23 @@ class SlimmStorage(StorageInterface):
     def _construct_multiform_request_video(
         filename: str,
         inspection: Inspection,
-        metadata: MissionMetadata,
+        mission: Mission,
     ):
         array_of_orientation = (
             inspection.metadata.pose.orientation.to_quat_array().tolist()
         )
         multiform_body: MultipartEncoder = MultipartEncoder(
             fields={
-                "PlantFacilitySAPCode": metadata.plant_code,
-                "InstCode": metadata.plant_short_name,
-                "InternalClassification": metadata.data_classification,
+                "PlantFacilitySAPCode": settings.PLANT_CODE,
+                "InstCode": settings.PLANT_SHORT_NAME,
+                "InternalClassification": settings.DATA_CLASSIFICATION,
                 "IsoCountryCode": "NO",
-                "Geodetic.CoordinateReferenceSystemCode": metadata.coordinate_reference_system,  # noqa: E501
-                "Geodetic.VerticalCoordinateReferenceSystemCode": metadata.vertical_reference_system,  # noqa: E501
-                "Geodetic.OrientationReferenceSystem": metadata.media_orientation_reference_system,  # noqa: E501
-                "SensorCarrier.SensorCarrierId": metadata.isar_id,
-                "SensorCarrier.ModelName": metadata.robot_model,
-                "Mission.MissionId": metadata.mission_id,
+                "Geodetic.CoordinateReferenceSystemCode": settings.COORDINATE_REFERENCE_SYSTEM,  # noqa: E501
+                "Geodetic.VerticalCoordinateReferenceSystemCode": settings.VERTICAL_REFERENCE_SYSTEM,  # noqa: E501
+                "Geodetic.OrientationReferenceSystem": settings.MEDIA_ORIENTATION_REFERENCE_SYSTEM,  # noqa: E501
+                "SensorCarrier.SensorCarrierId": settings.ISAR_ID,
+                "SensorCarrier.ModelName": settings.ROBOT_TYPE,
+                "Mission.MissionId": mission.id,
                 "Mission.Client": "Equinor",
                 "VideoMetadata.Timestamp": inspection.metadata.start_time.isoformat(),  # noqa: E501
                 # Converting to int because SLIMM expects an int, while we use floats in operations.

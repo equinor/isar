@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 
 from isar.config.settings import settings
-from isar.models.mission_metadata.mission_metadata import MissionMetadata
+from robot_interface.models.mission.mission import Mission
 from isar.storage.storage_interface import StorageException, StorageInterface
 from isar.storage.utilities import construct_metadata_file, construct_paths
 from robot_interface.models.inspection.inspection import Inspection
@@ -13,9 +13,9 @@ class LocalStorage(StorageInterface):
         self.root_folder: Path = Path(settings.LOCAL_STORAGE_PATH)
         self.logger = logging.getLogger("uploader")
 
-    def store(self, inspection: Inspection, metadata: MissionMetadata) -> str:
+    def store(self, inspection: Inspection, mission: Mission) -> str:
         local_path, local_metadata_path = construct_paths(
-            inspection=inspection, metadata=metadata
+            inspection=inspection, mission=mission
         )
 
         absolute_path: Path = self.root_folder.joinpath(local_path)
@@ -24,7 +24,7 @@ class LocalStorage(StorageInterface):
         absolute_path.parent.mkdir(parents=True, exist_ok=True)
 
         metadata_bytes: bytes = construct_metadata_file(
-            inspection=inspection, metadata=metadata, filename=local_path.name
+            inspection=inspection, mission=mission, filename=local_path.name
         )
         try:
             with open(absolute_path, "wb") as file, open(

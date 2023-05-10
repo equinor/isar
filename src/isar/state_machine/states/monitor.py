@@ -6,7 +6,6 @@ from typing import Callable, Optional, Sequence, TYPE_CHECKING, Tuple, Union
 from injector import inject
 from transitions import State
 
-from isar.models.mission_metadata.mission_metadata import MissionMetadata
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
@@ -129,18 +128,16 @@ class Monitor(State):
                 f"No inspection data retrieved for step {str(current_step.id)[:8]}"
             )
 
-        # A deepcopy is made to freeze the metadata before passing it to another thread
+        # A deepcopy is made to freeze the mission before passing it to another thread
         # through the queue
-        mission_metadata: MissionMetadata = deepcopy(
-            self.state_machine.current_mission_metadata
-        )
+        mission: Mission = deepcopy(self.state_machine.current_mission)
 
         for inspection in inspections:
             inspection.metadata.tag_id = current_step.tag_id
 
-            message: Tuple[Inspection, MissionMetadata] = (
+            message: Tuple[Inspection, Mission] = (
                 inspection,
-                mission_metadata,
+                mission,
             )
             self.state_machine.queues.upload_queue.put(message)
             self.logger.info(f"Inspection: {str(inspection.id)[:8]} queued for upload")
