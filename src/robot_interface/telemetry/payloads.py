@@ -55,6 +55,7 @@ class RobotInfoPayload:
     robot_name: str
     robot_model: str
     robot_serial_number: str
+    robot_asset: str
     video_streams: List[VideoStream]
     host: str
     port: int
