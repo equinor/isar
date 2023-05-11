@@ -49,12 +49,10 @@ def uploader_thread(injector) -> UploaderThread:
 def test_should_upload_from_queue(uploader_thread) -> None:
     mission: Mission = Mission([])
     inspection: Inspection = Inspection(ARBITRARY_IMAGE_METADATA)
-    metadata: Mission = Mission(
-        mission_id=mission.id, mission_name=mission.name
-    )
+
     message: Tuple[Inspection, Mission] = (
         inspection,
-        metadata,
+        mission,
     )
 
     uploader_thread.uploader.upload_queue.put(message)
@@ -65,12 +63,10 @@ def test_should_upload_from_queue(uploader_thread) -> None:
 def test_should_retry_failed_upload_from_queue(uploader_thread, mocker) -> None:
     mission: Mission = Mission([])
     inspection: Inspection = Inspection(ARBITRARY_IMAGE_METADATA)
-    metadata: Mission = Mission(
-        mission_id=mission.id, mission_name=mission.name
-    )
+
     message: Tuple[Inspection, Mission] = (
         inspection,
-        metadata,
+        mission,
     )
 
     # Need it to fail so that it retries

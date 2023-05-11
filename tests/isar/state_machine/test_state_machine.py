@@ -94,9 +94,7 @@ def test_state_machine_transitions(injector, state_machine_thread) -> None:
     mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(
-        mission=mission, initial_pose=None
-    )
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
     time.sleep(3)
     expected_transitions_list = deque(
@@ -126,9 +124,7 @@ def test_state_machine_transitions_when_running_full_mission(
     mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(
-        mission=mission, initial_pose=None
-    )
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
     time.sleep(3)
     expected_transitions_list = deque(
@@ -156,9 +152,7 @@ def test_state_machine_failed_dependency(
     mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.Failed)
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(
-        mission=mission, initial_pose=None
-    )
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
     time.sleep(3)
     expected_transitions_list = deque(
@@ -185,9 +179,7 @@ def test_state_machine_with_successful_collection(
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
-    scheduling_utilities.start_mission(
-        mission=mission, initial_pose=None
-    )
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
     time.sleep(3)
     expected_transitions_list = deque(
         [
@@ -217,9 +209,7 @@ def test_state_machine_with_unsuccessful_collection(
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
-    scheduling_utilities.start_mission(
-        mission=mission, initial_pose=None
-    )
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
     time.sleep(3)
     expected_transitions_list = deque(
         [
@@ -246,11 +236,9 @@ def test_state_machine_with_successful_mission_stop(
 ) -> None:
     step: TakeImage = MockStep.take_image_in_coordinate_direction
     mission: Mission = Mission(tasks=[Task(steps=[step])])
-    
+
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(
-        mission=mission, initial_pose=None
-    )
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
     scheduling_utilities.stop_mission()
     expected = deque(
         [
@@ -278,11 +266,10 @@ def test_state_machine_with_unsuccsessful_mission_stop(
 ) -> None:
     step: TakeImage = MockStep.take_image_in_coordinate_direction
     mission: Mission = Mission(tasks=[Task(steps=[step])])
-    
+
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(
-        mission=mission, initial_pose=None)
-    
+    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+
     mocker.patch.object(ThreadedRequest, "get_output", side_effect=RobotException)
     scheduling_utilities.stop_mission()
     expected = deque(
