@@ -67,12 +67,10 @@ def test_read_mission_from_file(mission_reader) -> None:
     task_4: Task = Task(steps=[expected_step_6])
 
     expected_tasks = [task_1, task_2, task_3, task_4]
-    expected_mission: Mission = Mission(tasks=expected_tasks)
     mission: Mission = mission_reader.read_mission_from_file(
         Path("./tests/test_data/test_mission_working.json")
     )
 
-    assert expected_mission.data_classification == Mission.data_classification
     for expected_task, task in zip(expected_tasks, mission.tasks):
         for expected_step, step in zip(expected_task.steps, task.steps):
             if isinstance(expected_step, DriveToPose) and isinstance(step, DriveToPose):
