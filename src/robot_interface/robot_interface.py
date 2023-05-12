@@ -31,10 +31,14 @@ class RobotInterface(metaclass=ABCMeta):
 
         Raises
         ------
+        RobotInfeasibleMissionException
+            If the mission input is infeasible and the mission fails to be scheduled in
+            a way that means attempting to schedule again is not necessary
         RobotException
-            If the mission is not initiated.
+            Will catch all RobotExceptions exceptions not previously listed and retry
+            scheduling of the mission until the number of allowed retries is exceeded
         NotImplementedError
-            If the robot is designed for stepwise mission execution.
+            If the robot is designed for stepwise mission execution
 
         """
         raise NotImplementedError

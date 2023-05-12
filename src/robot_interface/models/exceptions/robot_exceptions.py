@@ -33,7 +33,7 @@ class RobotException(Exception):
 
 
 # An exception which should be thrown by the robot package if it is unable to
-# communicate with the robot.
+# communicate with the robot API.
 class RobotCommunicationException(RobotException):
     pass
 
@@ -50,30 +50,23 @@ class RobotInfeasibleMissionException(RobotException):
     pass
 
 
-# An exception which should be thrown by the robot package if it is unable to perform
-# an update or create operation towards the API. An example could be attempting to
-# delete something through the API.
-class RobotPerformApiActionException(RobotException):
+# An exception which should be thrown by the robot package if it is able to communicate
+# with the robot API but the result of the communication leads to an exception. An
+# example could be a KeyError while reading from the response dictionary.
+class RobotAPIException(RobotException):
     pass
 
 
 # An exception which should be thrown by the robot package if it is unable to retrieve
-# status related information from the API like currently executing missions, status of
-# the current mission and similar.
-class RobotRetrieveStatusException(RobotException):
+# data from the API like currently executing missions, status of the current mission
+# and similar.
+class RobotRetrieveDataException(RobotException):
     pass
 
 
 # An exception which should be thrown by the robot package if it is unable to collect
 # the inspections that were generated for the currently executing step or mission.
 class RobotRetrieveInspectionException(RobotException):
-    pass
-
-
-# An exception which should be thrown by the robot package if it is unable to interpret
-# information that has been received from the API. For example, this could be the result
-# of a KeyError when accessing a response from the API.
-class RobotInterpretResponseException(RobotException):
     pass
 
 
@@ -86,15 +79,15 @@ class RobotTelemetryException(RobotException):
 
 # An exception which should be thrown by the robot package if it is unable to load the
 # configuration for maps and transformations. This could be caused by faulty
-# configuration and will this exception will cause ISAR to crash as further execution is
-# not advised.
-class RobotMapConfigurationException(RobotException):
+# configuration and this exception will cause ISAR to crash as further execution is not
+# advised.
+class RobotMapException(RobotException):
     pass
 
 
 # An exception which should be thrown by the robot package if it is unable to transform
 # the coordinates correctly between asset and robot frame.
-class RobotMapTransformException(RobotException):
+class RobotTransformException(RobotException):
     pass
 
 

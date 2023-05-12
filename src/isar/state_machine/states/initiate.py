@@ -94,10 +94,14 @@ class Initiate(State):
                 transition = self.state_machine.initiate_infeasible  # type: ignore
                 break
 
-            except RobotInfeasibleMissionException:
+            except RobotInfeasibleMissionException as e:
+                self.state_machine.current_mission.error_message = ErrorMessage(
+                    error_reason=e.error_reason, error_description=e.error_description
+                )
                 self.logger.warning(
                     f"Failed to initiate mission "
-                    f"{str(self.state_machine.current_mission.id)[:8]}"
+                    f"{str(self.state_machine.current_mission.id)[:8]} because: "
+                    f"{e.error_description}"
                 )
                 transition = self.state_machine.initiate_infeasible  # type: ignore
                 break
@@ -106,8 +110,8 @@ class Initiate(State):
                 self.initiate_thread = None
                 self.initiate_failure_counter += 1
                 self.logger.warning(
-                    f"Initiating step failed #: "
-                    f"{str(self.initiate_failure_counter)}"
+                    f"Initiating failed #: {str(self.initiate_failure_counter)} "
+                    f"because: {e.error_description}"
                 )
 
                 if self.initiate_failure_counter >= self.initiate_failure_counter_limit:
@@ -116,8 +120,9 @@ class Initiate(State):
                         error_description=e.error_description,
                     )
                     self.logger.error(
-                        f"Mission will be cancelled after failing to initiate step "
-                        f"{self.initiate_failure_counter_limit} times because: {e.error_description}"
+                        f"Mission will be cancelled after failing to initiate "
+                        f"{self.initiate_failure_counter_limit} times because: "
+                        f"{e.error_description}"
                     )
                     transition = self.state_machine.initiate_failed  # type: ignore
                     break
