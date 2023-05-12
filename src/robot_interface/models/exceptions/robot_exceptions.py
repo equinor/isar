@@ -69,6 +69,12 @@ class RobotAPIException(RobotException):
     pass
 
 
+# An exception which should be thrown by the robot package if it is unable to perform a
+# requested action. For example the package is unable to stop the robot.
+class RobotActionException(RobotException):
+    pass
+
+
 # An exception which should be thrown by the robot package if it is unable to retrieve
 # data from the API like currently executing missions, status of the current mission
 # and similar.
