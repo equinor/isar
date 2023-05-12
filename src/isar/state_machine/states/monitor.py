@@ -13,6 +13,8 @@ from isar.services.utilities.threaded_request import (
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotException,
+    RobotMissionStatusException,
+    RobotStepStatusException,
 )
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -71,17 +73,44 @@ class Monitor(State):
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
-            except RobotException as e:
+
+            except RobotStepStatusException as e:
                 self.state_machine.current_step.error_message = ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 )
                 self.logger.error(
-                    f"\nMonitoring step {self.state_machine.current_step.id[:8]} failed "
+                    f"Monitoring step {self.state_machine.current_step.id[:8]} failed "
                     f"because: {e.error_description}"
-                    f"\nThe step will be marked as failed but the mission continues "
-                    f"execution"
                 )
                 status = StepStatus.Failed
+
+            except RobotMissionStatusException as e:
+                self.state_machine.current_mission.error_message = ErrorMessage(
+                    error_reason=e.error_reason, error_description=e.error_description
+                )
+                self.logger.error(
+                    f"Monitoring mission {self.state_machine.current_mission.id} "
+                    f"failed because: {e.error_description}"
+                )
+                status = MissionStatus.Failed
+
+            except RobotException as e:
+                if self.state_machine.stepwise_mission:
+                    self.state_machine.current_step.error_message = ErrorMessage(
+                        error_reason=e.error_reason,
+                        error_description=e.error_description,
+                    )
+                    status = StepStatus.Failed
+                else:
+                    self.state_machine.current_mission.error_message = ErrorMessage(
+                        error_reason=e.error_reason,
+                        error_description=e.error_description,
+                    )
+                    status = MissionStatus.Failed
+
+                self.logger.error(
+                    f"Retrieving the status failed because: {e.error_description}"
+                )
 
             if self.state_machine.stepwise_mission and isinstance(status, StepStatus):
                 self.state_machine.current_step.status = status
