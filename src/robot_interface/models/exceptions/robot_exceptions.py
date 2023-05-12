@@ -50,6 +50,18 @@ class RobotInfeasibleMissionException(RobotException):
     pass
 
 
+# An exception which should be thrown by the robot package if it is unable to collect
+# the status of the current mission.
+class RobotMissionStatusException(RobotException):
+    pass
+
+
+# An exception which should be thrown by the robot package if it is unable to collect
+# the status of the current step.
+class RobotStepStatusException(RobotException):
+    pass
+
+
 # An exception which should be thrown by the robot package if it is able to communicate
 # with the robot API but the result of the communication leads to an exception. An
 # example could be a KeyError while reading from the response dictionary.

@@ -35,8 +35,8 @@ class RobotInterface(metaclass=ABCMeta):
             If the mission input is infeasible and the mission fails to be scheduled in
             a way that means attempting to schedule again is not necessary
         RobotException
-            Will catch all RobotExceptions exceptions not previously listed and retry
-            scheduling of the mission until the number of allowed retries is exceeded
+            Will catch all RobotExceptions not previously listed and retry scheduling of
+            the mission until the number of allowed retries is exceeded
         NotImplementedError
             If the robot is designed for stepwise mission execution
 
@@ -57,10 +57,14 @@ class RobotInterface(metaclass=ABCMeta):
 
         Raises
         ------
+        RobotMissionStatusException
+            If the mission status could not be collected this will lead to the mission
+            being marked as failed
         RobotException
-            If the mission status could not be retrieved.
+            An uncaught RobotException in the robot package while retrieving the status
+            will cause the mission to be marked as failed
         NotImplementedError
-            If the robot is designed for stepwise mission execution.
+            If the robot is designed for stepwise mission execution
 
         """
 
@@ -83,8 +87,13 @@ class RobotInterface(metaclass=ABCMeta):
 
         Raises
         ------
+        RobotInfeasibleStepException
+            If the step input is infeasible and the step fails to be scheduled in
+            a way that means attempting to schedule again is not necessary
         RobotException
-            If the step is not initiated.
+            Will catch all RobotExceptions not previously listed and retry scheduling
+            of the step until the number of allowed retries is exceeded before the step
+            will be marked as failed and the mission cancelled
         NotImplementedError
             If the robot is designed for full mission execution.
 
