@@ -14,6 +14,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotException,
     RobotMissionStatusException,
+    RobotRetrieveInspectionException,
     RobotStepStatusException,
 )
 from robot_interface.models.inspection.inspection import Inspection
@@ -95,17 +96,10 @@ class Monitor(State):
                 status = MissionStatus.Failed
 
             except RobotException as e:
+                self._set_error_message(e)
                 if self.state_machine.stepwise_mission:
-                    self.state_machine.current_step.error_message = ErrorMessage(
-                        error_reason=e.error_reason,
-                        error_description=e.error_description,
-                    )
                     status = StepStatus.Failed
                 else:
-                    self.state_machine.current_mission.error_message = ErrorMessage(
-                        error_reason=e.error_reason,
-                        error_description=e.error_description,
-                    )
                     status = MissionStatus.Failed
 
                 self.logger.error(
@@ -154,27 +148,12 @@ class Monitor(State):
             inspections: Sequence[
                 Inspection
             ] = self.state_machine.robot.get_inspections(step=current_step)
-        except RobotException as e:
-            current_step.error_message = ErrorMessage(
-                error_reason=e.error_reason, error_description=e.error_description
-            )
 
+        except [RobotRetrieveInspectionException, RobotException] as e:
+            self._set_error_message(e)
             self.logger.error(
-                f"Failed to retrieve inspections for step "
-                f"{current_step.id} because: {e.error_description}"
+                f"Failed to retrieve inspections because: {e.error_description}"
             )
-            return
-        except Exception as e:
-            if self.state_machine.stepwise_mission:
-                self.logger.error(
-                    f"Error getting inspections for step "
-                    f"{str(current_step.id)[:8]}: {e}"
-                )
-            else:
-                self.logger.error(
-                    f"Error getting inspections for mission "
-                    f"{str(mission.id)[:8]}: {e}"
-                )
             return
 
         if not inspections:
@@ -235,3 +214,13 @@ class Monitor(State):
             ):
                 return True
             return False
+
+    def _set_error_message(self, e: RobotException) -> None:
+        error_message: ErrorMessage = ErrorMessage(
+            error_reason=e.error_reason, error_description=e.error_description
+        )
+        if self.state_machine.stepwise_mission:
+            self.state_machine.current_step.error_message = error_message
+        else:
+            if self.state_machine.current_mission:
+                self.state_machine.current_mission.error_message = error_message

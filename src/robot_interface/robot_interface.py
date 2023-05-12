@@ -153,12 +153,16 @@ class RobotInterface(metaclass=ABCMeta):
         Returns
         -------
         Sequence[InspectionResult]
-            List containing all the inspection results connected to the given step.
+            List containing all the inspection results connected to the given step
 
         Raises
         ------
+        RobotRetrieveInspectionException
+            If the robot package is unable to retrieve the inspections for the relevant
+            mission or step an error message is logged and the state machine continues
         RobotException
-            If the inspection results can't be retrieved.
+            Catches other RobotExceptions that lead to the same result as a
+            RobotRetrieveInspectionException
 
         """
         raise NotImplementedError
