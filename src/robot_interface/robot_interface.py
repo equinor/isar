@@ -133,8 +133,11 @@ class RobotInterface(metaclass=ABCMeta):
 
         Raises
         ------
+        RobotActionException
+            If the robot fails to perform the requested action to stop mission execution
+            the action to stop will be attempted again until a certain number of retries
         RobotException
-            If the robot is not stopped.
+            Will catch other RobotExceptions and retry to stop the mission
 
         """
         raise NotImplementedError
