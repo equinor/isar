@@ -81,7 +81,8 @@ class Monitor(State):
                     self._queue_inspections_for_upload
                 )
                 get_inspections_thread.start_thread(
-                    self.state_machine.current_step,
+                    deepcopy(self.state_machine.current_mission),
+                    deepcopy(self.state_machine.current_step),
                     name="State Machine Get Inspections",
                 )
 
@@ -105,7 +106,9 @@ class Monitor(State):
         self.step_status_thread = ThreadedRequest(request_func=status_function)
         self.step_status_thread.start_thread(name=thread_name)
 
-    def _queue_inspections_for_upload(self, current_step: InspectionStep) -> None:
+    def _queue_inspections_for_upload(
+        self, mission: Mission, current_step: InspectionStep
+    ) -> None:
         try:
             inspections: Sequence[
                 Inspection
@@ -119,7 +122,7 @@ class Monitor(State):
             else:
                 self.logger.error(
                     f"Error getting inspections for mission "
-                    f"{str(self.state_machine.current_mission.id)[:8]}: {e}"
+                    f"{str(mission.id)[:8]}: {e}"
                 )
             return
 
@@ -130,7 +133,6 @@ class Monitor(State):
 
         # A deepcopy is made to freeze the mission before passing it to another thread
         # through the queue
-        mission: Mission = deepcopy(self.state_machine.current_mission)
 
         for inspection in inspections:
             inspection.metadata.tag_id = current_step.tag_id

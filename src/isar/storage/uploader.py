@@ -85,6 +85,9 @@ class Uploader:
 
                 inspection, mission = self.upload_queue.get(timeout=1)
 
+                if mission == None:
+                    raise Exception("Mission cannot be null")
+
                 # If new item from thread queue, add one per handler to internal queue:
                 for storage_handler in self.storage_handlers:
                     new_item: UploaderQueueItem = UploaderQueueItem(
