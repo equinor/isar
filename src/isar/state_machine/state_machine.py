@@ -428,6 +428,7 @@ class StateMachine(object):
         self.publish_state()
 
     def reset_state_machine(self) -> None:
+        self.logger.info("Finalising state machine")
         self.stopped = False
         self.current_step = None
         self.current_task = None
