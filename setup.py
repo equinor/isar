@@ -33,7 +33,7 @@ setup(
         "backoff",
         "click",
         "dacite",
-        "fastapi-azure-auth",
+        "fastapi-azure-auth==4.0.0",
         "fastapi",
         "injector",
         "opencensus-ext-logging",
