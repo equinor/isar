@@ -12,6 +12,7 @@ from isar.services.utilities.threaded_request import (
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotException,
+    RobotInitializeException,
 )
 
 if TYPE_CHECKING:
@@ -50,10 +51,12 @@ class Initialize(State):
 
             try:
                 self.initialize_thread.get_output()
+
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
-            except RobotException as e:
+
+            except [RobotInitializeException, RobotException] as e:
                 self.state_machine.current_step.error_message = ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 )

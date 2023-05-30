@@ -183,8 +183,12 @@ class RobotInterface(metaclass=ABCMeta):
 
         Raises
         ------
+        RobotInitializeException
+            If the robot package is unable to initialize the robot correctly the mission
+            will be cancelled
         RobotException
-            If the initialization failed
+            Catches other RobotExceptions that might have occurred during initialization
+            where the result is that the mission is cancelled
 
         """
         raise NotImplementedError
