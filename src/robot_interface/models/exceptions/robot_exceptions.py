@@ -75,6 +75,13 @@ class RobotActionException(RobotException):
     pass
 
 
+# An exception which should be thrown by the robot package if something is wrong during
+# the initialization of the robot. This exception will cause the mission to fail as
+# initialization is performed prior to starting the mission.
+class RobotInitializeException(RobotException):
+    pass
+
+
 # An exception which should be thrown by the robot package if it is unable to retrieve
 # data from the API like currently executing missions, status of the current mission
 # and similar.
