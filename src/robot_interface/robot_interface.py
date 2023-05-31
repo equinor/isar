@@ -212,7 +212,6 @@ class RobotInterface(metaclass=ABCMeta):
         -------
         List[Thread]
             List containing all threads that will be started to publish telemetry.
-
         """
         raise NotImplementedError
 
@@ -229,5 +228,16 @@ class RobotInterface(metaclass=ABCMeta):
         RobotStatus
             Enum indicating if the robot may be reached by the isar-robot package.
 
+        Raises
+        -------
+        RobotCommunicationException
+            Raised if the robot package is unable to communicate with the robot API
+        RobotAPIException
+            Raised if the robot package is able to communicate with the API but an error
+            occurred while interpreting the response
+        RobotException
+            Catches other RobotExceptions that may have occurred while retrieving the
+            robot status
+            At this point ISAR will attempt to request the robot status again
         """
         raise NotImplementedError

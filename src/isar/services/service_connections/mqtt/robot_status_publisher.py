@@ -10,7 +10,9 @@ from isar.config.settings import settings
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import (
+    RobotAPIException,
     RobotCommunicationException,
+    RobotException,
 )
 from robot_interface.models.mission.status import RobotStatus
 from robot_interface.robot_interface import RobotInterface
@@ -88,8 +90,12 @@ class RobotStatusMonitor:
         while True:
             try:
                 self.robot_status = self.robot.robot_status()
-            except RobotCommunicationException:
-                self.logger.warning(
-                    "Failed to get robot status due to a communication exception"
+            except [
+                RobotCommunicationException,
+                RobotAPIException,
+                RobotException,
+            ] as e:
+                self.logger.error(
+                    f"Failed to get robot status because: {e.error_description}"
                 )
             time.sleep(settings.ROBOT_API_STATUS_POLL_INTERVAL)
