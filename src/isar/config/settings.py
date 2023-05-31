@@ -134,18 +134,6 @@ class Settings(BaseSettings):
     # Name of blob container in Azure Blob Storage [slimm test]
     BLOB_CONTAINER: str = Field(default="test")
 
-    # Client ID for STID App Registration
-    STID_CLIENT_ID: str = Field(default="1734406c-3449-4192-a50d-7c3a63d3f57d")
-
-    # Scope for access to STID API
-    STID_APP_SCOPE: str = Field(default=".default")
-
-    # URL for STID endpoint
-    STID_API_URL: str = Field(default="https://stidapi.equinor.com")
-
-    # Plant name for the facility which STID should look for tags in
-    STID_PLANT_NAME: str = Field(default="kaa")
-
     # Client ID for SLIMM App Registration
     SLIMM_CLIENT_ID: str = Field(default="c630ca4d-d8d6-45ab-8cc6-68a363d0de9e")
 

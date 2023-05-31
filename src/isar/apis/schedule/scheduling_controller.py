@@ -261,7 +261,6 @@ class SchedulingController:
             robot_name=settings.ROBOT_NAME,
             robot_map_name=settings.DEFAULT_MAP,
             robot_capabilities=robot_settings.CAPABILITIES,
-            plant_short_name=settings.STID_PLANT_NAME,
         )
 
     def _api_response(self, mission: Mission) -> StartMissionResponse:
