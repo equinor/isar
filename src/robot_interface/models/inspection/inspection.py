@@ -1,7 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional, Type
+from typing import Optional, Type
 
 from alitra import Pose
 
