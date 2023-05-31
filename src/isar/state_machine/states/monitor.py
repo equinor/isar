@@ -149,7 +149,7 @@ class Monitor(State):
                 Inspection
             ] = self.state_machine.robot.get_inspections(step=current_step)
 
-        except [RobotRetrieveInspectionException, RobotException] as e:
+        except (RobotRetrieveInspectionException, RobotException) as e:
             self._set_error_message(e)
             self.logger.error(
                 f"Failed to retrieve inspections because: {e.error_description}"

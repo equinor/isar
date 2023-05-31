@@ -90,11 +90,11 @@ class RobotStatusMonitor:
         while True:
             try:
                 self.robot_status = self.robot.robot_status()
-            except [
+            except (
                 RobotCommunicationException,
                 RobotAPIException,
                 RobotException,
-            ] as e:
+            ) as e:
                 self.logger.error(
                     f"Failed to get robot status because: {e.error_description}"
                 )

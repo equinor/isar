@@ -52,7 +52,7 @@ class Stop(State):
                 time.sleep(self.state_machine.sleep_time)
                 continue
 
-            except [RobotActionException, RobotException] as e:
+            except (RobotActionException, RobotException) as e:
                 if self.handle_stop_fail(
                     retry_limit=self.state_machine.stop_robot_attempts_limit,
                     error_message=ErrorMessage(

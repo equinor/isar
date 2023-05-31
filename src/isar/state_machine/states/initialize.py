@@ -56,7 +56,7 @@ class Initialize(State):
                 time.sleep(self.state_machine.sleep_time)
                 continue
 
-            except [RobotInitializeException, RobotException] as e:
+            except (RobotInitializeException, RobotException) as e:
                 self.state_machine.current_step.error_message = ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 )
