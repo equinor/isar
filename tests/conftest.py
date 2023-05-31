@@ -18,7 +18,6 @@ from isar.modules import (
     UtilitiesModule,
 )
 from isar.services.service_connections.request_handler import RequestHandler
-from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states import Idle, Initiate, Monitor
@@ -129,11 +128,6 @@ def monitor(state_machine):
 @pytest.fixture()
 def request_handler(injector):
     return injector.get(RequestHandler)
-
-
-@pytest.fixture()
-def stid_service(injector):
-    return injector.get(StidService)
 
 
 @pytest.fixture()

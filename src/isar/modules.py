@@ -17,7 +17,6 @@ from isar.mission_planner.sequential_task_selector import SequentialTaskSelector
 from isar.mission_planner.task_selector_interface import TaskSelectorInterface
 from isar.models.communication.queues.queues import Queues
 from isar.services.service_connections.request_handler import RequestHandler
-from isar.services.service_connections.stid.stid_service import StidService
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.storage.blob_storage import BlobStorage
@@ -157,11 +156,6 @@ class ServiceModule(Module):
     @singleton
     def provide_keyvault(self) -> Keyvault:
         return Keyvault(keyvault_name=settings.KEYVAULT_NAME)
-
-    @provider
-    @singleton
-    def provide_stid_service(self, request_handler: RequestHandler) -> StidService:
-        return StidService(request_handler=request_handler)
 
 
 class MqttModule(Module):
