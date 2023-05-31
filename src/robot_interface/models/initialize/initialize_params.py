@@ -1,4 +1,4 @@
-from dataclasses import Field, dataclass
+from dataclasses import dataclass
 from typing import Optional
 
 from alitra import Pose

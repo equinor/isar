@@ -1,14 +1,13 @@
 import json
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Tuple
 
-from robot_interface.models.mission.mission import Mission
-from robot_interface.models.inspection.inspection import Inspection
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
-
 from isar.config.settings import settings
-from datetime import date, datetime
+from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission.mission import Mission
+from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 def construct_paths(inspection: Inspection, mission: Mission) -> Tuple[Path, Path]:

@@ -1,4 +1,3 @@
-from distutils.archive_util import make_zipfile
 from queue import Queue
 
 import pytest

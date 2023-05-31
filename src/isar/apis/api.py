@@ -1,5 +1,4 @@
 import logging
-import os
 from http import HTTPStatus
 from logging import Logger
 from typing import List, Union

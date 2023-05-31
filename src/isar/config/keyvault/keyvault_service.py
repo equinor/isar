@@ -1,5 +1,4 @@
 import logging
-import traceback
 from typing import Union
 
 from azure.core.exceptions import (

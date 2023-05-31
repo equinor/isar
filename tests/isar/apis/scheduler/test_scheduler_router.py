@@ -2,14 +2,14 @@ import json
 import re
 from http import HTTPStatus
 from typing import List
-
 from unittest import mock
+
 import pytest
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
-from isar.apis.models.models import ControlMissionResponse, StartMissionResponse
+from isar.apis.models.models import ControlMissionResponse
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
