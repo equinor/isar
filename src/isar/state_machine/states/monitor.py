@@ -161,9 +161,6 @@ class Monitor(State):
                 f"No inspection data retrieved for step {str(current_step.id)[:8]}"
             )
 
-        # A deepcopy is made to freeze the mission before passing it to another thread
-        # through the queue
-
         for inspection in inspections:
             inspection.metadata.tag_id = current_step.tag_id
 
