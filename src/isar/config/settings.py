@@ -1,6 +1,6 @@
 import importlib.resources as pkg_resources
 import os
-from typing import List
+from typing import List, Optional
 
 from dotenv import load_dotenv
 from pydantic import BaseSettings, Field, validator
@@ -310,6 +310,12 @@ class RobotSettings(BaseSettings):
     # Model of the robot which ISAR is connected to
     # This should be set in the robot package settings.env file
     ROBOT_MODEL: RobotModel = Field(default=RobotModel.Robot)  # type: ignore
+
+    # Valid arm poses that the robot may utilize
+    # This should be set in the robot package settings.env file
+    # Note that if the robot does not support moving an arm this will be None and
+    # the functionality will be unavailable
+    VALID_ARM_POSES: Optional[List[str]] = Field(default=None)
 
     class Config:
         env_file_encoding = "utf-8"

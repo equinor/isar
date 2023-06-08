@@ -123,6 +123,16 @@ class Localize(MotionStep):
 
 
 @dataclass
+class MoveArm(MotionStep):
+    """
+    Step which causes the robot to move its arm
+    """
+
+    arm_pose: str
+    type: Literal["move_arm"] = "move_arm"
+
+
+@dataclass
 class TakeImage(InspectionStep):
     """
     Step which causes the robot to take an image towards the given coordinate.
@@ -210,4 +220,5 @@ STEPS = Union[
     TakeVideo,
     TakeThermalVideo,
     RecordAudio,
+    MoveArm,
 ]

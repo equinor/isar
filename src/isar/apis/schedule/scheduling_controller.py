@@ -21,7 +21,7 @@ from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.step import DriveToPose, Localize
+from robot_interface.models.mission.step import DriveToPose, Localize, MoveArm
 from robot_interface.models.mission.task import Task
 
 
@@ -37,7 +37,6 @@ class SchedulingController:
     def start_mission_by_id(
         self,
         mission_id: str = Path(
-            ...,
             alias="id",
             title="Mission ID",
             description="ID-number for predefined mission",
@@ -247,6 +246,54 @@ class SchedulingController:
 
         self.logger.info(
             f"Starting localization mission with ISAR Mission ID: '{mission.id}'"
+        )
+        self.scheduling_utilities.start_mission(
+            mission=mission,
+            initial_pose=None,
+        )
+        return self._api_response(mission)
+
+    def start_move_arm_mission(
+        self,
+        arm_pose_literal: str = Path(
+            ...,
+            alias="arm_pose_literal",
+            title="Arm pose literal",
+            description="Arm pose as a literal",
+        ),
+    ) -> StartMissionResponse:
+        self.logger.info("Received request to start new move arm mission")
+
+        if not robot_settings.VALID_ARM_POSES:
+            error_message: str = (
+                f"Received a request to move the arm but the robot "
+                f"{settings.ROBOT_NAME} does not support moving an arm"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST, detail=error_message
+            )
+
+        if arm_pose_literal not in robot_settings.VALID_ARM_POSES:
+            error_message = (
+                f"Received a request to move the arm but the arm pose "
+                f"{arm_pose_literal} is not supported by the robot "
+                f"{settings.ROBOT_NAME}"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST, detail=error_message
+            )
+
+        state: States = self.scheduling_utilities.get_state()
+
+        self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
+
+        step: MoveArm = MoveArm(arm_pose=arm_pose_literal)
+        mission: Mission = Mission(tasks=[Task(steps=[step])])
+
+        self.logger.info(
+            f"Starting move arm mission with ISAR Mission ID: '{mission.id}'"
         )
         self.scheduling_utilities.start_mission(
             mission=mission,
