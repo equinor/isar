@@ -63,6 +63,9 @@ can be found in [this repository](https://github.com/equinor/isar-robot). Instal
 pip install isar-robot
 ```
 
+NB: isar-robot has not been published to PyPi for some time, and needs to be downloaded directly
+from git to work.
+
 Then, ensure the `ISAR_ROBOT_PACKAGE` variable in [settings.env](./src/isar/config/settings.env)
 is set to the name of the package you installed. `isar_robot` is set by default. See the section
 for [configuration](#configuration) for overwriting configuration.
