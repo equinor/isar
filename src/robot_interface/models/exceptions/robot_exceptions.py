@@ -18,6 +18,7 @@ class ErrorReason(str, Enum):
     RobotMapException: str = "robot_map_exception"
     RobotTransformException: str = "robot_transform_exception"
     RobotUnknownErrorException: str = "robot_unknown_error_exception"
+    RobotDisconnectedException: str = "robot_disconnected_exception"
 
 
 @dataclass
@@ -203,6 +204,17 @@ class RobotUnknownErrorException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
             error_reason=ErrorReason.RobotUnknownErrorException,
+            error_description=error_description,
+        )
+
+    pass
+
+
+# An exception which should be thrown by the robot package if the robot is not connected to the cloud
+class RobotDisconnectedException(RobotException):
+    def __init__(self, error_description: str) -> None:
+        super().__init__(
+            error_reason=ErrorReason.RobotDisconnectedException,
             error_description=error_description,
         )
 
