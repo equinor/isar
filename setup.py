@@ -41,7 +41,7 @@ setup(
         "opencensus-ext-azure",
         "numpy",
         "paho-mqtt",
-        "pydantic",
+        "pydantic==1.10.11",
         "PyJWT",
         "python-dotenv",
         "PyYAML",
