@@ -58,6 +58,7 @@ class Settings(BaseSettings):
 
     # ISAR telemetry intervals
     ROBOT_STATUS_PUBLISH_INTERVAL: int = Field(default=1)
+    ROBOT_HEARTBEAT_PUBLISH_INTERVAL: int = Field(default=1)
     ROBOT_INFO_PUBLISH_INTERVAL: int = Field(default=5)
     ROBOT_API_STATUS_POLL_INTERVAL: int = Field(default=5)
 
@@ -223,6 +224,7 @@ class Settings(BaseSettings):
     TOPIC_ISAR_INSPECTION_RESULT = Field(default="inspection_result")
     TOPIC_ISAR_ROBOT_STATUS: str = Field(default="robot_status")
     TOPIC_ISAR_ROBOT_INFO: str = Field(default="robot_info")
+    TOPIC_ISAR_ROBOT_HEARTBEAT: str = Field(default="robot_heartbeat")
 
     # Logging
 
@@ -271,6 +273,7 @@ class Settings(BaseSettings):
         "TOPIC_ISAR_STEP",
         "TOPIC_ISAR_ROBOT_STATUS",
         "TOPIC_ISAR_ROBOT_INFO",
+        "TOPIC_ISAR_ROBOT_HEARTBEAT",
         "TOPIC_ISAR_INSPECTION_RESULT",
         pre=True,
         always=True,

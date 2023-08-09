@@ -16,6 +16,9 @@ from isar.services.service_connections.mqtt.mqtt_client import MqttClient
 from isar.services.service_connections.mqtt.robot_info_publisher import (
     RobotInfoPublisher,
 )
+from isar.services.service_connections.mqtt.robot_keep_alive_publisher import (
+    RobotHeartbeatPublisher,
+)
 from isar.services.service_connections.mqtt.robot_status_publisher import (
     RobotStatusPublisher,
 )
@@ -74,6 +77,17 @@ if __name__ == "__main__":
             daemon=True,
         )
         threads.append(robot_info_thread)
+
+        robot_heartbeat_publisher: RobotHeartbeatPublisher = RobotHeartbeatPublisher(
+            mqtt_queue=queues.mqtt_queue
+        )
+
+        robot_heartbeat_thread: Thread = Thread(
+            target=robot_heartbeat_publisher.run,
+            name="ISAR Robot Heartbeat Publisher",
+            daemon=True,
+        )
+        threads.append(robot_heartbeat_thread)
 
         publishers: List[Thread] = robot.get_telemetry_publishers(
             queue=queues.mqtt_queue,

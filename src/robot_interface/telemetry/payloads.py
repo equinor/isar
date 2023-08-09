@@ -60,3 +60,10 @@ class RobotInfoPayload:
     host: str
     port: int
     timestamp: datetime
+
+
+@dataclass
+class RobotHeartbeatPayload:
+    isar_id: str
+    robot_name: str
+    timestamp: datetime
