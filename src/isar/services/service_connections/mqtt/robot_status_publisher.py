@@ -5,6 +5,7 @@ from datetime import datetime
 from logging import Logger
 from queue import Queue
 from threading import Thread
+from typing import Optional
 
 from isar.config.settings import settings
 from isar.state_machine.state_machine import StateMachine
@@ -49,16 +50,25 @@ class RobotStatusPublisher:
         )
         robot_status_thread.start()
 
+        previous_robot_status: Optional[RobotStatus] = None
+
         while True:
+            time.sleep(settings.ROBOT_STATUS_PUBLISH_INTERVAL)
+
             combined_status: RobotStatus = self._get_combined_robot_status(
                 robot_status=robot_status_monitor.robot_status,
                 current_state=self.state_machine.current_state,
             )
 
+            if previous_robot_status:
+                if previous_robot_status == combined_status:
+                    continue
+
             payload: RobotStatusPayload = RobotStatusPayload(
                 isar_id=settings.ISAR_ID,
                 robot_name=settings.ROBOT_NAME,
                 robot_status=combined_status,
+                previous_robot_status=previous_robot_status,
                 current_isar_state=self.state_machine.current_state,
                 current_mission_id=self.state_machine.current_mission.id
                 if self.state_machine.current_mission
@@ -77,7 +87,7 @@ class RobotStatusPublisher:
                 payload=json.dumps(payload, cls=EnhancedJSONEncoder),
             )
 
-            time.sleep(settings.ROBOT_STATUS_PUBLISH_INTERVAL)
+            previous_robot_status = combined_status
 
 
 class RobotStatusMonitor:
