@@ -40,6 +40,7 @@ def construct_metadata_file(
             "mission_date": datetime.utcnow().date(),
             "isar_id": settings.ISAR_ID,
             "robot_name": settings.ROBOT_NAME,
+            "analysis_type": inspection.metadata.analysis_type,
         },
         "data": [
             {

@@ -66,7 +66,6 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
                     duration=inspection.duration,
                     target=inspection.inspection_target.to_alitra_position(),
                     tag_id=tag_id,
-                    analysis=inspection.analysis_types,
                     metadata=inspection.metadata,
                     id=inspection.id,
                 )
@@ -119,7 +118,6 @@ def create_inspection_step(
     inspection_type: InspectionTypes,
     duration: float,
     target: Position,
-    analysis: Optional[str],
     tag_id: Optional[str],
     metadata: Optional[dict],
     id: Optional[str],
@@ -141,8 +139,6 @@ def create_inspection_step(
 
     if tag_id:
         inspection_step.tag_id = tag_id
-    if analysis:
-        inspection_step.analysis = analysis
     if metadata:
         inspection_step.metadata = metadata
     if id:
