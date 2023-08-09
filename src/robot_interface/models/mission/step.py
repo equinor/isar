@@ -66,7 +66,6 @@ class InspectionStep(Step):
     inspections: List[Inspection] = field(default_factory=list, init=False)
     tag_id: Optional[str] = field(default=None, init=False)
     type = "inspection_type"
-    analysis: Optional[str] = field(default=None, init=False)
     metadata: Optional[dict] = field(default_factory=dict, init=False)
 
     @staticmethod
