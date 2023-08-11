@@ -13,11 +13,11 @@ from isar.config.settings import settings
 from isar.models.communication.queues.queues import Queues
 from isar.modules import get_injector
 from isar.services.service_connections.mqtt.mqtt_client import MqttClient
+from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
+    RobotHeartbeatPublisher,
+)
 from isar.services.service_connections.mqtt.robot_info_publisher import (
     RobotInfoPublisher,
-)
-from isar.services.service_connections.mqtt.robot_keep_alive_publisher import (
-    RobotHeartbeatPublisher,
 )
 from isar.services.service_connections.mqtt.robot_status_publisher import (
     RobotStatusPublisher,
