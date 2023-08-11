@@ -32,7 +32,6 @@ class InspectionTypes(str, Enum):
 class StartMissionInspectionDefinition(BaseModel):
     type: InspectionTypes = Field(default=InspectionTypes.image)
     inspection_target: InputPosition
-    analysis_types: Optional[str]
     duration: Optional[float]
     metadata: Optional[dict]
     id: Optional[str]
