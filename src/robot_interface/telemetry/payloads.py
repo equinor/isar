@@ -26,6 +26,11 @@ class TelemetryBatteryPayload(TelemetryPayload):
 
 
 @dataclass
+class TelemetryObstacleStatusPayload(TelemetryPayload):
+    obstacle_status: bool
+
+
+@dataclass
 class TelemetryPressurePayload(TelemetryPayload):
     pressure_level: float
 
