@@ -206,11 +206,33 @@ The system consists of two main components.
 
 ### State machine
 
-The state machine handles interaction with the robots API and monitors the execution of missions. It also enables
-interacting with the robot before, during and after missions.
+The state machine handles interaction with the robots API and monitors the execution of missions. It also enables interacting with the robot before, during and after missions.
 
 The state machine is based on the [transitions](https://github.com/pytransitions/transitions) package for Python. An visualization of the state machine can be seen below:
-![State Machine](./docs/state_machine_diagram.png)
+
+<!-- ![State Machine](./docs/state_machine_diagram.png) -->
+
+```mermaid
+---
+title: State Machine
+---
+stateDiagram-v2
+direction LR
+[*] --> Idle
+Idle --> Initialize: mission_started
+Initialize --> Idle: initialization_failed
+Initialize --> Initiate: initialization_successful
+Initiate --> Idle: mission_finished | initiate_failed
+Initiate --> Initiate: initiate_infeasible
+Initiate --> Monitor: initiated
+Monitor --> Initiate: step_finished
+Monitor --> Stop: pause | stop
+Initiate --> Stop: pause | stop
+Stop --> Paused: mission_paused
+Stop --> Idle: mission_stopped
+Paused --> Initiate: resume
+Paused --> Idle: mission_stopped
+```
 
 In general the states
 
