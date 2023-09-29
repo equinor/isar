@@ -39,6 +39,8 @@ class RobotStatusPublisher:
             return RobotStatus.Available
         elif current_state != States.Idle or robot_status == RobotStatus.Busy:
             return RobotStatus.Busy
+        elif current_state != States.Idle or robot_status == RobotStatus.Stuck:
+            return RobotStatus.Busy
         return None
 
     def run(self) -> None:
