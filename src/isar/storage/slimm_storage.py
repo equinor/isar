@@ -7,12 +7,12 @@ from requests import HTTPError, RequestException
 from requests_toolbelt import MultipartEncoder
 
 from isar.config.settings import settings
-from robot_interface.models.mission.mission import Mission
 from isar.services.auth.azure_credentials import AzureCredentials
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.storage.storage_interface import StorageException, StorageInterface
 from isar.storage.utilities import get_filename
 from robot_interface.models.inspection.inspection import Inspection, ThermalVideo, Video
+from robot_interface.models.mission.mission import Mission
 
 
 class SlimmStorage(StorageInterface):
@@ -125,7 +125,8 @@ class SlimmStorage(StorageInterface):
                 "ImageMetadata.AnalysisMethods": inspection.metadata.additional[
                     "analysis_type"
                 ]
-                if inspection.metadata.additional["analysis_type"]
+                if inspection.metadata.additional
+                and inspection.metadata.additional["analysis_type"]
                 else "N/A",
                 "ImageMetadata.Description": str(inspection.metadata.additional),
                 "ImageMetadata.FunctionalLocation": inspection.metadata.tag_id  # noqa: E501
@@ -172,7 +173,8 @@ class SlimmStorage(StorageInterface):
                 "VideoMetadata.AnalysisMethods": inspection.metadata.additional[
                     "analysis_type"
                 ]
-                if inspection.metadata.additional["analysis_type"]
+                if inspection.metadata.additional
+                and inspection.metadata.additional["analysis_type"]
                 else "N/A",
                 "VideoMetadata.Description": str(inspection.metadata.additional),
                 "VideoMetadata.FunctionalLocation": inspection.metadata.tag_id  # noqa: E501
