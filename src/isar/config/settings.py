@@ -1,9 +1,10 @@
 import importlib.resources as pkg_resources
 import os
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from dotenv import load_dotenv
-from pydantic import BaseSettings, Field, validator
+from pydantic import Field, ValidationInfo, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from isar.config import predefined_missions
 from robot_interface.models.robots.robot_model import RobotModel
@@ -11,6 +12,14 @@ from robot_interface.telemetry.payloads import VideoStream
 
 
 class Settings(BaseSettings):
+    def __init__(self) -> None:
+        try:
+            with pkg_resources.path(f"isar.config", "settings.env") as path:
+                env_file_path = path
+        except ModuleNotFoundError:
+            env_file_path = None
+        super().__init__(_env_file=env_file_path)
+
     # Determines which robot package ISAR will attempt to import
     # Name must match with an installed python package in the local environment
     ROBOT_PACKAGE: str = Field(default="isar_robot")
@@ -32,7 +41,7 @@ class Settings(BaseSettings):
     FSM_SLEEP_TIME: float = Field(default=0.1)
 
     # Location of JSON files containing predefined missions for the Local Planner to use
-    path = os.path.dirname(predefined_missions.__file__)
+    path: str = os.path.dirname(predefined_missions.__file__)
     PREDEFINED_MISSIONS_FOLDER: str = Field(default=path + "/")
 
     # Name of default map transformation
@@ -217,14 +226,18 @@ class Settings(BaseSettings):
     DATA_CLASSIFICATION: str = Field(default="internal")
 
     # List of MQTT Topics
-    TOPIC_ISAR_STATE: str = Field(default="state")
-    TOPIC_ISAR_MISSION: str = Field(default="mission")
-    TOPIC_ISAR_TASK: str = Field(default="task")
-    TOPIC_ISAR_STEP: str = Field(default="step")
-    TOPIC_ISAR_INSPECTION_RESULT = Field(default="inspection_result")
-    TOPIC_ISAR_ROBOT_STATUS: str = Field(default="robot_status")
-    TOPIC_ISAR_ROBOT_INFO: str = Field(default="robot_info")
-    TOPIC_ISAR_ROBOT_HEARTBEAT: str = Field(default="robot_heartbeat")
+    TOPIC_ISAR_STATE: str = Field(default="state", validate_default=True)
+    TOPIC_ISAR_MISSION: str = Field(default="mission", validate_default=True)
+    TOPIC_ISAR_TASK: str = Field(default="task", validate_default=True)
+    TOPIC_ISAR_STEP: str = Field(default="step", validate_default=True)
+    TOPIC_ISAR_INSPECTION_RESULT: str = Field(
+        default="inspection_result", validate_default=True
+    )
+    TOPIC_ISAR_ROBOT_STATUS: str = Field(default="robot_status", validate_default=True)
+    TOPIC_ISAR_ROBOT_INFO: str = Field(default="robot_info", validate_default=True)
+    TOPIC_ISAR_ROBOT_HEARTBEAT: str = Field(
+        default="robot_heartbeat", validate_default=True
+    )
 
     # Logging
 
@@ -252,21 +265,22 @@ class Settings(BaseSettings):
 
     REQUIRED_ROLE: str = Field(default="Mission.Control")
 
-    @validator("LOG_LEVELS", pre=True, always=True)
-    def set_log_levels(cls, v, values) -> dict:
+    @field_validator("LOG_LEVELS")
+    @classmethod
+    def set_log_levels(cls, v: Any, info: ValidationInfo) -> dict:
         return {
-            "api": values["API_LOG_LEVEL"],
-            "main": values["MAIN_LOG_LEVEL"],
-            "mqtt": values["MQTT_LOG_LEVEL"],
-            "state_machine": values["STATE_MACHINE_LOG_LEVEL"],
-            "uploader": values["UPLOADER_LOG_LEVEL"],
-            "console": values["CONSOLE_LOG_LEVEL"],
-            "urllib3": values["URLLIB3_LOG_LEVEL"],
-            "uvicorn": values["UVICORN_LOG_LEVEL"],
-            "azure": values["AZURE_LOG_LEVEL"],
+            "api": info.data["API_LOG_LEVEL"],
+            "main": info.data["MAIN_LOG_LEVEL"],
+            "mqtt": info.data["MQTT_LOG_LEVEL"],
+            "state_machine": info.data["STATE_MACHINE_LOG_LEVEL"],
+            "uploader": info.data["UPLOADER_LOG_LEVEL"],
+            "console": info.data["CONSOLE_LOG_LEVEL"],
+            "urllib3": info.data["URLLIB3_LOG_LEVEL"],
+            "uvicorn": info.data["UVICORN_LOG_LEVEL"],
+            "azure": info.data["AZURE_LOG_LEVEL"],
         }
 
-    @validator(
+    @field_validator(
         "TOPIC_ISAR_STATE",
         "TOPIC_ISAR_MISSION",
         "TOPIC_ISAR_TASK",
@@ -275,20 +289,16 @@ class Settings(BaseSettings):
         "TOPIC_ISAR_ROBOT_INFO",
         "TOPIC_ISAR_ROBOT_HEARTBEAT",
         "TOPIC_ISAR_INSPECTION_RESULT",
-        pre=True,
-        always=True,
     )
-    def prefix_isar_topics(cls, v, values):
-        return f"isar/{values['ISAR_ID']}/{v}"
+    @classmethod
+    def prefix_isar_topics(cls, v: Any, info: ValidationInfo):
+        return f"isar/{info.data['ISAR_ID']}/{v}"
 
-    class Config:
-        with pkg_resources.path("isar.config", "settings.env") as path:
-            package_path = path
-
-        env_prefix = "ISAR_"
-        env_file = package_path
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_prefix="ISAR_",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+    )
 
 
 load_dotenv()
@@ -319,10 +329,10 @@ class RobotSettings(BaseSettings):
     # Note that if the robot does not support moving an arm this will be None and
     # the functionality will be unavailable
     VALID_ARM_POSES: Optional[List[str]] = Field(default=None)
-
-    class Config:
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+    )
 
 
 robot_settings = RobotSettings()

@@ -11,7 +11,7 @@ class StepResponse(BaseModel):
 
 class TaskResponse(BaseModel):
     id: str
-    tag_id: Optional[str]
+    tag_id: Optional[str] = None
     steps: List[StepResponse]
 
 
