@@ -40,7 +40,9 @@ def construct_metadata_file(
             "mission_date": datetime.utcnow().date(),
             "isar_id": settings.ISAR_ID,
             "robot_name": settings.ROBOT_NAME,
-            "analysis_type": inspection.metadata.additional["analysis_type"],
+            "analysis_type": inspection.metadata.additional["analysis_type"]
+            if inspection.metadata.additional
+            else "N/A",
         },
         "data": [
             {
