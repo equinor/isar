@@ -32,22 +32,22 @@ class InspectionTypes(str, Enum):
 class StartMissionInspectionDefinition(BaseModel):
     type: InspectionTypes = Field(default=InspectionTypes.image)
     inspection_target: InputPosition
-    duration: Optional[float]
-    metadata: Optional[dict]
-    id: Optional[str]
+    duration: Optional[float] = None
+    metadata: Optional[dict] = None
+    id: Optional[str] = None
 
 
 class StartMissionTaskDefinition(BaseModel):
     pose: InputPose
     inspections: List[StartMissionInspectionDefinition]
-    tag: Optional[str]
-    id: Optional[str]
+    tag: Optional[str] = None
+    id: Optional[str] = None
 
 
 class StartMissionDefinition(BaseModel):
     tasks: List[StartMissionTaskDefinition]
-    id: Optional[str]
-    name: Optional[str]
+    id: Optional[str] = None
+    name: Optional[str] = None
 
 
 def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
