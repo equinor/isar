@@ -37,9 +37,9 @@ class RobotStatusPublisher:
             return RobotStatus.Offline
         elif current_state == States.Idle and robot_status == RobotStatus.Available:
             return RobotStatus.Available
+        elif robot_status == RobotStatus.Blocked:
+            return RobotStatus.Blocked
         elif current_state != States.Idle or robot_status == RobotStatus.Busy:
-            return RobotStatus.Busy
-        elif current_state != States.Idle or robot_status == RobotStatus.Stuck:
             return RobotStatus.Busy
         return None
 
