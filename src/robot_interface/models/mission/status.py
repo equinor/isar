@@ -33,4 +33,4 @@ class RobotStatus(Enum):
     Available: str = "available"
     Busy: str = "busy"
     Offline: str = "offline"
-    Stuck: str = "stuck"
+    Blocked: str = "blocked"

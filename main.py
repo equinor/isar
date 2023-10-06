@@ -49,7 +49,6 @@ if __name__ == "__main__":
         target=uploader.run, name="ISAR Uploader", daemon=True
     )
     threads.append(uploader_thread)
-
     if settings.MQTT_ENABLED:
         mqtt_client: MqttClient = MqttClient(mqtt_queue=queues.mqtt_queue)
 
@@ -57,7 +56,6 @@ if __name__ == "__main__":
             target=mqtt_client.run, name="ISAR MQTT Client", daemon=True
         )
         threads.append(mqtt_thread)
-
         robot_status_publisher: RobotStatusPublisher = RobotStatusPublisher(
             mqtt_queue=queues.mqtt_queue, robot=robot, state_machine=state_machine
         )
