@@ -107,7 +107,7 @@ class DockingProcedure(MotionStep):
     Step which causes the robot to dock or undock
     """
 
-    behavior: Literal["dock, undock"]
+    behavior: Literal["dock", "undock"]
     type: Literal["docking_procedure"] = "docking_procedure"
 
 
