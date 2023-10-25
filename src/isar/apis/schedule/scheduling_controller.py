@@ -306,8 +306,9 @@ class SchedulingController:
             robot_package=settings.ROBOT_PACKAGE,
             isar_id=settings.ISAR_ID,
             robot_name=settings.ROBOT_NAME,
-            robot_map_name=settings.DEFAULT_MAP,
             robot_capabilities=robot_settings.CAPABILITIES,
+            robot_map_name=settings.DEFAULT_MAP,
+            plant_short_name=settings.PLANT_SHORT_NAME,
         )
 
     def _api_response(self, mission: Mission) -> StartMissionResponse:

@@ -363,3 +363,9 @@ class TestDriveTo:
     def test_state_machine_in_conflicting_state(self, client: TestClient):
         response = client.post(url=self.schedule_drive_to_path, data=self.mock_data)
         assert response.status_code == HTTPStatus.CONFLICT
+
+
+class TestInfoRobotSettings:
+    def test_info_robot_settings(self, client: TestClient):
+        response = client.get(url="/info/robot-settings")
+        assert response.status_code == HTTPStatus.OK
