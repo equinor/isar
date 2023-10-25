@@ -233,6 +233,7 @@ class StateMachine(object):
                 f"step: {str(self.current_step.id)[:8]}"
             )
         else:
+            self.current_mission.status = MissionStatus.InProgress
             self.logger.info(
                 f"Successfully initiated full mission with ID: "
                 f"{str(self.current_mission.id)[:8]}"
