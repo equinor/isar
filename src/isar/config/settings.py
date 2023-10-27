@@ -298,6 +298,7 @@ class Settings(BaseSettings):
         env_prefix="ISAR_",
         env_file_encoding="utf-8",
         case_sensitive=True,
+        extra="ignore",
     )
 
 
@@ -330,8 +331,7 @@ class RobotSettings(BaseSettings):
     # the functionality will be unavailable
     VALID_ARM_POSES: Optional[List[str]] = Field(default=None)
     model_config = SettingsConfigDict(
-        env_file_encoding="utf-8",
-        case_sensitive=True,
+        env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
     )
 
 
