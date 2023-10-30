@@ -9,9 +9,9 @@ from injector import inject
 
 from isar.config.settings import settings
 from isar.models.communication.queues import Queues
-from robot_interface.models.mission.mission import Mission
 from isar.storage.storage_interface import StorageException, StorageInterface
 from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission.mission import Mission
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
@@ -131,26 +131,29 @@ class Uploader:
 
     def _process_upload_queue(self) -> None:
         ready_items: List[UploaderQueueItem] = [
-            x for x in self._internal_upload_queue if x.is_ready_for_upload()
+            item for item in self._internal_upload_queue if item.is_ready_for_upload()
         ]
         for item in ready_items:
             inspection_path = self._upload(item)
-            self._publish_inspection_path(
+            self._publish_inspection_result(
                 inspection=item.inspection, inspection_path=inspection_path
             )
 
-    def _publish_inspection_path(
+    def _publish_inspection_result(
         self, inspection: Inspection, inspection_path: str
     ) -> None:
-        """Publishes the image url to the MQTT Broker"""
+        """Publishes the reference of the inspection result to the MQTT Broker
+        along with the analysis type
+        """
         if not self.mqtt_publisher:
             return
         payload: str = json.dumps(
             {
                 "isar_id": settings.ISAR_ID,
                 "robot_name": settings.ROBOT_NAME,
-                "step_id": inspection.id,
+                "inspection_id": inspection.id,
                 "inspection_path": inspection_path,
+                "analysis_type": inspection.metadata.analysis_type,
                 "timestamp": datetime.utcnow(),
             },
             cls=EnhancedJSONEncoder,
