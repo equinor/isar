@@ -56,8 +56,9 @@ pre-commit uninstall
 ### Robot integration
 
 To connect the state machine to a robot in a separate repository, it is required that the separate repository implements
-the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interface/robot_interface.py). A mocked robot
-can be found in [this repository](https://github.com/equinor/isar-robot). Install the repo, i.e:
+the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interface/robot_interface.py).  
+The separate repository should also have a settings.env file in a config folder where `CAPABILITIES` and `ROBOT_MODEL` are set.
+A mocked robot can be found in [this repository](https://github.com/equinor/isar-robot). Install the repo, i.e:
 
 ```bash
 pip install isar-robot
