@@ -192,12 +192,6 @@ make docs
 
 The documentation can now be viewed at `docs/build/html/index.html`.
 
-### Contributing
-
-We welcome all kinds of contributions, including code, bug reports, issues, feature requests, and documentation. The
-preferred way of submitting a contribution is to either make an [issue](https://github.com/equinor/isar/issues) on
-GitHub or by forking the project on GitHub and making a pull requests.
-
 ## Components
 
 The system consists of two main components.
@@ -366,3 +360,9 @@ ISAR_MQTT_PASSWORD
 ```
 
 If not specified the password will default to an empty string.
+
+# Contributions
+
+Equinor welcomes all kinds of contributions, including code, bug reports, issues, feature requests, and documentation
+Please initiate your contribution by creating an [issue](https://github.com/equinor/isar/issues) or by forking the
+project and making a pull requests. Commit messages shall be written according to [this guide](https://cbea.msgit-commit/).
