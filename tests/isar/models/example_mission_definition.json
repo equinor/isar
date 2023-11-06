@@ -1,0 +1,40 @@
+{
+    "tasks": [
+        {
+            "pose": {
+                "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "frame_name": "robot"
+                },
+                "orientation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 0,
+                    "frame_name": "robot"
+                },
+                "frame_name": "robot"
+            },
+            "inspections": [
+                {
+                    "type": "Image",
+                    "inspection_target": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "frame_name": "robot"
+                    },
+                    "duration": 0,
+                    "metadata": {},
+                    "id": "generated_inspection_id"
+                }
+            ],
+            "tag": "MY-TAG-123",
+            "id": "generated_task_id"
+        }
+    ],
+    "id": "generated_mission_id",
+    "name": "my-mission"
+}
