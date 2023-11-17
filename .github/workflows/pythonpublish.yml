@@ -1,24 +1,57 @@
 name: Upload Python Package
 
+# This is an adaptation of https://github.com/code-specialist/pypi-poetry-publish.
+# That action is released under an MIT License, and as such, so is this workflow.
+
 on:
   release:
-    types: [created]
+    types: [released]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: |
+          pipx install poetry==${{ POETRY_VERSION }}
+
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: "3.x"
+
+      - name: Set GitHub Tag as Package Version
+        run: |
+          sed -i -r 's/__version__ *= *".*"/__version__ = "${{ github.event.release.tag_name }}"/g' ./src/isar/__init__.py
+          sed -i '0,/version =.*/s//version = "'"${{ github.event.release.tag_name }}"'"/' ./pyproject.toml
+        shell: bash
+
+      - name: Update poetry.lock
+        run: |
+          poetry lock
+#          poetry check # Error message: "Declared README files must be of same type: found text/markdown, text/plain." Not sure why
+
+      - name: Add and Commit Version
+        run: |
+          git add ./src/isar/__init__.py ./pyproject.toml ./poetry.lock
+          git config --global user.name "PyPI Poetry Publish Bot"
+          git config --global user.email "fg_robots_dev@equinor.com"
+          git commit -m "Change version to ${{ github.event.release.tag_name }}" --allow-empty
+          git push origin HEAD:main
+        shell: bash
+
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade build
-          python -m pip install --upgrade twine
-      - name: Build and publish
+          poetry config virtualenvs.options.no-pip true
+          poetry config virtualenvs.options.no-setuptools true
+          poetry install --no-root
+
+      - name: Build and Publish
         run: |
-          python -m build
-          python -m twine upload --verbose --skip-existing -p ${{ secrets.PYPI_TOKEN }} -u __token__ dist/*
+          poetry config repositories.publish https://pypi.org/legacy/
+          poetry publish -p ${{ secrets.PYPI_TOKEN }} -u __token__ -r publish --build
+        shell: bash
