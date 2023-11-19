@@ -7,18 +7,19 @@ RUN python -m venv --copies $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN python -m pip install --upgrade pip
+RUN pip install poetry==1.7.0
 
-# Install dependencies before ISAR to cache pip installation
+# Install dependencies before ISAR to cache main dependencies
 RUN mkdir -p src
-COPY setup.py README.md ./
-RUN pip install .
+COPY pyproject.toml poetry.lock README.md LICENSE ./
+RUN poetry install --no-ansi --no-interaction --no-root --only main
 
 # Install the base isar-robot package
 RUN pip install isar-robot
 
 COPY . .
 
-RUN pip install .
+RUN poetry install --no-ansi --no-interaction --only-root
 
 EXPOSE 3000
 
