@@ -6,15 +6,13 @@ ENV VIRTUAL_ENV=/venv
 RUN python -m venv --copies $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Pip needed for isar-robot and pipx. Undersøk om pipx virkelig trengs, eller om pip can installere poetry
 RUN python -m pip install --upgrade pip
-RUN pip install pipx
-RUN pipx install poetry
+RUN pip install poetry==1.7.0
 
-# Install dependencies before ISAR to cache poetry installation
+# Install dependencies before ISAR to cache main dependencies
 RUN mkdir -p src
-COPY pyproject.toml poetry.lcok README.md ./
-RUN poetry install --no-ansi --no-interaction --only main
+COPY pyproject.toml poetry.lock README.md LICENSE ./
+RUN poetry install --no-ansi --no-interaction --no-root --only main
 
 # Install the base isar-robot package
 RUN pip install isar-robot
@@ -22,7 +20,7 @@ RUN pip install isar-robot
 COPY . .
 
 # Do we need to add anything here for poetry? for instance COPY pyproject.toml and poetry.lock?
-RUN poetry install
+RUN poetry install --no-ansi --no-interaction --only-root
 
 EXPOSE 3000
 

@@ -15,6 +15,7 @@ classifiers = [
         "Topic :: Software Development :: Libraries",
     ]
 
+
 [tool.poetry.dependencies]
 python = "^3.9, <3.13" # Numpy requires this to be <3.13
 alitra = "^1.1.0" # Was set manually
@@ -40,7 +41,7 @@ requests = "^2.31.0"
 transitions = "^0.9.0"
 uvicorn = "^0.24.0.post1"
 numpy = "^1.26.1"
-
+poetry = "1.7.0" # Tells SNYK we use poetry in dockerfile, !update manually the dockerfile!
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.10.1"
