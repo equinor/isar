@@ -40,7 +40,8 @@ requests = "^2.31.0"
 transitions = "^0.9.0"
 uvicorn = "^0.24.0.post1"
 numpy = "^1.26.1"
-
+# To make SNYK monitor poetry, as we lock the poetry version in the Dockerfile.
+poetry = "1.7.0"  # MUST be same as in the Dockerfile!
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.10.1"
@@ -56,5 +57,5 @@ requests-mock = "^1.11.0"
 sphinx = "^7.2.6"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.2"]
 build-backend = "poetry.core.masonry.api"
