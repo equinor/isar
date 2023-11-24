@@ -2,7 +2,6 @@
 !src/isar
 !src/robot_interface
 !main.py
-!setup.py
 !pyproject.toml
 !poetry.lock
 !LICENSE
