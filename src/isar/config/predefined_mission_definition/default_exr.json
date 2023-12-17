@@ -1,0 +1,51 @@
+{
+    "mission_definition": {
+        "tasks": [
+            {
+                "pose": {
+                    "position": {
+                        "x": -3.2629,
+                        "y": 3.0795,
+                        "z": 0.0055,
+                        "frame_name": "robot"
+                    },
+                    "orientation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1,
+                        "frame_name": "robot"
+                    },
+                    "frame_name": "robot"
+                },
+                "tag": "equinor_exR_tag_simulator",
+                "inspections": [
+                    {
+                        "type": "Image",
+                        "inspection_target": {
+                            "x": 6.6550,
+                            "y": 3.7987,
+                            "z": 0.6145,
+                            "frame_name": "robot"
+                        },
+                        "analysis_types": "CarSeal, Rust",
+                        "metadata": {
+                            "zoom": "2x"
+                        }
+                    },
+                    {
+                        "type": "ThermalVideo",
+                        "inspection_target": {
+                            "x": 6.6550,
+                            "y": 3.7987,
+                            "z": 0.6145,
+                            "frame_name": "robot"
+                        },
+                        "analysis_types": "GasDetection",
+                        "duration": 10
+                    }
+                ]
+            }
+        ]
+    }
+}
