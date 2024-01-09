@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.10.13-slim-bookworm
 
 WORKDIR /app
 
@@ -6,6 +6,8 @@ ENV VIRTUAL_ENV=/venv
 RUN python -m venv --copies $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+RUN apt-get update
+RUN apt-get install gcc python3-dev -y
 RUN python -m pip install --upgrade pip
 
 # Install dependencies before ISAR to cache pip installation
