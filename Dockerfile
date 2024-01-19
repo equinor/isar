@@ -1,14 +1,12 @@
-FROM python:3.10.13-slim-bookworm
+FROM python:3.10-slim AS builder
 
-WORKDIR /app
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends build-essential gcc
+RUN python -m pip install --upgrade pip
 
 ENV VIRTUAL_ENV=/venv
 RUN python -m venv --copies $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-RUN apt-get update
-RUN apt-get install gcc python3-dev -y
-RUN python -m pip install --upgrade pip
 
 # Install dependencies before ISAR to cache pip installation
 RUN mkdir -p src
@@ -21,6 +19,12 @@ RUN pip install isar-robot
 COPY . .
 
 RUN pip install .
+
+FROM python:3.10-slim
+COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+WORKDIR /app
 
 EXPOSE 3000
 
