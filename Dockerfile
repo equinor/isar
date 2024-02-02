@@ -1,4 +1,4 @@
-FROM python:3.10-slim AS builder
+FROM python:3.13.0a3-slim AS builder
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential gcc
@@ -20,7 +20,7 @@ COPY . .
 
 RUN pip install .
 
-FROM python:3.10-slim
+FROM python:3.13.0a3-slim
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
