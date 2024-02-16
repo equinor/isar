@@ -492,9 +492,9 @@ class StateMachine(object):
                 "mission_id": self.current_mission.id if self.current_mission else None,
                 "status": self.current_mission.status if self.current_mission else None,
                 "error_reason": error_message.error_reason if error_message else None,
-                "error_description": error_message.error_description
-                if error_message
-                else None,
+                "error_description": (
+                    error_message.error_description if error_message else None
+                ),
                 "timestamp": datetime.utcnow(),
             },
             cls=EnhancedJSONEncoder,
@@ -524,9 +524,9 @@ class StateMachine(object):
                 "task_id": task.id if task else None,
                 "status": task.status if task else None,
                 "error_reason": error_message.error_reason if error_message else None,
-                "error_description": error_message.error_description
-                if error_message
-                else None,
+                "error_description": (
+                    error_message.error_description if error_message else None
+                ),
                 "timestamp": datetime.utcnow(),
             },
             cls=EnhancedJSONEncoder,
@@ -558,9 +558,9 @@ class StateMachine(object):
                 "step_type": step.__class__.__name__ if step else None,
                 "status": step.status if step else None,
                 "error_reason": error_message.error_reason if error_message else None,
-                "error_description": error_message.error_description
-                if error_message
-                else None,
+                "error_description": (
+                    error_message.error_description if error_message else None
+                ),
                 "timestamp": datetime.utcnow(),
             },
             cls=EnhancedJSONEncoder,

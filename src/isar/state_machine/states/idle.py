@@ -25,9 +25,9 @@ class Idle(State):
 
     def _run(self) -> None:
         while True:
-            start_mission: Optional[
-                StartMissionMessage
-            ] = self.state_machine.should_start_mission()
+            start_mission: Optional[StartMissionMessage] = (
+                self.state_machine.should_start_mission()
+            )
             if start_mission:
                 self.state_machine.start_mission(
                     mission=start_mission.mission,

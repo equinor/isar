@@ -54,7 +54,9 @@ def configure_azure_handler(log_config: dict, keyvault: Keyvault) -> logging.Han
             "application-insights-connection-string"
         ).value
     except KeyvaultError:
-        message: str = f"CRITICAL ERROR: Missing connection string for Application Insights in key vault '{keyvault.name}'."
+        message: str = (
+            f"CRITICAL ERROR: Missing connection string for Application Insights in key vault '{keyvault.name}'."
+        )
         print(f"\n{message} \n")
         raise ConfigurationError(message)
 

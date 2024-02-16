@@ -72,15 +72,21 @@ class RobotStatusPublisher:
                 robot_status=combined_status,
                 previous_robot_status=previous_robot_status,
                 current_isar_state=self.state_machine.current_state,
-                current_mission_id=self.state_machine.current_mission.id
-                if self.state_machine.current_mission
-                else None,
-                current_task_id=self.state_machine.current_task.id
-                if self.state_machine.current_task
-                else None,
-                current_step_id=self.state_machine.current_step.id
-                if self.state_machine.current_step
-                else None,
+                current_mission_id=(
+                    self.state_machine.current_mission.id
+                    if self.state_machine.current_mission
+                    else None
+                ),
+                current_task_id=(
+                    self.state_machine.current_task.id
+                    if self.state_machine.current_task
+                    else None
+                ),
+                current_step_id=(
+                    self.state_machine.current_step.id
+                    if self.state_machine.current_step
+                    else None
+                ),
                 timestamp=datetime.utcnow(),
             )
 
