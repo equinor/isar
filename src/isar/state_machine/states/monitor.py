@@ -68,9 +68,9 @@ class Monitor(State):
                     )
 
             try:
-                status: Union[
-                    StepStatus, MissionStatus
-                ] = self.step_status_thread.get_output()
+                status: Union[StepStatus, MissionStatus] = (
+                    self.step_status_thread.get_output()
+                )
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
@@ -145,9 +145,9 @@ class Monitor(State):
         self, mission: Mission, current_step: InspectionStep
     ) -> None:
         try:
-            inspections: Sequence[
-                Inspection
-            ] = self.state_machine.robot.get_inspections(step=current_step)
+            inspections: Sequence[Inspection] = (
+                self.state_machine.robot.get_inspections(step=current_step)
+            )
 
         except (RobotRetrieveInspectionException, RobotException) as e:
             self._set_error_message(e)

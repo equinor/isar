@@ -122,16 +122,18 @@ class SlimmStorage(StorageInterface):
                 "ImageMetadata.CameraOrientation2": str(array_of_orientation[1]),
                 "ImageMetadata.CameraOrientation3": str(array_of_orientation[2]),
                 "ImageMetadata.CameraOrientation4": str(array_of_orientation[3]),
-                "ImageMetadata.AnalysisMethods": inspection.metadata.additional[
-                    "analysis_type"
-                ]
-                if inspection.metadata.additional
-                and inspection.metadata.additional["analysis_type"]
-                else "N/A",
+                "ImageMetadata.AnalysisMethods": (
+                    inspection.metadata.additional["analysis_type"]
+                    if inspection.metadata.additional
+                    and inspection.metadata.additional["analysis_type"]
+                    else "N/A"
+                ),
                 "ImageMetadata.Description": str(inspection.metadata.additional),
-                "ImageMetadata.FunctionalLocation": inspection.metadata.tag_id  # noqa: E501
-                if inspection.metadata.tag_id
-                else "N/A",
+                "ImageMetadata.FunctionalLocation": (
+                    inspection.metadata.tag_id  # noqa: E501
+                    if inspection.metadata.tag_id
+                    else "N/A"
+                ),
                 "Filename": filename,
                 "AttachedFile": (filename, inspection.data),
             }
@@ -170,16 +172,18 @@ class SlimmStorage(StorageInterface):
                 "VideoMetadata.CameraOrientation2": str(array_of_orientation[1]),
                 "VideoMetadata.CameraOrientation3": str(array_of_orientation[2]),
                 "VideoMetadata.CameraOrientation4": str(array_of_orientation[3]),
-                "VideoMetadata.AnalysisMethods": inspection.metadata.additional[
-                    "analysis_type"
-                ]
-                if inspection.metadata.additional
-                and inspection.metadata.additional["analysis_type"]
-                else "N/A",
+                "VideoMetadata.AnalysisMethods": (
+                    inspection.metadata.additional["analysis_type"]
+                    if inspection.metadata.additional
+                    and inspection.metadata.additional["analysis_type"]
+                    else "N/A"
+                ),
                 "VideoMetadata.Description": str(inspection.metadata.additional),
-                "VideoMetadata.FunctionalLocation": inspection.metadata.tag_id  # noqa: E501
-                if inspection.metadata.tag_id
-                else "N/A",
+                "VideoMetadata.FunctionalLocation": (
+                    inspection.metadata.tag_id  # noqa: E501
+                    if inspection.metadata.tag_id
+                    else "N/A"
+                ),
                 "Filename": filename,
                 "AttachedFile": (filename, inspection.data),
             }
