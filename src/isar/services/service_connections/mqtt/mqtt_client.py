@@ -53,7 +53,7 @@ class MqttClient(MqttClientInterface):
 
         self.port: int = settings.MQTT_PORT
 
-        self.client: Client = Client()
+        self.client: Client = Client(mqtt.CallbackAPIVersion.VERSION1)
 
         self.client.enable_logger(logger=self.logger)
 
