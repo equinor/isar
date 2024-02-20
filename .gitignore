@@ -132,6 +132,7 @@ dmypy.json
 
 .vscode
 **/node_modules
+*.code-workspace
 
 # Temporary result folders
 results
