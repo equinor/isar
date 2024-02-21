@@ -26,7 +26,7 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
-        "alitra>=1.1.0",
+        "alitra>=1.1.3",
         "azure-identity",
         "azure-keyvault-secrets",
         "azure-storage-blob",
