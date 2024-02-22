@@ -103,7 +103,7 @@ class Initiate(State):
                     f"{str(self.state_machine.current_mission.id)[:8]} because: "
                     f"{e.error_description}"
                 )
-                transition = self.state_machine.initiate_infeasible  # type: ignore
+                transition = self.state_machine.initiate_failed  # type: ignore
                 break
 
             except RobotException as e:
