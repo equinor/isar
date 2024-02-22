@@ -349,12 +349,26 @@ class StateMachine(object):
         self.stopped = True
 
     def _initiate_failed(self) -> None:
-        self.current_step.status = StepStatus.Failed
-        self.current_task.update_task_status()
-        self.current_mission.status = MissionStatus.Failed
-        self.publish_step_status(step=self.current_step)
-        self.publish_task_status(task=self.current_task)
-        self._finalize()
+        if self.stepwise_mission:
+            self.current_step.status = StepStatus.Failed
+            self.current_task.update_task_status()
+            self.current_mission.status = MissionStatus.Failed
+            self.publish_step_status(step=self.current_step)
+            self.publish_task_status(task=self.current_task)
+            self._finalize()
+
+        else:
+            self.current_task = None
+            step_status: StepStatus = StepStatus.Cancelled
+            task_status: TaskStatus = TaskStatus.Cancelled
+
+            for task in self.current_mission.tasks:
+                task.status = task_status
+                for step in task.steps:
+                    step.status = step_status
+                    self.publish_step_status(step=step)
+                self.publish_task_status(task=task)
+            self._finalize()
 
     def _initiate_infeasible(self) -> None:
         if self.stepwise_mission:
