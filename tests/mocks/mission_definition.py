@@ -30,12 +30,15 @@ class MockMissionDefinition:
         id="default_mission",
         tasks=[
             Task(
-                steps=[MockStep.take_image_in_coordinate_direction, MockStep.drive_to]
+                steps=[
+                    MockStep.take_image_in_coordinate_direction(),
+                    MockStep.drive_to(),
+                ]
             ),
             Task(
                 steps=[
-                    MockStep.take_image_in_coordinate_direction,
-                    MockStep.take_image_in_coordinate_direction,
+                    MockStep.take_image_in_coordinate_direction(),
+                    MockStep.take_image_in_coordinate_direction(),
                 ]
             ),
         ],
