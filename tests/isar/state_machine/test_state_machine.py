@@ -148,7 +148,7 @@ def test_state_machine_failed_dependency(
     injector, state_machine_thread, mocker
 ) -> None:
     drive_to_step: Step = DriveToPose(pose=MockPose.default_pose)
-    inspection_step: Step = MockStep.take_image_in_coordinate_direction
+    inspection_step: Step = MockStep.take_image_in_coordinate_direction()
     mission: Mission = Mission(tasks=[Task(steps=[drive_to_step, inspection_step])])  # type: ignore
 
     mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.Failed)
@@ -177,7 +177,7 @@ def test_state_machine_with_successful_collection(
 ) -> None:
     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
 
-    step: TakeImage = MockStep.take_image_in_coordinate_direction
+    step: TakeImage = MockStep.take_image_in_coordinate_direction()
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
@@ -207,7 +207,7 @@ def test_state_machine_with_unsuccessful_collection(
 
     mocker.patch.object(MockRobot, "get_inspections", return_value=[])
 
-    step: TakeImage = MockStep.take_image_in_coordinate_direction
+    step: TakeImage = MockStep.take_image_in_coordinate_direction()
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
@@ -236,7 +236,7 @@ def test_state_machine_with_successful_mission_stop(
     state_machine_thread: StateMachineThread,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    step: TakeImage = MockStep.take_image_in_coordinate_direction
+    step: TakeImage = MockStep.take_image_in_coordinate_direction()
     mission: Mission = Mission(tasks=[Task(steps=[step])])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
@@ -266,7 +266,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
     state_machine_thread: StateMachineThread,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    step: TakeImage = MockStep.take_image_in_coordinate_direction
+    step: TakeImage = MockStep.take_image_in_coordinate_direction()
     mission: Mission = Mission(tasks=[Task(steps=[step])])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)

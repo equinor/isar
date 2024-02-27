@@ -5,7 +5,10 @@ from tests.mocks.pose import MockPose
 
 
 class MockStep:
-    drive_to = DriveToPose(pose=MockPose.default_pose)
-    take_image_in_coordinate_direction = TakeImage(
-        target=Position(x=1, y=1, z=1, frame=Frame("robot"))
-    )
+    @staticmethod
+    def drive_to() -> DriveToPose:
+        return DriveToPose(pose=MockPose.default_pose)
+
+    @staticmethod
+    def take_image_in_coordinate_direction() -> TakeImage:
+        return TakeImage(target=Position(x=1, y=1, z=1, frame=Frame("robot")))

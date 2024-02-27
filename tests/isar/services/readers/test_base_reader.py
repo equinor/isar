@@ -17,8 +17,8 @@ class TestBaseReader:
         "dataclass_dict, expected_dataclass",
         [
             (asdict(MockMissionDefinition.default_mission), Mission),
-            (asdict(MockStep.drive_to), Step),
-            (asdict(MockStep.take_image_in_coordinate_direction), Step),
+            (asdict(MockStep.drive_to()), Step),
+            (asdict(MockStep.take_image_in_coordinate_direction()), Step),
             (asdict(MockPose.default_pose), Pose),
         ],
     )
