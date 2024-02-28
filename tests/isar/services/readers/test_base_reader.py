@@ -19,7 +19,7 @@ class TestBaseReader:
             (asdict(MockMissionDefinition.default_mission), Mission),
             (asdict(MockStep.drive_to()), Step),
             (asdict(MockStep.take_image_in_coordinate_direction()), Step),
-            (asdict(MockPose.default_pose), Pose),
+            (asdict(MockPose.default_pose()), Pose),
         ],
     )
     def test_dict_to_dataclass(self, dataclass_dict: dict, expected_dataclass: Any):
