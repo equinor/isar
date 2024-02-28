@@ -91,8 +91,8 @@ empty_mission: Mission = Mission([], None)
 
 
 def test_state_machine_transitions(injector, state_machine_thread) -> None:
-    step_1: Step = DriveToPose(pose=MockPose.default_pose)
-    step_2: Step = TakeImage(target=MockPose.default_pose.position)
+    step_1: Step = DriveToPose(pose=MockPose.default_pose())
+    step_2: Step = TakeImage(target=MockPose.default_pose().position)
     mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
@@ -121,8 +121,8 @@ def test_state_machine_transitions_when_running_full_mission(
 ) -> None:
     state_machine_thread.state_machine.stepwise_mission = False
 
-    step_1: Step = DriveToPose(pose=MockPose.default_pose)
-    step_2: Step = TakeImage(target=MockPose.default_pose.position)
+    step_1: Step = DriveToPose(pose=MockPose.default_pose())
+    step_2: Step = TakeImage(target=MockPose.default_pose().position)
     mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
@@ -147,7 +147,7 @@ def test_state_machine_transitions_when_running_full_mission(
 def test_state_machine_failed_dependency(
     injector, state_machine_thread, mocker
 ) -> None:
-    drive_to_step: Step = DriveToPose(pose=MockPose.default_pose)
+    drive_to_step: Step = DriveToPose(pose=MockPose.default_pose())
     inspection_step: Step = MockStep.take_image_in_coordinate_direction()
     mission: Mission = Mission(tasks=[Task(steps=[drive_to_step, inspection_step])])  # type: ignore
 
