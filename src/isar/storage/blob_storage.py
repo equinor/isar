@@ -55,7 +55,7 @@ class BlobStorage(StorageInterface):
         except Exception as e:
             self.logger.error("An unexpected error occurred while uploading blob")
             raise StorageException from e
-        return blob_properties["etag"]
+        return blob_client.url
 
     def _get_blob_service_client(self) -> BlobServiceClient:
         try:
