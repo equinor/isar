@@ -51,6 +51,12 @@ class MockRobot(RobotInterface):
     def stop(self) -> None:
         return
 
+    def pause(self) -> None:
+        return
+
+    def resume(self) -> None:
+        return
+
     def get_inspections(self, step: InspectionStep) -> Sequence[Inspection]:
         image: Image = Image(mock_image_metadata())
         image.data = b"Some binary image data"
