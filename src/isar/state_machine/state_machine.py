@@ -123,6 +123,12 @@ class StateMachine(object):
                     "before": self._initiated,
                 },
                 {
+                    "trigger": "pause_full_mission",
+                    "source": [self.initiate_state, self.monitor_state],
+                    "dest": self.paused_state,
+                    "before": self._mission_paused,
+                },
+                {
                     "trigger": "pause",
                     "source": [self.initiate_state, self.monitor_state],
                     "dest": self.stop_state,
@@ -164,6 +170,12 @@ class StateMachine(object):
                     "trigger": "resume",
                     "source": self.paused_state,
                     "dest": self.initiate_state,
+                    "before": self._resume,
+                },
+                {
+                    "trigger": "resume_full_mission",
+                    "source": self.paused_state,
+                    "dest": self.monitor_state,
                     "before": self._resume,
                 },
                 {
@@ -282,6 +294,8 @@ class StateMachine(object):
         self.current_task.reset_task()
         self.update_current_step()
 
+        self.robot.resume()
+
     def _mission_finished(self) -> None:
         fail_statuses: List[TaskStatus] = [
             TaskStatus.Cancelled,
@@ -347,6 +361,8 @@ class StateMachine(object):
         self.publish_mission_status()
         self.publish_task_status(task=self.current_task)
         self.publish_step_status(step=self.current_step)
+
+        self.robot.pause()
 
     def _stop(self) -> None:
         self.stopped = True

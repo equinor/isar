@@ -59,7 +59,10 @@ class Monitor(State):
                 break
 
             if self.state_machine.should_pause_mission():
-                transition = self.state_machine.pause  # type: ignore
+                if self.state_machine.stepwise_mission:
+                    transition = self.state_machine.pause  # type: ignore
+                else:
+                    transition = self.state_machine.pause_full_mission  # type: ignore
                 break
 
             if not self.step_status_thread:

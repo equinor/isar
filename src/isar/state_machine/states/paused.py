@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Callable
+from typing import Callable, TYPE_CHECKING
 
 from transitions import State
 
@@ -26,7 +26,10 @@ class Paused(State):
                 break
 
             if self.state_machine.should_resume_mission():
-                transition = self.state_machine.resume  # type: ignore
+                if self.state_machine.stepwise_mission:
+                    transition = self.state_machine.resume  # type: ignore
+                else:
+                    transition = self.state_machine.resume_full_mission  # type: ignore
                 break
 
             time.sleep(self.state_machine.sleep_time)
