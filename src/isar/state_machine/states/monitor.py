@@ -5,6 +5,7 @@ from typing import Callable, Optional, Sequence, TYPE_CHECKING, Tuple, Union
 
 from injector import inject
 from transitions import State
+from isar.config.settings import RobotSettings
 
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
@@ -34,6 +35,7 @@ class Monitor(State):
 
         self.logger = logging.getLogger("state_machine")
         self.step_status_thread: Optional[ThreadedRequest] = None
+        self.pause_mission_thread: Optional[ThreadedRequest] = None
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -44,6 +46,10 @@ class Monitor(State):
             self.step_status_thread.wait_for_thread()
         self.step_status_thread = None
 
+        if self.pause_mission_thread:
+            self.pause_mission_thread.wait_for_thread()
+        self.pause_mission_thread = None
+
     def _run(self) -> None:
         transition: Callable
         while True:
@@ -53,6 +59,11 @@ class Monitor(State):
 
             if self.state_machine.should_pause_mission():
                 transition = self.state_machine.pause  # type: ignore
+                if "pause_mission" in RobotSettings.CAPABILITIES:
+                    self._run_pause_mission_thread(
+                        pause_mission_function=self.state_machine.robot.pause,
+                        thread_name="State Machine Monitor Pause Mission",
+                    )
                 break
 
             if not self.step_status_thread:
@@ -140,6 +151,12 @@ class Monitor(State):
     ) -> None:
         self.step_status_thread = ThreadedRequest(request_func=status_function)
         self.step_status_thread.start_thread(name=thread_name)
+
+    def _run_pause_mission_thread(
+        self, pause_mission_function: Callable, thread_name: str
+    ) -> None:
+        self.pause_mission_thread = ThreadedRequest(request_func=pause_mission_function)
+        self.pause_mission_thread.start_thread(name=thread_name)
 
     def _queue_inspections_for_upload(
         self, mission: Mission, current_step: InspectionStep
