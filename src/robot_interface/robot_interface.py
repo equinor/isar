@@ -143,6 +143,44 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
+    def pause(self) -> None:
+        """Pauses the execution of the current step and stops the movement of the robot.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RobotActionException
+            If the robot fails to perform the requested action to pause mission execution
+            the action to pause will be attempted again until a certain number of retries
+        RobotException
+            Will catch other RobotExceptions and retry to pause the mission
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def resume(self) -> None:
+        """Resumes the execution of the current step and continues the rest of the mission.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RobotActionException
+            If the robot fails to perform the requested action to resume mission execution
+            the action to resume will be attempted again until a certain number of retries
+        RobotException
+            Will catch other RobotExceptions and retry to resume the mission
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def get_inspections(self, step: InspectionStep) -> Sequence[Inspection]:
         """Return the inspections connected to the given step.
 
