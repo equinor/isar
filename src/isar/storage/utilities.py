@@ -79,4 +79,5 @@ def get_filename(
 
 
 def get_foldername(mission: Mission) -> str:
-    return f"{datetime.utcnow().date()}__{settings.PLANT_SHORT_NAME}__{mission.name}__{mission.id}"
+    mission_name: str = mission.name.replace(" ", "-")
+    return f"{datetime.utcnow().date()}__{settings.PLANT_SHORT_NAME}__{mission_name}__{mission.id}"
