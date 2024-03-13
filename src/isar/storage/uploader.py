@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from queue import Empty, Queue
-from typing import List
+from typing import List, Union
 
 from injector import inject
 
@@ -100,8 +100,8 @@ class Uploader:
             except Empty:
                 continue
 
-    def _upload(self, upload_item: UploaderQueueItem) -> str:
-        inspection_path = ""
+    def _upload(self, upload_item: UploaderQueueItem) -> Union[str, dict]:
+        inspection_path: Union[str, dict] = ""
         try:
             inspection_path = upload_item.storage_handler.store(
                 inspection=upload_item.inspection, mission=upload_item.mission
@@ -140,7 +140,7 @@ class Uploader:
             )
 
     def _publish_inspection_result(
-        self, inspection: Inspection, inspection_path: str
+        self, inspection: Inspection, inspection_path: Union[str, dict]
     ) -> None:
         """Publishes the reference of the inspection result to the MQTT Broker
         along with the analysis type
