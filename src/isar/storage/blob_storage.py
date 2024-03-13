@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Union
 
 from azure.core.exceptions import ResourceExistsError
 from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
@@ -7,10 +8,10 @@ from injector import inject
 
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
-from robot_interface.models.mission.mission import Mission
 from isar.storage.storage_interface import StorageException, StorageInterface
 from isar.storage.utilities import construct_metadata_file, construct_paths
 from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission.mission import Mission
 
 
 class BlobStorage(StorageInterface):
@@ -31,7 +32,7 @@ class BlobStorage(StorageInterface):
 
         self.logger = logging.getLogger("uploader")
 
-    def store(self, inspection: Inspection, mission: Mission) -> str:
+    def store(self, inspection: Inspection, mission: Mission) -> Union[str, dict]:
         data_path, metadata_path = construct_paths(
             inspection=inspection, mission=mission
         )
@@ -43,7 +44,7 @@ class BlobStorage(StorageInterface):
         self._upload_file(path=metadata_path, data=metadata_bytes)
         return self._upload_file(path=data_path, data=inspection.data)
 
-    def _upload_file(self, path: Path, data: bytes) -> str:
+    def _upload_file(self, path: Path, data: bytes) -> Union[str, dict]:
         blob_client = self._get_blob_client(path)
         try:
             blob_properties = blob_client.upload_blob(data=data)
@@ -55,7 +56,14 @@ class BlobStorage(StorageInterface):
         except Exception as e:
             self.logger.error("An unexpected error occurred while uploading blob")
             raise StorageException from e
-        return blob_properties["etag"]
+
+        absolute_inspection_path = {
+            "source": "blob",
+            "blob_storage_account_url": settings.BLOB_STORAGE_ACCOUNT_URL,
+            "blob_container": settings.BLOB_CONTAINER,
+            "blob_name": blob_client.blob_name,
+        }
+        return absolute_inspection_path
 
     def _get_blob_service_client(self) -> BlobServiceClient:
         try:

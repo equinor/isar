@@ -1,12 +1,13 @@
 from abc import ABCMeta, abstractmethod
+from typing import Union
 
-from robot_interface.models.mission.mission import Mission
 from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission.mission import Mission
 
 
 class StorageInterface(metaclass=ABCMeta):
     @abstractmethod
-    def store(self, inspection: Inspection, mission: Mission) -> str:
+    def store(self, inspection: Inspection, mission: Mission) -> Union[str, dict]:
         """
         Parameters
         ----------
