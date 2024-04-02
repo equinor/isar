@@ -66,10 +66,10 @@ class Settings(BaseSettings):
     UPLOAD_FAILURE_MAX_WAIT: int = Field(default=60)
 
     # ISAR telemetry intervals
-    ROBOT_STATUS_PUBLISH_INTERVAL: int = Field(default=1)
-    ROBOT_HEARTBEAT_PUBLISH_INTERVAL: int = Field(default=1)
-    ROBOT_INFO_PUBLISH_INTERVAL: int = Field(default=5)
-    ROBOT_API_STATUS_POLL_INTERVAL: int = Field(default=5)
+    ROBOT_STATUS_PUBLISH_INTERVAL: float = Field(default=1)
+    ROBOT_HEARTBEAT_PUBLISH_INTERVAL: float = Field(default=1)
+    ROBOT_INFO_PUBLISH_INTERVAL: float = Field(default=5)
+    ROBOT_API_STATUS_POLL_INTERVAL: float = Field(default=5)
 
     # FastAPI host
     API_HOST_VIEWED_EXTERNALLY: str = Field(default="0.0.0.0")
