@@ -65,6 +65,7 @@ class RobotInfoPayload:
     video_streams: List[VideoStream]
     host: str
     port: int
+    capabilities: List[str]
     timestamp: datetime
 
 
