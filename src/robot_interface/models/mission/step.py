@@ -112,6 +112,16 @@ class DockingProcedure(MotionStep):
 
 
 @dataclass
+class ReturnToHome(MotionStep):
+    """
+    Step which cases the robot to return home
+    """
+
+    pose: Pose
+    type: Literal["return_to_home"] = "return_to_home"
+
+
+@dataclass
 class Localize(MotionStep):
     """
     Step which causes the robot to localize
@@ -213,6 +223,7 @@ class RecordAudio(InspectionStep):
 STEPS = Union[
     DriveToPose,
     DockingProcedure,
+    ReturnToHome,
     Localize,
     TakeImage,
     TakeThermalImage,

@@ -10,11 +10,12 @@ from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.step import (
+    STEPS,
     DockingProcedure,
     DriveToPose,
     Localize,
     RecordAudio,
-    STEPS,
+    ReturnToHome,
     TakeImage,
     TakeThermalImage,
     TakeThermalVideo,
@@ -35,6 +36,7 @@ class TaskType(str, Enum):
     Inspection: str = "inspection"
     DriveTo: str = "drive_to"
     Localization: str = "localization"
+    ReturnToHome: str = "return_to_home"
     Dock: str = "dock"
 
 
@@ -112,6 +114,8 @@ def generate_steps(task) -> List[STEPS]:
                 steps.append(generate_steps_for_drive_to_task(task=task))
             case TaskType.Localization:
                 steps.append(generate_steps_for_localization_task(task=task))
+            case TaskType.ReturnToHome:
+                steps.append(generate_steps_for_return_to_home_task(task=task))
             case TaskType.Dock:
                 steps.append(generate_steps_for_dock_task())
     except ValueError as e:
@@ -144,6 +148,12 @@ def generate_steps_for_drive_to_task(task: StartMissionTaskDefinition) -> DriveT
 
 def generate_steps_for_localization_task(task: StartMissionTaskDefinition) -> Localize:
     return Localize(localization_pose=task.pose.to_alitra_pose())
+
+
+def generate_steps_for_return_to_home_task(
+    task: StartMissionTaskDefinition,
+) -> ReturnToHome:
+    return ReturnToHome(pose=task.pose.to_alitra_pose())
 
 
 def generate_steps_for_dock_task() -> DockingProcedure:
