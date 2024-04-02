@@ -24,6 +24,7 @@ class RobotInfoPublisher:
                 video_streams=settings.VIDEO_STREAMS,
                 host=settings.API_HOST_VIEWED_EXTERNALLY,
                 port=settings.API_PORT,
+                capabilities=robot_settings.CAPABILITIES,
                 timestamp=datetime.utcnow(),
             )
 
