@@ -20,7 +20,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotException,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import StepStatus
+from robot_interface.models.mission.status import RobotStatus, StepStatus
 from robot_interface.models.mission.step import DriveToPose, Step, TakeImage
 from robot_interface.models.mission.task import Task
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
@@ -108,7 +108,7 @@ def test_state_machine_transitions(injector, state_machine_thread) -> None:
             States.Initiate,
             States.Monitor,
             States.Initiate,
-            States.Idle,
+            States.Idle
         ]
     )
     assert (
@@ -295,6 +295,45 @@ def test_state_machine_with_unsuccessful_mission_stop(
     )
     assert expected_log in caplog.text
     assert expected == actual
+
+
+def test_state_machine_idle_to_offline_to_idle(mocker, state_machine_thread) -> None:
+    # step_1: Step = DriveToPose(pose=MockPose.default_pose())
+    # step_2: Step = TakeImage(target=MockPose.default_pose().position)
+    # mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
+
+    # scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+    # scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+
+    mocker.patch.object(MockRobot, "robot_status", side_effect=[RobotStatus.Offline,RobotStatus.Available])
+
+    # Robot status check happens every 5 seconds by default
+    time.sleep(80)
+    expected_transitions_list = deque(
+        [
+            States.Idle,
+            States.Offline,
+            States.Idle
+        ]
+    )
+    assert (
+        state_machine_thread.state_machine.transitions_list == expected_transitions_list
+    )
+
+    # # mocker.patch.object(MockRobot, "robot_status", return_value=RobotStatus.Available)
+
+    # # Robot status check happens every 5 seconds by default
+    # time.sleep(3)
+    # expected_transitions_list = deque(
+    #     [
+    #         States.Idle,
+    #         States.Offline,
+    #         States.Idle
+    #     ]
+    # )
+    # assert (
+    #     state_machine_thread.state_machine.transitions_list == expected_transitions_list
+    # )
 
 
 def _mock_robot_exception_with_message() -> RobotException:

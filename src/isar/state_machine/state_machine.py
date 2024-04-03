@@ -25,6 +25,7 @@ from isar.state_machine.states import (
     Initiate,
     Monitor,
     Off,
+    Offline,
     Paused,
     Stop,
 )
@@ -89,6 +90,7 @@ class StateMachine(object):
         self.monitor_state: State = Monitor(self)
         self.initiate_state: State = Initiate(self)
         self.off_state: State = Off(self)
+        self.offline_state: State = Offline(self)
 
         self.states: List[State] = [
             self.off_state,
@@ -98,6 +100,7 @@ class StateMachine(object):
             self.monitor_state,
             self.stop_state,
             self.paused_state,
+            self.offline_state,
         ]
 
         self.machine = Machine(self, states=self.states, initial="off", queued=True)
@@ -195,6 +198,18 @@ class StateMachine(object):
                     "dest": self.idle_state,
                     "before": self._mission_stopped,
                 },
+                {
+                    "trigger": "robot_turned_offline",
+                    "source": [self.idle_state],
+                    "dest": self.offline_state,
+                    "before": self._offline,
+                },
+                {
+                    "trigger": "robot_turned_online",
+                    "source": self.offline_state,
+                    "dest": self.idle_state,
+                    "before": self._online,
+                },
             ]
         )
 
@@ -243,6 +258,12 @@ class StateMachine(object):
         return
 
     def _off(self) -> None:
+        return
+
+    def _offline(self) -> None:
+        return
+
+    def _online(self) -> None:
         return
 
     def _resume(self) -> None:
