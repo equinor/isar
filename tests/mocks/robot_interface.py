@@ -78,3 +78,15 @@ def mock_image_metadata() -> ImageMetadata:
         ),
         file_type="jpg",
     )
+
+
+class MockRobotIdleToOfflineToIdleTest(MockRobot):
+    def __init__(self):
+        self.first = True
+
+    def robot_status(self) -> RobotStatus:
+        if self.first:
+            self.first = False
+            return RobotStatus.Offline
+
+        return RobotStatus.Available

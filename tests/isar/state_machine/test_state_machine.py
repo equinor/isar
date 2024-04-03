@@ -25,7 +25,7 @@ from robot_interface.models.mission.step import DriveToPose, Step, TakeImage
 from robot_interface.models.mission.task import Task
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from tests.mocks.pose import MockPose
-from tests.mocks.robot_interface import MockRobot
+from tests.mocks.robot_interface import MockRobot, MockRobotIdleToOfflineToIdleTest
 from tests.mocks.step import MockStep
 
 
@@ -318,6 +318,18 @@ def test_state_machine_with_unsuccessful_mission_stop(
     )
     assert expected_log in caplog.text
     assert expected == actual
+
+
+def test_state_machine_idle_to_offline_to_idle(state_machine_thread) -> None:
+    state_machine_thread.state_machine.robot = MockRobotIdleToOfflineToIdleTest()
+
+    # Robot status check happens every 5 seconds by default
+    time.sleep(13)  # Ensure that robot_status have been called again in Idle
+
+    expected_transitions_list = deque([States.Idle, States.Offline, States.Idle])
+    assert (
+        state_machine_thread.state_machine.transitions_list == expected_transitions_list
+    )
 
 
 def _mock_robot_exception_with_message() -> RobotException:
