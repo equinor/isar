@@ -9,6 +9,7 @@ class States(str, Enum):
     Monitor = "monitor"
     Paused = "paused"
     Stop = "stop"
+    Offline = "offline"
 
     def __repr__(self):
         return self.value

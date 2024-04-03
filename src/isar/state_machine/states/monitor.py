@@ -1,7 +1,7 @@
 import logging
 import time
 from copy import deepcopy
-from typing import Callable, Optional, Sequence, TYPE_CHECKING, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Optional, Sequence, Tuple, Union
 
 from injector import inject
 from transitions import State
@@ -14,11 +14,11 @@ from isar.services.utilities.threaded_request import (
 )
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
+    RobotCommunicationTimeoutException,
     RobotException,
     RobotMissionStatusException,
     RobotRetrieveInspectionException,
     RobotStepStatusException,
-    RobotCommunicationTimeoutException,
 )
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -131,8 +131,6 @@ class Monitor(State):
                     f"Retrieving the status failed because: {e.error_description}"
                 )
 
-            self.request_status_failure_counter = 0
-
             if isinstance(status, StepStatus):
                 self.state_machine.current_step.status = status
             elif isinstance(status, MissionStatus):
@@ -158,6 +156,7 @@ class Monitor(State):
             else:
                 if isinstance(status, StepStatus):
                     if self._step_finished(self.state_machine.current_step):
+                        self.state_machine.update_current_step()
                         self.state_machine.current_task.update_task_status()
                     else:  # If not all steps are done
                         self.state_machine.current_task.status = TaskStatus.InProgress
@@ -166,7 +165,6 @@ class Monitor(State):
                         self.state_machine.current_task
                     )
                     if self.state_machine.current_task.status == TaskStatus.Successful:
-                        self.state_machine.update_remaining_steps()
                         try:
                             self.state_machine.current_task = (
                                 self.state_machine.task_selector.next_task()
