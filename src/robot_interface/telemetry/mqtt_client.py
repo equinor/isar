@@ -1,11 +1,15 @@
 import time
 from abc import ABCMeta, abstractmethod
 from queue import Queue
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Type
+from datetime import datetime
+import json
 
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotTelemetryException,
 )
+from robot_interface.telemetry.payloads import CloudHealthPayload
+from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 class MqttClientInterface(metaclass=ABCMeta):
@@ -61,17 +65,23 @@ class MqttTelemetryPublisher(MqttClientInterface):
         self.retain: bool = retain
 
     def run(self, isar_id: str, robot_name: str) -> None:
+        self.cloud_healt_topic: str = f"isar/{isar_id}/cloud_health"
+        topic: str
+        payload: str
+
         while True:
             try:
-                payload: str = self.telemetry_method(
-                    isar_id=isar_id, robot_name=robot_name
-                )
+                payload = self.telemetry_method(isar_id=isar_id, robot_name=robot_name)
+                topic = self.topic
             except RobotTelemetryException:
-                continue
+                payload = json.dumps(
+                    CloudHealthPayload(isar_id, robot_name, datetime.utcnow()),
+                    cls=EnhancedJSONEncoder,
+                )
+                topic = self.cloud_healt_topic
 
-            self.publish(
-                topic=self.topic, payload=payload, qos=self.qos, retain=self.retain
-            )
+            self.publish(topic=topic, payload=payload, qos=self.qos, retain=self.retain)
+
             time.sleep(self.interval)
 
     def publish(
