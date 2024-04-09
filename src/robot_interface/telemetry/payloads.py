@@ -16,6 +16,13 @@ class TelemetryPayload:
 
 
 @dataclass
+class CloudHealthPayload:
+    isar_id: str
+    robot_name: str
+    timestamp: datetime
+
+
+@dataclass
 class TelemetryPosePayload(TelemetryPayload):
     pose: Pose
 
