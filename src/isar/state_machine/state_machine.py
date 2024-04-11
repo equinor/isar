@@ -1,7 +1,6 @@
 import json
 import logging
 import queue
-import time
 from collections import deque
 from datetime import datetime
 from typing import Deque, List, Optional
@@ -226,18 +225,13 @@ class StateMachine(object):
     def _initiated(self) -> None:
         if self.stepwise_mission:
             self.current_step.status = StepStatus.InProgress
-            self.publish_step_status(step=self.current_step)
-            self.logger.info(
-                f"Successfully initiated "
-                f"{type(self.current_step).__name__} "
-                f"step: {str(self.current_step.id)[:8]}"
-            )
-        else:
-            self.current_mission.status = MissionStatus.InProgress
-            self.logger.info(
-                f"Successfully initiated full mission with ID: "
-                f"{str(self.current_mission.id)[:8]}"
-            )
+        self.current_mission.status = MissionStatus.InProgress
+        self.publish_step_status(step=self.current_step)
+        self.logger.info(
+            f"Successfully initiated "
+            f"{type(self.current_step).__name__} "
+            f"step: {str(self.current_step.id)[:8]}"
+        )
 
     def _pause(self) -> None:
         return
@@ -307,28 +301,6 @@ class StateMachine(object):
 
     def _full_mission_finished(self) -> None:
         self.current_task = None
-        step_status: StepStatus = StepStatus.Failed
-        task_status: TaskStatus = TaskStatus.Failed
-
-        if self.current_mission.status == MissionStatus.Failed:
-            step_status = StepStatus.Failed
-            task_status = TaskStatus.Failed
-        elif self.current_mission.status == MissionStatus.Cancelled:
-            step_status = StepStatus.Cancelled
-            task_status = TaskStatus.Cancelled
-        elif (
-            self.current_mission.status == MissionStatus.Successful
-            or self.current_mission.status == MissionStatus.PartiallySuccessful
-        ):
-            step_status = StepStatus.Successful
-            task_status = TaskStatus.Successful
-
-        for task in self.current_mission.tasks:
-            task.status = task_status
-            for step in task.steps:
-                step.status = step_status
-                self.publish_step_status(step=step)
-            self.publish_task_status(task=task)
 
     def _mission_paused(self) -> None:
         self.logger.info(f"Pausing mission: {self.current_mission.id}")
@@ -349,26 +321,12 @@ class StateMachine(object):
         self.stopped = True
 
     def _initiate_failed(self) -> None:
-        if self.stepwise_mission:
-            self.current_step.status = StepStatus.Failed
-            self.current_task.update_task_status()
-            self.current_mission.status = MissionStatus.Failed
-            self.publish_step_status(step=self.current_step)
-            self.publish_task_status(task=self.current_task)
-            self._finalize()
-
-        else:
-            self.current_task = None
-            step_status: StepStatus = StepStatus.Cancelled
-            task_status: TaskStatus = TaskStatus.Cancelled
-
-            for task in self.current_mission.tasks:
-                task.status = task_status
-                for step in task.steps:
-                    step.status = step_status
-                    self.publish_step_status(step=step)
-                self.publish_task_status(task=task)
-            self._finalize()
+        self.current_step.status = StepStatus.Failed
+        self.current_task.update_task_status()
+        self.current_mission.status = MissionStatus.Failed
+        self.publish_step_status(step=self.current_step)
+        self.publish_task_status(task=self.current_task)
+        self._finalize()
 
     def _initiate_infeasible(self) -> None:
         if self.stepwise_mission:
