@@ -6,6 +6,7 @@ from typing import Callable, Optional, Sequence, TYPE_CHECKING, Tuple, Union
 from injector import inject
 from transitions import State
 
+from isar.mission_planner.task_selector_interface import TaskSelectorStop
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
@@ -19,7 +20,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from robot_interface.models.mission.step import InspectionStep, Step, StepStatus
 
 if TYPE_CHECKING:
@@ -56,16 +57,10 @@ class Monitor(State):
                 break
 
             if not self.step_status_thread:
-                if self.state_machine.stepwise_mission:
-                    self._run_get_status_thread(
-                        status_function=self.state_machine.robot.step_status,
-                        thread_name="State Machine Monitor Get Step Status",
-                    )
-                else:
-                    self._run_get_status_thread(
-                        status_function=self.state_machine.robot.mission_status,
-                        thread_name="State Machine Monitor Get Mission Status",
-                    )
+                self._run_get_status_thread(
+                    status_function=self.state_machine.robot.step_status,
+                    thread_name="State Machine Monitor Get Step Status",
+                )
 
             try:
                 status: Union[StepStatus, MissionStatus] = (
@@ -97,19 +92,19 @@ class Monitor(State):
 
             except RobotException as e:
                 self._set_error_message(e)
-                if self.state_machine.stepwise_mission:
-                    status = StepStatus.Failed
-                else:
-                    status = MissionStatus.Failed
+                status = StepStatus.Failed
 
                 self.logger.error(
                     f"Retrieving the status failed because: {e.error_description}"
                 )
 
-            if self.state_machine.stepwise_mission and isinstance(status, StepStatus):
+            if isinstance(status, StepStatus):
                 self.state_machine.current_step.status = status
             elif isinstance(status, MissionStatus):
                 self.state_machine.current_mission.status = status
+                self.logger.error(
+                    f"Received an invalid status update when monitoring mission. Only StepStatus is expected."
+                )
 
             if self._should_upload_inspections():
                 get_inspections_thread = ThreadedRequest(
@@ -126,7 +121,28 @@ class Monitor(State):
                     transition = self.state_machine.step_finished  # type: ignore
                     break
             else:
-                if self._mission_finished(self.state_machine.current_mission):
+                if isinstance(status, StepStatus):
+                    if self._step_finished(self.state_machine.current_step):
+                        self.state_machine.update_current_step()
+                        self.state_machine.current_task.update_task_status()
+                    else:  # If not all steps are done
+                        self.state_machine.current_task.status = TaskStatus.InProgress
+
+                    self.state_machine.publish_task_status(
+                        self.state_machine.current_task
+                    )
+                    if self.state_machine.current_task.status == TaskStatus.Successful:
+                        try:
+                            self.state_machine.current_task = (
+                                self.state_machine.task_selector.next_task()
+                            )
+                        except TaskSelectorStop:
+                            # Indicates that all tasks are finished
+                            self.state_machine.current_task = None
+                            transition = self.state_machine.full_mission_finished  # type: ignore
+                            break
+                        self.state_machine.update_current_step()
+                elif self._mission_finished(self.state_machine.current_mission):
                     transition = self.state_machine.full_mission_finished  # type: ignore
                     break
 
@@ -196,28 +212,15 @@ class Monitor(State):
         return False
 
     def _should_upload_inspections(self) -> bool:
-        if self.state_machine.stepwise_mission:
-            step: Step = self.state_machine.current_step
-            return (
-                self._step_finished(step)
-                and step.status == StepStatus.Successful
-                and isinstance(step, InspectionStep)
-            )
-        else:
-            mission_status: MissionStatus = self.state_machine.current_mission.status
-            if (
-                mission_status == MissionStatus.Successful
-                or mission_status == MissionStatus.PartiallySuccessful
-            ):
-                return True
-            return False
+        step: Step = self.state_machine.current_step
+        return (
+            self._step_finished(step)
+            and step.status == StepStatus.Successful
+            and isinstance(step, InspectionStep)
+        )
 
     def _set_error_message(self, e: RobotException) -> None:
         error_message: ErrorMessage = ErrorMessage(
             error_reason=e.error_reason, error_description=e.error_description
         )
-        if self.state_machine.stepwise_mission:
-            self.state_machine.current_step.error_message = error_message
-        else:
-            if self.state_machine.current_mission:
-                self.state_machine.current_mission.error_message = error_message
+        self.state_machine.current_step.error_message = error_message
