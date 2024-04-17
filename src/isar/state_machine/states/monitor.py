@@ -132,6 +132,7 @@ class Monitor(State):
                         self.state_machine.current_task
                     )
                     if self.state_machine.current_task.status == TaskStatus.Successful:
+                        self.state_machine.update_remaining_steps()
                         try:
                             self.state_machine.current_task = (
                                 self.state_machine.task_selector.next_task()

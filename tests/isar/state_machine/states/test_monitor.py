@@ -40,7 +40,9 @@ def test_should_only_upload_if_status_is_completed(
     step.status = StepStatus.Successful if is_status_successful else StepStatus.Failed
     task: Task = Task(steps=[step])
     mission: Mission = Mission(tasks=[task])
-    mission.status = MissionStatus.Successful if is_status_successful else MissionStatus.Failed
+    mission.status = (
+        MissionStatus.Successful if is_status_successful else MissionStatus.Failed
+    )
 
     monitor.state_machine.current_mission = mission
     monitor.state_machine.current_task = task

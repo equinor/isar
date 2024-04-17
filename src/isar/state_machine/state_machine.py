@@ -396,6 +396,16 @@ class StateMachine(object):
         if self.current_task:
             self.current_step = self.current_task.next_step()
 
+    def update_remaining_steps(self):
+        if self.current_task:
+            for step in self.current_task.steps:
+                if (
+                    step.status == StepStatus.InProgress
+                    or step.status == StepStatus.NotStarted
+                ):
+                    step.status = self.current_task.status
+                    self.publish_step_status(step=step)
+
     def update_state(self):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)
