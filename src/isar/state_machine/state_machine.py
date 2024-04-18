@@ -263,7 +263,9 @@ class StateMachine(object):
         ]
         partially_fail_statuses = fail_statuses + [TaskStatus.PartiallySuccessful]
 
-        if all(task.status in fail_statuses for task in self.current_mission.tasks):
+        if len(self.current_mission.tasks) == 0:
+            self.current_mission.status = MissionStatus.Successful
+        elif all(task.status in fail_statuses for task in self.current_mission.tasks):
             self.current_mission.error_message = ErrorMessage(
                 error_reason=None,
                 error_description="The mission failed because all tasks in the mission "
@@ -290,9 +292,12 @@ class StateMachine(object):
         self.current_mission.status = MissionStatus.InProgress
         self.publish_mission_status()
         self.current_task = self.task_selector.next_task()
-        self.current_task.status = TaskStatus.InProgress
-        self.publish_task_status(task=self.current_task)
-        self.update_current_step()
+        if self.current_task == None:
+            self._mission_finished()
+        else:
+            self.current_task.status = TaskStatus.InProgress
+            self.publish_task_status(task=self.current_task)
+            self.update_current_step()
 
     def _step_finished(self) -> None:
         self.publish_step_status(step=self.current_step)
@@ -393,7 +398,7 @@ class StateMachine(object):
                 self.current_task = None
 
     def update_current_step(self):
-        if self.current_task:
+        if self.current_task != None:
             self.current_step = self.current_task.next_step()
 
     def update_remaining_steps(self):
