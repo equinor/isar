@@ -7,6 +7,7 @@ from injector import inject
 from transitions import State
 
 from isar.mission_planner.task_selector_interface import TaskSelectorStop
+from isar.config.settings import settings
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
@@ -17,6 +18,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotMissionStatusException,
     RobotRetrieveInspectionException,
     RobotStepStatusException,
+    RobotCommunicationTimeoutException,
 )
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -32,6 +34,10 @@ class Monitor(State):
     def __init__(self, state_machine: "StateMachine") -> None:
         super().__init__(name="monitor", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
+        self.request_status_failure_counter: int = 0
+        self.request_status_failure_counter_limit: int = (
+            settings.REQUEST_STATUS_FAILURE_COUNTER_LIMIT
+        )
 
         self.logger = logging.getLogger("state_machine")
         self.step_status_thread: Optional[ThreadedRequest] = None
@@ -61,7 +67,6 @@ class Monitor(State):
                     status_function=self.state_machine.robot.step_status,
                     thread_name="State Machine Monitor Get Step Status",
                 )
-
             try:
                 status: Union[StepStatus, MissionStatus] = (
                     self.step_status_thread.get_output()
@@ -69,6 +74,34 @@ class Monitor(State):
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
+
+            except RobotCommunicationTimeoutException as e:
+                self.state_machine.current_mission.error_message = ErrorMessage(
+                    error_reason=e.error_reason, error_description=e.error_description
+                )
+                self.step_status_thread = None
+                self.request_status_failure_counter += 1
+                self.logger.warning(
+                    f"Monitoring step {self.state_machine.current_step.id} failed #: "
+                    f"{self.request_status_failure_counter} failed because: {e.error_description}"
+                )
+
+                if (
+                    self.request_status_failure_counter
+                    >= self.request_status_failure_counter_limit
+                ):
+                    self.state_machine.current_step.error_message = ErrorMessage(
+                        error_reason=e.error_reason,
+                        error_description=e.error_description,
+                    )
+                    self.logger.error(
+                        f"Step will be cancelled after failing to get step status "
+                        f"{self.request_status_failure_counter} times because: "
+                        f"{e.error_description}"
+                    )
+                    status = StepStatus.Failed
+                else:
+                    continue
 
             except RobotStepStatusException as e:
                 self.state_machine.current_step.error_message = ErrorMessage(
@@ -97,6 +130,8 @@ class Monitor(State):
                 self.logger.error(
                     f"Retrieving the status failed because: {e.error_description}"
                 )
+
+            self.request_status_failure_counter = 0
 
             if isinstance(status, StepStatus):
                 self.state_machine.current_step.status = status

@@ -56,6 +56,9 @@ class Settings(BaseSettings):
     # Number of attempts to initiate a step or mission before cancelling
     INITIATE_FAILURE_COUNTER_LIMIT: int = Field(default=10)
 
+    # Number of attempts to request a step status in monitor before cancelling
+    REQUEST_STATUS_FAILURE_COUNTER_LIMIT: int = Field(default=3)
+
     # Number of attempts to stop the robot before giving up
     STOP_ROBOT_ATTEMPTS_LIMIT: int = Field(default=10)
 

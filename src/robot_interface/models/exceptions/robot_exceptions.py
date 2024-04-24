@@ -5,6 +5,7 @@ from typing import Optional
 
 class ErrorReason(str, Enum):
     RobotCommunicationException: str = "robot_communication_exception"
+    RobotCommunicationTimeoutException: str = "robot_communication_timeout_exception"
     RobotInfeasibleStepException: str = "robot_infeasible_step_exception"
     RobotInfeasibleMissionException: str = "robot_infeasible_mission_exception"
     RobotMissionStatusException: str = "robot_mission_status_exception"
@@ -43,6 +44,18 @@ class RobotCommunicationException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
             error_reason=ErrorReason.RobotCommunicationException,
+            error_description=error_description,
+        )
+
+    pass
+
+
+# An exception which should be thrown by the robot package if the communication has timed
+# out and ISAR should retry the request.
+class RobotCommunicationTimeoutException(RobotException):
+    def __init__(self, error_description: str) -> None:
+        super().__init__(
+            error_reason=ErrorReason.RobotCommunicationTimeoutException,
             error_description=error_description,
         )
 
