@@ -1,13 +1,11 @@
+import json
 import time
 from abc import ABCMeta, abstractmethod
+from datetime import UTC, datetime
 from queue import Queue
-from typing import Callable, Tuple, Type
-from datetime import datetime
-import json
+from typing import Callable, Tuple
 
-from robot_interface.models.exceptions.robot_exceptions import (
-    RobotTelemetryException,
-)
+from robot_interface.models.exceptions.robot_exceptions import RobotTelemetryException
 from robot_interface.telemetry.payloads import CloudHealthPayload
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
@@ -75,7 +73,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
                 topic = self.topic
             except RobotTelemetryException:
                 payload = json.dumps(
-                    CloudHealthPayload(isar_id, robot_name, datetime.utcnow()),
+                    CloudHealthPayload(isar_id, robot_name, datetime.now(UTC)),
                     cls=EnhancedJSONEncoder,
                 )
                 topic = self.cloud_healt_topic
