@@ -1,5 +1,5 @@
-import importlib.resources as pkg_resources
 import os
+from importlib.resources import as_file, files
 from typing import Any, List, Optional
 
 from dotenv import load_dotenv
@@ -14,11 +14,12 @@ from robot_interface.telemetry.payloads import VideoStream
 class Settings(BaseSettings):
     def __init__(self) -> None:
         try:
-            with pkg_resources.path(f"isar.config", "settings.env") as path:
-                env_file_path = path
+            source = files("isar").joinpath("config").joinpath("settings.env")
+            with as_file(source) as eml:
+                env_file = eml
         except ModuleNotFoundError:
-            env_file_path = None
-        super().__init__(_env_file=env_file_path)
+            env_file = None
+        super().__init__(_env_file=env_file)
 
     # Determines which robot package ISAR will attempt to import
     # Name must match with an installed python package in the local environment
@@ -310,13 +311,16 @@ settings = Settings()
 class RobotSettings(BaseSettings):
     def __init__(self) -> None:
         try:
-            with pkg_resources.path(
-                f"{settings.ROBOT_PACKAGE}.config", "settings.env"
-            ) as path:
-                env_file_path = path
+            source = (
+                files(f"{settings.ROBOT_PACKAGE}")
+                .joinpath("config")
+                .joinpath("settings.env")
+            )
+            with as_file(source) as eml:
+                env_file = eml
         except ModuleNotFoundError:
-            env_file_path = None
-        super().__init__(_env_file=env_file_path)
+            env_file = None
+        super().__init__(_env_file=env_file)
 
     # ISAR steps the robot is capable of performing
     # This should be set in the robot package settings.env file
