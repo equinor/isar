@@ -1,6 +1,6 @@
-import importlib.resources as pkg_resources
 import logging
 import logging.config
+from importlib.resources import as_file, files
 
 import yaml
 from opencensus.ext.azure.log_exporter import AzureLogHandler
@@ -14,8 +14,9 @@ from isar.config.settings import settings
 
 def setup_loggers(keyvault: Keyvault) -> None:
     log_levels: dict = settings.LOG_LEVELS
-    with pkg_resources.path("isar.config", "logging.conf") as path:
-        log_config = yaml.safe_load(open(path))
+    source = files("isar").joinpath("config").joinpath("logging.conf")
+    with as_file(source) as f:
+        log_config = yaml.safe_load(open(f))
 
     logging.config.dictConfig(log_config)
 
