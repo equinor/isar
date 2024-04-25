@@ -29,6 +29,7 @@ class RobotStatusPublisher:
         self.mqtt_publisher: MqttPublisher = MqttPublisher(mqtt_queue=mqtt_queue)
         self.robot: RobotInterface = robot
         self.state_machine: StateMachine = state_machine
+        self.logger: Logger = logging.getLogger("mqtt")
 
     def _get_combined_robot_status(
         self, robot_status: RobotStatus, current_state: States
@@ -88,6 +89,11 @@ class RobotStatusPublisher:
                     else None
                 ),
                 timestamp=datetime.utcnow(),
+            )
+
+            self.logger.info(
+                f"Combined status has changed to {combined_status} from {previous_robot_status} "
+                f"with current state {self.state_machine.current_state}"
             )
 
             self.mqtt_publisher.publish(
