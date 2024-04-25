@@ -1,7 +1,7 @@
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from queue import Empty, Queue
 from typing import List, Union
 
@@ -22,12 +22,12 @@ class UploaderQueueItem:
     mission: Mission
     storage_handler: StorageInterface
     _retry_count: int
-    _next_retry_time: datetime = datetime.utcnow()
+    _next_retry_time: datetime = datetime.now(UTC)
 
     def increment_retry(self, max_wait_time: int) -> None:
         self._retry_count += 1
         seconds_until_retry: int = min(2**self._retry_count, max_wait_time)
-        self._next_retry_time = datetime.utcnow() + timedelta(
+        self._next_retry_time = datetime.now(UTC) + timedelta(
             seconds=seconds_until_retry
         )
 
@@ -35,10 +35,10 @@ class UploaderQueueItem:
         return self._retry_count
 
     def is_ready_for_upload(self) -> bool:
-        return datetime.utcnow() >= self._next_retry_time
+        return datetime.now(UTC) >= self._next_retry_time
 
     def seconds_until_retry(self) -> int:
-        return max(0, int((self._next_retry_time - datetime.utcnow()).total_seconds()))
+        return max(0, int((self._next_retry_time - datetime.now(UTC)).total_seconds()))
 
 
 class Uploader:
@@ -154,7 +154,7 @@ class Uploader:
                 "inspection_id": inspection.id,
                 "inspection_path": inspection_path,
                 "analysis_type": inspection.metadata.analysis_type,
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
             },
             cls=EnhancedJSONEncoder,
         )

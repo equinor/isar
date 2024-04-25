@@ -1,6 +1,6 @@
 import json
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from queue import Queue
 
 from isar.config.settings import settings
@@ -18,7 +18,7 @@ class RobotHeartbeatPublisher:
             payload: RobotHeartbeatPayload = RobotHeartbeatPayload(
                 isar_id=settings.ISAR_ID,
                 robot_name=settings.ROBOT_NAME,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
             )
 
             self.mqtt_publisher.publish(
