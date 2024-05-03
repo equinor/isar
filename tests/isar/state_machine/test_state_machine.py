@@ -35,6 +35,8 @@ class StateMachineThread(object):
         self.state_machine: StateMachine = injector.get(StateMachine)
         self._thread: Thread = Thread(target=main, args=[self.state_machine])
         self._thread.daemon = True
+
+    def start(self):
         self._thread.start()
 
 
@@ -105,6 +107,7 @@ def test_state_machine_transitions(
     mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
 
     state_machine_thread.state_machine.stepwise_mission = should_run_stepwise
+    state_machine_thread.start()
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
@@ -143,6 +146,7 @@ def test_state_machine_transitions_when_running_full_mission(
     injector, state_machine_thread
 ) -> None:
     state_machine_thread.state_machine.stepwise_mission = False
+    state_machine_thread.start()
 
     step_1: Step = DriveToPose(pose=MockPose.default_pose())
     step_2: Step = TakeImage(target=MockPose.default_pose().position)
@@ -176,6 +180,8 @@ def test_state_machine_failed_dependency(
 
     mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.Failed)
 
+    state_machine_thread.start()
+
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
@@ -198,6 +204,8 @@ def test_state_machine_failed_dependency(
 def test_state_machine_with_successful_collection(
     injector, state_machine_thread, uploader_thread
 ) -> None:
+    state_machine_thread.start()
+
     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
 
     step: TakeImage = MockStep.take_image_in_coordinate_direction()
@@ -230,6 +238,8 @@ def test_state_machine_with_unsuccessful_collection(
 
     mocker.patch.object(MockRobot, "get_inspections", return_value=[])
 
+    state_machine_thread.start()
+
     step: TakeImage = MockStep.take_image_in_coordinate_direction()
     mission: Mission = Mission(tasks=[Task(steps=[step])])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
@@ -259,6 +269,8 @@ def test_state_machine_with_successful_mission_stop(
     state_machine_thread: StateMachineThread,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    state_machine_thread.start()
+
     step: TakeImage = MockStep.take_image_in_coordinate_direction()
     mission: Mission = Mission(tasks=[Task(steps=[step])])
 
@@ -298,6 +310,8 @@ def test_state_machine_with_unsuccessful_mission_stop(
         MockRobot, "stop", side_effect=_mock_robot_exception_with_message
     )
 
+    state_machine_thread.start()
+
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
     scheduling_utilities.stop_mission()
@@ -323,6 +337,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
 def test_state_machine_idle_to_offline_to_idle(state_machine_thread) -> None:
     state_machine_thread.state_machine.robot = MockRobotIdleToOfflineToIdleTest()
 
+    state_machine_thread.start()
     # Robot status check happens every 5 seconds by default
     time.sleep(13)  # Ensure that robot_status have been called again in Idle
 
