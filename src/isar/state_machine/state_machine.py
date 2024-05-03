@@ -32,7 +32,12 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.initialize.initialize_params import InitializeParams
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, StepStatus, TaskStatus
+from robot_interface.models.mission.status import (
+    MissionStatus,
+    RobotStatus,
+    StepStatus,
+    TaskStatus,
+)
 from robot_interface.models.mission.step import Step
 from robot_interface.models.mission.task import Task
 from robot_interface.robot_interface import RobotInterface
@@ -438,7 +443,7 @@ class StateMachine(object):
         self.send_state_status()
         self._log_state_transition(self.current_state)
         self.logger.info(f"State: {self.current_state}")
-        self.publish_state()
+        self.publish_status()
 
     def reset_state_machine(self) -> None:
         self.logger.info("Resetting state machine")
@@ -580,24 +585,32 @@ class StateMachine(object):
             retain=False,
         )
 
-    def publish_state(self) -> None:
+    def publish_status(self) -> None:
         if not self.mqtt_publisher:
             return
         payload: str = json.dumps(
             {
                 "isar_id": settings.ISAR_ID,
                 "robot_name": settings.ROBOT_NAME,
-                "state": self.current_state,
+                "status": self._current_status(),
                 "timestamp": datetime.utcnow(),
             },
             cls=EnhancedJSONEncoder,
         )
 
         self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_STATE,
+            topic=settings.TOPIC_ISAR_STATUS,
             payload=payload,
             retain=False,
         )
+
+    def _current_status(self) -> RobotStatus:
+        if self.current_state == States.Idle:
+            return RobotStatus.Available
+        elif self.current_state == States.Offline:
+            return RobotStatus.Offline
+        else:
+            return RobotStatus.Busy
 
     def _log_state_transition(self, next_state):
         """Logs all state transitions that are not self-transitions."""

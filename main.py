@@ -19,9 +19,6 @@ from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
 from isar.services.service_connections.mqtt.robot_info_publisher import (
     RobotInfoPublisher,
 )
-from isar.services.service_connections.mqtt.robot_status_publisher import (
-    RobotStatusPublisher,
-)
 from isar.state_machine.state_machine import StateMachine, main
 from isar.storage.uploader import Uploader
 from robot_interface.robot_interface import RobotInterface
@@ -56,15 +53,6 @@ if __name__ == "__main__":
             target=mqtt_client.run, name="ISAR MQTT Client", daemon=True
         )
         threads.append(mqtt_thread)
-        robot_status_publisher: RobotStatusPublisher = RobotStatusPublisher(
-            mqtt_queue=queues.mqtt_queue, robot=robot, state_machine=state_machine
-        )
-        robot_status_thread: Thread = Thread(
-            target=robot_status_publisher.run,
-            name="ISAR Robot Status Publisher",
-            daemon=True,
-        )
-        threads.append(robot_status_thread)
 
         robot_info_publisher: RobotInfoPublisher = RobotInfoPublisher(
             mqtt_queue=queues.mqtt_queue

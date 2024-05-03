@@ -229,14 +229,13 @@ class Settings(BaseSettings):
     DATA_CLASSIFICATION: str = Field(default="internal")
 
     # List of MQTT Topics
-    TOPIC_ISAR_STATE: str = Field(default="state", validate_default=True)
+    TOPIC_ISAR_STATUS: str = Field(default="status", validate_default=True)
     TOPIC_ISAR_MISSION: str = Field(default="mission", validate_default=True)
     TOPIC_ISAR_TASK: str = Field(default="task", validate_default=True)
     TOPIC_ISAR_STEP: str = Field(default="step", validate_default=True)
     TOPIC_ISAR_INSPECTION_RESULT: str = Field(
         default="inspection_result", validate_default=True
     )
-    TOPIC_ISAR_ROBOT_STATUS: str = Field(default="robot_status", validate_default=True)
     TOPIC_ISAR_ROBOT_INFO: str = Field(default="robot_info", validate_default=True)
     TOPIC_ISAR_ROBOT_HEARTBEAT: str = Field(
         default="robot_heartbeat", validate_default=True
@@ -284,11 +283,10 @@ class Settings(BaseSettings):
         }
 
     @field_validator(
-        "TOPIC_ISAR_STATE",
+        "TOPIC_ISAR_STATUS",
         "TOPIC_ISAR_MISSION",
         "TOPIC_ISAR_TASK",
         "TOPIC_ISAR_STEP",
-        "TOPIC_ISAR_ROBOT_STATUS",
         "TOPIC_ISAR_ROBOT_INFO",
         "TOPIC_ISAR_ROBOT_HEARTBEAT",
         "TOPIC_ISAR_INSPECTION_RESULT",
