@@ -361,6 +361,17 @@ ISAR_MQTT_PASSWORD
 
 If not specified the password will default to an empty string.
 
+## Running several ISAR instances locally
+
+To run several ISAR instances in parallel locally:
+1. Generate a guid: https://www.guidgenerator.com/
+2. Open a new terminal in the isar folder
+3. Run the following command before running main.py:
+
+```
+export ISAR_API_PORT=port_name_higher_than_1024 ISAR_ISAR_ID=guid ISAR_ROBOT_NAME=random_robot_name
+```
+
 # Contributions
 
 Equinor welcomes all kinds of contributions, including code, bug reports, issues, feature requests, and documentation
