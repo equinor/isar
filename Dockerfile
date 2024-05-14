@@ -1,4 +1,4 @@
-FROM python:3.10-slim AS builder
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 RUN apt-get update
@@ -15,7 +15,7 @@ RUN pip install .
 # Install the base isar-robot package
 RUN pip install isar-robot
 
-FROM python:3.10-slim
+FROM python:3.12-slim
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
