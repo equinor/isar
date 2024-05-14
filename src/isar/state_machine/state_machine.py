@@ -592,7 +592,7 @@ class StateMachine(object):
             {
                 "isar_id": settings.ISAR_ID,
                 "robot_name": settings.ROBOT_NAME,
-                "state": self._current_status(),
+                "status": self._current_status(),
                 "timestamp": datetime.now(UTC),
             },
             cls=EnhancedJSONEncoder,
