@@ -19,7 +19,7 @@ jobs:
     if: github.event_name == 'issues' && github.event.action == 'opened' || github.event.action == 'reopened'
     steps:
       - name: 'Move issue to "Todo"'
-        uses: leonsteinhaeuser/project-beta-automations@v1.0.2
+        uses: leonsteinhaeuser/project-beta-automations@v2.1.0
         with:
           gh_token: ${{ secrets.MY_GITHUB_TOKEN }}
           organization: equinor
@@ -32,7 +32,7 @@ jobs:
     if: github.event_name == 'issues' && github.event.action == 'closed'
     steps:
       - name: 'Moved issue to "Done"'
-        uses: leonsteinhaeuser/project-beta-automations@v1.0.2
+        uses: leonsteinhaeuser/project-beta-automations@v2.1.0
         with:
           gh_token: ${{ secrets.MY_GITHUB_TOKEN }}
           organization: equinor
@@ -45,7 +45,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'review_requested'
     steps:
       - name: 'Move PR to "In Progress"'
-        uses: leonsteinhaeuser/project-beta-automations@v1.0.2
+        uses: leonsteinhaeuser/project-beta-automations@v2.1.0
         with:
           gh_token: ${{ secrets.MY_GITHUB_TOKEN }}
           organization: equinor
@@ -58,7 +58,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'ready_for_review'
     steps:
       - name: 'Move PR to "Review"'
-        uses: leonsteinhaeuser/project-beta-automations@v1.0.2
+        uses: leonsteinhaeuser/project-beta-automations@v2.1.0
         with:
           gh_token: ${{ secrets.MY_GITHUB_TOKEN }}
           organization: equinor
@@ -71,7 +71,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     steps:
       - name: 'Move PR to "Done"'
-        uses: leonsteinhaeuser/project-beta-automations@v1.0.2
+        uses: leonsteinhaeuser/project-beta-automations@v2.1.0
         with:
           gh_token: ${{ secrets.MY_GITHUB_TOKEN }}
           organization: equinor
