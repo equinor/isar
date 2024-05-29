@@ -516,7 +516,7 @@ class StateMachine(object):
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_MISSION,
             payload=payload,
-            retain=False,
+            retain=True,
         )
 
     def publish_task_status(self, task: Task) -> None:
@@ -548,7 +548,7 @@ class StateMachine(object):
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_TASK,
             payload=payload,
-            retain=False,
+            retain=True,
         )
 
     def publish_step_status(self, step: Step) -> None:
@@ -582,7 +582,7 @@ class StateMachine(object):
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_STEP,
             payload=payload,
-            retain=False,
+            retain=True,
         )
 
     def publish_status(self) -> None:
@@ -601,7 +601,7 @@ class StateMachine(object):
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_STATUS,
             payload=payload,
-            retain=False,
+            retain=True,
         )
 
     def _current_status(self) -> RobotStatus:

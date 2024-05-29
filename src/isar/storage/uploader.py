@@ -161,5 +161,5 @@ class Uploader:
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_INSPECTION_RESULT,
             payload=payload,
-            retain=False,
+            retain=True,
         )
