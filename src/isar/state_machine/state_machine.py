@@ -516,6 +516,7 @@ class StateMachine(object):
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_MISSION,
             payload=payload,
+            qos=1,
             retain=True,
         )
 
@@ -548,6 +549,7 @@ class StateMachine(object):
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_TASK,
             payload=payload,
+            qos=1,
             retain=True,
         )
 
@@ -582,6 +584,7 @@ class StateMachine(object):
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_STEP,
             payload=payload,
+            qos=1,
             retain=True,
         )
 
@@ -601,6 +604,7 @@ class StateMachine(object):
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_STATUS,
             payload=payload,
+            qos=1,
             retain=True,
         )
 
