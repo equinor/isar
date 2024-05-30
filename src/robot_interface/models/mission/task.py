@@ -53,6 +53,7 @@ class Task:
         return True
 
     def update_task_status(self) -> None:
+        some_not_started: bool = False
         for step in self.steps:
             if step.status is StepStatus.Failed and isinstance(step, MotionStep):
                 self.error_message = ErrorMessage(
@@ -79,8 +80,16 @@ class Task:
             elif step.status is StepStatus.Successful:
                 continue
 
+            elif (step.status is StepStatus.NotStarted) and isinstance(
+                step, InspectionStep
+            ):
+                some_not_started = True
+
         if self.status is not TaskStatus.PartiallySuccessful:
-            self.status = TaskStatus.Successful
+            if some_not_started:
+                self.status = TaskStatus.InProgress  # TODO: handle all not_started
+            else:
+                self.status = TaskStatus.Successful
 
         elif self._all_inspection_steps_failed():
             self.error_message = ErrorMessage(
