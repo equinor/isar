@@ -156,6 +156,10 @@ class Monitor(State):
             else:
                 if isinstance(status, StepStatus):
                     if self._step_finished(self.state_machine.current_step):
+                        self.state_machine.update_current_task()
+                        if self.state_machine.current_task == None:
+                            transition = self.state_machine.full_mission_finished  # type: ignore
+                            break
                         self.state_machine.update_current_step()
                         self.state_machine.current_task.update_task_status()
                     else:  # If not all steps are done
