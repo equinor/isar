@@ -2,7 +2,7 @@ import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from alitra import Position
+from alitra import Position, Pose, Orientation, Frame
 from pydantic import BaseModel, Field
 
 from isar.apis.models.models import InputPose, InputPosition
@@ -61,6 +61,7 @@ class StartMissionDefinition(BaseModel):
     tasks: List[StartMissionTaskDefinition]
     id: Optional[str] = None
     name: Optional[str] = None
+    start_pose: Optional[InputPose] = None
 
 
 def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
@@ -91,6 +92,26 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
 
     if mission_definition.id:
         isar_mission.id = mission_definition.id
+
+    if mission_definition.start_pose:
+        input_pose: InputPose = mission_definition.start_pose
+        input_frame: Frame = Frame(name=input_pose.frame_name)
+        input_position: Position = Position(
+            input_pose.position.x,
+            input_pose.position.y,
+            input_pose.position.z,
+            input_frame,
+        )
+        input_orientation: Orientation = Orientation(
+            input_pose.orientation.x,
+            input_pose.orientation.y,
+            input_pose.orientation.z,
+            input_pose.orientation.w,
+            input_frame,
+        )
+        isar_mission.start_pose = Pose(
+            position=input_position, orientation=input_orientation, frame=input_frame
+        )
 
     return isar_mission
 
