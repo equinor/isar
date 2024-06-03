@@ -56,7 +56,7 @@ pre-commit uninstall
 ### Robot integration
 
 To connect the state machine to a robot in a separate repository, it is required that the separate repository implements
-the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interface/robot_interface.py).  
+the [robot interface](https://github.com/equinor/isar/blob/main/src/robot_interface/robot_interface.py).
 The separate repository should also have a settings.env file in a config folder where `CAPABILITIES` and `ROBOT_MODEL` are set.
 A mocked robot can be found in [this repository](https://github.com/equinor/isar-robot). Install the repo, i.e:
 
@@ -364,12 +364,27 @@ If not specified the password will default to an empty string.
 ## Running several ISAR instances locally
 
 To run several ISAR instances in parallel locally:
+
 1. Generate a guid: https://www.guidgenerator.com/
 2. Open a new terminal in the isar folder
 3. Run the following command before running main.py:
 
 ```
 export ISAR_API_PORT=port_name_higher_than_1024 ISAR_ISAR_ID=guid ISAR_ROBOT_NAME=random_robot_name
+```
+
+# Dependencies
+
+The dependencies used for this package are listed in `pyproject.toml` and pinned in `requirements.txt`. This ensures our builds are predictable and deterministic. This project uses `pip-compile` (from [`pip-tools`](https://github.com/jazzband/pip-tools)) for this:
+
+```
+pip-compile --output-file=requirements.txt pyproject.toml
+```
+
+To update the requirements to the latest versions, run the same command with the `--upgrade` flag:
+
+```
+pip-compile --output-file=requirements.txt pyproject.toml --upgrade
 ```
 
 # Contributions

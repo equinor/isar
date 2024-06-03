@@ -58,6 +58,7 @@ dev = [
     "flake8",
     "mypy",
     "myst-parser",
+    "pip-tools",
     "pre-commit",
     "pytest-dotenv",
     "pytest-mock",
