@@ -2,10 +2,11 @@ import logging
 import time
 from logging import Logger
 from threading import Thread
-from typing import List
+from typing import Any, List
 
 from injector import Injector
 
+import isar
 from isar.apis.api import API
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.log import setup_loggers
@@ -24,12 +25,65 @@ from isar.storage.uploader import Uploader
 from robot_interface.robot_interface import RobotInterface
 
 
+def print_setting(
+    setting: str = "", value: Any = "", fillchar: str = " ", width: int = 48
+):
+    separator = ": " if value != "" else ""
+    text = setting.ljust(22, fillchar) + separator + str(value)
+    print("*", text.ljust(width - 4, fillchar), "*")
+
+
+def print_startup_info():
+    print(
+        """
+         __   ________   ___        ________
+        / /  / ______/  /   |      / ____  /
+       / /  / /_____   / /| |     / /___/ /
+      / /  /_____  /  / __  |    / __  __/
+     / /  ______/ /  / /  | |   / /  | |
+    /_/  /_______/  /_/   |_|  /_/   |_|
+
+"""
+    )
+
+    WIDTH = 48
+
+    def print_setting(setting: str = "", value: Any = "", fillchar: str = " "):
+        separator = ": " if value != "" else ""
+        text = setting.ljust(22, fillchar) + separator + str(value)
+        print("*", text.ljust(WIDTH - 4, fillchar), "*")
+
+    print("Integration and Supervisory control".center(WIDTH, " "))
+    print("of Autonomous Robots".center(WIDTH, " "))
+    print()
+    print(f"Version: {isar.__version__}\n".center(WIDTH, " "))
+
+    print_setting(fillchar="*")
+    print_setting("ISAR settings")
+    print_setting(fillchar="-")
+    print_setting("Robot package", settings.ROBOT_PACKAGE)
+    print_setting("Robot name", settings.ROBOT_NAME)
+    print_setting("Run mission stepwise", settings.RUN_MISSION_STEPWISE)
+    print_setting("Running on port", settings.API_PORT)
+    print_setting("Mission planner", settings.MISSION_PLANNER)
+    print_setting("Using local storage", settings.STORAGE_LOCAL_ENABLED)
+    print_setting("Using blob storage", settings.STORAGE_BLOB_ENABLED)
+    print_setting("Using SLIMM storage", settings.STORAGE_SLIMM_ENABLED)
+    print_setting("Plant code", settings.PLANT_CODE)
+    print_setting("Plant name", settings.PLANT_NAME)
+    print_setting("Plant shortname", settings.PLANT_SHORT_NAME)
+    print_setting(fillchar="*")
+    print()
+
+
 def start():
     injector: Injector = get_injector()
 
     keyvault_client = injector.get(Keyvault)
     setup_loggers(keyvault=keyvault_client)
     logger: Logger = logging.getLogger("main")
+
+    print_startup_info()
 
     state_machine: StateMachine = injector.get(StateMachine)
     uploader: Uploader = injector.get(Uploader)
