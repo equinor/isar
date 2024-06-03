@@ -1,8 +1,8 @@
 from typing import List
 
-from robot_interface.models.mission.mission import Mission
 from isar.storage.storage_interface import StorageException, StorageInterface
 from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission.mission import Mission
 
 
 class StorageMock(StorageInterface):

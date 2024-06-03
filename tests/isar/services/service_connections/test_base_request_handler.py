@@ -1,8 +1,8 @@
 import pytest
 import requests
 from requests.exceptions import (
-    ConnectTimeout,
     ConnectionError,
+    ConnectTimeout,
     RequestException,
     Timeout,
 )

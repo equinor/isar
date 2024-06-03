@@ -3,8 +3,8 @@ from alitra import Frame, Orientation, Pose, Position
 from isar.services.readers.base_reader import BaseReader
 from robot_interface.models.mission.mission import Mission, Task
 from robot_interface.models.mission.step import (
-    DriveToPose,
     STEPS,
+    DriveToPose,
     TakeImage,
     TakeThermalImage,
 )
