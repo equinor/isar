@@ -1,12 +1,12 @@
 import json
 from http import HTTPStatus
 
+import jwt
 import pytest
-from jose import jwt
 
 
 def mock_access_token():
-    token = jwt.encode(claims={}, key="some_key")
+    token = jwt.encode(payload={}, key="some_key")
 
     return token
 
