@@ -49,6 +49,9 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.scripts]
+isar-start = "isar.script:start"
+
 [project.urls]
 repository = "https://github.com/equinor/isar.git"
 

@@ -23,7 +23,8 @@ from isar.state_machine.state_machine import StateMachine, main
 from isar.storage.uploader import Uploader
 from robot_interface.robot_interface import RobotInterface
 
-if __name__ == "__main__":
+
+def start():
     injector: Injector = get_injector()
 
     keyvault_client = injector.get(Keyvault)
