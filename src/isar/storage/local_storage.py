@@ -27,9 +27,10 @@ class LocalStorage(StorageInterface):
             inspection=inspection, mission=mission, filename=local_path.name
         )
         try:
-            with open(absolute_path, "wb") as file, open(
-                absolute_metadata_path, "wb"
-            ) as metadata_file:
+            with (
+                open(absolute_path, "wb") as file,
+                open(absolute_metadata_path, "wb") as metadata_file,
+            ):
                 file.write(inspection.data)
                 metadata_file.write(metadata_bytes)
         except IOError as e:
