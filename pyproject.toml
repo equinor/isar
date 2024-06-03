@@ -2,4 +2,91 @@
 requires = ["setuptools>=64.0", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "isar"
+authors = [{ name = "Equinor ASA", email = "fg_robots_dev@equinor.com" }]
+description = "Integration and Supervisory control of Autonomous Robots"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Eclipse Public License 2.0 (EPL-2.0)",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "alitra>=1.1.3",
+    "azure-identity",
+    "azure-keyvault-secrets",
+    "azure-storage-blob",
+    "backoff",
+    "click",
+    "dacite",
+    "fastapi-azure-auth",
+    "fastapi",
+    "injector",
+    "numpy",
+    "opencensus-ext-azure",
+    "opencensus-ext-logging",
+    "opencensus-ext-requests",
+    "paho-mqtt",
+    "pydantic_settings",
+    "pydantic",
+    "PyJWT",
+    "python-dotenv",
+    "PyYAML",
+    "requests-toolbelt",
+    "requests",
+    "transitions",
+    "uvicorn",
+]
+dynamic = ["version"]
+
+[project.urls]
+repository = "https://github.com/equinor/isar.git"
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "mypy",
+    "myst-parser",
+    "pre-commit",
+    "pytest-dotenv",
+    "pytest-mock",
+    "pytest-xdist",
+    "pytest",
+    "requests-mock",
+    "sphinx",
+]
+
 [tool.setuptools_scm]
+# This section is empty but required for dynamic versioning.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--ignore=tests/integration"
+log_cli = true
+
+[tool.mypy]
+no_strict_optional = true
+no_site_packages = true
+ignore_missing_imports = true
+exclude = ["build"]
+files = ["src", "tests"]
+
+[tool.isort]
+include_trailing_comma = true
+line_length = 88
+multi_line_output = 3
+use_parentheses = true
+
+[tool.black]
+line_length = 88

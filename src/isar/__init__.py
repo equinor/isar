@@ -1,6 +1,3 @@
-from importlib.metadata import PackageNotFoundError, distribution
+from importlib.metadata import version
 
-try:
-    __version__ = distribution(__name__).version
-except PackageNotFoundError:
-    pass  # package is not installed
+__version__ = version(__package__ or __name__)
