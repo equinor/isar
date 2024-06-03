@@ -2,10 +2,10 @@ import logging
 from pathlib import Path
 
 from isar.config.settings import settings
-from robot_interface.models.mission.mission import Mission
 from isar.storage.storage_interface import StorageException, StorageInterface
 from isar.storage.utilities import construct_metadata_file, construct_paths
 from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission.mission import Mission
 
 
 class LocalStorage(StorageInterface):

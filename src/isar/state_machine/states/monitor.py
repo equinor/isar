@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Callable, Optional, Sequence, Tuple, Union
 from injector import inject
 from transitions import State
 
-from isar.mission_planner.task_selector_interface import TaskSelectorStop
 from isar.config.settings import settings
+from isar.mission_planner.task_selector_interface import TaskSelectorStop
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,

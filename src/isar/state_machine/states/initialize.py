@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Callable, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Optional
 
 from injector import inject
 from transitions import State
