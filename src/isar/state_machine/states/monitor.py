@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Callable, Optional, Sequence, Tuple, Union
 
 from injector import inject
 from transitions import State
-from isar.config.settings import RobotSettings
 
 from isar.config.settings import settings
 from isar.mission_planner.task_selector_interface import TaskSelectorStop

@@ -125,7 +125,7 @@ class StateMachine(object):
                 {
                     "trigger": "pause",
                     "source": [self.initiate_state, self.monitor_state],
-                    "dest": self.stop_state,
+                    "dest": self.paused_state,
                     "before": self._pause,
                 },
                 {
@@ -164,6 +164,12 @@ class StateMachine(object):
                     "trigger": "resume",
                     "source": self.paused_state,
                     "dest": self.initiate_state,
+                    "before": self._resume,
+                },
+                {
+                    "trigger": "resume_full_mission",
+                    "source": self.paused_state,
+                    "dest": self.monitor_state,
                     "before": self._resume,
                 },
                 {
@@ -266,21 +272,22 @@ class StateMachine(object):
         return
 
     def _resume(self) -> None:
-        self.logger.info(f"Resuming mission: {self.current_mission.id}")
-        self.current_mission.status = MissionStatus.InProgress
-        self.current_mission.error_message = None
-        self.current_task.status = TaskStatus.InProgress
+        if self.stepwise_mission:
+            self.logger.info(f"Resuming mission: {self.current_mission.id}")
+            self.current_mission.status = MissionStatus.InProgress
+            self.current_mission.error_message = None
+            self.current_task.status = TaskStatus.InProgress
 
-        self.publish_mission_status()
-        self.publish_task_status(task=self.current_task)
+            self.publish_mission_status()
+            self.publish_task_status(task=self.current_task)
 
-        resume_mission_response: ControlMissionResponse = (
-            self._make_control_mission_response()
-        )
-        self.queues.resume_mission.output.put(resume_mission_response)
+            resume_mission_response: ControlMissionResponse = (
+                self._make_control_mission_response()
+            )
+            self.queues.resume_mission.output.put(resume_mission_response)
 
-        self.current_task.reset_task()
-        self.update_current_step()
+            self.current_task.reset_task()
+            self.update_current_step()
 
     def _mission_finished(self) -> None:
         fail_statuses: List[TaskStatus] = [
