@@ -65,11 +65,12 @@ class Monitor(State):
 
             if self.state_machine.should_pause_mission():
                 transition = self.state_machine.pause  # type: ignore
-                if "pause_mission" in RobotSettings.CAPABILITIES:
-                    self._run_pause_mission_thread(
-                        pause_mission_function=self.state_machine.robot.pause,
-                        thread_name="State Machine Monitor Pause Mission",
-                    )
+                # if "pause_mission" in settings.CAPABILITIES:
+                # TODO: Reintroduce the if at some point (in case of stepwise mission)
+                self._run_pause_mission_thread(
+                    pause_mission_function=self.state_machine.robot.pause,
+                    thread_name="State Machine Monitor Pause Mission",
+                )
                 break
 
             if not self.step_status_thread:

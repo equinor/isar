@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Callable, Optional
 
 from transitions import State
 
-from isar.config.settings import RobotSettings
+from isar.config.settings import robot_settings, settings
 from isar.services.utilities.threaded_request import ThreadedRequest
 
 if TYPE_CHECKING:
@@ -35,12 +35,13 @@ class Paused(State):
                 break
 
             if self.state_machine.should_resume_mission():
-                transition = self.state_machine.resume  # type: ignore
-                if "pause_mission" in RobotSettings.CAPABILITIES:
-                    self._run_resume_mission_thread(
-                        resume_mission_function=self.state_machine.robot.resume,
-                        thread_name="State Machine Paused Resume Mission",
-                    )
+                transition = self.state_machine.resume_full_mission  # type: ignore
+                # if "pause_mission" in robot_settings.CAPABILITIES:
+                # TODO: Reintroduce this at some point (for stepwise missions)
+                self._run_resume_mission_thread(
+                    resume_mission_function=self.state_machine.robot.resume,
+                    thread_name="State Machine Paused Resume Mission",
+                )
                 break
 
             time.sleep(self.state_machine.sleep_time)
