@@ -45,7 +45,7 @@ click==8.1.7
     #   isar (pyproject.toml)
     #   typer
     #   uvicorn
-cryptography==42.0.7
+cryptography==42.0.8
     # via
     #   azure-identity
     #   azure-storage-blob
