@@ -10,7 +10,7 @@ import isar
 from isar.apis.api import API
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.log import setup_loggers
-from isar.config.settings import settings
+from isar.config.settings import robot_settings, settings
 from isar.models.communication.queues.queues import Queues
 from isar.modules import get_injector
 from isar.services.service_connections.mqtt.mqtt_client import MqttClient
@@ -72,6 +72,8 @@ def print_startup_info():
     print_setting("Plant code", settings.PLANT_CODE)
     print_setting("Plant name", settings.PLANT_NAME)
     print_setting("Plant shortname", settings.PLANT_SHORT_NAME)
+    print_setting(fillchar="-")
+    print_setting("Robot capabilities", robot_settings.CAPABILITIES)
     print_setting(fillchar="*")
     print()
 
