@@ -1,15 +1,21 @@
 FROM python:3.12-slim AS builder
 
 WORKDIR /app
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends build-essential gcc
-RUN python -m pip install --upgrade pip
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install dependencies before ISAR to cache pip installation
+RUN apt-get update && apt-get install -y git
+RUN apt-get install -y --no-install-recommends build-essential gcc
+RUN python -m pip install --upgrade pip
+
+# Install dependencies before isar to cache pip installation
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Install isar
 COPY . .
+RUN --mount=source=.git,target=.git,type=bind
 RUN pip install .
 
 # Install the base isar-robot package

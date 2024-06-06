@@ -1,4 +1,5 @@
 *
+!.git/
 !src/isar
 !src/robot_interface
 !main.py
