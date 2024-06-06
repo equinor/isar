@@ -2,7 +2,8 @@
 !src/isar
 !src/robot_interface
 !main.py
-!setup.py
+!pyproject.toml
+!requirements.txt
 !LICENSE
 !README.md
 **/__pycache__
