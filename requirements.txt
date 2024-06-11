@@ -19,7 +19,7 @@ azure-core==1.30.2
     #   azure-keyvault-secrets
     #   azure-storage-blob
     #   opencensus-ext-azure
-azure-identity==1.16.0
+azure-identity==1.16.1
     # via
     #   isar (pyproject.toml)
     #   opencensus-ext-azure
@@ -130,7 +130,7 @@ opencensus-ext-logging==0.1.1
     # via isar (pyproject.toml)
 opencensus-ext-requests==0.8.0
     # via isar (pyproject.toml)
-orjson==3.10.3
+orjson==3.10.4
     # via fastapi
 packaging==24.1
     # via msal-extensions
