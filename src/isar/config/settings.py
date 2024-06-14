@@ -343,5 +343,5 @@ class RobotSettings(BaseSettings):
 robot_settings = RobotSettings()
 
 if not settings.RUN_MISSION_STEPWISE:  # If mission-wise, do not run localize missions
-    if "localize" in robot_settings.CAPABILTIIES:
+    if "localize" in robot_settings.CAPABILITIES:
         robot_settings.CAPABILITIES.remove("localize")
