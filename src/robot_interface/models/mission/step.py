@@ -220,6 +220,19 @@ class RecordAudio(InspectionStep):
         return Audio
 
 
+@dataclass
+class TakeSensorTowerFrontImage(InspectionStep):
+    """
+    Step which causes the robot to take an image with the sensor tower front camera.
+    """
+
+    type: Literal["take_image"] = "take_sensor_tower_image"
+
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return Image
+
+
 STEPS = Union[
     DriveToPose,
     DockingProcedure,
@@ -231,4 +244,5 @@ STEPS = Union[
     TakeThermalVideo,
     RecordAudio,
     MoveArm,
+    TakeSensorTowerFrontImage,
 ]
