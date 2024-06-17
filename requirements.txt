@@ -58,7 +58,7 @@ dacite==1.8.1
     #   isar (pyproject.toml)
 dnspython==2.6.1
     # via email-validator
-email-validator==2.1.1
+email-validator==2.1.2
     # via fastapi
 fastapi==0.111.0
     # via
@@ -112,7 +112,7 @@ msal==1.28.1
     #   msal-extensions
 msal-extensions==1.1.0
     # via azure-identity
-numpy==1.26.4
+numpy==2.0.0
     # via
     #   alitra
     #   isar (pyproject.toml)
@@ -130,7 +130,7 @@ opencensus-ext-logging==0.1.1
     # via isar (pyproject.toml)
 opencensus-ext-requests==0.8.0
     # via isar (pyproject.toml)
-orjson==3.10.4
+orjson==3.10.5
     # via fastapi
 packaging==24.1
     # via msal-extensions
@@ -155,14 +155,14 @@ pyasn1-modules==0.4.0
     # via google-auth
 pycparser==2.22
     # via cffi
-pydantic==2.7.3
+pydantic==2.7.4
     # via
     #   fastapi
     #   isar (pyproject.toml)
     #   pydantic-settings
 pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.3.1
+pydantic-settings==2.3.3
     # via isar (pyproject.toml)
 pygments==2.18.0
     # via rich
