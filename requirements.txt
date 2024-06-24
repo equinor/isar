@@ -19,7 +19,7 @@ azure-core==1.30.2
     #   azure-keyvault-secrets
     #   azure-storage-blob
     #   opencensus-ext-azure
-azure-identity==1.16.1
+azure-identity==1.17.1
     # via
     #   isar (pyproject.toml)
     #   opencensus-ext-azure
@@ -58,7 +58,7 @@ dacite==1.8.1
     #   isar (pyproject.toml)
 dnspython==2.6.1
     # via email-validator
-email-validator==2.1.2
+email-validator==2.2.0
     # via fastapi
 fastapi==0.111.0
     # via
@@ -106,11 +106,11 @@ markupsafe==2.1.5
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-msal==1.28.1
+msal==1.29.0
     # via
     #   azure-identity
     #   msal-extensions
-msal-extensions==1.1.0
+msal-extensions==1.2.0
     # via azure-identity
 numpy==2.0.0
     # via
@@ -132,20 +132,18 @@ opencensus-ext-requests==0.8.0
     # via isar (pyproject.toml)
 orjson==3.10.5
     # via fastapi
-packaging==24.1
-    # via msal-extensions
 paho-mqtt==2.1.0
     # via isar (pyproject.toml)
-portalocker==2.8.2
+portalocker==2.10.0
     # via msal-extensions
-proto-plus==1.23.0
+proto-plus==1.24.0
     # via google-api-core
 protobuf==4.25.3
     # via
     #   google-api-core
     #   googleapis-common-protos
     #   proto-plus
-psutil==5.9.8
+psutil==6.0.0
     # via opencensus-ext-azure
 pyasn1==0.6.0
     # via
@@ -220,6 +218,7 @@ typer==0.12.3
 typing-extensions==4.12.2
     # via
     #   azure-core
+    #   azure-identity
     #   azure-keyvault-secrets
     #   azure-storage-blob
     #   fastapi
@@ -228,7 +227,7 @@ typing-extensions==4.12.2
     #   typer
 ujson==5.10.0
     # via fastapi
-urllib3==2.2.1
+urllib3==2.2.2
     # via requests
 uvicorn[standard]==0.30.1
     # via
