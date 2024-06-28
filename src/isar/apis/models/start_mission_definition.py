@@ -62,6 +62,8 @@ class StartMissionDefinition(BaseModel):
     id: Optional[str] = None
     name: Optional[str] = None
     start_pose: Optional[InputPose] = None
+    dock: Optional[bool] = None
+    undock: Optional[bool] = None
 
 
 def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
@@ -84,6 +86,9 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
     check_for_duplicate_ids(all_steps_in_mission)
 
     isar_mission: Mission = Mission(tasks=isar_tasks)
+
+    isar_mission.dock = mission_definition.dock
+    isar_mission.undock = mission_definition.undock
 
     if mission_definition.name:
         isar_mission.name = mission_definition.name

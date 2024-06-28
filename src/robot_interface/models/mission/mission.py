@@ -15,6 +15,8 @@ class Mission:
     id: str = field(default_factory=uuid4_string, init=True)
     name: str = ""
     start_pose: Optional[Pose] = None
+    dock: Optional[bool] = None
+    undock: Optional[bool] = None
     status: MissionStatus = MissionStatus.NotStarted
     error_message: Optional[ErrorMessage] = field(default=None, init=False)
 
