@@ -68,11 +68,11 @@ fastapi-azure-auth==4.4.0
     # via isar (pyproject.toml)
 fastapi-cli==0.0.4
     # via fastapi
-google-api-core==2.19.0
+google-api-core==2.19.1
     # via opencensus
-google-auth==2.30.0
+google-auth==2.31.0
     # via google-api-core
-googleapis-common-protos==1.63.1
+googleapis-common-protos==1.63.2
     # via google-api-core
 h11==0.14.0
     # via
@@ -138,7 +138,7 @@ portalocker==2.10.0
     # via msal-extensions
 proto-plus==1.24.0
     # via google-api-core
-protobuf==4.25.3
+protobuf==5.27.2
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -153,14 +153,14 @@ pyasn1-modules==0.4.0
     # via google-auth
 pycparser==2.22
     # via cffi
-pydantic==2.7.4
+pydantic==2.8.0
     # via
     #   fastapi
     #   isar (pyproject.toml)
     #   pydantic-settings
-pydantic-core==2.18.4
+pydantic-core==2.20.0
     # via pydantic
-pydantic-settings==2.3.3
+pydantic-settings==2.3.4
     # via isar (pyproject.toml)
 pygments==2.18.0
     # via rich
@@ -195,7 +195,7 @@ rich==13.7.1
     # via typer
 rsa==4.9
     # via google-auth
-scipy==1.13.1
+scipy==1.14.0
     # via alitra
 shellingham==1.5.4
     # via typer
