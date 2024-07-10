@@ -24,6 +24,7 @@ class ErrorReason(str, Enum):
     RobotMissionMissingStartPoseException: str = (
         "robot_mission_missing_start_pose_exception"
     )
+    RobotAmendMissionException: str = "robot_amend_mission_exception"
 
 
 @dataclass
@@ -254,6 +255,16 @@ class RobotMissionMissingStartPoseException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
             error_reason=ErrorReason.RobotMissionMissingStartPoseException,
+            error_description=error_description,
+        )
+
+    pass
+
+
+class RobotAmendMissionException(RobotException):
+    def __init__(self, error_description: str) -> None:
+        super().__init__(
+            error_reason=ErrorReason.RobotAmendMissionException,
             error_description=error_description,
         )
 
