@@ -22,11 +22,14 @@ class Task:
     id: str = field(default_factory=uuid4_string, init=True)
     _iterator: Iterator = None
 
-    def next_step(self) -> Step:
-        step: Step = next(self._iterator)
-        while step.status != StepStatus.NotStarted:
-            step = next(self._iterator)
-        return step
+    def next_step(self) -> Optional[Step]:
+        try:
+            step: Step = next(self._iterator)
+            while step.status != StepStatus.NotStarted:
+                step = next(self._iterator)
+            return step
+        except StopIteration:
+            return None
 
     def is_finished(self) -> bool:
         for step in self.steps:
