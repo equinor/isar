@@ -127,29 +127,32 @@ class Monitor(State):
             else:
                 if self._is_step_finished(self.state_machine.current_step):
                     self._report_step_status(self.state_machine.current_step)
-                    self.state_machine.update_current_task()
-                    if self.state_machine.current_task == None:
-                        transition = self.state_machine.full_mission_finished  # type: ignore
-                        break
-                    self.state_machine.update_current_step()
-                    self.state_machine.current_task.update_task_status()
+
+                    
+
+                    if self.state_machine.current_task.is_finished():
+                        # Report and update finished task
+                        self.state_machine.current_task.update_task_status()  # Uses the updated step status to set the task status
+                        self.state_machine.publish_task_status(
+                            task=self.state_machine.current_task
+                        )
+
+                        self.state_machine.increment_current_task()
+
+                        if self.state_machine.current_task == None:
+                            transition = self.state_machine.full_mission_finished  # type: ignore
+                            break
+
+                        # Report and update next task
+                        self.state_machine.current_task.update_task_status()
+                        self.state_machine.publish_task_status(
+                            task=self.state_machine.current_task
+                        )
+                    
+                    self.state_machine.increment_current_step()
+
                 else:  # If not all steps are done
                     self.state_machine.current_task.status = TaskStatus.InProgress
-
-                self.state_machine.publish_task_status(
-                    self.state_machine.current_task
-                )
-                if self.state_machine.current_task.status == TaskStatus.Successful:
-                    try:
-                        self.state_machine.current_task = (
-                            self.state_machine.task_selector.next_task()
-                        )
-                    except TaskSelectorStop:
-                        # Indicates that all tasks are finished
-                        self.state_machine.current_task = None
-                        transition = self.state_machine.full_mission_finished  # type: ignore
-                        break
-                    self.state_machine.update_current_step()
 
             self.step_status_thread = None
             time.sleep(self.state_machine.sleep_time)
@@ -199,7 +202,7 @@ class Monitor(State):
         elif step.status == StepStatus.Successful:
             finished = True
         return finished
-    
+
     def _report_step_status(self, step: Step) -> None:
         if step.status == StepStatus.Failed:
             self.logger.warning(
