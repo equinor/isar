@@ -120,11 +120,13 @@ class Monitor(State):
                 )
 
             if self.state_machine.stepwise_mission:
-                if self._step_finished(self.state_machine.current_step):
+                if self._is_step_finished(self.state_machine.current_step):
+                    self._report_step_status(self.state_machine.current_step)
                     transition = self.state_machine.step_finished  # type: ignore
                     break
             else:
-                if self._step_finished(self.state_machine.current_step):
+                if self._is_step_finished(self.state_machine.current_step):
+                    self._report_step_status(self.state_machine.current_step)
                     self.state_machine.update_current_task()
                     if self.state_machine.current_task == None:
                         transition = self.state_machine.full_mission_finished  # type: ignore
@@ -190,24 +192,28 @@ class Monitor(State):
             self.state_machine.queues.upload_queue.put(message)
             self.logger.info(f"Inspection: {str(inspection.id)[:8]} queued for upload")
 
-    def _step_finished(self, step: Step) -> bool:
+    def _is_step_finished(self, step: Step) -> bool:
         finished: bool = False
+        if step.status == StepStatus.Failed:
+            finished = True
+        elif step.status == StepStatus.Successful:
+            finished = True
+        return finished
+    
+    def _report_step_status(self, step: Step) -> None:
         if step.status == StepStatus.Failed:
             self.logger.warning(
                 f"Step: {str(step.id)[:8]} was reported as failed by the robot"
             )
-            finished = True
         elif step.status == StepStatus.Successful:
             self.logger.info(
                 f"{type(step).__name__} step: {str(step.id)[:8]} completed"
             )
-            finished = True
-        return finished
 
     def _should_upload_inspections(self) -> bool:
         step: Step = self.state_machine.current_step
         return (
-            self._step_finished(step)
+            self._is_step_finished(step)
             and step.status == StepStatus.Successful
             and isinstance(step, InspectionStep)
         )
