@@ -71,9 +71,7 @@ class Monitor(State):
                     thread_name="State Machine Monitor Get Step Status",
                 )
             try:
-                status: Union[StepStatus, MissionStatus] = (
-                    self.step_status_thread.get_output()
-                )
+                status: StepStatus = self.step_status_thread.get_output()
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
@@ -116,16 +114,6 @@ class Monitor(State):
                 )
                 status = StepStatus.Failed
 
-            except RobotMissionStatusException as e:
-                self.state_machine.current_mission.error_message = ErrorMessage(
-                    error_reason=e.error_reason, error_description=e.error_description
-                )
-                self.logger.error(
-                    f"Monitoring mission {self.state_machine.current_mission.id} "
-                    f"failed because: {e.error_description}"
-                )
-                status = MissionStatus.Failed
-
             except RobotException as e:
                 self._set_error_message(e)
                 status = StepStatus.Failed
@@ -134,13 +122,13 @@ class Monitor(State):
                     f"Retrieving the status failed because: {e.error_description}"
                 )
 
-            if isinstance(status, StepStatus):
-                self.state_machine.current_step.status = status
-            elif isinstance(status, MissionStatus):
-                self.state_machine.current_mission.status = status
+            if not isinstance(status, StepStatus):
                 self.logger.error(
                     f"Received an invalid status update when monitoring mission. Only StepStatus is expected."
                 )
+                break
+
+            self.state_machine.current_step.status = status
 
             if self._should_upload_inspections():
                 get_inspections_thread = ThreadedRequest(
@@ -157,34 +145,30 @@ class Monitor(State):
                     transition = self.state_machine.step_finished  # type: ignore
                     break
             else:
-                if isinstance(status, StepStatus):
-                    if self._step_finished(self.state_machine.current_step):
-                        self.state_machine.update_current_task()
-                        if self.state_machine.current_task == None:
-                            transition = self.state_machine.full_mission_finished  # type: ignore
-                            break
-                        self.state_machine.update_current_step()
-                        self.state_machine.current_task.update_task_status()
-                    else:  # If not all steps are done
-                        self.state_machine.current_task.status = TaskStatus.InProgress
+                if self._step_finished(self.state_machine.current_step):
+                    self.state_machine.update_current_task()
+                    if self.state_machine.current_task == None:
+                        transition = self.state_machine.full_mission_finished  # type: ignore
+                        break
+                    self.state_machine.update_current_step()
+                    self.state_machine.current_task.update_task_status()
+                else:  # If not all steps are done
+                    self.state_machine.current_task.status = TaskStatus.InProgress
 
-                    self.state_machine.publish_task_status(
-                        self.state_machine.current_task
-                    )
-                    if self.state_machine.current_task.status == TaskStatus.Successful:
-                        try:
-                            self.state_machine.current_task = (
-                                self.state_machine.task_selector.next_task()
-                            )
-                        except TaskSelectorStop:
-                            # Indicates that all tasks are finished
-                            self.state_machine.current_task = None
-                            transition = self.state_machine.full_mission_finished  # type: ignore
-                            break
-                        self.state_machine.update_current_step()
-                elif self._mission_finished(self.state_machine.current_mission):
-                    transition = self.state_machine.full_mission_finished  # type: ignore
-                    break
+                self.state_machine.publish_task_status(
+                    self.state_machine.current_task
+                )
+                if self.state_machine.current_task.status == TaskStatus.Successful:
+                    try:
+                        self.state_machine.current_task = (
+                            self.state_machine.task_selector.next_task()
+                        )
+                    except TaskSelectorStop:
+                        # Indicates that all tasks are finished
+                        self.state_machine.current_task = None
+                        transition = self.state_machine.full_mission_finished  # type: ignore
+                        break
+                    self.state_machine.update_current_step()
 
             self.step_status_thread = None
             time.sleep(self.state_machine.sleep_time)
@@ -240,16 +224,6 @@ class Monitor(State):
             )
             finished = True
         return finished
-
-    @staticmethod
-    def _mission_finished(mission: Mission) -> bool:
-        if (
-            mission.status == MissionStatus.Successful
-            or mission.status == MissionStatus.PartiallySuccessful
-            or mission.status == MissionStatus.Failed
-        ):
-            return True
-        return False
 
     def _should_upload_inspections(self) -> bool:
         step: Step = self.state_machine.current_step
