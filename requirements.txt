@@ -60,7 +60,7 @@ dnspython==2.6.1
     # via email-validator
 email-validator==2.2.0
     # via fastapi
-fastapi==0.111.0
+fastapi==0.111.1
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
@@ -70,7 +70,7 @@ fastapi-cli==0.0.4
     # via fastapi
 google-api-core==2.19.1
     # via opencensus
-google-auth==2.31.0
+google-auth==2.32.0
     # via google-api-core
 googleapis-common-protos==1.63.2
     # via google-api-core
@@ -130,11 +130,9 @@ opencensus-ext-logging==0.1.1
     # via isar (pyproject.toml)
 opencensus-ext-requests==0.8.0
     # via isar (pyproject.toml)
-orjson==3.10.6
-    # via fastapi
 paho-mqtt==2.1.0
     # via isar (pyproject.toml)
-portalocker==2.10.0
+portalocker==2.10.1
     # via msal-extensions
 proto-plus==1.24.0
     # via google-api-core
@@ -225,8 +223,6 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   typer
-ujson==5.10.0
-    # via fastapi
 urllib3==2.2.2
     # via requests
 uvicorn[standard]==0.30.1
