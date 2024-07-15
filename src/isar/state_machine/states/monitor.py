@@ -77,29 +77,8 @@ class Monitor(State):
                 continue
 
             except RobotCommunicationTimeoutException as e:
-                self.state_machine.current_mission.error_message = ErrorMessage(
-                    error_reason=e.error_reason, error_description=e.error_description
-                )
-                self.step_status_thread = None
-                self.request_status_failure_counter += 1
-                self.logger.warning(
-                    f"Monitoring step {self.state_machine.current_step.id} failed #: "
-                    f"{self.request_status_failure_counter} failed because: {e.error_description}"
-                )
-
-                if (
-                    self.request_status_failure_counter
-                    >= self.request_status_failure_counter_limit
-                ):
-                    self.state_machine.current_step.error_message = ErrorMessage(
-                        error_reason=e.error_reason,
-                        error_description=e.error_description,
-                    )
-                    self.logger.error(
-                        f"Step will be cancelled after failing to get step status "
-                        f"{self.request_status_failure_counter} times because: "
-                        f"{e.error_description}"
-                    )
+                step_failed: bool = self._handle_communication_timeout(e)
+                if step_failed:
                     status = StepStatus.Failed
                 else:
                     continue
@@ -238,3 +217,33 @@ class Monitor(State):
             error_reason=e.error_reason, error_description=e.error_description
         )
         self.state_machine.current_step.error_message = error_message
+
+    def _handle_communication_timeout(
+        self, e: RobotCommunicationTimeoutException
+    ) -> bool:
+        self.state_machine.current_mission.error_message = ErrorMessage(
+            error_reason=e.error_reason, error_description=e.error_description
+        )
+        self.step_status_thread = None
+        self.request_status_failure_counter += 1
+        self.logger.warning(
+            f"Monitoring step {self.state_machine.current_step.id} failed #: "
+            f"{self.request_status_failure_counter} failed because: {e.error_description}"
+        )
+
+        if (
+            self.request_status_failure_counter
+            >= self.request_status_failure_counter_limit
+        ):
+            self.state_machine.current_step.error_message = ErrorMessage(
+                error_reason=e.error_reason,
+                error_description=e.error_description,
+            )
+            self.logger.error(
+                f"Step will be cancelled after failing to get step status "
+                f"{self.request_status_failure_counter} times because: "
+                f"{e.error_description}"
+            )
+            return True
+
+        return False
