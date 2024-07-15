@@ -19,7 +19,7 @@ from tests.mocks.step import MockStep
 def test_step_finished(monitor: Monitor, mock_status, expected_output):
     step: Step = MockStep.drive_to()
     step.status = mock_status
-    step_completed: bool = monitor._step_finished(
+    step_completed: bool = monitor._is_step_finished(
         step=step,
     )
 
