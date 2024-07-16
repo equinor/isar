@@ -107,6 +107,11 @@ class Monitor(State):
                 )
                 break
 
+            if self.state_machine.current_task == None:
+                self.state_machine.increment_current_task()
+            if self.state_machine.current_step == None:
+                self.state_machine.increment_current_step()
+
             self.state_machine.current_step.status = status
 
             if self._should_upload_inspections():
