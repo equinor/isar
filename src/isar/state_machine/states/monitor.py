@@ -108,9 +108,9 @@ class Monitor(State):
                 break
 
             if self.state_machine.current_task == None:
-                self.state_machine.increment_current_task()
+                self.state_machine.iterate_current_task()
             if self.state_machine.current_step == None:
-                self.state_machine.increment_current_step()
+                self.state_machine.iterate_current_step()
 
             self.state_machine.current_step.status = status
 
@@ -133,8 +133,6 @@ class Monitor(State):
                 if self._is_step_finished(self.state_machine.current_step):
                     self._report_step_status(self.state_machine.current_step)
 
-                    
-
                     if self.state_machine.current_task.is_finished():
                         # Report and update finished task
                         self.state_machine.current_task.update_task_status()  # Uses the updated step status to set the task status
@@ -142,7 +140,7 @@ class Monitor(State):
                             task=self.state_machine.current_task
                         )
 
-                        self.state_machine.increment_current_task()
+                        self.state_machine.iterate_current_task()
 
                         if self.state_machine.current_task == None:
                             transition = self.state_machine.full_mission_finished  # type: ignore
@@ -153,8 +151,8 @@ class Monitor(State):
                         self.state_machine.publish_task_status(
                             task=self.state_machine.current_task
                         )
-                    
-                    self.state_machine.increment_current_step()
+
+                    self.state_machine.iterate_current_step()
 
                 else:  # If not all steps are done
                     self.state_machine.current_task.status = TaskStatus.InProgress
