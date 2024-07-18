@@ -292,7 +292,7 @@ class StateMachine(object):
         self.queues.resume_mission.output.put(resume_mission_response)
 
         self.current_task.reset_task()
-        self.increment_current_step()
+        self.iterate_current_step()
 
         self.robot.resume()
 
@@ -337,12 +337,12 @@ class StateMachine(object):
         else:
             self.current_task.status = TaskStatus.InProgress
             self.publish_task_status(task=self.current_task)
-            self.increment_current_step()
+            self.iterate_current_step()
 
     def _step_finished(self) -> None:
         self.publish_step_status(step=self.current_step)
-        self.increment_current_task()
-        self.increment_current_step()
+        self.iterate_current_task()
+        self.iterate_current_step()
 
     def _full_mission_finished(self) -> None:
         self.current_task = None
@@ -379,8 +379,8 @@ class StateMachine(object):
         if self.stepwise_mission:
             self.current_step.status = StepStatus.Failed
             self.publish_step_status(step=self.current_step)
-            self.increment_current_task()
-            self.increment_current_step()
+            self.iterate_current_task()
+            self.iterate_current_step()
 
     def _mission_stopped(self) -> None:
         self.current_mission.status = MissionStatus.Cancelled
@@ -427,7 +427,7 @@ class StateMachine(object):
         """
         self.to_idle()
 
-    def increment_current_task(self):
+    def iterate_current_task(self):
         if self.current_task.is_finished():
             try:
                 self.current_task = self.task_selector.next_task()
@@ -437,7 +437,7 @@ class StateMachine(object):
                 # Indicates that all tasks are finished
                 self.current_task = None
 
-    def increment_current_step(self):
+    def iterate_current_step(self):
         if self.current_task != None:
             self.current_step = self.current_task.next_step()
 
