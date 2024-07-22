@@ -25,7 +25,7 @@ azure-identity==1.17.1
     #   opencensus-ext-azure
 azure-keyvault-secrets==4.8.0
     # via isar (pyproject.toml)
-azure-storage-blob==12.20.0
+azure-storage-blob==12.21.0
     # via isar (pyproject.toml)
 backoff==2.2.1
     # via isar (pyproject.toml)
@@ -45,7 +45,7 @@ click==8.1.7
     #   isar (pyproject.toml)
     #   typer
     #   uvicorn
-cryptography==42.0.8
+cryptography==43.0.0
     # via
     #   azure-identity
     #   azure-storage-blob
@@ -112,7 +112,7 @@ msal==1.30.0
     #   msal-extensions
 msal-extensions==1.2.0
     # via azure-identity
-numpy==2.0.0
+numpy==2.0.1
     # via
     #   alitra
     #   isar (pyproject.toml)
@@ -225,7 +225,7 @@ typing-extensions==4.12.2
     #   typer
 urllib3==2.2.2
     # via requests
-uvicorn[standard]==0.30.1
+uvicorn[standard]==0.30.3
     # via
     #   fastapi
     #   isar (pyproject.toml)
