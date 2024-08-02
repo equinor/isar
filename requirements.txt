@@ -66,7 +66,7 @@ fastapi==0.111.1
     #   isar (pyproject.toml)
 fastapi-azure-auth==4.4.0
     # via isar (pyproject.toml)
-fastapi-cli==0.0.4
+fastapi-cli==0.0.5
     # via fastapi
 google-api-core==2.19.1
     # via opencensus
@@ -136,7 +136,7 @@ portalocker==2.10.1
     # via msal-extensions
 proto-plus==1.24.0
     # via google-api-core
-protobuf==5.27.2
+protobuf==5.27.3
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -158,11 +158,11 @@ pydantic==2.8.2
     #   pydantic-settings
 pydantic-core==2.20.1
     # via pydantic
-pydantic-settings==2.3.4
+pydantic-settings==2.4.0
     # via isar (pyproject.toml)
 pygments==2.18.0
     # via rich
-pyjwt[crypto]==2.8.0
+pyjwt[crypto]==2.9.0
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
@@ -225,9 +225,10 @@ typing-extensions==4.12.2
     #   typer
 urllib3==2.2.2
     # via requests
-uvicorn[standard]==0.30.3
+uvicorn[standard]==0.30.4
     # via
     #   fastapi
+    #   fastapi-cli
     #   isar (pyproject.toml)
 uvloop==0.19.0
     # via uvicorn
