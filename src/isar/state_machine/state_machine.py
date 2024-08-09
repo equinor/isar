@@ -341,6 +341,8 @@ class StateMachine(object):
 
     def _step_finished(self) -> None:
         self.publish_step_status(step=self.current_step)
+        self.current_task.update_task_status()
+        self.publish_task_status(task=self.current_task)
         self.iterate_current_task()
         self.iterate_current_step()
 
@@ -379,6 +381,8 @@ class StateMachine(object):
         if self.stepwise_mission:
             self.current_step.status = StepStatus.Failed
             self.publish_step_status(step=self.current_step)
+            self.current_task.update_task_status()
+            self.publish_task_status(task=self.current_task)
             self.iterate_current_task()
             self.iterate_current_step()
 
