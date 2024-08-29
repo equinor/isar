@@ -21,6 +21,7 @@ class RobotInfoPublisher:
                 robot_model=robot_settings.ROBOT_MODEL,  # type: ignore
                 robot_serial_number=settings.SERIAL_NUMBER,
                 robot_asset=settings.PLANT_SHORT_NAME,
+                documentation=settings.DOCUMENTATION,
                 video_streams=settings.VIDEO_STREAMS,
                 host=settings.API_HOST_VIEWED_EXTERNALLY,
                 port=settings.API_PORT,

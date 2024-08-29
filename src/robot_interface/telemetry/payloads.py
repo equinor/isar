@@ -43,6 +43,12 @@ class TelemetryPressurePayload(TelemetryPayload):
 
 
 @dataclass
+class DocumentInfo:
+    name: str
+    url: str
+
+
+@dataclass
 class VideoStream:
     name: str
     url: str
@@ -69,6 +75,7 @@ class RobotInfoPayload:
     robot_model: str
     robot_serial_number: str
     robot_asset: str
+    documentation: List[DocumentInfo]
     video_streams: List[VideoStream]
     host: str
     port: int
