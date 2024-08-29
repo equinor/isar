@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from isar.config import predefined_missions
 from robot_interface.models.robots.robot_model import RobotModel
-from robot_interface.telemetry.payloads import VideoStream
+from robot_interface.telemetry.payloads import VideoStream, DocumentInfo
 
 
 class Settings(BaseSettings):
@@ -189,6 +189,9 @@ class Settings(BaseSettings):
 
     # Serial number of the robot ISAR is connected to
     SERIAL_NUMBER: str = Field(default="0001")
+
+    # Info about robot documentation
+    DOCUMENTATION: List[DocumentInfo] = Field(default=[])
 
     # Endpoints to reach video streams for the robot
     VIDEO_STREAMS: List[VideoStream] = Field(
