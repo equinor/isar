@@ -54,7 +54,7 @@ dacite==1.8.1
     # via
     #   alitra
     #   isar (pyproject.toml)
-fastapi==0.112.2
+fastapi==0.103.2
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
