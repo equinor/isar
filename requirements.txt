@@ -35,7 +35,7 @@ certifi==2024.8.30
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.0
+cffi==1.17.1
     # via cryptography
 charset-normalizer==3.3.2
     # via requests
@@ -54,7 +54,7 @@ dacite==1.8.1
     # via
     #   alitra
     #   isar (pyproject.toml)
-fastapi==0.112.2
+fastapi==0.112.3
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
@@ -91,7 +91,7 @@ msal==1.30.0
     #   msal-extensions
 msal-extensions==1.2.0
     # via azure-identity
-numpy==2.1.0
+numpy==2.1.1
     # via
     #   alitra
     #   isar (pyproject.toml)
