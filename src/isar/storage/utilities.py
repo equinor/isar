@@ -1,6 +1,6 @@
 import json
 import time
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Tuple
 
@@ -37,7 +37,7 @@ def construct_metadata_file(
             "mission_id": mission.id,
             "mission_name": mission.name,
             "plant_name": settings.PLANT_NAME,
-            "mission_date": datetime.now(UTC).date(),
+            "mission_date": datetime.now(timezone.utc).date(),
             "isar_id": settings.ISAR_ID,
             "robot_name": settings.ROBOT_NAME,
             "analysis_type": (
@@ -80,4 +80,4 @@ def get_filename(
 
 def get_foldername(mission: Mission) -> str:
     mission_name: str = mission.name.replace(" ", "-")
-    return f"{datetime.now(UTC).date()}__{settings.PLANT_SHORT_NAME}__{mission_name}__{mission.id}"
+    return f"{datetime.now(timezone.utc).date()}__{settings.PLANT_SHORT_NAME}__{mission_name}__{mission.id}"

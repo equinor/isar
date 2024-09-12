@@ -1,7 +1,7 @@
 import json
 import time
 from abc import ABCMeta, abstractmethod
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from queue import Queue
 from typing import Callable, Tuple
 
@@ -73,7 +73,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
                 topic = self.topic
             except RobotTelemetryException:
                 payload = json.dumps(
-                    CloudHealthPayload(isar_id, robot_name, datetime.now(UTC)),
+                    CloudHealthPayload(isar_id, robot_name, datetime.now(timezone.utc)),
                     cls=EnhancedJSONEncoder,
                 )
                 topic = self.cloud_healt_topic

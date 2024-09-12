@@ -1,6 +1,6 @@
 import json
 import time
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from queue import Queue
 
 from isar.config.settings import robot_settings, settings
@@ -26,7 +26,7 @@ class RobotInfoPublisher:
                 host=settings.API_HOST_VIEWED_EXTERNALLY,
                 port=settings.API_PORT,
                 capabilities=robot_settings.CAPABILITIES,
-                timestamp=datetime.now(UTC),
+                timestamp=datetime.now(timezone.utc),
             )
 
             self.mqtt_publisher.publish(
