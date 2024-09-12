@@ -1,7 +1,7 @@
 import shutil
 import time
 from copy import deepcopy
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List
 
@@ -102,9 +102,9 @@ def test_successful_mission(
     mission_id: str = state_machine_thread.state_machine.current_mission.id
     mission: Mission = deepcopy(state_machine_thread.state_machine.current_mission)
 
-    start_time: datetime = datetime.now(UTC)
+    start_time: datetime = datetime.now(timezone.utc)
     while state_machine_thread.state_machine.current_state != States.Idle:
-        if (datetime.now(UTC) - start_time) > integration_test_timeout:
+        if (datetime.now(timezone.utc) - start_time) > integration_test_timeout:
             raise TimeoutError
         time.sleep(5)
 

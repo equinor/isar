@@ -2,7 +2,7 @@ import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from alitra import Position, Pose, Orientation, Frame
+from alitra import Frame, Orientation, Pose, Position
 from pydantic import BaseModel, Field
 
 from isar.apis.models.models import InputPose, InputPosition
@@ -132,20 +132,21 @@ def check_for_duplicate_ids(items: Union[List[Task], List[STEPS]]):
 
 def generate_steps(task) -> List[STEPS]:
     steps: List[STEPS] = []
-    try:
-        match task.type:
-            case TaskType.Inspection:
-                steps.extend(generate_steps_for_inspection_task(task=task))
-            case TaskType.DriveTo:
-                steps.append(generate_steps_for_drive_to_task(task=task))
-            case TaskType.Localization:
-                steps.append(generate_steps_for_localization_task(task=task))
-            case TaskType.ReturnToHome:
-                steps.append(generate_steps_for_return_to_home_task(task=task))
-            case TaskType.Dock:
-                steps.append(generate_steps_for_dock_task())
-    except ValueError as e:
-        raise MissionPlannerError(f"Failed to create task: {str(e)}")
+
+    if task.type == TaskType.Inspection:
+        steps.extend(generate_steps_for_inspection_task(task=task))
+    elif task.type == TaskType.DriveTo:
+        steps.append(generate_steps_for_drive_to_task(task=task))
+    elif task.type == TaskType.Localization:
+        steps.append(generate_steps_for_localization_task(task=task))
+    elif task.type == TaskType.ReturnToHome:
+        steps.append(generate_steps_for_return_to_home_task(task=task))
+    elif task.type == TaskType.Dock:
+        steps.append(generate_steps_for_dock_task())
+    else:
+        raise MissionPlannerError(
+            f"Failed to create task: '{task.type}' is not a valid"
+        )
 
     return steps
 

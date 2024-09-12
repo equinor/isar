@@ -2,7 +2,7 @@ import json
 import logging
 import queue
 from collections import deque
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Deque, List, Optional
 
 from alitra import Pose
@@ -526,7 +526,7 @@ class StateMachine(object):
                 "error_description": (
                     error_message.error_description if error_message else None
                 ),
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             },
             cls=EnhancedJSONEncoder,
         )
@@ -559,7 +559,7 @@ class StateMachine(object):
                 "error_description": (
                     error_message.error_description if error_message else None
                 ),
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             },
             cls=EnhancedJSONEncoder,
         )
@@ -594,7 +594,7 @@ class StateMachine(object):
                 "error_description": (
                     error_message.error_description if error_message else None
                 ),
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             },
             cls=EnhancedJSONEncoder,
         )
@@ -614,7 +614,7 @@ class StateMachine(object):
                 "isar_id": settings.ISAR_ID,
                 "robot_name": settings.ROBOT_NAME,
                 "status": self._current_status(),
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             },
             cls=EnhancedJSONEncoder,
         )

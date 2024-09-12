@@ -7,7 +7,7 @@ name = "isar"
 authors = [{ name = "Equinor ASA", email = "fg_robots_dev@equinor.com" }]
 description = "Integration and Supervisory control of Autonomous Robots"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 license = { file = "LICENSE" }
 classifiers = [
     "Intended Audience :: Developers",
@@ -15,6 +15,7 @@ classifiers = [
     "License :: OSI Approved :: Eclipse Public License 2.0 (EPL-2.0)",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
