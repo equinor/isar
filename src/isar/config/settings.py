@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from isar.config import predefined_missions
 from robot_interface.models.robots.robot_model import RobotModel
-from robot_interface.telemetry.payloads import VideoStream, DocumentInfo
+from robot_interface.telemetry.payloads import DocumentInfo, VideoStream
 
 
 class Settings(BaseSettings):
@@ -191,7 +191,12 @@ class Settings(BaseSettings):
     SERIAL_NUMBER: str = Field(default="0001")
 
     # Info about robot documentation
-    DOCUMENTATION: List[DocumentInfo] = Field(default=[])
+    DOCUMENTATION: List[DocumentInfo] = Field(
+        default=[
+            DocumentInfo(name="doc1", url="link"),
+            DocumentInfo(name="doc2", url="link"),
+        ]
+    )
 
     # Endpoints to reach video streams for the robot
     VIDEO_STREAMS: List[VideoStream] = Field(
