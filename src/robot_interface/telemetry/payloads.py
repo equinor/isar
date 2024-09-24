@@ -56,6 +56,13 @@ class VideoStream:
 
 
 @dataclass
+class MediaConfig(TelemetryPayload):
+    url: str
+    token: str
+    media_connection_type: str
+
+
+@dataclass
 class RobotStatusPayload:
     isar_id: str
     robot_name: str
