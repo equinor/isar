@@ -11,14 +11,6 @@ class MissionStatus(str, Enum):
     PartiallySuccessful: str = "partially_successful"
 
 
-class StepStatus(str, Enum):
-    NotStarted: str = "not_started"
-    Successful: str = "successful"
-    InProgress: str = "in_progress"
-    Failed: str = "failed"
-    Cancelled: str = "cancelled"
-
-
 class TaskStatus(str, Enum):
     NotStarted: str = "not_started"
     InProgress: str = "in_progress"

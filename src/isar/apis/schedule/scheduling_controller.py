@@ -1,6 +1,6 @@
 import logging
 from http import HTTPStatus
-from typing import List, Optional
+from typing import Optional
 
 from alitra import Pose
 from fastapi import Body, HTTPException, Path
@@ -21,8 +21,7 @@ from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.step import (
-    DriveToPose,
+from robot_interface.models.mission.task import (
     Localize,
     MoveArm,
     ReturnToHome,
@@ -67,8 +66,7 @@ class SchedulingController:
         mission: Mission = self.scheduling_utilities.get_mission(mission_id)
         if return_pose:
             pose: Pose = return_pose.to_alitra_pose()
-            step: DriveToPose = DriveToPose(pose=pose)
-            mission.tasks.append(Task(steps=[step]))
+            mission.tasks.append(ReturnToHome(pose=pose))
 
         self.scheduling_utilities.verify_robot_capable_of_mission(
             mission=mission, robot_capabilities=robot_settings.CAPABILITIES
@@ -136,8 +134,7 @@ class SchedulingController:
         )
         if return_pose:
             pose: Pose = return_pose.to_alitra_pose()
-            step: DriveToPose = DriveToPose(pose=pose)
-            mission.tasks.append(Task(steps=[step]))
+            mission.tasks.append(ReturnToHome(pose=pose))
 
         initial_pose_alitra: Optional[Pose] = (
             initial_pose.to_alitra_pose() if initial_pose else None
@@ -211,7 +208,7 @@ class SchedulingController:
         target_pose: InputPose = Body(
             default=None,
             title="Target Pose",
-            description="The target pose for the drive_to step",
+            description="The target pose for the drive_to task",
         ),
     ) -> StartMissionResponse:
         self.logger.info("Received request to start new drive-to mission")
@@ -221,8 +218,7 @@ class SchedulingController:
         self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
 
         pose: Pose = target_pose.to_alitra_pose()
-        step: DriveToPose = DriveToPose(pose=pose)
-        mission: Mission = Mission(tasks=[Task(steps=[step])])
+        mission: Mission = Mission(tasks=[ReturnToHome(pose=pose)])
 
         self.logger.info(
             f"Starting drive to mission with ISAR Mission ID: '{mission.id}'"
@@ -246,8 +242,7 @@ class SchedulingController:
         self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
 
         pose: Pose = localization_pose.to_alitra_pose()
-        step: Localize = Localize(localization_pose=pose)
-        mission: Mission = Mission(tasks=[Task(steps=[step])])
+        mission: Mission = Mission(tasks=[Localize(localization_pose=pose)])
 
         self.logger.info(
             f"Starting localization mission with ISAR Mission ID: '{mission.id}'"
@@ -294,8 +289,7 @@ class SchedulingController:
 
         self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
 
-        step: MoveArm = MoveArm(arm_pose=arm_pose_literal)
-        mission: Mission = Mission(tasks=[Task(steps=[step])])
+        mission: Mission = Mission(tasks=[MoveArm(arm_pose=arm_pose_literal)])
 
         self.logger.info(
             f"Starting move arm mission with ISAR Mission ID: '{mission.id}'"
@@ -323,8 +317,4 @@ class SchedulingController:
         )
 
     def _task_api_response(self, task: Task) -> TaskResponse:
-        steps: List[dict] = []
-        for step in task.steps:
-            steps.append({"id": step.id, "type": step.__class__.__name__})
-
-        return TaskResponse(id=task.id, tag_id=task.tag_id, steps=steps)
+        return TaskResponse(id=task.id, tag_id=task.tag_id, type=task.type)

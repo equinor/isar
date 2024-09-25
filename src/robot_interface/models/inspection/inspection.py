@@ -45,7 +45,7 @@ class AudioMetadata(InspectionMetadata):
 
 @dataclass
 class Inspection:
-    id: str = field(default_factory=uuid4_string, init=False)
+    id: str
     metadata: InspectionMetadata
     data: Optional[bytes] = field(default=None, init=False)
 

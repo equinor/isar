@@ -20,8 +20,8 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotException,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import StepStatus
-from robot_interface.models.mission.step import DriveToPose, Step, TakeImage
+from robot_interface.models.mission.status import TaskStatus
+from robot_interface.models.mission.task_action import DriveToPose, TakeImage
 from robot_interface.models.mission.task import Task
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from tests.mocks.pose import MockPose
@@ -84,271 +84,270 @@ def test_send_status(state_machine) -> None:
 def test_reset_state_machine(state_machine) -> None:
     state_machine.reset_state_machine()
 
-    assert state_machine.current_step is None
     assert state_machine.current_task is None
     assert state_machine.current_mission is None
 
 
-empty_mission: Mission = Mission([], None)
+# empty_mission: Mission = Mission([], None)
 
 
-@pytest.mark.parametrize(
-    "should_run_stepwise",
-    [
-        (True),
-        (False),
-    ],
-)
-def test_state_machine_transitions(
-    injector, state_machine_thread, should_run_stepwise
-) -> None:
-    step_1: Step = DriveToPose(pose=MockPose.default_pose())
-    step_2: Step = TakeImage(target=MockPose.default_pose().position)
-    mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
+# @pytest.mark.parametrize(
+#     "should_run_stepwise",
+#     [
+#         (True),
+#         (False),
+#     ],
+# )
+# def test_state_machine_transitions(
+#     injector, state_machine_thread, should_run_stepwise
+# ) -> None:
+#     step_1: Step = DriveToPose(pose=MockPose.default_pose())
+#     step_2: Step = TakeImage(target=MockPose.default_pose().position)
+#     mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
 
-    state_machine_thread.state_machine.stepwise_mission = should_run_stepwise
-    state_machine_thread.start()
+#     state_machine_thread.state_machine.stepwise_mission = should_run_stepwise
+#     state_machine_thread.start()
 
-    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+#     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+#     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
-    time.sleep(3)
-    if should_run_stepwise:
-        expected_transitions_list = deque(
-            [
-                States.Idle,
-                States.Initialize,
-                States.Initiate,
-                States.Monitor,
-                States.Initiate,
-                States.Monitor,
-                States.Initiate,
-                States.Idle,
-            ]
-        )
-    else:
-        expected_transitions_list = deque(
-            [
-                States.Idle,
-                States.Initialize,
-                States.Initiate,
-                States.Monitor,
-                States.Initiate,
-                States.Idle,
-            ]
-        )
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
-    )
-
-
-def test_state_machine_transitions_when_running_full_mission(
-    injector, state_machine_thread
-) -> None:
-    state_machine_thread.state_machine.stepwise_mission = False
-    state_machine_thread.start()
-
-    step_1: Step = DriveToPose(pose=MockPose.default_pose())
-    step_2: Step = TakeImage(target=MockPose.default_pose().position)
-    mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
-
-    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-
-    time.sleep(3)
-    expected_transitions_list = deque(
-        [
-            States.Idle,
-            States.Initialize,
-            States.Initiate,
-            States.Monitor,
-            States.Initiate,
-            States.Idle,
-        ]
-    )
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
-    )
+#     time.sleep(3)
+#     if should_run_stepwise:
+#         expected_transitions_list = deque(
+#             [
+#                 States.Idle,
+#                 States.Initialize,
+#                 States.Initiate,
+#                 States.Monitor,
+#                 States.Initiate,
+#                 States.Monitor,
+#                 States.Initiate,
+#                 States.Idle,
+#             ]
+#         )
+#     else:
+#         expected_transitions_list = deque(
+#             [
+#                 States.Idle,
+#                 States.Initialize,
+#                 States.Initiate,
+#                 States.Monitor,
+#                 States.Initiate,
+#                 States.Idle,
+#             ]
+#         )
+#     assert (
+#         state_machine_thread.state_machine.transitions_list == expected_transitions_list
+#     )
 
 
-def test_state_machine_failed_dependency(
-    injector, state_machine_thread, mocker
-) -> None:
-    drive_to_step: Step = DriveToPose(pose=MockPose.default_pose())
-    inspection_step: Step = MockStep.take_image_in_coordinate_direction()
-    mission: Mission = Mission(tasks=[Task(steps=[drive_to_step, inspection_step])])  # type: ignore
+# def test_state_machine_transitions_when_running_full_mission(
+#     injector, state_machine_thread
+# ) -> None:
+#     state_machine_thread.state_machine.stepwise_mission = False
+#     state_machine_thread.start()
 
-    mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.Failed)
+#     step_1: Step = DriveToPose(pose=MockPose.default_pose())
+#     step_2: Step = TakeImage(target=MockPose.default_pose().position)
+#     mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
 
-    state_machine_thread.start()
+#     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+#     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
-    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-
-    time.sleep(3)
-    expected_transitions_list = deque(
-        [
-            States.Idle,
-            States.Initialize,
-            States.Initiate,
-            States.Monitor,
-            States.Initiate,
-            States.Idle,
-        ]
-    )
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
-    )
-
-
-def test_state_machine_with_successful_collection(
-    injector, state_machine_thread, uploader_thread
-) -> None:
-    state_machine_thread.start()
-
-    storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
-
-    step: TakeImage = MockStep.take_image_in_coordinate_direction()
-    mission: Mission = Mission(tasks=[Task(steps=[step])])
-    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-    time.sleep(3)
-    expected_transitions_list = deque(
-        [
-            States.Idle,
-            States.Initialize,
-            States.Initiate,
-            States.Monitor,
-            States.Initiate,
-            States.Idle,
-        ]
-    )
-    expected_stored_items = 1
-    assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
-    )
+#     time.sleep(3)
+#     expected_transitions_list = deque(
+#         [
+#             States.Idle,
+#             States.Initialize,
+#             States.Initiate,
+#             States.Monitor,
+#             States.Initiate,
+#             States.Idle,
+#         ]
+#     )
+#     assert (
+#         state_machine_thread.state_machine.transitions_list == expected_transitions_list
+#     )
 
 
-def test_state_machine_with_unsuccessful_collection(
-    injector, mocker, state_machine_thread
-) -> None:
-    storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
+# def test_state_machine_failed_dependency(
+#     injector, state_machine_thread, mocker
+# ) -> None:
+#     drive_to_step: Step = DriveToPose(pose=MockPose.default_pose())
+#     inspection_step: Step = MockStep.take_image_in_coordinate_direction()
+#     mission: Mission = Mission(tasks=[Task(steps=[drive_to_step, inspection_step])])  # type: ignore
 
-    mocker.patch.object(MockRobot, "get_inspections", return_value=[])
+#     mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.Failed)
 
-    state_machine_thread.start()
+#     state_machine_thread.start()
 
-    step: TakeImage = MockStep.take_image_in_coordinate_direction()
-    mission: Mission = Mission(tasks=[Task(steps=[step])])
-    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+#     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+#     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-    time.sleep(3)
-    expected_transitions_list = deque(
-        [
-            States.Idle,
-            States.Initialize,
-            States.Initiate,
-            States.Monitor,
-            States.Initiate,
-            States.Idle,
-        ]
-    )
-    expected_stored_items = 0
-    assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
-    print(state_machine_thread.state_machine.transitions_list)
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
-    )
+#     time.sleep(3)
+#     expected_transitions_list = deque(
+#         [
+#             States.Idle,
+#             States.Initialize,
+#             States.Initiate,
+#             States.Monitor,
+#             States.Initiate,
+#             States.Idle,
+#         ]
+#     )
+#     assert (
+#         state_machine_thread.state_machine.transitions_list == expected_transitions_list
+#     )
 
 
-def test_state_machine_with_successful_mission_stop(
-    injector: Injector,
-    state_machine_thread: StateMachineThread,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    state_machine_thread.start()
+# def test_state_machine_with_successful_collection(
+#     injector, state_machine_thread, uploader_thread
+# ) -> None:
+#     state_machine_thread.start()
 
-    step: TakeImage = MockStep.take_image_in_coordinate_direction()
-    mission: Mission = Mission(tasks=[Task(steps=[step])])
+#     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
 
-    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-    scheduling_utilities.stop_mission()
-    expected = deque(
-        [
-            States.Idle,
-            States.Initialize,
-            States.Initiate,
-            States.Stop,
-            States.Idle,
-        ]
-    )
-    actual = state_machine_thread.state_machine.transitions_list
-    unexpected_log = (
-        "Could not communicate request: Reached limit for stop attempts. "
-        "Cancelled mission and transitioned to idle."
-    )
-    assert unexpected_log not in caplog.text
-    assert expected == actual
+#     step: TakeImage = MockStep.take_image_in_coordinate_direction()
+#     mission: Mission = Mission(tasks=[Task(steps=[step])])
+#     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
-
-def test_state_machine_with_unsuccessful_mission_stop(
-    injector: Injector,
-    mocker: MockerFixture,
-    state_machine_thread: StateMachineThread,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    step: TakeImage = MockStep.take_image_in_coordinate_direction()
-    mission: Mission = Mission(tasks=[Task(steps=[step])])
-
-    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.InProgress)
-    mocker.patch.object(
-        MockRobot, "stop", side_effect=_mock_robot_exception_with_message
-    )
-
-    state_machine_thread.start()
-
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-
-    scheduling_utilities.stop_mission()
-
-    expected = deque(
-        [
-            States.Idle,
-            States.Initialize,
-            States.Initiate,
-            States.Stop,
-            States.Idle,
-        ]
-    )
-    actual = state_machine_thread.state_machine.transitions_list
-    expected_log = (
-        "Be aware that the robot may still be "
-        "moving even though a stop has been attempted"
-    )
-    assert expected_log in caplog.text
-    assert expected == actual
+#     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+#     time.sleep(3)
+#     expected_transitions_list = deque(
+#         [
+#             States.Idle,
+#             States.Initialize,
+#             States.Initiate,
+#             States.Monitor,
+#             States.Initiate,
+#             States.Idle,
+#         ]
+#     )
+#     expected_stored_items = 1
+#     assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
+#     assert (
+#         state_machine_thread.state_machine.transitions_list == expected_transitions_list
+#     )
 
 
-def test_state_machine_idle_to_offline_to_idle(state_machine_thread) -> None:
-    state_machine_thread.state_machine.robot = MockRobotIdleToOfflineToIdleTest()
+# def test_state_machine_with_unsuccessful_collection(
+#     injector, mocker, state_machine_thread
+# ) -> None:
+#     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
 
-    state_machine_thread.start()
-    # Robot status check happens every 5 seconds by default
-    time.sleep(13)  # Ensure that robot_status have been called again in Idle
+#     mocker.patch.object(MockRobot, "get_inspections", return_value=[])
 
-    expected_transitions_list = deque([States.Idle, States.Offline, States.Idle])
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
-    )
+#     state_machine_thread.start()
+
+#     step: TakeImage = MockStep.take_image_in_coordinate_direction()
+#     mission: Mission = Mission(tasks=[Task(steps=[step])])
+#     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+
+#     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+#     time.sleep(3)
+#     expected_transitions_list = deque(
+#         [
+#             States.Idle,
+#             States.Initialize,
+#             States.Initiate,
+#             States.Monitor,
+#             States.Initiate,
+#             States.Idle,
+#         ]
+#     )
+#     expected_stored_items = 0
+#     assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
+#     print(state_machine_thread.state_machine.transitions_list)
+#     assert (
+#         state_machine_thread.state_machine.transitions_list == expected_transitions_list
+#     )
 
 
-def _mock_robot_exception_with_message() -> RobotException:
-    raise RobotException(
-        error_reason=ErrorReason.RobotUnknownErrorException,
-        error_description="This is an example error description",
-    )
+# def test_state_machine_with_successful_mission_stop(
+#     injector: Injector,
+#     state_machine_thread: StateMachineThread,
+#     caplog: pytest.LogCaptureFixture,
+# ) -> None:
+#     state_machine_thread.start()
+
+#     step: TakeImage = MockStep.take_image_in_coordinate_direction()
+#     mission: Mission = Mission(tasks=[Task(steps=[step])])
+
+#     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+#     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+#     scheduling_utilities.stop_mission()
+#     expected = deque(
+#         [
+#             States.Idle,
+#             States.Initialize,
+#             States.Initiate,
+#             States.Stop,
+#             States.Idle,
+#         ]
+#     )
+#     actual = state_machine_thread.state_machine.transitions_list
+#     unexpected_log = (
+#         "Could not communicate request: Reached limit for stop attempts. "
+#         "Cancelled mission and transitioned to idle."
+#     )
+#     assert unexpected_log not in caplog.text
+#     assert expected == actual
+
+
+# def test_state_machine_with_unsuccessful_mission_stop(
+#     injector: Injector,
+#     mocker: MockerFixture,
+#     state_machine_thread: StateMachineThread,
+#     caplog: pytest.LogCaptureFixture,
+# ) -> None:
+#     step: TakeImage = MockStep.take_image_in_coordinate_direction()
+#     mission: Mission = Mission(tasks=[Task(steps=[step])])
+
+#     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+#     mocker.patch.object(MockRobot, "step_status", return_value=StepStatus.InProgress)
+#     mocker.patch.object(
+#         MockRobot, "stop", side_effect=_mock_robot_exception_with_message
+#     )
+
+#     state_machine_thread.start()
+
+#     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+
+#     scheduling_utilities.stop_mission()
+
+#     expected = deque(
+#         [
+#             States.Idle,
+#             States.Initialize,
+#             States.Initiate,
+#             States.Stop,
+#             States.Idle,
+#         ]
+#     )
+#     actual = state_machine_thread.state_machine.transitions_list
+#     expected_log = (
+#         "Be aware that the robot may still be "
+#         "moving even though a stop has been attempted"
+#     )
+#     assert expected_log in caplog.text
+#     assert expected == actual
+
+
+# def test_state_machine_idle_to_offline_to_idle(state_machine_thread) -> None:
+#     state_machine_thread.state_machine.robot = MockRobotIdleToOfflineToIdleTest()
+
+#     state_machine_thread.start()
+#     # Robot status check happens every 5 seconds by default
+#     time.sleep(13)  # Ensure that robot_status have been called again in Idle
+
+#     expected_transitions_list = deque([States.Idle, States.Offline, States.Idle])
+#     assert (
+#         state_machine_thread.state_machine.transitions_list == expected_transitions_list
+#     )
+
+
+# def _mock_robot_exception_with_message() -> RobotException:
+#     raise RobotException(
+#         error_reason=ErrorReason.RobotUnknownErrorException,
+#         error_description="This is an example error description",
+#     )

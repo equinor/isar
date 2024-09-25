@@ -1,6 +1,6 @@
 import time
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from alitra import Frame, Orientation, Pose, Position
 from pydantic import BaseModel, Field
@@ -8,11 +8,10 @@ from pydantic import BaseModel, Field
 from isar.apis.models.models import InputPose, InputPosition
 from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
+from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.step import (
-    STEPS,
+from robot_interface.models.mission.task import (
     DockingProcedure,
-    DriveToPose,
     Localize,
     RecordAudio,
     ReturnToHome,
@@ -34,7 +33,6 @@ class InspectionTypes(str, Enum):
 
 class TaskType(str, Enum):
     Inspection: str = "inspection"
-    DriveTo: str = "drive_to"
     Localization: str = "localization"
     ReturnToHome: str = "return_to_home"
     Dock: str = "dock"
@@ -52,7 +50,7 @@ class StartMissionInspectionDefinition(BaseModel):
 class StartMissionTaskDefinition(BaseModel):
     type: TaskType = Field(default=TaskType.Inspection)
     pose: InputPose
-    inspections: List[StartMissionInspectionDefinition]
+    inspection: StartMissionInspectionDefinition
     tag: Optional[str] = None
     id: Optional[str] = None
 
@@ -66,40 +64,35 @@ class StartMissionDefinition(BaseModel):
     undock: Optional[bool] = None
 
 
-def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
+def to_isar_mission(start_mission_definition: StartMissionDefinition) -> Mission:
     isar_tasks: List[Task] = []
-    all_steps_in_mission: List[STEPS] = []
 
-    for task in mission_definition.tasks:
-        steps: List[STEPS] = generate_steps(task)
-        all_steps_in_mission.extend(steps)
-
-        isar_task: Task = Task(steps=steps, tag_id=task.tag)
-        if task.id:
-            isar_task.id = task.id
-        isar_tasks.append(isar_task)
+    for start_mission_task_definition in start_mission_definition.tasks:
+        task: Task = create_isar_task(start_mission_task_definition)
+        if start_mission_task_definition.id:
+            task.id = start_mission_task_definition.id
+        isar_tasks.append(task)
 
     if not isar_tasks:
         raise MissionPlannerError("Mission does not contain any valid tasks")
 
     check_for_duplicate_ids(isar_tasks)
-    check_for_duplicate_ids(all_steps_in_mission)
 
     isar_mission: Mission = Mission(tasks=isar_tasks)
 
-    isar_mission.dock = mission_definition.dock
-    isar_mission.undock = mission_definition.undock
+    isar_mission.dock = start_mission_definition.dock
+    isar_mission.undock = start_mission_definition.undock
 
-    if mission_definition.name:
-        isar_mission.name = mission_definition.name
+    if start_mission_definition.name:
+        isar_mission.name = start_mission_definition.name
     else:
         isar_mission.name = _build_mission_name()
 
-    if mission_definition.id:
-        isar_mission.id = mission_definition.id
+    if start_mission_definition.id:
+        isar_mission.id = start_mission_definition.id
 
-    if mission_definition.start_pose:
-        input_pose: InputPose = mission_definition.start_pose
+    if start_mission_definition.start_pose:
+        input_pose: InputPose = start_mission_definition.start_pose
         input_frame: Frame = Frame(name=input_pose.frame_name)
         input_position: Position = Position(
             input_pose.position.x,
@@ -121,7 +114,7 @@ def to_isar_mission(mission_definition: StartMissionDefinition) -> Mission:
     return isar_mission
 
 
-def check_for_duplicate_ids(items: Union[List[Task], List[STEPS]]):
+def check_for_duplicate_ids(items: List[Task]):
     duplicate_ids = get_duplicate_ids(items=items)
     if len(duplicate_ids) > 0:
         raise MissionPlannerError(
@@ -130,97 +123,97 @@ def check_for_duplicate_ids(items: Union[List[Task], List[STEPS]]):
         )
 
 
-def generate_steps(task) -> List[STEPS]:
-    steps: List[STEPS] = []
+def create_isar_task(start_mission_task_definition) -> Task:
 
-    if task.type == TaskType.Inspection:
-        steps.extend(generate_steps_for_inspection_task(task=task))
-    elif task.type == TaskType.DriveTo:
-        steps.append(generate_steps_for_drive_to_task(task=task))
-    elif task.type == TaskType.Localization:
-        steps.append(generate_steps_for_localization_task(task=task))
-    elif task.type == TaskType.ReturnToHome:
-        steps.append(generate_steps_for_return_to_home_task(task=task))
-    elif task.type == TaskType.Dock:
-        steps.append(generate_steps_for_dock_task())
+    if start_mission_task_definition.type == TaskType.Inspection:
+        return create_inspection_task(start_mission_task_definition)
+    elif start_mission_task_definition.type == TaskType.Localization:
+        return create_localization_task(start_mission_task_definition)
+    elif start_mission_task_definition.type == TaskType.ReturnToHome:
+        return create_return_to_home_task(start_mission_task_definition)
+    elif start_mission_task_definition.type == TaskType.Dock:
+        return create_dock_task()
     else:
         raise MissionPlannerError(
-            f"Failed to create task: '{task.type}' is not a valid"
+            f"Failed to create task: '{start_mission_task_definition.type}' is not a valid"
         )
 
-    return steps
 
+def create_inspection_task(
+    start_mission_task_definition: StartMissionTaskDefinition,
+) -> Task:
 
-def generate_steps_for_inspection_task(task: StartMissionTaskDefinition) -> List[STEPS]:
-    drive_step: DriveToPose = DriveToPose(pose=task.pose.to_alitra_pose())
+    inspection = Inspection(
+        id=start_mission_task_definition.inspection.id,
+        metadata=start_mission_task_definition.inspection.metadata,
+    )
 
-    inspection_steps: List[STEPS] = [
-        create_inspection_step(
-            inspection_type=inspection.type,
-            duration=inspection.duration,
-            target=inspection.inspection_target.to_alitra_position(),
-            tag_id=task.tag,
-            metadata=inspection.metadata,
-            id=inspection.id,
+    if start_mission_task_definition.inspection.type == InspectionTypes.image:
+        return TakeImage(
+            target=start_mission_task_definition.inspection.inspection_target.to_alitra_position(),
+            inspection=inspection,
+            tag_id=start_mission_task_definition.tag,
+            robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
         )
-        for inspection in task.inspections
-    ]
+    elif start_mission_task_definition.inspection.type == InspectionTypes.video:
+        return TakeVideo(
+            target=start_mission_task_definition.inspection.inspection_target.to_alitra_position(),
+            duration=start_mission_task_definition.inspection.duration,
+            inspection=inspection,
+            tag_id=start_mission_task_definition.tag,
+            robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
+        )
 
-    return [drive_step, *inspection_steps]
+    elif start_mission_task_definition.inspection.type == InspectionTypes.thermal_image:
+        return TakeThermalImage(
+            target=start_mission_task_definition.inspection.inspection_target.to_alitra_position(),
+            inspection=inspection,
+            tag_id=start_mission_task_definition.tag,
+            robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
+        )
+
+    elif start_mission_task_definition.inspection.type == InspectionTypes.thermal_video:
+        return TakeThermalVideo(
+            target=start_mission_task_definition.inspection.inspection_target.to_alitra_position(),
+            duration=start_mission_task_definition.inspection.duration,
+            inspection=inspection,
+            tag_id=start_mission_task_definition.tag,
+            robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
+        )
+
+    elif start_mission_task_definition.inspection.type == InspectionTypes.audio:
+        return RecordAudio(
+            target=start_mission_task_definition.inspection.inspection_target.to_alitra_position(),
+            duration=start_mission_task_definition.inspection.duration,
+            inspection=inspection,
+            tag_id=start_mission_task_definition.tag,
+            robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
+        )
+    else:
+        raise ValueError(
+            f"Inspection type '{start_mission_task_definition.inspection.type}' not supported"
+        )
 
 
-def generate_steps_for_drive_to_task(task: StartMissionTaskDefinition) -> DriveToPose:
-    return DriveToPose(pose=task.pose.to_alitra_pose())
+def create_localization_task(
+    start_mission_task_definition: StartMissionTaskDefinition,
+) -> Localize:
+    return Localize(
+        localization_pose=start_mission_task_definition.pose.to_alitra_pose()
+    )
 
 
-def generate_steps_for_localization_task(task: StartMissionTaskDefinition) -> Localize:
-    return Localize(localization_pose=task.pose.to_alitra_pose())
-
-
-def generate_steps_for_return_to_home_task(
-    task: StartMissionTaskDefinition,
+def create_return_to_home_task(
+    start_mission_task_definition: StartMissionTaskDefinition,
 ) -> ReturnToHome:
-    return ReturnToHome(pose=task.pose.to_alitra_pose())
+    return ReturnToHome(pose=start_mission_task_definition.pose.to_alitra_pose())
 
 
-def generate_steps_for_dock_task() -> DockingProcedure:
+def create_dock_task() -> DockingProcedure:
     return DockingProcedure(behavior="dock")
 
 
-def create_inspection_step(
-    inspection_type: InspectionTypes,
-    duration: float,
-    target: Position,
-    tag_id: Optional[str],
-    metadata: Optional[dict],
-    id: Optional[str],
-) -> STEPS:
-    inspection_step_dict: Dict[str, Any] = {
-        InspectionTypes.image.value: TakeImage(target=target),
-        InspectionTypes.video.value: TakeVideo(target=target, duration=duration),
-        InspectionTypes.thermal_image.value: TakeThermalImage(target=target),
-        InspectionTypes.thermal_video.value: TakeThermalVideo(
-            target=target, duration=duration
-        ),
-        InspectionTypes.audio.value: RecordAudio(target=target, duration=duration),
-    }
-
-    if inspection_type not in inspection_step_dict:
-        raise ValueError(f"Inspection type '{inspection_type}' not supported")
-    else:
-        inspection_step = inspection_step_dict[inspection_type]
-
-    if tag_id:
-        inspection_step.tag_id = tag_id
-    if metadata:
-        inspection_step.metadata = metadata
-    if id:
-        inspection_step.id = id
-
-    return inspection_step
-
-
-def get_duplicate_ids(items: Union[List[Task], List[STEPS]]) -> List[str]:
+def get_duplicate_ids(items: List[Task]) -> List[str]:
     unique_ids: List[str] = []
     duplicate_ids: List[str] = []
     for item in items:

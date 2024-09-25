@@ -11,7 +11,7 @@ from isar.apis.models.start_mission_definition import (
     to_isar_mission,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.step import STEPS, Step
+from robot_interface.models.mission.task_action import STEPS, Step
 from robot_interface.models.mission.task import Task
 
 task_1: Task = Task([], tag_id=None, id="123")

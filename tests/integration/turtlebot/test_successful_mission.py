@@ -28,7 +28,7 @@ from isar.modules import (
 from isar.services.readers.base_reader import BaseReader
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.step import DriveToPose
+from robot_interface.models.mission.task import ReturnToHome
 from tests.isar.state_machine.test_state_machine import (
     StateMachineThread,
     UploaderThread,
@@ -110,11 +110,11 @@ def test_successful_mission(
 
     mission_result_folder: Path = Path(f"tests/results/{mission_id}")
 
-    drive_to_steps: List[DriveToPose] = [
+    drive_to_steps: List[ReturnToHome] = [
         step
         for task in mission.tasks
         for step in task.steps
-        if isinstance(step, DriveToPose)
+        if isinstance(step, ReturnToHome)
     ]
 
     expected_positions: list = [step.pose.position for step in drive_to_steps]

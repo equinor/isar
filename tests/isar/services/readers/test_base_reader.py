@@ -6,7 +6,7 @@ from alitra import Pose
 
 from isar.services.readers.base_reader import BaseReader
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.step import Step
+from robot_interface.models.mission.task_action import Step
 from tests.mocks.mission_definition import MockMissionDefinition
 from tests.mocks.pose import MockPose
 from tests.mocks.step import MockStep

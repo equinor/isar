@@ -1,6 +1,6 @@
 from alitra import Frame, Position
 
-from robot_interface.models.mission.step import DriveToPose, TakeImage
+from robot_interface.models.mission.task_action import DriveToPose, TakeImage
 from tests.mocks.pose import MockPose
 
 

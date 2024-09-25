@@ -35,10 +35,8 @@ from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import (
     MissionStatus,
     RobotStatus,
-    StepStatus,
     TaskStatus,
 )
-from robot_interface.models.mission.step import Step
 from robot_interface.models.mission.task import Task
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
@@ -179,10 +177,10 @@ class StateMachine(object):
                     "before": self._resume,
                 },
                 {
-                    "trigger": "step_finished",
+                    "trigger": "task_finished",
                     "source": self.monitor_state,
                     "dest": self.initiate_state,
-                    "before": self._step_finished,
+                    "before": self._task_finished,
                 },
                 {
                     "trigger": "full_mission_finished",
@@ -235,7 +233,6 @@ class StateMachine(object):
         self.stopped: bool = False
         self.current_mission: Optional[Mission] = None
         self.current_task: Optional[Task] = None
-        self.current_step: Optional[Step] = None
         self.initial_pose: Optional[Pose] = None
 
         self.current_state: State = States(self.state)  # type: ignore
@@ -256,13 +253,13 @@ class StateMachine(object):
 
     def _initiated(self) -> None:
         if self.stepwise_mission:
-            self.current_step.status = StepStatus.InProgress
+            self.current_task.status = TaskStatus.InProgress
         self.current_mission.status = MissionStatus.InProgress
-        self.publish_step_status(step=self.current_step)
+        self.publish_task_status(task=self.current_task)
         self.logger.info(
             f"Successfully initiated "
-            f"{type(self.current_step).__name__} "
-            f"step: {str(self.current_step.id)[:8]}"
+            f"{type(self.current_task).__name__} "
+            f"task: {str(self.current_task.id)[:8]}"
         )
 
     def _pause(self) -> None:
@@ -291,8 +288,8 @@ class StateMachine(object):
         )
         self.queues.resume_mission.output.put(resume_mission_response)
 
-        self.current_task.reset_task()
-        self.iterate_current_step()
+        # self.current_task.reset_task()
+        # self.iterate_current_step()
 
         self.robot.resume()
 
@@ -327,7 +324,7 @@ class StateMachine(object):
             f"Initialization successful. Starting new mission: "
             f"{self.current_mission.id}"
         )
-        self.log_step_overview(mission=self.current_mission)
+        self.log_mission_overview(mission=self.current_mission)
 
         self.current_mission.status = MissionStatus.InProgress
         self.publish_mission_status()
@@ -337,14 +334,11 @@ class StateMachine(object):
         else:
             self.current_task.status = TaskStatus.InProgress
             self.publish_task_status(task=self.current_task)
-            self.iterate_current_step()
 
-    def _step_finished(self) -> None:
-        self.publish_step_status(step=self.current_step)
+    def _task_finished(self) -> None:
+        self.publish_task_status(step=self.current_task)
         self.current_task.update_task_status()
-        self.publish_task_status(task=self.current_task)
         self.iterate_current_task()
-        self.iterate_current_step()
 
     def _full_mission_finished(self) -> None:
         self.current_task = None
@@ -353,7 +347,6 @@ class StateMachine(object):
         self.logger.info(f"Pausing mission: {self.current_mission.id}")
         self.current_mission.status = MissionStatus.Paused
         self.current_task.status = TaskStatus.Paused
-        self.current_step.status = StepStatus.NotStarted
 
         paused_mission_response: ControlMissionResponse = (
             self._make_control_mission_response()
@@ -362,7 +355,6 @@ class StateMachine(object):
 
         self.publish_mission_status()
         self.publish_task_status(task=self.current_task)
-        self.publish_step_status(step=self.current_step)
 
         self.robot.pause()
 
@@ -370,29 +362,21 @@ class StateMachine(object):
         self.stopped = True
 
     def _initiate_failed(self) -> None:
-        self.current_step.status = StepStatus.Failed
-        self.current_task.update_task_status()
+        self.current_task.status = TaskStatus.Failed
         self.current_mission.status = MissionStatus.Failed
-        self.publish_step_status(step=self.current_step)
         self.publish_task_status(task=self.current_task)
         self._finalize()
 
     def _initiate_infeasible(self) -> None:
         if self.stepwise_mission:
-            self.current_step.status = StepStatus.Failed
-            self.publish_step_status(step=self.current_step)
-            self.current_task.update_task_status()
+            self.current_task.status = TaskStatus.Failed
             self.publish_task_status(task=self.current_task)
             self.iterate_current_task()
-            self.iterate_current_step()
 
     def _mission_stopped(self) -> None:
         self.current_mission.status = MissionStatus.Cancelled
 
         for task in self.current_mission.tasks:
-            for step in task.steps:
-                if step.status in [StepStatus.NotStarted, StepStatus.InProgress]:
-                    step.status = StepStatus.Cancelled
             if task.status in [
                 TaskStatus.NotStarted,
                 TaskStatus.InProgress,
@@ -406,14 +390,13 @@ class StateMachine(object):
         self.queues.stop_mission.output.put(stopped_mission_response)
 
         self.publish_task_status(task=self.current_task)
-        self.publish_step_status(step=self.current_step)
         self._finalize()
 
     #################################################################################
 
     def _finalize(self) -> None:
         self.publish_mission_status()
-        self.log_step_overview(mission=self.current_mission)
+        self.log_mission_overview(mission=self.current_mission)
         state_transitions: str = ", ".join(
             [
                 f"\n  {transition}" if (i + 1) % 10 == 0 else f"{transition}"
@@ -441,20 +424,6 @@ class StateMachine(object):
                 # Indicates that all tasks are finished
                 self.current_task = None
 
-    def iterate_current_step(self):
-        if self.current_task != None:
-            self.current_step = self.current_task.next_step()
-
-    def update_remaining_steps(self):
-        if self.current_task:
-            for step in self.current_task.steps:
-                if (
-                    step.status == StepStatus.InProgress
-                    or step.status == StepStatus.NotStarted
-                ):
-                    step.status = self.current_task.status
-                    self.publish_step_status(step=step)
-
     def update_state(self):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)
@@ -466,7 +435,6 @@ class StateMachine(object):
     def reset_state_machine(self) -> None:
         self.logger.info("Resetting state machine")
         self.stopped = False
-        self.current_step = None
         self.current_task = None
         self.current_mission = None
         self.initial_pose = None
@@ -555,6 +523,7 @@ class StateMachine(object):
                 "mission_id": self.current_mission.id if self.current_mission else None,
                 "task_id": task.id if task else None,
                 "status": task.status if task else None,
+                "task_type": task.type,
                 "error_reason": error_message.error_reason if error_message else None,
                 "error_description": (
                     error_message.error_description if error_message else None
@@ -566,41 +535,6 @@ class StateMachine(object):
 
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_TASK,
-            payload=payload,
-            qos=1,
-            retain=True,
-        )
-
-    def publish_step_status(self, step: Step) -> None:
-        """Publishes the step status to the MQTT Broker"""
-        if not self.mqtt_publisher:
-            return
-
-        error_message: Optional[ErrorMessage] = None
-        if step:
-            if step.error_message:
-                error_message = step.error_message
-
-        payload: str = json.dumps(
-            {
-                "isar_id": settings.ISAR_ID,
-                "robot_name": settings.ROBOT_NAME,
-                "mission_id": self.current_mission.id if self.current_mission else None,
-                "task_id": self.current_task.id if self.current_task else None,
-                "step_id": step.id if step else None,
-                "step_type": step.__class__.__name__ if step else None,
-                "status": step.status if step else None,
-                "error_reason": error_message.error_reason if error_message else None,
-                "error_description": (
-                    error_message.error_description if error_message else None
-                ),
-                "timestamp": datetime.now(timezone.utc),
-            },
-            cls=EnhancedJSONEncoder,
-        )
-
-        self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_STEP,
             payload=payload,
             qos=1,
             retain=True,
@@ -638,18 +572,13 @@ class StateMachine(object):
         """Logs all state transitions that are not self-transitions."""
         self.transitions_list.append(next_state)
 
-    def log_step_overview(self, mission: Mission):
-        """Log an overview of the steps in a mission"""
+    def log_mission_overview(self, mission: Mission):
+        """Log an overview of the tasks in a mission"""
         log_statements: List[str] = []
         for task in mission.tasks:
             log_statements.append(
                 f"{type(task).__name__:<20} {str(task.id)[:8]:<32} -- {task.status}"
             )
-            for j, step in enumerate(task.steps):
-                log_statements.append(
-                    f"{j:>3} {type(step).__name__:<20} {str(step.id)[:8]:<32} -- {step.status}"  # noqa: E501
-                )
-
         log_statement: str = "\n".join(log_statements)
 
         self.logger.info(f"Mission overview:\n{log_statement}")
@@ -660,8 +589,6 @@ class StateMachine(object):
             mission_status=self.current_mission.status,
             task_id=self.current_task.id,
             task_status=self.current_task.status,
-            step_id=self.current_step.id,
-            step_status=self.current_step.status,
         )
 
 
