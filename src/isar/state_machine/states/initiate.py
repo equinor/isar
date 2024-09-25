@@ -63,9 +63,9 @@ class Initiate(State):
             if not self.initiate_thread:
                 if self.state_machine.stepwise_mission:
                     self._run_initiate_thread(
-                        initiate_function=self.state_machine.robot.initiate_step,
-                        function_argument=self.state_machine.current_step,
-                        thread_name="State Machine Initiate Step",
+                        initiate_function=self.state_machine.robot.initiate_task,
+                        function_argument=self.state_machine.current_task,
+                        thread_name="State Machine Initiate Task",
                     )
                 else:
                     self._run_initiate_thread(
@@ -82,12 +82,12 @@ class Initiate(State):
                 time.sleep(self.state_machine.sleep_time)
                 continue
             except RobotInfeasibleStepException as e:
-                self.state_machine.current_step.error_message = ErrorMessage(
+                self.state_machine.current_task.error_message = ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 )
                 self.logger.warning(
-                    f"Failed to initiate step "
-                    f"{str(self.state_machine.current_step.id)[:8]} after retrying "
+                    f"Failed to initiate task "
+                    f"{str(self.state_machine.current_task.id)[:8]} after retrying "
                     f"{self.initiate_failure_counter} times because: "
                     f"{e.error_description}"
                 )
@@ -115,7 +115,7 @@ class Initiate(State):
                 )
 
                 if self.initiate_failure_counter >= self.initiate_failure_counter_limit:
-                    self.state_machine.current_step.error_message = ErrorMessage(
+                    self.state_machine.current_task.error_message = ErrorMessage(
                         error_reason=e.error_reason,
                         error_description=e.error_description,
                     )

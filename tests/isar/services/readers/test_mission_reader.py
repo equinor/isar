@@ -6,7 +6,7 @@ from alitra import Frame, Orientation, Pose, Position
 from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import MissionNotFoundError
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.step import (
+from robot_interface.models.mission.task_action import (
     DriveToPose,
     Step,
     TakeImage,

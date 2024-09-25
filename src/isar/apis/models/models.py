@@ -4,15 +4,10 @@ from alitra import Frame, Orientation, Pose, Position
 from pydantic import BaseModel, Field
 
 
-class StepResponse(BaseModel):
-    id: str
-    type: str
-
-
 class TaskResponse(BaseModel):
     id: str
     tag_id: Optional[str] = None
-    steps: List[StepResponse]
+    type: str
 
 
 class StartMissionResponse(BaseModel):
@@ -25,8 +20,6 @@ class ControlMissionResponse(BaseModel):
     mission_status: str
     task_id: str
     task_status: str
-    step_id: str
-    step_status: str
 
 
 class RobotInfoResponse(BaseModel):

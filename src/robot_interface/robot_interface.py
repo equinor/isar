@@ -6,8 +6,9 @@ from typing import List, Sequence
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, RobotStatus, StepStatus
-from robot_interface.models.mission.step import InspectionStep, Step
+from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
+from robot_interface.models.mission.task import InspectionTask
+from robot_interface.models.mission.task import Task
 
 
 class RobotInterface(metaclass=ABCMeta):
@@ -69,7 +70,7 @@ class RobotInterface(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def initiate_step(self, step: Step) -> None:
+    def initiate_task(self, task: Task) -> None:
         """Send a step to the robot and initiate the execution of the step
 
         This function should be used in combination with the step_status function
@@ -101,7 +102,7 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def step_status(self) -> StepStatus:
+    def task_status(self, task: Task) -> TaskStatus:
         """Gets the status of the currently active step on robot.
 
         This function should be used in combination with the initiate_step function
@@ -181,7 +182,7 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_inspections(self, step: InspectionStep) -> Sequence[Inspection]:
+    def get_inspections(self, task: InspectionTask) -> Sequence[Inspection]:
         """Return the inspections connected to the given step.
 
         Parameters

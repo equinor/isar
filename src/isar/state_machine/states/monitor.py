@@ -7,7 +7,6 @@ from injector import inject
 from transitions import State
 
 from isar.config.settings import settings
-from isar.mission_planner.task_selector_interface import TaskSelectorStop
 from isar.services.utilities.threaded_request import (
     ThreadedRequest,
     ThreadedRequestNotFinishedError,
@@ -16,14 +15,16 @@ from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotCommunicationTimeoutException,
     RobotException,
-    RobotMissionStatusException,
     RobotRetrieveInspectionException,
     RobotStepStatusException,
 )
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, TaskStatus
-from robot_interface.models.mission.step import InspectionStep, Step, StepStatus
+from robot_interface.models.mission.status import TaskStatus
+from robot_interface.models.mission.task import Task
+from robot_interface.models.mission.task import (
+    InspectionTask,
+)
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -40,16 +41,16 @@ class Monitor(State):
         )
 
         self.logger = logging.getLogger("state_machine")
-        self.step_status_thread: Optional[ThreadedRequest] = None
+        self.task_status_thread: Optional[ThreadedRequest] = None
 
     def start(self) -> None:
         self.state_machine.update_state()
         self._run()
 
     def stop(self) -> None:
-        if self.step_status_thread:
-            self.step_status_thread.wait_for_thread()
-        self.step_status_thread = None
+        if self.task_status_thread:
+            self.task_status_thread.wait_for_thread()
+        self.task_status_thread = None
 
     def _run(self) -> None:
         transition: Callable
@@ -65,54 +66,53 @@ class Monitor(State):
                     transition = self.state_machine.pause_full_mission  # type: ignore
                 break
 
-            if not self.step_status_thread:
+            if not self.task_status_thread:
                 self._run_get_status_thread(
-                    status_function=self.state_machine.robot.step_status,
+                    status_function=self.state_machine.robot.task_status,
+                    function_argument=self.state_machine.current_task.id,
                     thread_name="State Machine Monitor Get Step Status",
                 )
             try:
-                status: StepStatus = self.step_status_thread.get_output()
+                status: TaskStatus = self.task_status_thread.get_output()
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
 
             except RobotCommunicationTimeoutException as e:
-                step_failed: bool = self._handle_communication_timeout(e)
-                if step_failed:
-                    status = StepStatus.Failed
+                task_failed: bool = self._handle_communication_timeout(e)
+                if task_failed:
+                    status = TaskStatus.Failed
                 else:
                     continue
 
             except RobotStepStatusException as e:
-                self.state_machine.current_step.error_message = ErrorMessage(
+                self.state_machine.current_task.error_message = ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 )
                 self.logger.error(
-                    f"Monitoring step {self.state_machine.current_step.id[:8]} failed "
+                    f"Monitoring task {self.state_machine.current_task.id[:8]} failed "
                     f"because: {e.error_description}"
                 )
-                status = StepStatus.Failed
+                status = TaskStatus.Failed
 
             except RobotException as e:
                 self._set_error_message(e)
-                status = StepStatus.Failed
+                status = TaskStatus.Failed
 
                 self.logger.error(
                     f"Retrieving the status failed because: {e.error_description}"
                 )
 
-            if not isinstance(status, StepStatus):
+            if not isinstance(status, TaskStatus):
                 self.logger.error(
-                    f"Received an invalid status update when monitoring mission. Only StepStatus is expected."
+                    f"Received an invalid status update when monitoring mission. Only TaskStatus is expected."
                 )
                 break
 
             if self.state_machine.current_task == None:
                 self.state_machine.iterate_current_task()
-            if self.state_machine.current_step == None:
-                self.state_machine.iterate_current_step()
 
-            self.state_machine.current_step.status = status
+            self.state_machine.current_task.status = status
 
             if self._should_upload_inspections():
                 get_inspections_thread = ThreadedRequest(
@@ -120,22 +120,21 @@ class Monitor(State):
                 )
                 get_inspections_thread.start_thread(
                     deepcopy(self.state_machine.current_mission),
-                    deepcopy(self.state_machine.current_step),
+                    deepcopy(self.state_machine.current_task),
                     name="State Machine Get Inspections",
                 )
 
             if self.state_machine.stepwise_mission:
-                if self._is_step_finished(self.state_machine.current_step):
-                    self._report_step_status(self.state_machine.current_step)
-                    transition = self.state_machine.step_finished  # type: ignore
+                if self.state_machine.current_task.is_finished():
+                    self._report_task_status(self.state_machine.current_task)
+                    transition = self.state_machine.task_finished  # type: ignore
                     break
             else:
-                if self._is_step_finished(self.state_machine.current_step):
-                    self._report_step_status(self.state_machine.current_step)
+                if self._is_task_finished(self.state_machine.current_task):
+                    self._report_task_status(self.state_machine.current_task)
 
                     if self.state_machine.current_task.is_finished():
-                        # Report and update finished task
-                        self.state_machine.current_task.update_task_status()  # Uses the updated step status to set the task status
+                        # Report finished task
                         self.state_machine.publish_task_status(
                             task=self.state_machine.current_task
                         )
@@ -152,28 +151,23 @@ class Monitor(State):
                             task=self.state_machine.current_task
                         )
 
-                    self.state_machine.iterate_current_step()
-
-                else:  # If not all steps are done
-                    self.state_machine.current_task.status = TaskStatus.InProgress
-
-            self.step_status_thread = None
+            self.task_status_thread = None
             time.sleep(self.state_machine.sleep_time)
 
         transition()
 
     def _run_get_status_thread(
-        self, status_function: Callable, thread_name: str
+        self, status_function: Callable, function_argument: str, thread_name: str
     ) -> None:
-        self.step_status_thread = ThreadedRequest(request_func=status_function)
-        self.step_status_thread.start_thread(name=thread_name)
+        self.task_status_thread = ThreadedRequest(request_func=status_function)
+        self.task_status_thread.start_thread(function_argument, name=thread_name)
 
     def _queue_inspections_for_upload(
-        self, mission: Mission, current_step: InspectionStep
+        self, mission: Mission, current_task: InspectionTask
     ) -> None:
         try:
             inspections: Sequence[Inspection] = (
-                self.state_machine.robot.get_inspections(step=current_step)
+                self.state_machine.robot.get_inspections(task=current_task)
             )
 
         except (RobotRetrieveInspectionException, RobotException) as e:
@@ -185,11 +179,11 @@ class Monitor(State):
 
         if not inspections:
             self.logger.warning(
-                f"No inspection data retrieved for step {str(current_step.id)[:8]}"
+                f"No inspection data retrieved for task {str(current_task.id)[:8]}"
             )
 
         for inspection in inspections:
-            inspection.metadata.tag_id = current_step.tag_id
+            inspection.metadata.tag_id = current_task.tag_id
 
             message: Tuple[Inspection, Mission] = (
                 inspection,
@@ -198,37 +192,37 @@ class Monitor(State):
             self.state_machine.queues.upload_queue.put(message)
             self.logger.info(f"Inspection: {str(inspection.id)[:8]} queued for upload")
 
-    def _is_step_finished(self, step: Step) -> bool:
+    def _is_task_finished(self, task: Task) -> bool:
         finished: bool = False
-        if step.status == StepStatus.Failed:
+        if task.status == TaskStatus.Failed:
             finished = True
-        elif step.status == StepStatus.Successful:
+        elif task.status == TaskStatus.Successful:
             finished = True
         return finished
 
-    def _report_step_status(self, step: Step) -> None:
-        if step.status == StepStatus.Failed:
+    def _report_task_status(self, task: Task) -> None:
+        if task.status == TaskStatus.Failed:
             self.logger.warning(
-                f"Step: {str(step.id)[:8]} was reported as failed by the robot"
+                f"Step: {str(task.id)[:8]} was reported as failed by the robot"
             )
-        elif step.status == StepStatus.Successful:
+        elif task.status == TaskStatus.Successful:
             self.logger.info(
-                f"{type(step).__name__} step: {str(step.id)[:8]} completed"
+                f"{type(task).__name__} task: {str(task.id)[:8]} completed"
             )
 
     def _should_upload_inspections(self) -> bool:
-        step: Step = self.state_machine.current_step
+        task: Task = self.state_machine.current_task
         return (
-            self._is_step_finished(step)
-            and step.status == StepStatus.Successful
-            and isinstance(step, InspectionStep)
+            self._is_task_finished(task)
+            and task.status == TaskStatus.Successful
+            and isinstance(task, InspectionTask)
         )
 
     def _set_error_message(self, e: RobotException) -> None:
         error_message: ErrorMessage = ErrorMessage(
             error_reason=e.error_reason, error_description=e.error_description
         )
-        self.state_machine.current_step.error_message = error_message
+        self.state_machine.current_task.error_message = error_message
 
     def _handle_communication_timeout(
         self, e: RobotCommunicationTimeoutException
@@ -236,10 +230,10 @@ class Monitor(State):
         self.state_machine.current_mission.error_message = ErrorMessage(
             error_reason=e.error_reason, error_description=e.error_description
         )
-        self.step_status_thread = None
+        self.task_status_thread = None
         self.request_status_failure_counter += 1
         self.logger.warning(
-            f"Monitoring step {self.state_machine.current_step.id} failed #: "
+            f"Monitoring task {self.state_machine.current_task.id} failed #: "
             f"{self.request_status_failure_counter} failed because: {e.error_description}"
         )
 
@@ -247,12 +241,12 @@ class Monitor(State):
             self.request_status_failure_counter
             >= self.request_status_failure_counter_limit
         ):
-            self.state_machine.current_step.error_message = ErrorMessage(
+            self.state_machine.current_task.error_message = ErrorMessage(
                 error_reason=e.error_reason,
                 error_description=e.error_description,
             )
             self.logger.error(
-                f"Step will be cancelled after failing to get step status "
+                f"Step will be cancelled after failing to get task status "
                 f"{self.request_status_failure_counter} times because: "
                 f"{e.error_description}"
             )

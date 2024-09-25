@@ -101,10 +101,9 @@ class SchedulingUtilities:
         is_capable: bool = True
         missing_capabilities: Set[str] = set()
         for task in mission.tasks:
-            for step in task.steps:
-                if not step.type in robot_capabilities:
-                    is_capable = False
-                    missing_capabilities.add(step.type)
+            if not task.type in robot_capabilities:
+                is_capable = False
+                missing_capabilities.add(task.type)
 
         if not is_capable:
             error_message = (
