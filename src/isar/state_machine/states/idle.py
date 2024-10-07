@@ -82,4 +82,6 @@ class Idle(State):
                 transition = self.state_machine.robot_turned_offline  # type: ignore
                 break
 
+            self.robot_status_thread = None
+
         transition()
