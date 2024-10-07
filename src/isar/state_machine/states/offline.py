@@ -57,6 +57,7 @@ class Offline(State):
                 transition = self.state_machine.robot_turned_online  # type: ignore
                 break
 
+            self.robot_status_thread = None
             time.sleep(settings.ROBOT_API_STATUS_POLL_INTERVAL)
 
         transition()
