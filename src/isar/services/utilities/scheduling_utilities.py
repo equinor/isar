@@ -128,7 +128,7 @@ class SchedulingUtilities:
         """
         is_state_machine_ready_to_receive_mission = state == States.Idle
         if not is_state_machine_ready_to_receive_mission:
-            error_message = f"Conflict - Mission already in progress - State: {state}"
+            error_message = f"Conflict - Robot is not idle - State: {state}"
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
