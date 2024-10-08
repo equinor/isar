@@ -130,26 +130,22 @@ class Monitor(State):
                     transition = self.state_machine.task_finished  # type: ignore
                     break
             else:
-                if self._is_task_finished(self.state_machine.current_task):
+                if self.state_machine.current_task.is_finished():
                     self._report_task_status(self.state_machine.current_task)
+                    self.state_machine.publish_task_status(
+                        task=self.state_machine.current_task
+                    )
 
-                    if self.state_machine.current_task.is_finished():
-                        # Report finished task
-                        self.state_machine.publish_task_status(
-                            task=self.state_machine.current_task
-                        )
+                    self.state_machine.iterate_current_task()
+                    if self.state_machine.current_task == None:
+                        transition = self.state_machine.full_mission_finished  # type: ignore
+                        break
 
-                        self.state_machine.iterate_current_task()
-
-                        if self.state_machine.current_task == None:
-                            transition = self.state_machine.full_mission_finished  # type: ignore
-                            break
-
-                        # Report and update next task
-                        self.state_machine.current_task.update_task_status()
-                        self.state_machine.publish_task_status(
-                            task=self.state_machine.current_task
-                        )
+                    # Report and update next task
+                    self.state_machine.current_task.update_task_status()
+                    self.state_machine.publish_task_status(
+                        task=self.state_machine.current_task
+                    )
 
             self.task_status_thread = None
             time.sleep(self.state_machine.sleep_time)
@@ -192,14 +188,6 @@ class Monitor(State):
             self.state_machine.queues.upload_queue.put(message)
             self.logger.info(f"Inspection: {str(inspection.id)[:8]} queued for upload")
 
-    def _is_task_finished(self, task: Task) -> bool:
-        finished: bool = False
-        if task.status == TaskStatus.Failed:
-            finished = True
-        elif task.status == TaskStatus.Successful:
-            finished = True
-        return finished
-
     def _report_task_status(self, task: Task) -> None:
         if task.status == TaskStatus.Failed:
             self.logger.warning(
@@ -211,11 +199,10 @@ class Monitor(State):
             )
 
     def _should_upload_inspections(self) -> bool:
-        task: Task = self.state_machine.current_task
         return (
-            self._is_task_finished(task)
-            and task.status == TaskStatus.Successful
-            and isinstance(task, InspectionTask)
+            self.state_machine.current_task.is_finished()
+            and self.state_machine.current_task.status == TaskStatus.Successful
+            and isinstance(self.state_machine.current_task, InspectionTask)
         )
 
     def _set_error_message(self, e: RobotException) -> None:
