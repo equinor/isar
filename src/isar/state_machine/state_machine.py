@@ -336,7 +336,7 @@ class StateMachine(object):
             self.publish_task_status(task=self.current_task)
 
     def _task_finished(self) -> None:
-        self.publish_task_status(step=self.current_task)
+        self.publish_task_status(task=self.current_task)
         self.current_task.update_task_status()
         self.iterate_current_task()
 
