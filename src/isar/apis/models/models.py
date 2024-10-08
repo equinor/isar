@@ -3,11 +3,13 @@ from typing import List, Optional
 from alitra import Frame, Orientation, Pose, Position
 from pydantic import BaseModel, Field
 
+from robot_interface.models.mission.task import TaskTypes
+
 
 class TaskResponse(BaseModel):
     id: str
     tag_id: Optional[str] = None
-    type: str
+    type: TaskTypes
 
 
 class StartMissionResponse(BaseModel):
