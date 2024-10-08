@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from queue import Queue
 from threading import Thread
-from typing import List, Sequence
+from typing import List
 
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
@@ -43,31 +43,6 @@ class RobotInterface(metaclass=ABCMeta):
 
         """
         raise NotImplementedError
-
-    def mission_status(self) -> MissionStatus:
-        """Gets the status of the currently active mission on the robot
-
-        This function should be used in combination with the initiate_mission function
-        if the robot is designed to run full missions and not in a stepwise
-        configuration.
-
-        Returns
-        -------
-        MissionStatus
-            Status of the executing mission on the robot.
-
-        Raises
-        ------
-        RobotMissionStatusException
-            If the mission status could not be collected this will lead to the mission
-            being marked as failed
-        RobotException
-            An uncaught RobotException in the robot package while retrieving the status
-            will cause the mission to be marked as failed
-        NotImplementedError
-            If the robot is designed for stepwise mission execution
-
-        """
 
     @abstractmethod
     def initiate_task(self, task: Task) -> None:
