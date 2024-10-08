@@ -40,9 +40,6 @@ from robot_interface.models.mission.mission import Mission
 #     def initiate_mission(self, mission: Mission) -> None:
 #         return
 
-#     def mission_status(self) -> MissionStatus:
-#         return self.mission_status_return_value
-
 #     def initiate_step(self, step: Step) -> None:
 #         return
 
