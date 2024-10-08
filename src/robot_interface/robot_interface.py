@@ -102,7 +102,7 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def task_status(self, task: Task) -> TaskStatus:
+    def task_status(self, task_id: str) -> TaskStatus:
         """Gets the status of the currently active step on robot.
 
         This function should be used in combination with the initiate_step function
