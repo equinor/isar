@@ -60,7 +60,7 @@ class Monitor(State):
                 break
 
             if self.state_machine.should_pause_mission():
-                if self.state_machine.stepwise_mission:
+                if self.state_machine.run_mission_by_task:
                     transition = self.state_machine.pause  # type: ignore
                 else:
                     transition = self.state_machine.pause_full_mission  # type: ignore
@@ -124,7 +124,7 @@ class Monitor(State):
                     name="State Machine Get Inspections",
                 )
 
-            if self.state_machine.stepwise_mission:
+            if self.state_machine.run_mission_by_task:
                 if self.state_machine.current_task.is_finished():
                     self._report_task_status(self.state_machine.current_task)
                     transition = self.state_machine.task_finished  # type: ignore

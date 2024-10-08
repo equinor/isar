@@ -105,7 +105,7 @@ def test_reset_state_machine(state_machine) -> None:
 #     step_2: Step = TakeImage(target=MockPose.default_pose().position)
 #     mission: Mission = Mission(tasks=[Task(steps=[step_1, step_2])])  # type: ignore
 
-#     state_machine_thread.state_machine.stepwise_mission = should_run_stepwise
+#     state_machine_thread.state_machine.run_mission_by_task = should_run_stepwise
 #     state_machine_thread.start()
 
 #     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
@@ -144,7 +144,7 @@ def test_reset_state_machine(state_machine) -> None:
 # def test_state_machine_transitions_when_running_full_mission(
 #     injector, state_machine_thread
 # ) -> None:
-#     state_machine_thread.state_machine.stepwise_mission = False
+#     state_machine_thread.state_machine.run_mission_by_task = False
 #     state_machine_thread.start()
 
 #     step_1: Step = DriveToPose(pose=MockPose.default_pose())

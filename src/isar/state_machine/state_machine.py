@@ -54,7 +54,7 @@ class StateMachine(object):
         mqtt_publisher: MqttClientInterface,
         task_selector: TaskSelectorInterface,
         sleep_time: float = settings.FSM_SLEEP_TIME,
-        stepwise_mission: bool = settings.RUN_MISSION_STEPWISE,
+        run_mission_by_task: bool = settings.RUN_MISSION_BY_TASK,
         stop_robot_attempts_limit: int = settings.STOP_ROBOT_ATTEMPTS_LIMIT,
         transitions_log_length: int = settings.STATE_TRANSITIONS_LOG_LENGTH,
     ):
@@ -82,7 +82,7 @@ class StateMachine(object):
         self.robot: RobotInterface = robot
         self.mqtt_publisher: Optional[MqttClientInterface] = mqtt_publisher
         self.task_selector: TaskSelectorInterface = task_selector
-        self.stepwise_mission: bool = stepwise_mission
+        self.run_mission_by_task: bool = run_mission_by_task
 
         # List of states
         self.stop_state: State = Stop(self)
@@ -252,7 +252,7 @@ class StateMachine(object):
         self._finalize()
 
     def _initiated(self) -> None:
-        if self.stepwise_mission:
+        if self.run_mission_by_task:
             self.current_task.status = TaskStatus.InProgress
         self.current_mission.status = MissionStatus.InProgress
         self.publish_task_status(task=self.current_task)
@@ -368,7 +368,7 @@ class StateMachine(object):
         self._finalize()
 
     def _initiate_infeasible(self) -> None:
-        if self.stepwise_mission:
+        if self.run_mission_by_task:
             self.current_task.status = TaskStatus.Failed
             self.publish_task_status(task=self.current_task)
             self.iterate_current_task()

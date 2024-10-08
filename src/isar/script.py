@@ -63,7 +63,7 @@ def print_startup_info():
     print_setting(fillchar="-")
     print_setting("Robot package", settings.ROBOT_PACKAGE)
     print_setting("Robot name", settings.ROBOT_NAME)
-    print_setting("Run mission stepwise", settings.RUN_MISSION_STEPWISE)
+    print_setting("Run mission stepwise", settings.RUN_MISSION_BY_TASK)
     print_setting("Running on port", settings.API_PORT)
     print_setting("Mission planner", settings.MISSION_PLANNER)
     print_setting("Using local storage", settings.STORAGE_LOCAL_ENABLED)

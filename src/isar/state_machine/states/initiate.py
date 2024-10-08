@@ -61,7 +61,7 @@ class Initiate(State):
                 break
 
             if not self.initiate_thread:
-                if self.state_machine.stepwise_mission:
+                if self.state_machine.run_mission_by_task:
                     self._run_initiate_thread(
                         initiate_function=self.state_machine.robot.initiate_task,
                         function_argument=self.state_machine.current_task,
