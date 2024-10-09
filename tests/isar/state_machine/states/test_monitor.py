@@ -3,55 +3,49 @@ import pytest
 from isar.state_machine.states.monitor import Monitor
 from robot_interface.models.mission.mission import Mission
 
-# from robot_interface.models.mission.status import MissionStatus, StepStatus
-# from robot_interface.models.mission.task_type import Step, TakeImage
-# from robot_interface.models.mission.task import Task
-# from tests.mocks.step import MockStep
+from robot_interface.models.mission.status import MissionStatus, TaskStatus
+from robot_interface.models.mission.task import Task
+from tests.mocks.task import MockTask
 
 
-# @pytest.mark.parametrize(
-#     "mock_status, expected_output",
-#     [
-#         (StepStatus.Successful, True),
-#         (StepStatus.Successful, True),
-#         (StepStatus.Failed, True),
-#     ],
-# )
-# def test_step_finished(monitor: Monitor, mock_status, expected_output):
-#     step: Step = MockStep.drive_to()
-#     step.status = mock_status
-#     step_completed: bool = monitor._is_step_finished(
-#         step=step,
-#     )
-
-#     assert step_completed == expected_output
+@pytest.mark.parametrize(
+    "mock_status, expected_output",
+    [
+        (TaskStatus.Successful, True),
+        (TaskStatus.Successful, True),
+        (TaskStatus.Failed, True),
+    ],
+)
+def test_task_finished(monitor: Monitor, mock_status, expected_output):
+    task: Task = MockTask.return_home()
+    task.status = mock_status
+    task_completed: bool = task.is_finished()
+    assert task_completed == expected_output
 
 
-# @pytest.mark.parametrize(
-#     "is_status_successful, should_queue_upload",
-#     [
-#         (True, True),
-#         (False, False),
-#     ],
-# )
-# def test_should_only_upload_if_status_is_completed(
-#     monitor: Monitor, is_status_successful, should_queue_upload
-# ):
-#     step: TakeImage = MockStep.take_image_in_coordinate_direction()
-#     step.status = StepStatus.Successful if is_status_successful else StepStatus.Failed
-#     task: Task = Task(steps=[step])
-#     mission: Mission = Mission(tasks=[task])
-#     mission.status = (
-#         MissionStatus.Successful if is_status_successful else MissionStatus.Failed
-#     )
+@pytest.mark.parametrize(
+    "is_status_successful, should_queue_upload",
+    [
+        (True, True),
+        (False, False),
+    ],
+)
+def test_should_only_upload_if_status_is_completed(
+    monitor: Monitor, is_status_successful, should_queue_upload
+):
+    task: Task = MockTask.take_image()
+    task.status = TaskStatus.Successful if is_status_successful else TaskStatus.Failed
+    mission: Mission = Mission(tasks=[task])
+    mission.status = (
+        MissionStatus.Successful if is_status_successful else MissionStatus.Failed
+    )
 
-#     monitor.state_machine.current_mission = mission
-#     monitor.state_machine.current_task = task
-#     monitor.state_machine.current_step = step
+    monitor.state_machine.current_mission = mission
+    monitor.state_machine.current_task = task
 
-#     if monitor._should_upload_inspections():
-#         monitor._queue_inspections_for_upload(mission, step)
+    if monitor._should_upload_inspections():
+        monitor._queue_inspections_for_upload(mission, task)
 
-#     assert monitor.state_machine.queues.upload_queue.empty() == (
-#         not should_queue_upload
-#     )
+    assert monitor.state_machine.queues.upload_queue.empty() == (
+        not should_queue_upload
+    )

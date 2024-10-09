@@ -327,7 +327,7 @@ class RobotSettings(BaseSettings):
 
     # ISAR steps the robot is capable of performing
     # This should be set in the robot package settings.env file
-    CAPABILITIES: List[str] = Field(default=["drive_to_pose", "take_image"])
+    CAPABILITIES: List[str] = Field(default=["return_to_home", "take_image"])
 
     # Model of the robot which ISAR is connected to
     # This should be set in the robot package settings.env file

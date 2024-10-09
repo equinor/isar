@@ -5,20 +5,16 @@ import pytest
 from alitra import Pose
 
 from isar.services.readers.base_reader import BaseReader
-from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task_action import Step
-from tests.mocks.mission_definition import MockMissionDefinition
+from robot_interface.models.mission.task import ReturnToHome, TakeImage
 from tests.mocks.pose import MockPose
-from tests.mocks.step import MockStep
+from tests.mocks.task import MockTask
 
 
 class TestBaseReader:
     @pytest.mark.parametrize(
         "dataclass_dict, expected_dataclass",
         [
-            (asdict(MockMissionDefinition.default_mission), Mission),
-            (asdict(MockStep.drive_to()), Step),
-            (asdict(MockStep.take_image_in_coordinate_direction()), Step),
+            (asdict(MockTask.return_home()), ReturnToHome),
             (asdict(MockPose.default_pose()), Pose),
         ],
     )

@@ -162,8 +162,8 @@ class Monitor(State):
         self, mission: Mission, current_task: InspectionTask
     ) -> None:
         try:
-            inspections: Sequence[Inspection] = (
-                self.state_machine.robot.get_inspections(task=current_task)
+            inspection: Inspection = self.state_machine.robot.get_inspections(
+                task=current_task
             )
 
         except (RobotRetrieveInspectionException, RobotException) as e:
@@ -173,25 +173,24 @@ class Monitor(State):
             )
             return
 
-        if not inspections:
+        if not inspection:
             self.logger.warning(
                 f"No inspection data retrieved for task {str(current_task.id)[:8]}"
             )
 
-        for inspection in inspections:
-            inspection.metadata.tag_id = current_task.tag_id
+        inspection.metadata.tag_id = current_task.tag_id
 
-            message: Tuple[Inspection, Mission] = (
-                inspection,
-                mission,
-            )
-            self.state_machine.queues.upload_queue.put(message)
-            self.logger.info(f"Inspection: {str(inspection.id)[:8]} queued for upload")
+        message: Tuple[Inspection, Mission] = (
+            inspection,
+            mission,
+        )
+        self.state_machine.queues.upload_queue.put(message)
+        self.logger.info(f"Inspection: {str(inspection.id)[:8]} queued for upload")
 
     def _report_task_status(self, task: Task) -> None:
         if task.status == TaskStatus.Failed:
             self.logger.warning(
-                f"Step: {str(task.id)[:8]} was reported as failed by the robot"
+                f"Task: {str(task.id)[:8]} was reported as failed by the robot"
             )
         elif task.status == TaskStatus.Successful:
             self.logger.info(

@@ -110,14 +110,11 @@ def test_successful_mission(
 
     mission_result_folder: Path = Path(f"tests/results/{mission_id}")
 
-    drive_to_steps: List[ReturnToHome] = [
-        step
-        for task in mission.tasks
-        for step in task.steps
-        if isinstance(step, ReturnToHome)
+    drive_to_tasks: List[ReturnToHome] = [
+        task for task in mission.tasks if isinstance(task, ReturnToHome)
     ]
 
-    expected_positions: list = [step.pose.position for step in drive_to_steps]
+    expected_positions: list = [task.pose for task in drive_to_tasks]
 
     paths = mission_result_folder.rglob("*.json")
     for path in paths:

@@ -1,92 +1,74 @@
 {
-    "id": "1",
-    "tasks": [
-        {
-            "steps": [
-                {
-                    "type": "drive_to_pose",
-                    "pose": {
-                        "position": {
-                            "x": -2,
-                            "y": -2,
-                            "z": 0,
-                            "frame": "asset"
-                        },
-                        "orientation": {
-                            "x": 0,
-                            "y": 0,
-                            "z": 0.4794255,
-                            "w": 0.8775826,
-                            "frame": "asset"
-                        },
-                        "frame": "asset"
-                    }
-                },
-                {
-                    "type": "take_image",
-                    "target": {
-                        "x": 2,
-                        "y": 2,
-                        "z": 0,
-                        "frame": "robot"
-                    }
-                }
-            ]
+  "id": "1",
+  "tasks": [
+    {
+      "type": "take_image",
+      "robot_pose": {
+        "position": {
+          "x": -2,
+          "y": -2,
+          "z": 0,
+          "frame": "asset"
         },
-        {
-            "steps": [
-                {
-                    "type": "drive_to_pose",
-                    "pose": {
-                        "position": {
-                            "x": -2,
-                            "y": 2,
-                            "z": 0,
-                            "frame": "asset"
-                        },
-                        "orientation": {
-                            "x": 0,
-                            "y": 0,
-                            "z": 0.4794255,
-                            "w": 0.8775826,
-                            "frame": "asset"
-                        },
-                        "frame": "asset"
-                    }
-                },
-                {
-                    "type": "take_thermal_image",
-                    "target": {
-                        "x": 2,
-                        "y": 2,
-                        "z": 0,
-                        "frame": "robot"
-                    }
-                }
-            ]
+        "orientation": {
+          "x": 0,
+          "y": 0,
+          "z": 0.4794255,
+          "w": 0.8775826,
+          "frame": "asset"
         },
-        {
-            "steps": [
-                {
-                    "type": "drive_to_pose",
-                    "pose": {
-                        "position": {
-                            "x": 2,
-                            "y": 2,
-                            "z": 0,
-                            "frame": "asset"
-                        },
-                        "orientation": {
-                            "x": 0,
-                            "y": 0,
-                            "z": 0.4794255,
-                            "w": 0.8775826,
-                            "frame": "asset"
-                        },
-                        "frame": "asset"
-                    }
-                }
-            ]
-        }
-    ]
+        "frame": "asset"
+      },
+      "target": {
+        "x": 2,
+        "y": 2,
+        "z": 0,
+        "frame": "robot"
+      }
+    },
+    {
+      "type": "take_thermal_image",
+      "robot_pose": {
+        "position": {
+          "x": -2,
+          "y": 2,
+          "z": 0,
+          "frame": "asset"
+        },
+        "orientation": {
+          "x": 0,
+          "y": 0,
+          "z": 0.4794255,
+          "w": 0.8775826,
+          "frame": "asset"
+        },
+        "frame": "asset"
+      },
+      "target": {
+        "x": 2,
+        "y": 2,
+        "z": 0,
+        "frame": "robot"
+      }
+    },
+    {
+      "type": "return_to_home",
+      "pose": {
+        "position": {
+          "x": 2,
+          "y": 2,
+          "z": 0,
+          "frame": "asset"
+        },
+        "orientation": {
+          "x": 0,
+          "y": 0,
+          "z": 0.4794255,
+          "w": 0.8775826,
+          "frame": "asset"
+        },
+        "frame": "asset"
+      }
+    }
+  ]
 }
