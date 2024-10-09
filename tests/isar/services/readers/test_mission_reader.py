@@ -6,9 +6,8 @@ from alitra import Frame, Orientation, Pose, Position
 from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import MissionNotFoundError
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task_action import (
-    DriveToPose,
-    Step,
+from robot_interface.models.mission.task import (
+    ReturnToHome,
     TakeImage,
     TakeThermalImage,
 )
@@ -28,43 +27,39 @@ def test_get_mission(mission_reader, mission_path) -> None:
 
 
 def test_read_mission_from_file(mission_reader) -> None:
-    expected_step_1 = DriveToPose(
-        pose=Pose(
-            position=Position(-2, -2, 0, Frame("asset")),
-            orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
-            frame=Frame("asset"),
-        )
+    expected_robot_pose_1 = Pose(
+        position=Position(-2, -2, 0, Frame("asset")),
+        orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
+        frame=Frame("asset"),
     )
-    task_1: Task = Task(steps=[expected_step_1])
+    task_1: Task = ReturnToHome(pose=expected_robot_pose_1)
 
-    expected_step_2 = DriveToPose(
-        pose=Pose(
-            position=Position(-2, 2, 0, Frame("asset")),
-            orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
-            frame=Frame("asset"),
-        )
+    expected_robot_pose_2 = Pose(
+        position=Position(-2, 2, 0, Frame("asset")),
+        orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
+        frame=Frame("asset"),
     )
-    expected_step_3 = TakeImage(target=Position(2, 2, 0, Frame("robot")))
-    task_2: Task = Task(steps=[expected_step_2, expected_step_3])
+    expected_inspection_target_1 = Position(2, 2, 0, Frame("robot"))
+    task_2: Task = TakeImage(
+        target=expected_inspection_target_1, robot_pose=expected_robot_pose_2
+    )
 
-    expected_step_4 = DriveToPose(
-        pose=Pose(
-            position=Position(2, 2, 0, Frame("asset")),
-            orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
-            frame=Frame("asset"),
-        )
+    expected_robot_pose_3 = Pose(
+        position=Position(2, 2, 0, Frame("asset")),
+        orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
+        frame=Frame("asset"),
     )
-    expected_step_5 = TakeImage(target=Position(2, 2, 0, Frame("robot")))
-    task_3: Task = Task(steps=[expected_step_4, expected_step_5])
+    expected_inspection_target_2 = Position(2, 2, 0, Frame("robot"))
+    task_3: Task = TakeImage(
+        target=expected_inspection_target_2, robot_pose=expected_robot_pose_3
+    )
 
-    expected_step_6 = DriveToPose(
-        pose=Pose(
-            position=Position(0, 0, 0, Frame("asset")),
-            orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
-            frame=Frame("asset"),
-        )
+    expected_robot_pose_4 = Pose(
+        position=Position(0, 0, 0, Frame("asset")),
+        orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
+        frame=Frame("asset"),
     )
-    task_4: Task = Task(steps=[expected_step_6])
+    task_4: Task = ReturnToHome(pose=expected_robot_pose_4)
 
     expected_tasks = [task_1, task_2, task_3, task_4]
     mission: Mission = mission_reader.read_mission_from_file(
@@ -72,11 +67,11 @@ def test_read_mission_from_file(mission_reader) -> None:
     )
 
     for expected_task, task in zip(expected_tasks, mission.tasks):
-        for expected_step, step in zip(expected_task.steps, task.steps):
-            if isinstance(expected_step, DriveToPose) and isinstance(step, DriveToPose):
-                assert expected_step.pose == step.pose
-            if isinstance(expected_step, TakeImage) and isinstance(step, TakeImage):
-                assert expected_step.target == step.target
+        if isinstance(expected_task, ReturnToHome):
+            assert expected_task.pose == task.pose
+        if isinstance(expected_task, TakeImage):
+            assert expected_task.target == task.target
+            assert expected_task.robot_pose == task.robot_pose
 
 
 @pytest.mark.parametrize(
@@ -114,14 +109,13 @@ def test_valid_predefined_missions_files(mission_reader) -> None:
         assert mission is not None
 
 
-def test_thermal_image_step(mission_reader) -> None:
+def test_thermal_image_task(mission_reader) -> None:
     mission_path: Path = Path("./tests/test_data/test_thermal_image_mission.json")
     output: Mission = mission_reader.read_mission_from_file(mission_path)
 
-    step: Step = output.tasks[0].steps[0]
-
-    assert isinstance(step, TakeThermalImage)
-    assert hasattr(step, "target")
-    assert step.type == "take_thermal_image"
-    assert hasattr(step, "id")
-    assert hasattr(step, "tag_id")
+    task = output.tasks[0]
+    assert isinstance(task, TakeThermalImage)
+    assert hasattr(task, "target")
+    assert task.type == "take_thermal_image"
+    assert hasattr(task, "id")
+    assert hasattr(task, "tag_id")

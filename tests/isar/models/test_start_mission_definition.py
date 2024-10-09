@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Union
+from typing import List
 
 import pytest
 from alitra import Frame, Orientation, Pose, Position
@@ -11,21 +11,13 @@ from isar.apis.models.start_mission_definition import (
     to_isar_mission,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task_action import STEPS, Step
 from robot_interface.models.mission.task import Task
 
-task_1: Task = Task([], tag_id=None, id="123")
-task_2: Task = Task([], tag_id=None, id="123")
-task_3: Task = Task([], tag_id=None, id="123456")
-task_4: Task = Task([])
-task_5: Task = Task([])
-
-step_1: Step = Step()
-step_1.id = "123"
-step_2: Step = Step()
-step_2.id = "123"
-step_3: Step = Step()
-step_3.id = "123456"
+task_1: Task = Task(tag_id=None, id="123")
+task_2: Task = Task(tag_id=None, id="123")
+task_3: Task = Task(tag_id=None, id="123456")
+task_4: Task = Task()
+task_5: Task = Task()
 
 
 @pytest.mark.parametrize(
@@ -39,23 +31,9 @@ step_3.id = "123456"
             [task_1, task_3, task_4, task_5],
             False,
         ),
-        (
-            [step_1, step_2, step_3],
-            True,
-        ),
-        (
-            [step_1, step_3],
-            False,
-        ),
-        (
-            [step_1, step_3],
-            False,
-        ),
     ],
 )
-def test_duplicate_id_check(
-    item_list: Union[List[Task], List[STEPS]], expected_boolean: bool
-):
+def test_duplicate_id_check(item_list: List[Task], expected_boolean: bool):
     duplicates: List[str] = get_duplicate_ids(item_list)
     has_duplicates: bool = len(duplicates) > 0
     assert has_duplicates == expected_boolean
@@ -76,19 +54,10 @@ def test_mission_definition_to_isar_mission():
 
     task = generated_mission.tasks[0]
     assert task.id == "generated_task_id"
-    assert task.tag_id == "MY-TAG-123"
-
-    first_step = task.steps[0]
-    # assert first_step.id == "generated_inspection_id"
-    assert first_step.type == "drive_to_pose"
-    assert first_step.pose == Pose(
+    assert task.robot_pose == Pose(
         position=Position(0.0, 0.0, 0.0, frame=Frame("robot")),
         orientation=Orientation(0.0, 0.0, 0.0, 0.0, frame=Frame("robot")),
         frame=Frame("robot"),
     )
-
-    second_step = task.steps[1]
-    # assert second_step.id == "generated_inspection_id"
-    assert second_step.type == "take_image"
-    assert second_step.tag_id == "MY-TAG-123"
-    assert second_step.target == Position(0.0, 0.0, 0.0, frame=Frame("robot"))
+    assert task.type == "take_image"
+    assert task.target == Position(0.0, 0.0, 0.0, frame=Frame("robot"))

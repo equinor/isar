@@ -24,7 +24,7 @@ def test_timeout_send_command(
 def test_robot_capable_of_mission(scheduling_utilities: SchedulingUtilities):
     assert scheduling_utilities.verify_robot_capable_of_mission(
         mission=MockMissionDefinition.default_mission,
-        robot_capabilities=["drive_to_pose", "take_image"],
+        robot_capabilities=["return_to_home", "take_image"],
     )
 
 
@@ -32,7 +32,7 @@ def test_robot_not_capable_of_mission(scheduling_utilities: SchedulingUtilities)
     with pytest.raises(HTTPException) as err:
         scheduling_utilities.verify_robot_capable_of_mission(
             mission=MockMissionDefinition.default_mission,
-            robot_capabilities=["drive_to_pose"],
+            robot_capabilities=["return_to_home"],
         )
     assert err.value.status_code == HTTPStatus.BAD_REQUEST
 

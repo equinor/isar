@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from enum import StrEnum
+from enum import Enum
 from typing import Iterator, Literal, Optional, Type
 
 from alitra import Pose, Position
@@ -17,7 +17,7 @@ from robot_interface.models.mission.status import TaskStatus
 from robot_interface.utilities.uuid_string_factory import uuid4_string
 
 
-class TaskTypes(StrEnum):
+class TaskTypes(str, Enum):
     ReturnToHome = "return_to_home"
     Localize = "localize"
     MoveArm = "move_arm"
@@ -35,13 +35,13 @@ class Task:
     error_message: Optional[ErrorMessage] = field(default=None, init=False)
     tag_id: Optional[str] = field(default=None)
     id: str = field(default_factory=uuid4_string, init=True)
-    _iterator: Iterator = None
 
     def is_finished(self) -> bool:
         if (
             self.status == TaskStatus.Successful
             or self.status == TaskStatus.PartiallySuccessful
             or self.status == TaskStatus.Cancelled
+            or self.status == TaskStatus.Failed
         ):
             return True
         return False
@@ -57,7 +57,6 @@ class InspectionTask(Task):
     """
 
     inspection: Inspection = field(default=None, init=True)
-    tag_id: Optional[str] = field(default=None, init=True)
     robot_pose: Pose = field(default=None, init=True)
     metadata: Optional[dict] = field(default_factory=dict, init=True)
 
