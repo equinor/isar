@@ -11,7 +11,7 @@ from isar.apis.models.start_mission_definition import (
     to_isar_mission,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import Task
+from robot_interface.models.mission.task import TASKS, Task
 
 task_1: Task = Task(tag_id=None, id="123")
 task_2: Task = Task(tag_id=None, id="123")
@@ -33,7 +33,7 @@ task_5: Task = Task()
         ),
     ],
 )
-def test_duplicate_id_check(item_list: List[Task], expected_boolean: bool):
+def test_duplicate_id_check(item_list: List[TASKS], expected_boolean: bool):
     duplicates: List[str] = get_duplicate_ids(item_list)
     has_duplicates: bool = len(duplicates) > 0
     assert has_duplicates == expected_boolean

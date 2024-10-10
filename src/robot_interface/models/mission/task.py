@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Iterator, Literal, Optional, Type
+from typing import Iterator, Literal, Optional, Type, Union
 
 from alitra import Pose, Position
 
@@ -46,7 +46,7 @@ class Task:
             return True
         return False
 
-    def update_task_status(self) -> None:
+    def update_task_status(self) -> TaskStatus:
         return self.status
 
 
@@ -72,7 +72,7 @@ class DockingProcedure(Task):
     """
 
     behavior: Literal["dock", "undock"] = field(default=None, init=True)
-    type: str = TaskTypes.DockingProcedure
+    type: Literal[TaskTypes.DockingProcedure] = TaskTypes.DockingProcedure
 
 
 @dataclass
@@ -82,7 +82,7 @@ class ReturnToHome(Task):
     """
 
     pose: Pose = field(default=None, init=True)
-    type: str = TaskTypes.ReturnToHome
+    type: Literal[TaskTypes.ReturnToHome] = TaskTypes.ReturnToHome
 
 
 @dataclass
@@ -92,7 +92,7 @@ class Localize(Task):
     """
 
     localization_pose: Pose = field(default=None, init=True)
-    type: str = TaskTypes.Localize
+    type: Literal[TaskTypes.Localize] = TaskTypes.Localize
 
 
 @dataclass
@@ -102,7 +102,7 @@ class MoveArm(Task):
     """
 
     arm_pose: str = field(default=None, init=True)
-    type: str = TaskTypes.MoveArm
+    type: Literal[TaskTypes.MoveArm] = TaskTypes.MoveArm
 
 
 @dataclass
@@ -112,7 +112,7 @@ class TakeImage(InspectionTask):
     """
 
     target: Position = field(default=None, init=True)
-    type: str = TaskTypes.TakeImage
+    type: Literal[TaskTypes.TakeImage] = TaskTypes.TakeImage
 
     @staticmethod
     def get_inspection_type() -> Type[Inspection]:
@@ -126,7 +126,7 @@ class TakeThermalImage(InspectionTask):
     """
 
     target: Position = field(default=None, init=True)
-    type: str = TaskTypes.TakeThermalImage
+    type: Literal[TaskTypes.TakeThermalImage] = TaskTypes.TakeThermalImage
 
     @staticmethod
     def get_inspection_type() -> Type[Inspection]:
@@ -143,7 +143,7 @@ class TakeVideo(InspectionTask):
 
     target: Position = field(default=None, init=True)
     duration: float = field(default=None, init=True)
-    type: str = TaskTypes.TakeVideo
+    type: Literal[TaskTypes.TakeVideo] = TaskTypes.TakeVideo
 
     @staticmethod
     def get_inspection_type() -> Type[Inspection]:
@@ -160,7 +160,7 @@ class TakeThermalVideo(InspectionTask):
 
     target: Position = field(default=None, init=True)
     duration: float = field(default=None, init=True)
-    type: str = TaskTypes.TakeThermalVideo
+    type: Literal[TaskTypes.TakeThermalVideo] = TaskTypes.TakeThermalVideo
 
     @staticmethod
     def get_inspection_type() -> Type[Inspection]:
@@ -177,8 +177,21 @@ class RecordAudio(InspectionTask):
 
     target: Position = field(default=None, init=True)
     duration: float = field(default=None, init=True)
-    type: str = TaskTypes.RecordAudio
+    type: Literal[TaskTypes.RecordAudio] = TaskTypes.RecordAudio
 
     @staticmethod
     def get_inspection_type() -> Type[Inspection]:
         return Audio
+
+
+TASKS = Union[
+    ReturnToHome,
+    Localize,
+    MoveArm,
+    TakeImage,
+    TakeThermalImage,
+    TakeVideo,
+    TakeThermalVideo,
+    RecordAudio,
+    DockingProcedure,
+]

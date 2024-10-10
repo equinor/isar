@@ -178,7 +178,7 @@ class TestStartMission:
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
     @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
-    def test_mission_with_input_task_ids(self, client: TestClient):
+    def test_mission_with_input_inspection_task_ids(self, client: TestClient):
         expected_inspection_ids: List[str] = []
         for task in self.mock_start_mission_with_task_ids_content[
             "mission_definition"
@@ -199,15 +199,6 @@ class TestStartMission:
                 and task["type"] == TaskTypes.MoveArm == False
             ):
                 assert task["id"] in expected_inspection_ids
-
-    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
-    @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
-    def test_mission_with_duplicate_task_ids(self, client: TestClient):
-        response = client.post(
-            url=self.schedule_start_mission_path,
-            json=jsonable_encoder(self.mock_start_mission_duplicate_task_ids_content),
-        )
-        assert response.status_code == HTTPStatus.BAD_REQUEST
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
     @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)

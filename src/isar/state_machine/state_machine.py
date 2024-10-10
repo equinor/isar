@@ -37,7 +37,7 @@ from robot_interface.models.mission.status import (
     RobotStatus,
     TaskStatus,
 )
-from robot_interface.models.mission.task import Task
+from robot_interface.models.mission.task import TASKS, Task
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
@@ -232,7 +232,7 @@ class StateMachine(object):
 
         self.stopped: bool = False
         self.current_mission: Optional[Mission] = None
-        self.current_task: Optional[Task] = None
+        self.current_task: Optional[TASKS] = None
         self.initial_pose: Optional[Pose] = None
 
         self.current_state: State = States(self.state)  # type: ignore
@@ -506,7 +506,7 @@ class StateMachine(object):
             retain=True,
         )
 
-    def publish_task_status(self, task: Task) -> None:
+    def publish_task_status(self, task: TASKS) -> None:
         """Publishes the task status to the MQTT Broker"""
         if not self.mqtt_publisher:
             return

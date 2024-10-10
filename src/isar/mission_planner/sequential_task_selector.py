@@ -4,7 +4,7 @@ from isar.mission_planner.task_selector_interface import (
     TaskSelectorInterface,
     TaskSelectorStop,
 )
-from robot_interface.models.mission.task import Task
+from robot_interface.models.mission.task import TASKS, Task
 
 
 class SequentialTaskSelector(TaskSelectorInterface):
@@ -12,11 +12,11 @@ class SequentialTaskSelector(TaskSelectorInterface):
         super().__init__()
         self._iterator: Iterator = None
 
-    def initialize(self, tasks: List[Task]) -> None:
+    def initialize(self, tasks: List[TASKS]) -> None:
         super().initialize(tasks=tasks)
         self._iterator = iter(self.tasks)
 
-    def next_task(self) -> Task:
+    def next_task(self) -> TASKS:
         try:
             return next(self._iterator)
         except StopIteration:
