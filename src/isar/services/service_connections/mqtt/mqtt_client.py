@@ -99,7 +99,7 @@ class MqttClient(MqttClientInterface):
     )
     def connect(self, host: str, port: int) -> None:
         self.logger.info("Attempting to connect to MQTT Broker")
-        self.logger.debug(f"Host: {host}, Port: {port}")
+        self.logger.info(f"Host: {host}, Port: {port}")
         self.client.connect(host=host, port=port)
 
     def publish(self, topic: str, payload: str, qos: int = 0, retain: bool = False):

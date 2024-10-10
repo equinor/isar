@@ -1,130 +1,197 @@
 from dataclasses import dataclass, field
-from typing import Iterator, List, Optional
+from enum import Enum
+from typing import Iterator, Literal, Optional, Type, Union
+
+from alitra import Pose, Position
 
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.status import StepStatus, TaskStatus
-from robot_interface.models.mission.step import (
-    STEPS,
-    DriveToPose,
-    InspectionStep,
-    MotionStep,
-    Step,
+from robot_interface.models.inspection import (
+    Audio,
+    Image,
+    Inspection,
+    ThermalImage,
+    ThermalVideo,
+    Video,
 )
+from robot_interface.models.mission.status import TaskStatus
 from robot_interface.utilities.uuid_string_factory import uuid4_string
+
+
+class TaskTypes(str, Enum):
+    ReturnToHome = "return_to_home"
+    Localize = "localize"
+    MoveArm = "move_arm"
+    TakeImage = "take_image"
+    TakeThermalImage = "take_thermal_image"
+    TakeVideo = "take_video"
+    TakeThermalVideo = "take_thermal_video"
+    RecordAudio = "record_audio"
+    DockingProcedure = "docking_procedure"
 
 
 @dataclass
 class Task:
-    steps: List[STEPS]
     status: TaskStatus = field(default=TaskStatus.NotStarted, init=False)
     error_message: Optional[ErrorMessage] = field(default=None, init=False)
     tag_id: Optional[str] = field(default=None)
     id: str = field(default_factory=uuid4_string, init=True)
-    _iterator: Iterator = None
-
-    def next_step(self) -> Optional[Step]:
-        try:
-            step: Step = next(self._iterator)
-            while step.status != StepStatus.NotStarted:
-                step = next(self._iterator)
-            return step
-        except StopIteration:
-            return None
 
     def is_finished(self) -> bool:
-        for step in self.steps:
-            if step.status is StepStatus.Failed and isinstance(step, MotionStep):
-                # One motion step has failed meaning the task as a whole should be
-                # considered as failed
-                return True
+        if (
+            self.status == TaskStatus.Successful
+            or self.status == TaskStatus.PartiallySuccessful
+            or self.status == TaskStatus.Cancelled
+            or self.status == TaskStatus.Failed
+        ):
+            return True
+        return False
 
-            elif (step.status is StepStatus.Failed) and isinstance(
-                step, InspectionStep
-            ):
-                # It should be possible to perform several inspections per task. If
-                # one out of many inspections fail the task is considered as
-                # partially successful.
-                continue
+    def update_task_status(self) -> TaskStatus:
+        return self.status
 
-            elif step.status is StepStatus.Successful:
-                # The task is complete once all steps are completed
-                continue
-            else:
-                # Not all steps have been completed yet
-                return False
 
-        return True
+@dataclass
+class InspectionTask(Task):
+    """
+    Base class for all inspection tasks which produce results to be uploaded.
+    """
 
-    def update_task_status(self) -> None:
-        some_not_started: bool = False
-        for step in self.steps:
-            if step.status is StepStatus.Failed and isinstance(step, MotionStep):
-                self.error_message = ErrorMessage(
-                    error_reason=None,
-                    error_description=f"Inspection "
-                    f"{'of ' + self.tag_id if self.tag_id else ''}failed because the "
-                    f"robot could not navigate to the desired location",
-                )
-                self.status = TaskStatus.Failed
-                return
+    inspection: Inspection = field(default=None, init=True)
+    robot_pose: Pose = field(default=None, init=True)
+    metadata: Optional[dict] = field(default_factory=dict, init=True)
 
-            elif (step.status is StepStatus.Failed) and isinstance(
-                step, InspectionStep
-            ):
-                self.error_message = ErrorMessage(
-                    error_reason=None,
-                    error_description=f"Inspection "
-                    f"{'of ' + self.tag_id if self.tag_id else ''}was partially "
-                    f"successful because one or more inspection steps failed",
-                )
-                self.status = TaskStatus.PartiallySuccessful
-                continue
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return Inspection
 
-            elif step.status is StepStatus.Successful:
-                continue
 
-            elif (step.status is StepStatus.NotStarted) and isinstance(
-                step, InspectionStep
-            ):
-                some_not_started = True
+@dataclass
+class DockingProcedure(Task):
+    """
+    Task which causes the robot to dock or undock
+    """
 
-        if self.status is not TaskStatus.PartiallySuccessful:
-            if some_not_started:
-                self.status = TaskStatus.InProgress  # TODO: handle all not_started
-            else:
-                self.status = TaskStatus.Successful
+    behavior: Literal["dock", "undock"] = field(default=None, init=True)
+    type: Literal[TaskTypes.DockingProcedure] = TaskTypes.DockingProcedure
 
-        elif self._all_inspection_steps_failed():
-            self.error_message = ErrorMessage(
-                error_reason=None,
-                error_description=f"Inspection "
-                f"{'of ' + self.tag_id if self.tag_id else ''}failed as all inspection "
-                f"steps failed",
-            )
-            self.status = TaskStatus.Failed
 
-    def reset_task(self):
-        self.error_message = None
-        for step in self.steps:
-            step.error_message = None
-            if isinstance(step, DriveToPose):
-                step.status = StepStatus.NotStarted
-            elif (
-                isinstance(step, InspectionStep)
-                and step.status == StepStatus.InProgress
-            ):
-                step.status = StepStatus.NotStarted
-        self._iterator = iter(self.steps)
+@dataclass
+class ReturnToHome(Task):
+    """
+    Task which cases the robot to return home
+    """
 
-    def _all_inspection_steps_failed(self) -> bool:
-        for step in self.steps:
-            if isinstance(step, MotionStep):
-                continue
-            elif step.status is not StepStatus.Failed:
-                return False
+    pose: Pose = field(default=None, init=True)
+    type: Literal[TaskTypes.ReturnToHome] = TaskTypes.ReturnToHome
 
-        return True
 
-    def __post_init__(self) -> None:
-        if self._iterator is None:
-            self._iterator = iter(self.steps)
+@dataclass
+class Localize(Task):
+    """
+    Task which causes the robot to localize
+    """
+
+    localization_pose: Pose = field(default=None, init=True)
+    type: Literal[TaskTypes.Localize] = TaskTypes.Localize
+
+
+@dataclass
+class MoveArm(Task):
+    """
+    Task which causes the robot to move its arm
+    """
+
+    arm_pose: str = field(default=None, init=True)
+    type: Literal[TaskTypes.MoveArm] = TaskTypes.MoveArm
+
+
+@dataclass
+class TakeImage(InspectionTask):
+    """
+    Task which causes the robot to take an image towards the given coordinate.
+    """
+
+    target: Position = field(default=None, init=True)
+    type: Literal[TaskTypes.TakeImage] = TaskTypes.TakeImage
+
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return Image
+
+
+@dataclass
+class TakeThermalImage(InspectionTask):
+    """
+    Task which causes the robot to take a thermal image towards the given coordinate.
+    """
+
+    target: Position = field(default=None, init=True)
+    type: Literal[TaskTypes.TakeThermalImage] = TaskTypes.TakeThermalImage
+
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return ThermalImage
+
+
+@dataclass
+class TakeVideo(InspectionTask):
+    """
+    Task which causes the robot to take a video towards the given coordinate.
+
+    Duration of video is given in seconds.
+    """
+
+    target: Position = field(default=None, init=True)
+    duration: float = field(default=None, init=True)
+    type: Literal[TaskTypes.TakeVideo] = TaskTypes.TakeVideo
+
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return Video
+
+
+@dataclass
+class TakeThermalVideo(InspectionTask):
+    """
+    Task which causes the robot to record thermal video towards the given coordinate
+
+    Duration of video is given in seconds.
+    """
+
+    target: Position = field(default=None, init=True)
+    duration: float = field(default=None, init=True)
+    type: Literal[TaskTypes.TakeThermalVideo] = TaskTypes.TakeThermalVideo
+
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return ThermalVideo
+
+
+@dataclass
+class RecordAudio(InspectionTask):
+    """
+    Task which causes the robot to record a video at its position, facing the target.
+
+    Duration of audio is given in seconds.
+    """
+
+    target: Position = field(default=None, init=True)
+    duration: float = field(default=None, init=True)
+    type: Literal[TaskTypes.RecordAudio] = TaskTypes.RecordAudio
+
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return Audio
+
+
+TASKS = Union[
+    ReturnToHome,
+    Localize,
+    MoveArm,
+    TakeImage,
+    TakeThermalImage,
+    TakeVideo,
+    TakeThermalVideo,
+    RecordAudio,
+    DockingProcedure,
+]

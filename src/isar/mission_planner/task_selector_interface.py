@@ -1,18 +1,18 @@
 from abc import ABCMeta, abstractmethod
 from typing import List
 
-from robot_interface.models.mission.task import Task
+from robot_interface.models.mission.task import TASKS, Task
 
 
 class TaskSelectorInterface(metaclass=ABCMeta):
     def __init__(self) -> None:
-        self.tasks: List[Task] = None
+        self.tasks: List[TASKS] = None
 
-    def initialize(self, tasks: List[Task]) -> None:
+    def initialize(self, tasks: List[TASKS]) -> None:
         self.tasks = tasks
 
     @abstractmethod
-    def next_task(self) -> Task:
+    def next_task(self) -> TASKS:
         """
         Returns
         -------

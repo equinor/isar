@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     ROBOT_PACKAGE: str = Field(default="isar_robot")
 
     # The run mode of the robot (stepwise or full mission)
-    RUN_MISSION_STEPWISE: bool = Field(default=True)
+    RUN_MISSION_BY_TASK: bool = Field(default=True)
 
     # Determines the local path in which results from missions are stored
     LOCAL_STORAGE_PATH: str = Field(default="./results")
@@ -327,7 +327,7 @@ class RobotSettings(BaseSettings):
 
     # ISAR steps the robot is capable of performing
     # This should be set in the robot package settings.env file
-    CAPABILITIES: List[str] = Field(default=["drive_to_pose", "take_image"])
+    CAPABILITIES: List[str] = Field(default=["return_to_home", "take_image"])
 
     # Model of the robot which ISAR is connected to
     # This should be set in the robot package settings.env file
@@ -345,6 +345,6 @@ class RobotSettings(BaseSettings):
 
 robot_settings = RobotSettings()
 
-if not settings.RUN_MISSION_STEPWISE:  # If mission-wise, do not run localize missions
+if not settings.RUN_MISSION_BY_TASK:  # If mission-wise, do not run localize missions
     if "localize" in robot_settings.CAPABILITIES:
         robot_settings.CAPABILITIES.remove("localize")

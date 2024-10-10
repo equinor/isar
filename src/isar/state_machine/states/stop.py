@@ -81,7 +81,7 @@ class Stop(State):
     def handle_stop_fail(self, retry_limit: int, error_message: ErrorMessage) -> bool:
         self._count_number_retries += 1
         if self._count_number_retries > retry_limit:
-            self.state_machine.current_step.error_message = error_message
+            self.state_machine.current_task.error_message = error_message
 
             self.logger.error(
                 f"\nFailed to stop the robot after {retry_limit} attempts because: "

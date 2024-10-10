@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import List, Optional
 
 from alitra import Frame
 from injector import inject
@@ -12,6 +13,7 @@ from isar.mission_planner.mission_planner_interface import (
 )
 from isar.services.readers.base_reader import BaseReader, BaseReaderError
 from robot_interface.models.mission.mission import Mission
+
 
 logger = logging.getLogger("api")
 
@@ -38,6 +40,7 @@ class LocalPlanner(MissionPlannerInterface):
     @staticmethod
     def read_mission_from_file(mission_path: Path) -> Mission:
         mission_dict: dict = BaseReader.read_json(location=mission_path)
+
         mission: Mission = BaseReader.dict_to_dataclass(
             dataclass_dict=mission_dict,
             target_dataclass=Mission,

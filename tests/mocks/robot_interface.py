@@ -1,3 +1,4 @@
+from dataclasses import field
 from datetime import datetime
 from queue import Queue
 from threading import Thread
@@ -12,16 +13,18 @@ from robot_interface.models.inspection.inspection import (
     Inspection,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, RobotStatus, StepStatus
-from robot_interface.models.mission.step import InspectionStep, Step
+
+from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
+from robot_interface.models.mission.task import InspectionTask, Task
 from robot_interface.robot_interface import RobotInterface
 
 
 class MockRobot(RobotInterface):
+
     def __init__(
         self,
         mission_status: MissionStatus = MissionStatus.Successful,
-        step_status: StepStatus = StepStatus.Successful,
+        task_status: TaskStatus = TaskStatus.Successful,
         stop: bool = True,
         pose: Pose = Pose(
             position=Position(x=0, y=0, z=0, frame=Frame("robot")),
@@ -31,7 +34,7 @@ class MockRobot(RobotInterface):
         robot_status: RobotStatus = RobotStatus.Available,
     ):
         self.mission_status_return_value: MissionStatus = mission_status
-        self.step_status_return_value: StepStatus = step_status
+        self.task_status_return_value: TaskStatus = task_status
         self.stop_return_value: bool = stop
         self.robot_pose_return_value: Pose = pose
         self.robot_status_return_value: RobotStatus = robot_status
@@ -39,14 +42,11 @@ class MockRobot(RobotInterface):
     def initiate_mission(self, mission: Mission) -> None:
         return
 
-    def mission_status(self) -> MissionStatus:
-        return self.mission_status_return_value
-
-    def initiate_step(self, step: Step) -> None:
+    def initiate_task(self, task: Task) -> None:
         return
 
-    def step_status(self) -> StepStatus:
-        return self.step_status_return_value
+    def task_status(self, task_id: str) -> TaskStatus:
+        return self.task_status_return_value
 
     def stop(self) -> None:
         return
@@ -57,10 +57,10 @@ class MockRobot(RobotInterface):
     def resume(self) -> None:
         return
 
-    def get_inspections(self, step: InspectionStep) -> Sequence[Inspection]:
+    def get_inspection(self, task: InspectionTask) -> Inspection:
         image: Image = Image(mock_image_metadata())
         image.data = b"Some binary image data"
-        return [image]
+        return image
 
     def initialize(self, params: InitializeParams) -> None:
         return

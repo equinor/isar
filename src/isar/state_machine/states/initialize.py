@@ -57,7 +57,7 @@ class Initialize(State):
                 continue
 
             except (RobotInitializeException, RobotException) as e:
-                self.state_machine.current_step.error_message = ErrorMessage(
+                self.state_machine.current_task.error_message = ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 )
                 self.logger.error(
