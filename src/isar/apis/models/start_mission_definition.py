@@ -44,7 +44,7 @@ class StartMissionInspectionDefinition(BaseModel):
     inspection_target: InputPosition
     analysis_type: Optional[str] = None
     duration: Optional[float] = None
-    metadata: Optional[InspectionMetadata] = None
+    metadata: Optional[dict] = None
     id: Optional[str] = None
 
 
@@ -144,51 +144,46 @@ def create_inspection_task(
     start_mission_task_definition: StartMissionTaskDefinition,
 ) -> TASKS:
 
-    inspection = Inspection(
-        id=start_mission_task_definition.inspection.id,
-        metadata=start_mission_task_definition.inspection.metadata,
-    )
-
     if start_mission_task_definition.inspection.type == InspectionTypes.image:
         return TakeImage(
             target=start_mission_task_definition.inspection.inspection_target.to_alitra_position(),
-            inspection=inspection,
             tag_id=start_mission_task_definition.tag,
             robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
+            metadata=start_mission_task_definition.inspection.metadata,
         )
     elif start_mission_task_definition.inspection.type == InspectionTypes.video:
         return TakeVideo(
             target=start_mission_task_definition.inspection.inspection_target.to_alitra_position(),
             duration=start_mission_task_definition.inspection.duration,
-            inspection=inspection,
             tag_id=start_mission_task_definition.tag,
             robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
+            metadata=start_mission_task_definition.inspection.metadata,
         )
 
     elif start_mission_task_definition.inspection.type == InspectionTypes.thermal_image:
         return TakeThermalImage(
             target=start_mission_task_definition.inspection.inspection_target.to_alitra_position(),
-            inspection=inspection,
             tag_id=start_mission_task_definition.tag,
             robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
+            metadata=start_mission_task_definition.inspection.metadata,
         )
 
     elif start_mission_task_definition.inspection.type == InspectionTypes.thermal_video:
         return TakeThermalVideo(
             target=start_mission_task_definition.inspection.inspection_target.to_alitra_position(),
             duration=start_mission_task_definition.inspection.duration,
-            inspection=inspection,
             tag_id=start_mission_task_definition.tag,
             robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
+            metadata=start_mission_task_definition.inspection.metadata,
         )
 
     elif start_mission_task_definition.inspection.type == InspectionTypes.audio:
         return RecordAudio(
             target=start_mission_task_definition.inspection.inspection_target.to_alitra_position(),
             duration=start_mission_task_definition.inspection.duration,
-            inspection=inspection,
             tag_id=start_mission_task_definition.tag,
             robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
+            metadata=start_mission_task_definition.inspection.metadata,
         )
     else:
         raise ValueError(
