@@ -244,7 +244,7 @@ def test_state_machine_with_unsuccessful_collection(
 ) -> None:
     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
 
-    mocker.patch.object(MockRobot, "get_inspections", return_value=[])
+    mocker.patch.object(MockRobot, "get_inspection", return_value=[])
 
     state_machine_thread.start()
 

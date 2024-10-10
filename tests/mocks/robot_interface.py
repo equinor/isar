@@ -57,7 +57,7 @@ class MockRobot(RobotInterface):
     def resume(self) -> None:
         return
 
-    def get_inspections(self, task: InspectionTask) -> Inspection:
+    def get_inspection(self, task: InspectionTask) -> Inspection:
         image: Image = Image(mock_image_metadata())
         image.data = b"Some binary image data"
         return image

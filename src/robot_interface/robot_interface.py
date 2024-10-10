@@ -157,7 +157,7 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_inspections(self, task: InspectionTask) -> Inspection:
+    def get_inspection(self, task: InspectionTask) -> Inspection:
         """Return the inspections connected to the given step.
 
         Parameters

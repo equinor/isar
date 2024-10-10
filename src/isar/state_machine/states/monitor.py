@@ -115,10 +115,10 @@ class Monitor(State):
             self.state_machine.current_task.status = status
 
             if self._should_upload_inspections():
-                get_inspections_thread = ThreadedRequest(
+                get_inspection_thread = ThreadedRequest(
                     self._queue_inspections_for_upload
                 )
-                get_inspections_thread.start_thread(
+                get_inspection_thread.start_thread(
                     deepcopy(self.state_machine.current_mission),
                     deepcopy(self.state_machine.current_task),
                     name="State Machine Get Inspections",
@@ -162,7 +162,7 @@ class Monitor(State):
         self, mission: Mission, current_task: InspectionTask
     ) -> None:
         try:
-            inspection: Inspection = self.state_machine.robot.get_inspections(
+            inspection: Inspection = self.state_machine.robot.get_inspection(
                 task=current_task
             )
 
