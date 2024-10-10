@@ -8,9 +8,10 @@ from pydantic import BaseModel, Field
 from isar.apis.models.models import InputPose, InputPosition
 from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
-from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.inspection.inspection import Inspection, InspectionMetadata
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
+    TASKS,
     DockingProcedure,
     Localize,
     RecordAudio,
@@ -43,7 +44,7 @@ class StartMissionInspectionDefinition(BaseModel):
     inspection_target: InputPosition
     analysis_type: Optional[str] = None
     duration: Optional[float] = None
-    metadata: Optional[dict] = None
+    metadata: Optional[InspectionMetadata] = None
     id: Optional[str] = None
 
 
@@ -65,10 +66,10 @@ class StartMissionDefinition(BaseModel):
 
 
 def to_isar_mission(start_mission_definition: StartMissionDefinition) -> Mission:
-    isar_tasks: List[Task] = []
+    isar_tasks: List[TASKS] = []
 
     for start_mission_task_definition in start_mission_definition.tasks:
-        task: Task = create_isar_task(start_mission_task_definition)
+        task: TASKS = create_isar_task(start_mission_task_definition)
         if start_mission_task_definition.id:
             task.id = start_mission_task_definition.id
         isar_tasks.append(task)
@@ -114,7 +115,7 @@ def to_isar_mission(start_mission_definition: StartMissionDefinition) -> Mission
     return isar_mission
 
 
-def check_for_duplicate_ids(items: List[Task]):
+def check_for_duplicate_ids(items: List[TASKS]):
     duplicate_ids = get_duplicate_ids(items=items)
     if len(duplicate_ids) > 0:
         raise MissionPlannerError(
@@ -123,7 +124,7 @@ def check_for_duplicate_ids(items: List[Task]):
         )
 
 
-def create_isar_task(start_mission_task_definition) -> Task:
+def create_isar_task(start_mission_task_definition) -> TASKS:
 
     if start_mission_task_definition.type == TaskType.Inspection:
         return create_inspection_task(start_mission_task_definition)
@@ -141,7 +142,7 @@ def create_isar_task(start_mission_task_definition) -> Task:
 
 def create_inspection_task(
     start_mission_task_definition: StartMissionTaskDefinition,
-) -> Task:
+) -> TASKS:
 
     inspection = Inspection(
         id=start_mission_task_definition.inspection.id,
@@ -213,7 +214,7 @@ def create_dock_task() -> DockingProcedure:
     return DockingProcedure(behavior="dock")
 
 
-def get_duplicate_ids(items: List[Task]) -> List[str]:
+def get_duplicate_ids(items: List[TASKS]) -> List[str]:
     unique_ids: List[str] = []
     duplicate_ids: List[str] = []
     for item in items:

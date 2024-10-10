@@ -22,6 +22,7 @@ from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
+    TASKS,
     Localize,
     MoveArm,
     ReturnToHome,
@@ -316,5 +317,5 @@ class SchedulingController:
             tasks=[self._task_api_response(task) for task in mission.tasks],
         )
 
-    def _task_api_response(self, task: Task) -> TaskResponse:
+    def _task_api_response(self, task: TASKS) -> TaskResponse:
         return TaskResponse(id=task.id, tag_id=task.tag_id, type=task.type)

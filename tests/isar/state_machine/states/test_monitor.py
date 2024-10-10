@@ -4,7 +4,7 @@ from isar.state_machine.states.monitor import Monitor
 from robot_interface.models.mission.mission import Mission
 
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
-from robot_interface.models.mission.task import Task
+from robot_interface.models.mission.task import ReturnToHome, TakeImage
 from tests.mocks.task import MockTask
 
 
@@ -17,7 +17,7 @@ from tests.mocks.task import MockTask
     ],
 )
 def test_task_finished(monitor: Monitor, mock_status, expected_output):
-    task: Task = MockTask.return_home()
+    task: ReturnToHome = MockTask.return_home()
     task.status = mock_status
     task_completed: bool = task.is_finished()
     assert task_completed == expected_output
@@ -33,7 +33,7 @@ def test_task_finished(monitor: Monitor, mock_status, expected_output):
 def test_should_only_upload_if_status_is_completed(
     monitor: Monitor, is_status_successful, should_queue_upload
 ):
-    task: Task = MockTask.take_image()
+    task: TakeImage = MockTask.take_image()
     task.status = TaskStatus.Successful if is_status_successful else TaskStatus.Failed
     mission: Mission = Mission(tasks=[task])
     mission.status = (

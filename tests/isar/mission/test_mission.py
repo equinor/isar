@@ -1,8 +1,9 @@
 from alitra import Frame, Orientation, Pose, Position
 
 from isar.services.readers.base_reader import BaseReader
-from robot_interface.models.mission.mission import Mission, Task
+from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
+    TASKS,
     TakeImage,
     TakeThermalImage,
     ReturnToHome,
@@ -126,8 +127,8 @@ def test_mission_definition() -> None:
 
     assert len(loaded_mission.tasks) == len(expected_mission.tasks)
     for i_task in range(len(loaded_mission.tasks)):
-        loaded_task: Task = loaded_mission.tasks[i_task]
-        expected_task: Task = expected_mission.tasks[i_task]
+        loaded_task: TASKS = loaded_mission.tasks[i_task]
+        expected_task: TASKS = expected_mission.tasks[i_task]
 
         assert loaded_task.status == expected_task.status
         assert loaded_task.tag_id == expected_task.tag_id
