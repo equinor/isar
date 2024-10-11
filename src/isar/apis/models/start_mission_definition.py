@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field
 from isar.apis.models.models import InputPose, InputPosition
 from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
-from robot_interface.models.inspection.inspection import Inspection, InspectionMetadata
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
     TASKS,
@@ -21,7 +20,6 @@ from robot_interface.models.mission.task import (
     TakeThermalVideo,
     TakeVideo,
 )
-from robot_interface.models.mission.task import Task
 
 
 class InspectionTypes(str, Enum):
@@ -51,7 +49,7 @@ class StartMissionInspectionDefinition(BaseModel):
 class StartMissionTaskDefinition(BaseModel):
     type: TaskType = Field(default=TaskType.Inspection)
     pose: InputPose
-    inspection: StartMissionInspectionDefinition
+    inspection: Optional[StartMissionInspectionDefinition] = None
     tag: Optional[str] = None
     id: Optional[str] = None
 
