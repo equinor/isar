@@ -103,7 +103,7 @@ class RobotMissionStatusException(RobotException):
 
 # An exception which should be thrown by the robot package if it is unable to collect
 # the status of the current step.
-class RobotStepStatusException(RobotException):
+class RobotTaskStatusException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
             error_reason=ErrorReason.RobotStepStatusException,

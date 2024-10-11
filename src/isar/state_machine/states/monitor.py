@@ -16,15 +16,12 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotCommunicationTimeoutException,
     RobotException,
     RobotRetrieveInspectionException,
-    RobotStepStatusException,
+    RobotTaskStatusException,
 )
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import TaskStatus
-from robot_interface.models.mission.task import Task
-from robot_interface.models.mission.task import (
-    InspectionTask,
-)
+from robot_interface.models.mission.task import InspectionTask, Task
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -85,7 +82,7 @@ class Monitor(State):
                 else:
                     continue
 
-            except RobotStepStatusException as e:
+            except RobotTaskStatusException as e:
                 self.state_machine.current_task.error_message = ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 )
