@@ -213,6 +213,7 @@ class API:
             methods=["POST"],
             dependencies=[authentication_dependency],
             summary="Drive to the provided pose",
+            deprecated=True,
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Drive to succesfully started",
