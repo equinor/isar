@@ -192,7 +192,7 @@ def test_state_machine_failed_dependency(
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
 
-    time.sleep(10)
+    time.sleep(3)
     expected_transitions_list = deque(
         [
             States.Idle,
@@ -221,7 +221,7 @@ def test_state_machine_with_successful_collection(
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-    time.sleep(10)
+    time.sleep(3)
     expected_transitions_list = deque(
         [
             States.Idle,
