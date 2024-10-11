@@ -6,7 +6,7 @@ from typing import Optional
 class ErrorReason(str, Enum):
     RobotCommunicationException: str = "robot_communication_exception"
     RobotCommunicationTimeoutException: str = "robot_communication_timeout_exception"
-    RobotInfeasibleStepException: str = "robot_infeasible_step_exception"
+    RobotInfeasibleTaskException: str = "robot_infeasible_step_exception"
     RobotInfeasibleMissionException: str = "robot_infeasible_mission_exception"
     RobotMissionStatusException: str = "robot_mission_status_exception"
     RobotStepStatusException: str = "robot_step_status_exception"
@@ -67,10 +67,10 @@ class RobotCommunicationTimeoutException(RobotException):
 
 # An exception which should be thrown by the robot package if it is unable to start the
 # current step.
-class RobotInfeasibleStepException(RobotException):
+class RobotInfeasibleTaskException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
-            error_reason=ErrorReason.RobotInfeasibleStepException,
+            error_reason=ErrorReason.RobotInfeasibleTaskException,
             error_description=error_description,
         )
 

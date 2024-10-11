@@ -6,9 +6,8 @@ from typing import List
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
-from robot_interface.models.mission.task import InspectionTask
-from robot_interface.models.mission.task import Task
+from robot_interface.models.mission.status import RobotStatus, TaskStatus
+from robot_interface.models.mission.task import InspectionTask, Task
 
 
 class RobotInterface(metaclass=ABCMeta):
@@ -19,7 +18,7 @@ class RobotInterface(metaclass=ABCMeta):
         """Send a mission to the robot and initiate execution of the mission
 
         This function should be used in combination with the mission_status function
-        if the robot is designed to run full missions and not in a stepwise
+        if the robot is designed to run full missions and not in a taskwise
         configuration.
 
         Parameters
@@ -39,23 +38,23 @@ class RobotInterface(metaclass=ABCMeta):
             Will catch all RobotExceptions not previously listed and retry scheduling of
             the mission until the number of allowed retries is exceeded
         NotImplementedError
-            If the robot is designed for stepwise mission execution
+            If the robot is designed for taskwise mission execution
 
         """
         raise NotImplementedError
 
     @abstractmethod
     def initiate_task(self, task: Task) -> None:
-        """Send a step to the robot and initiate the execution of the step
+        """Send a task to the robot and initiate the execution of the task
 
-        This function should be used in combination with the step_status function
-        if the robot is designed to run stepwise missions and not in a full mission
+        This function should be used in combination with the task_status function
+        if the robot is designed to run taskwise missions and not in a full mission
         configuration.
 
         Parameters
         ----------
-        step : Step
-            The step that should be initiated on the robot.
+        task : Task
+            The task that should be initiated on the robot.
 
         Returns
         -------
@@ -63,12 +62,12 @@ class RobotInterface(metaclass=ABCMeta):
 
         Raises
         ------
-        RobotInfeasibleStepException
-            If the step input is infeasible and the step fails to be scheduled in
+        RobotInfeasibleTaskException
+            If the task input is infeasible and the task fails to be scheduled in
             a way that means attempting to schedule again is not necessary
         RobotException
             Will catch all RobotExceptions not previously listed and retry scheduling
-            of the step until the number of allowed retries is exceeded before the step
+            of the task until the number of allowed retries is exceeded before the task
             will be marked as failed and the mission cancelled
         NotImplementedError
             If the robot is designed for full mission execution.
@@ -78,21 +77,21 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def task_status(self, task_id: str) -> TaskStatus:
-        """Gets the status of the currently active step on robot.
+        """Gets the status of the currently active task on robot.
 
-        This function should be used in combination with the initiate_step function
-        if the robot is designed to run stepwise missions and not in a full mission
+        This function should be used in combination with the initiate_task function
+        if the robot is designed to run taskwise missions and not in a full mission
         configuration.
 
         Returns
         -------
-        StepStatus
-            Status of the execution of current step.
+        TaskStatus
+            Status of the execution of current task.
 
         Raises
         ------
         RobotException
-            If the step status could not be retrieved.
+            If the task status could not be retrieved.
         NotImplementedError
             If the robot is designed for full mission execution.
 
@@ -101,7 +100,7 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def stop(self) -> None:
-        """Stops the execution of the current step and stops the movement of the robot.
+        """Stops the execution of the current task and stops the movement of the robot.
 
         Returns
         -------
@@ -120,7 +119,7 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def pause(self) -> None:
-        """Pauses the execution of the current step and stops the movement of the robot.
+        """Pauses the execution of the current task and stops the movement of the robot.
 
         Returns
         -------
@@ -139,7 +138,7 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def resume(self) -> None:
-        """Resumes the execution of the current step and continues the rest of the mission.
+        """Resumes the execution of the current task and continues the rest of the mission.
 
         Returns
         -------
@@ -158,22 +157,22 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def get_inspection(self, task: InspectionTask) -> Inspection:
-        """Return the inspections connected to the given step.
+        """Return the inspection connected to the given task.
 
         Parameters
         ----------
-        step : Step
+        task : InspectionTask
 
         Returns
         -------
         Sequence[InspectionResult]
-            List containing all the inspection results connected to the given step
+            List containing all the inspection results connected to the given task
 
         Raises
         ------
         RobotRetrieveInspectionException
             If the robot package is unable to retrieve the inspections for the relevant
-            mission or step an error message is logged and the state machine continues
+            mission or task an error message is logged and the state machine continues
         RobotException
             Catches other RobotExceptions that lead to the same result as a
             RobotRetrieveInspectionException

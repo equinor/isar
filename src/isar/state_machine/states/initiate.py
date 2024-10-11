@@ -13,7 +13,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotException,
     RobotInfeasibleMissionException,
-    RobotInfeasibleStepException,
+    RobotInfeasibleTaskException,
 )
 
 if TYPE_CHECKING:
@@ -81,7 +81,7 @@ class Initiate(State):
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
-            except RobotInfeasibleStepException as e:
+            except RobotInfeasibleTaskException as e:
                 self.state_machine.current_task.error_message = ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 )

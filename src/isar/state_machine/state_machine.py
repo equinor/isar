@@ -288,9 +288,6 @@ class StateMachine(object):
         )
         self.queues.resume_mission.output.put(resume_mission_response)
 
-        # self.current_task.reset_task()
-        # self.iterate_current_step()
-
         self.robot.resume()
 
     def _mission_finished(self) -> None:
