@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from isar.config import predefined_missions
 from robot_interface.models.robots.robot_model import RobotModel
-from robot_interface.telemetry.payloads import VideoStream, DocumentInfo
+from robot_interface.telemetry.payloads import DocumentInfo, VideoStream
 
 
 class Settings(BaseSettings):
@@ -54,10 +54,10 @@ class Settings(BaseSettings):
     # Determines the number of state transitions that are kept in the log
     STATE_TRANSITIONS_LOG_LENGTH: int = Field(default=20)
 
-    # Number of attempts to initiate a step or mission before cancelling
+    # Number of attempts to initiate a task or mission before cancelling
     INITIATE_FAILURE_COUNTER_LIMIT: int = Field(default=10)
 
-    # Number of attempts to request a step status in monitor before cancelling
+    # Number of attempts to request a task status in monitor before cancelling
     REQUEST_STATUS_FAILURE_COUNTER_LIMIT: int = Field(default=3)
 
     # Number of attempts to stop the robot before giving up
@@ -236,7 +236,6 @@ class Settings(BaseSettings):
     TOPIC_ISAR_STATUS: str = Field(default="status", validate_default=True)
     TOPIC_ISAR_MISSION: str = Field(default="mission", validate_default=True)
     TOPIC_ISAR_TASK: str = Field(default="task", validate_default=True)
-    TOPIC_ISAR_STEP: str = Field(default="step", validate_default=True)
     TOPIC_ISAR_INSPECTION_RESULT: str = Field(
         default="inspection_result", validate_default=True
     )
@@ -290,7 +289,6 @@ class Settings(BaseSettings):
         "TOPIC_ISAR_STATUS",
         "TOPIC_ISAR_MISSION",
         "TOPIC_ISAR_TASK",
-        "TOPIC_ISAR_STEP",
         "TOPIC_ISAR_ROBOT_INFO",
         "TOPIC_ISAR_ROBOT_HEARTBEAT",
         "TOPIC_ISAR_INSPECTION_RESULT",
