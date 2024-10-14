@@ -5,7 +5,10 @@ from datetime import datetime, timezone
 from queue import Queue
 from typing import Callable, Tuple
 
-from robot_interface.models.exceptions.robot_exceptions import RobotTelemetryException
+from robot_interface.models.exceptions.robot_exceptions import (
+    RobotTelemetryException,
+    RobotTelemetryPoseException,
+)
 from robot_interface.telemetry.payloads import CloudHealthPayload
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
@@ -71,6 +74,9 @@ class MqttTelemetryPublisher(MqttClientInterface):
             try:
                 payload = self.telemetry_method(isar_id=isar_id, robot_name=robot_name)
                 topic = self.topic
+            except RobotTelemetryPoseException:
+                time.sleep(self.interval)
+                continue
             except RobotTelemetryException:
                 payload = json.dumps(
                     CloudHealthPayload(isar_id, robot_name, datetime.now(timezone.utc)),
