@@ -66,7 +66,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
         self.retain: bool = retain
 
     def run(self, isar_id: str, robot_name: str) -> None:
-        self.cloud_healt_topic: str = f"isar/{isar_id}/cloud_health"
+        self.cloud_health_topic: str = f"isar/{isar_id}/cloud_health"
         topic: str
         payload: str
 
@@ -82,7 +82,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
                     CloudHealthPayload(isar_id, robot_name, datetime.now(timezone.utc)),
                     cls=EnhancedJSONEncoder,
                 )
-                topic = self.cloud_healt_topic
+                topic = self.cloud_health_topic
 
             self.publish(topic=topic, payload=payload, qos=self.qos, retain=self.retain)
 
