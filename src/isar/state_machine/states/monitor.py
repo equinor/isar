@@ -67,7 +67,7 @@ class Monitor(State):
                 self._run_get_status_thread(
                     status_function=self.state_machine.robot.task_status,
                     function_argument=self.state_machine.current_task.id,
-                    thread_name="State Machine Monitor Get Step Status",
+                    thread_name="State Machine Monitor Get Task Status",
                 )
             try:
                 status: TaskStatus = self.task_status_thread.get_output()
@@ -229,7 +229,7 @@ class Monitor(State):
                 error_description=e.error_description,
             )
             self.logger.error(
-                f"Step will be cancelled after failing to get task status "
+                f"Task will be cancelled after failing to get task status "
                 f"{self.request_status_failure_counter} times because: "
                 f"{e.error_description}"
             )

@@ -9,7 +9,7 @@ class ErrorReason(str, Enum):
     RobotInfeasibleTaskException: str = "robot_infeasible_step_exception"
     RobotInfeasibleMissionException: str = "robot_infeasible_mission_exception"
     RobotMissionStatusException: str = "robot_mission_status_exception"
-    RobotStepStatusException: str = "robot_step_status_exception"
+    RobotTaskStatusException: str = "robot_task_status_exception"
     RobotAPIException: str = "robot_api_exception"
     RobotActionException: str = "robot_action_exception"
     RobotInitializeException: str = "robot_initialize_exception"
@@ -66,7 +66,7 @@ class RobotCommunicationTimeoutException(RobotException):
 
 
 # An exception which should be thrown by the robot package if it is unable to start the
-# current step.
+# current task.
 class RobotInfeasibleTaskException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
@@ -102,11 +102,11 @@ class RobotMissionStatusException(RobotException):
 
 
 # An exception which should be thrown by the robot package if it is unable to collect
-# the status of the current step.
+# the status of the current task.
 class RobotTaskStatusException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
-            error_reason=ErrorReason.RobotStepStatusException,
+            error_reason=ErrorReason.RobotTaskStatusException,
             error_description=error_description,
         )
 
@@ -165,7 +165,7 @@ class RobotRetrieveDataException(RobotException):
 
 
 # An exception which should be thrown by the robot package if it is unable to collect
-# the inspections that were generated for the currently executing step or mission.
+# the inspections that were generated for the currently executing task or mission.
 class RobotRetrieveInspectionException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
