@@ -22,7 +22,7 @@ azure-identity==1.19.0
     # via
     #   isar (pyproject.toml)
     #   opencensus-ext-azure
-azure-keyvault-secrets==4.8.0
+azure-keyvault-secrets==4.9.0
     # via isar (pyproject.toml)
 azure-storage-blob==12.23.1
     # via isar (pyproject.toml)
@@ -43,7 +43,7 @@ click==8.1.7
     # via
     #   isar (pyproject.toml)
     #   uvicorn
-cryptography==43.0.1
+cryptography==43.0.3
     # via
     #   azure-identity
     #   azure-storage-blob
@@ -120,7 +120,7 @@ protobuf==5.28.2
     #   google-api-core
     #   googleapis-common-protos
     #   proto-plus
-psutil==6.0.0
+psutil==6.1.0
     # via opencensus-ext-azure
 pyasn1==0.6.1
     # via
@@ -137,7 +137,7 @@ pydantic==2.9.2
     #   pydantic-settings
 pydantic-core==2.23.4
     # via pydantic
-pydantic-settings==2.5.2
+pydantic-settings==2.6.0
     # via isar (pyproject.toml)
 pyjwt[crypto]==2.9.0
     # via
@@ -189,7 +189,7 @@ typing-extensions==4.12.2
     #   pydantic-core
 urllib3==2.2.3
     # via requests
-uvicorn==0.31.1
+uvicorn==0.32.0
     # via isar (pyproject.toml)
 wrapt==1.16.0
     # via opencensus-ext-requests
