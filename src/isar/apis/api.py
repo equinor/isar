@@ -232,6 +232,7 @@ class API:
             methods=["POST"],
             dependencies=[authentication_dependency],
             summary="Localize at the provided pose",
+            deprecated=True,
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Localization succesfully started",
