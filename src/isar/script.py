@@ -2,7 +2,7 @@ import logging
 import time
 from logging import Logger
 from threading import Thread
-from typing import Any, List
+from typing import Any, List, Tuple
 
 from injector import Injector
 
@@ -20,6 +20,8 @@ from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
 from isar.services.service_connections.mqtt.robot_info_publisher import (
     RobotInfoPublisher,
 )
+from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission.mission import Mission
 from isar.state_machine.state_machine import StateMachine, main
 from isar.storage.uploader import Uploader
 from robot_interface.robot_interface import RobotInterface
@@ -69,6 +71,7 @@ def print_startup_info():
     print_setting("Using local storage", settings.STORAGE_LOCAL_ENABLED)
     print_setting("Using blob storage", settings.STORAGE_BLOB_ENABLED)
     print_setting("Using SLIMM storage", settings.STORAGE_SLIMM_ENABLED)
+    print_setting("Using async inspection uploading", settings.UPLOAD_INSPECTIONS_ASYNC)
     print_setting("Plant code", settings.PLANT_CODE)
     print_setting("Plant name", settings.PLANT_NAME)
     print_setting("Plant shortname", settings.PLANT_SHORT_NAME)
@@ -103,6 +106,18 @@ def start():
         target=uploader.run, name="ISAR Uploader", daemon=True
     )
     threads.append(uploader_thread)
+
+    if settings.UPLOAD_INSPECTIONS_ASYNC:
+
+        def inspections_callback(inspection: Inspection):
+            message: Tuple[Inspection, Mission] = (
+                inspection,
+                state_machine.current_mission,
+            )
+            state_machine.queues.upload_queue.put(message)
+
+        robot.register_inspection_callback(inspections_callback)
+
     if settings.MQTT_ENABLED:
         mqtt_client: MqttClient = MqttClient(mqtt_queue=queues.mqtt_queue)
 
@@ -137,6 +152,7 @@ def start():
             robot_name=settings.ROBOT_NAME,
             isar_id=settings.ISAR_ID,
         )
+
         if publishers:
             threads.extend(publishers)
 

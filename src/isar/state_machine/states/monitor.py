@@ -111,7 +111,10 @@ class Monitor(State):
 
             self.state_machine.current_task.status = status
 
-            if self._should_upload_inspections():
+            if (
+                not settings.UPLOAD_INSPECTIONS_ASYNC
+                and self._should_upload_inspections()
+            ):
                 get_inspection_thread = ThreadedRequest(
                     self._queue_inspections_for_upload
                 )
