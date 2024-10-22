@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from queue import Queue
 from threading import Thread
-from typing import List
+from typing import Callable, List
 
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
@@ -176,6 +176,24 @@ class RobotInterface(metaclass=ABCMeta):
         RobotException
             Catches other RobotExceptions that lead to the same result as a
             RobotRetrieveInspectionException
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def register_inspection_callback(
+        self, callback_function: Callable[[Inspection], None]
+    ) -> None:
+        """Register a function which should be run when inspection data is received
+        asynchronously. This function should expect to receive an Inspection from.
+
+        Parameters
+        ----------
+        callback_function : Callable[[Inspection]
+
+        Returns
+        -------
+        None
 
         """
         raise NotImplementedError

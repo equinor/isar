@@ -2,7 +2,7 @@ from dataclasses import field
 from datetime import datetime
 from queue import Queue
 from threading import Thread
-from typing import List, Sequence
+from typing import Callable, List, Sequence
 
 from alitra import Frame, Orientation, Pose, Position
 
@@ -61,6 +61,11 @@ class MockRobot(RobotInterface):
         image: Image = Image(mock_image_metadata())
         image.data = b"Some binary image data"
         return image
+
+    def register_inspection_callback(
+        self, callback_function: Callable[[Inspection], None]
+    ) -> None:
+        return
 
     def initialize(self, params: InitializeParams) -> None:
         return

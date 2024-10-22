@@ -140,6 +140,9 @@ class Settings(BaseSettings):
     # Keyvault name
     KEYVAULT_NAME: str = Field(default="IsarDevKv")
 
+    # Determines whether inspections are uploaded asynchronously or get_inspections in robotinterface
+    UPLOAD_INSPECTIONS_ASYNC: bool = Field(default=False)
+
     # URL to storage account for Azure Blob Storage
     BLOB_STORAGE_ACCOUNT_URL: str = Field(
         default="https://eqrobotdevstorage.blob.core.windows.net"
