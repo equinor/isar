@@ -269,6 +269,7 @@ class TestStopMission:
     valid_states = [
         States.Initiate,
         States.Initialize,
+        States.Idle,
         States.Monitor,
         States.Paused,
         States.Stop,
@@ -285,14 +286,6 @@ class TestStopMission:
         response = client.post(url=self.schedule_stop_mission_path)
         assert response.status_code == HTTPStatus.OK
         assert response.json() == jsonable_encoder(mock_control_mission_response)
-
-    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
-    @mock.patch.object(
-        SchedulingUtilities, "stop_mission", mock_control_mission_response
-    )
-    def test_can_not_stop_mission_in_idle(self, client: TestClient):
-        response = client.post(url=self.schedule_stop_mission_path)
-        assert response.status_code == HTTPStatus.CONFLICT
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_off)
     @mock.patch.object(

@@ -36,6 +36,9 @@ class Idle(State):
 
     def _run(self) -> None:
         while True:
+            if self.state_machine.should_stop_mission():
+                transition = self.state_machine.stop  # type: ignore
+                break
             start_mission: Optional[StartMissionMessage] = (
                 self.state_machine.should_start_mission()
             )

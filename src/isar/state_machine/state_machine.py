@@ -32,11 +32,7 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.initialize.initialize_params import InitializeParams
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import (
-    MissionStatus,
-    RobotStatus,
-    TaskStatus,
-)
+from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import TASKS, Task
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
@@ -134,7 +130,11 @@ class StateMachine(object):
                 },
                 {
                     "trigger": "stop",
-                    "source": [self.initiate_state, self.monitor_state],
+                    "source": [
+                        self.initiate_state,
+                        self.monitor_state,
+                        self.idle_state,
+                    ],
                     "dest": self.stop_state,
                     "before": self._stop,
                 },
@@ -371,6 +371,11 @@ class StateMachine(object):
             self.iterate_current_task()
 
     def _mission_stopped(self) -> None:
+        if self.current_mission is None:
+            self._queue_empty_response()
+            self.reset_state_machine()
+            return
+
         self.current_mission.status = MissionStatus.Cancelled
 
         for task in self.current_mission.tasks:
@@ -586,6 +591,16 @@ class StateMachine(object):
             mission_status=self.current_mission.status,
             task_id=self.current_task.id,
             task_status=self.current_task.status,
+        )
+
+    def _queue_empty_response(self):
+        self.queues.stop_mission.output.put(
+            ControlMissionResponse(
+                mission_id="None",
+                mission_status="None",
+                task_id="None",
+                task_status="None",
+            )
         )
 
 
