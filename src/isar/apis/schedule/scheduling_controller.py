@@ -21,13 +21,7 @@ from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import (
-    TASKS,
-    Localize,
-    MoveArm,
-    ReturnToHome,
-)
-from robot_interface.models.mission.task import Task
+from robot_interface.models.mission.task import TASKS, Localize, MoveArm, ReturnToHome
 
 
 class SchedulingController:
@@ -192,7 +186,7 @@ class SchedulingController:
 
         state: States = self.scheduling_utilities.get_state()
 
-        if state in [States.Off, States.Idle]:
+        if state == States.Off:
             error_message = (
                 f"Conflict - Stop command received in invalid state - State: {state}"
             )
