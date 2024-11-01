@@ -17,6 +17,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotException,
     RobotRetrieveInspectionException,
     RobotTaskStatusException,
+    RobotCommunicationException,
 )
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -75,8 +76,11 @@ class Monitor(State):
                 time.sleep(self.state_machine.sleep_time)
                 continue
 
-            except RobotCommunicationTimeoutException as e:
-                task_failed: bool = self._handle_communication_timeout(e)
+            except (
+                RobotCommunicationTimeoutException,
+                RobotCommunicationException,
+            ) as e:
+                task_failed: bool = self._handle_communication_retry(e)
                 if task_failed:
                     status = TaskStatus.Failed
                 else:
@@ -210,8 +214,8 @@ class Monitor(State):
         )
         self.state_machine.current_task.error_message = error_message
 
-    def _handle_communication_timeout(
-        self, e: RobotCommunicationTimeoutException
+    def _handle_communication_retry(
+        self, e: Union[RobotCommunicationTimeoutException, RobotCommunicationException]
     ) -> bool:
         self.state_machine.current_mission.error_message = ErrorMessage(
             error_reason=e.error_reason, error_description=e.error_description
