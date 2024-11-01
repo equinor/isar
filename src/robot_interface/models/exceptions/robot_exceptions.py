@@ -43,7 +43,7 @@ class RobotException(Exception):
 
 
 # An exception which should be thrown by the robot package if it is unable to
-# communicate with the robot API.
+# communicate with the robot API. ISAR will retry the request.
 class RobotCommunicationException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
