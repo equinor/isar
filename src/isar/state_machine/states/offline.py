@@ -48,7 +48,7 @@ class Offline(State):
                 time.sleep(self.state_machine.sleep_time)
                 continue
 
-            except (RobotException,) as e:
+            except RobotException as e:
                 self.logger.error(
                     f"Failed to get robot status because: {e.error_description}"
                 )
