@@ -12,7 +12,7 @@ anyio==4.6.2.post1
     # via
     #   httpx
     #   starlette
-azure-core==1.31.0
+azure-core==1.32.0
     # via
     #   azure-identity
     #   azure-keyvault-secrets
@@ -62,7 +62,7 @@ fastapi-azure-auth==5.0.1
     # via isar (pyproject.toml)
 google-api-core==2.22.0
     # via opencensus
-google-auth==2.35.0
+google-auth==2.36.0
     # via google-api-core
 googleapis-common-protos==1.65.0
     # via google-api-core
@@ -91,7 +91,7 @@ msal==1.31.0
     #   msal-extensions
 msal-extensions==1.2.0
     # via azure-identity
-numpy==2.1.2
+numpy==2.1.3
     # via
     #   alitra
     #   isar (pyproject.toml)
@@ -137,7 +137,7 @@ pydantic==2.9.2
     #   pydantic-settings
 pydantic-core==2.23.4
     # via pydantic
-pydantic-settings==2.6.0
+pydantic-settings==2.6.1
     # via isar (pyproject.toml)
 pyjwt[crypto]==2.9.0
     # via
