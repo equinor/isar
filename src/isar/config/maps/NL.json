@@ -1,0 +1,49 @@
+{
+    "map_name": "NL",
+    "robot_reference_points": {
+      "points": [
+        {
+          "x": -27.1,
+          "y": -122,
+          "z": -2.09,
+          "frame": "robot"
+        },
+        {
+          "x": 167,
+          "y": -4.01,
+          "z": 0.798,
+          "frame": "robot"
+        },
+        {
+          "x": 77.7,
+          "y": 55.9,
+          "z": -0.0693,
+          "frame": "robot"
+        }
+      ],
+      "frame": "robot"
+    },
+    "asset_reference_points": {
+      "points": [
+        {
+          "x": 149.866,
+          "y": 114.862,
+          "z": 103.155,
+          "frame": "asset"
+        },
+        {
+          "x": 344.003,
+          "y": 233.360,
+          "z": 105.154,
+          "frame": "asset"
+        },
+        {
+          "x": 254.736,
+          "y": 293.067,
+          "z": 105.002,
+          "frame": "asset"
+        }
+      ],
+      "frame": "asset"
+    }
+  }
