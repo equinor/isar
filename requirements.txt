@@ -24,7 +24,7 @@ azure-identity==1.19.0
     #   opencensus-ext-azure
 azure-keyvault-secrets==4.9.0
     # via isar (pyproject.toml)
-azure-storage-blob==12.23.1
+azure-storage-blob==12.24.0
     # via isar (pyproject.toml)
 backoff==2.2.1
     # via isar (pyproject.toml)
@@ -54,23 +54,23 @@ dacite==1.8.1
     # via
     #   alitra
     #   isar (pyproject.toml)
-fastapi==0.115.4
+fastapi==0.115.5
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
 fastapi-azure-auth==5.0.1
     # via isar (pyproject.toml)
-google-api-core==2.22.0
+google-api-core==2.23.0
     # via opencensus
 google-auth==2.36.0
     # via google-api-core
-googleapis-common-protos==1.65.0
+googleapis-common-protos==1.66.0
     # via google-api-core
 h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
-httpcore==1.0.6
+httpcore==1.0.7
     # via httpx
 httpx==0.27.2
     # via fastapi-azure-auth
@@ -139,7 +139,7 @@ pydantic-core==2.23.4
     # via pydantic
 pydantic-settings==2.6.1
     # via isar (pyproject.toml)
-pyjwt[crypto]==2.9.0
+pyjwt[crypto]==2.10.0
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
