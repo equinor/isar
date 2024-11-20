@@ -109,10 +109,10 @@ def start():
 
     if settings.UPLOAD_INSPECTIONS_ASYNC:
 
-        def inspections_callback(inspection: Inspection):
+        def inspections_callback(inspection: Inspection, mission: Mission):
             message: Tuple[Inspection, Mission] = (
                 inspection,
-                state_machine.current_mission,
+                mission,
             )
             state_machine.queues.upload_queue.put(message)
 
