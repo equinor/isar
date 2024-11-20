@@ -63,7 +63,7 @@ class MockRobot(RobotInterface):
         return image
 
     def register_inspection_callback(
-        self, callback_function: Callable[[Inspection], None]
+        self, callback_function: Callable[[Inspection, Mission], None]
     ) -> None:
         return
 

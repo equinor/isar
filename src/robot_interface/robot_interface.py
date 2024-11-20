@@ -182,14 +182,14 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def register_inspection_callback(
-        self, callback_function: Callable[[Inspection], None]
+        self, callback_function: Callable[[Inspection, Mission], None]
     ) -> None:
         """Register a function which should be run when inspection data is received
         asynchronously. This function should expect to receive an Inspection from.
 
         Parameters
         ----------
-        callback_function : Callable[[Inspection]
+        callback_function : Callable[[Inspection, Mission], None]
 
         Returns
         -------
