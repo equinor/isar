@@ -223,6 +223,19 @@ class RobotInterface(metaclass=ABCMeta):
 
         """
         raise NotImplementedError
+    
+    @abstractmethod
+    def generate_media_config(self, isar_id: str, robot_name: str) -> str:
+        """
+        Generate a JSON containing the url and token needed to establish a media stream
+        connection to a robot. 
+
+        Returns
+        -------
+        str
+            JSON string containing the connection information for a media stream connection
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def get_telemetry_publishers(

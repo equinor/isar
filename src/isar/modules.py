@@ -8,6 +8,7 @@ from injector import Injector, Module, multiprovider, provider, singleton
 
 from isar.apis.api import API
 from isar.apis.schedule.scheduling_controller import SchedulingController
+from isar.apis.robot_control.robot_controller import RobotController
 from isar.apis.security.authentication import Authenticator
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
@@ -18,6 +19,7 @@ from isar.mission_planner.task_selector_interface import TaskSelectorInterface
 from isar.models.communication.queues.queues import Queues
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+from isar.services.utilities.robot_utilities import RobotUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.storage.blob_storage import BlobStorage
 from isar.storage.local_storage import LocalStorage
@@ -35,9 +37,10 @@ class APIModule(Module):
         self,
         authenticator: Authenticator,
         scheduling_controller: SchedulingController,
+        robot_controller: RobotController,
         keyvault: Keyvault,
     ) -> API:
-        return API(authenticator, scheduling_controller, keyvault)
+        return API(authenticator, scheduling_controller, robot_controller, keyvault)
 
     @provider
     @singleton
@@ -46,6 +49,14 @@ class APIModule(Module):
         scheduling_utilities: SchedulingUtilities,
     ) -> SchedulingController:
         return SchedulingController(scheduling_utilities)
+    
+    @provider
+    @singleton
+    def provide_robot_controller(
+        self,
+        robot_utilities: RobotUtilities,
+    ) -> SchedulingController:
+        return RobotController(robot_utilities)
 
 
 class AuthenticationModule(Module):
@@ -150,6 +161,13 @@ class UtilitiesModule(Module):
     ) -> SchedulingUtilities:
         return SchedulingUtilities(queues, mission_planner)
 
+class RobotUtilitiesModule(Module):
+    @provider
+    @singleton
+    def provide_robot_utilities(
+        self, robot: RobotInterface
+    ) -> RobotUtilities:
+        return RobotUtilities(robot)
 
 class ServiceModule(Module):
     @provider
@@ -194,6 +212,7 @@ modules: Dict[str, Tuple[Module, Union[str, bool]]] = {
     "storage_slimm": (SlimmStorageModule, settings.STORAGE_SLIMM_ENABLED),
     "mqtt": (MqttModule, "required"),
     "utilities": (UtilitiesModule, "required"),
+    "robot_utilities": (RobotUtilitiesModule, "required"),
 }
 
 
