@@ -144,9 +144,7 @@ class Settings(BaseSettings):
     UPLOAD_INSPECTIONS_ASYNC: bool = Field(default=False)
 
     # URL to storage account for Azure Blob Storage
-    BLOB_STORAGE_ACCOUNT_URL: str = Field(
-        default="https://eqrobotdevstorage.blob.core.windows.net"
-    )
+    BLOB_STORAGE_ACCOUNT: str = Field(default="eqrobotdevstorage")
 
     # Name of blob container in Azure Blob Storage [slimm test]
     BLOB_CONTAINER: str = Field(default="test")
