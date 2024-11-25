@@ -49,6 +49,7 @@ class Monitor(State):
         if self.task_status_thread:
             self.task_status_thread.wait_for_thread()
         self.task_status_thread = None
+        self.request_status_failure_counter = 0
 
     def _run(self) -> None:
         transition: Callable
