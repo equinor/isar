@@ -59,7 +59,7 @@ class BlobStorage(StorageInterface):
 
         absolute_inspection_path = {
             "source": "blob",
-            "blob_storage_account_url": settings.BLOB_STORAGE_ACCOUNT_URL,
+            "storage_account": settings.BLOB_STORAGE_ACCOUNT,
             "blob_container": settings.BLOB_CONTAINER,
             "blob_name": blob_client.blob_name,
         }
