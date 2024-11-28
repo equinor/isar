@@ -17,6 +17,7 @@ from opencensus.trace.tracer import Tracer
 from pydantic import AnyHttpUrl
 
 from isar.apis.models.models import ControlMissionResponse, StartMissionResponse
+from isar.apis.robot_control.robot_controller import RobotController
 from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.configuration_error import ConfigurationError
@@ -34,12 +35,14 @@ class API:
         self,
         authenticator: Authenticator,
         scheduling_controller: SchedulingController,
+        robot_controller: RobotController,
         keyvault_client: Keyvault,
         port: int = settings.API_PORT,
         azure_ai_logging_enabled: bool = settings.LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED,
     ) -> None:
         self.authenticator: Authenticator = authenticator
         self.scheduling_controller: SchedulingController = scheduling_controller
+        self.robot_controller: RobotController = robot_controller
         self.keyvault_client: Keyvault = keyvault_client
         self.host: str = "0.0.0.0"  # Locking uvicorn to use 0.0.0.0
         self.port: int = port
@@ -97,6 +100,8 @@ class API:
         app.include_router(router=self._create_scheduler_router())
 
         app.include_router(router=self._create_info_router())
+
+        app.include_router(router=self._create_media_control_router())
 
         return app
 
@@ -277,10 +282,25 @@ class API:
 
         router.add_api_route(
             path="/info/robot-settings",
-            endpoint=self.scheduling_controller.get_info,
+            endpoint=self.robot_controller.get_info,
             methods=["GET"],
             dependencies=[authentication_dependency],
             summary="Information about the robot-settings",
+        )
+
+        return router
+
+    def _create_media_control_router(self) -> APIRouter:
+        router: APIRouter = APIRouter(tags=["Media"])
+
+        authentication_dependency: Security = Security(self.authenticator.get_scheme())
+
+        router.add_api_route(
+            path="/media/media-stream-config",
+            endpoint=self.robot_controller.generate_media_config,
+            methods=["GET"],
+            dependencies=[authentication_dependency],
+            summary="Generates a media stream connection config",
         )
 
         return router

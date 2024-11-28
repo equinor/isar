@@ -6,7 +6,6 @@ from alitra import Pose
 from transitions import State
 
 from robot_interface.models.mission.status import RobotStatus
-from robot_interface.telemetry.media_connection_type import MediaConnectionType
 
 
 @dataclass
@@ -54,13 +53,6 @@ class VideoStream:
     name: str
     url: str
     type: str
-
-
-@dataclass
-class MediaConfig(TelemetryPayload):
-    url: str
-    token: str
-    media_connection_type: MediaConnectionType
 
 
 @dataclass

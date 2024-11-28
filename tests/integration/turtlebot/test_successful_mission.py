@@ -23,7 +23,7 @@ from isar.modules import (
     RobotModule,
     ServiceModule,
     StateMachineModule,
-    UtilitiesModule,
+    SchedulingUtilitiesModule,
 )
 from isar.services.readers.base_reader import BaseReader
 from isar.state_machine.states_enum import States
@@ -57,7 +57,7 @@ def injector_turtlebot():
             StateMachineModule,
             LocalPlannerModule,
             LocalStorageModule,
-            UtilitiesModule,
+            SchedulingUtilitiesModule,
             MockMqttModule,
         ]
     )

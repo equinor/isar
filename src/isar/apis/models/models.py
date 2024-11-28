@@ -1,6 +1,8 @@
+from dataclasses import dataclass
 from typing import List, Optional
 
 from alitra import Frame, Orientation, Pose, Position
+from isar.apis.models.media_connection_type import MediaConnectionType
 from pydantic import BaseModel, Field
 
 from robot_interface.models.mission.task import TaskTypes
@@ -31,6 +33,13 @@ class RobotInfoResponse(BaseModel):
     robot_capabilities: List[str]
     robot_map_name: str
     plant_short_name: str
+
+
+@dataclass
+class MediaConfig:
+    url: str
+    token: str
+    media_connection_type: MediaConnectionType
 
 
 class InputOrientation(BaseModel):
