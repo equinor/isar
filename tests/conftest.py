@@ -15,7 +15,7 @@ from isar.modules import (
     SequentialTaskSelectorModule,
     ServiceModule,
     StateMachineModule,
-    UtilitiesModule,
+    SchedulingUtilitiesModule,
 )
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -47,7 +47,7 @@ def injector():
             ServiceModule,
             StateMachineModule,
             SequentialTaskSelectorModule,
-            UtilitiesModule,
+            SchedulingUtilitiesModule,
         ]
     )
 
@@ -66,7 +66,7 @@ def injector_auth():
             RequestHandlerModule,
             ServiceModule,
             StateMachineModule,
-            UtilitiesModule,
+            SchedulingUtilitiesModule,
         ]
     )
 

@@ -6,6 +6,8 @@ from typing import Callable, List, Sequence
 
 from alitra import Frame, Orientation, Pose, Position
 
+from isar.apis.models.media_connection_type import MediaConnectionType
+from isar.apis.models.models import MediaConfig
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import (
     Image,
@@ -61,6 +63,13 @@ class MockRobot(RobotInterface):
         image: Image = Image(mock_image_metadata())
         image.data = b"Some binary image data"
         return image
+
+    def generate_media_config(self) -> MediaConfig:
+        return MediaConfig(
+            url="mockURL",
+            token="mockToken",
+            media_connection_type=MediaConnectionType.LiveKit,
+        )
 
     def register_inspection_callback(
         self, callback_function: Callable[[Inspection, Mission], None]

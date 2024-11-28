@@ -3,6 +3,7 @@ from queue import Queue
 from threading import Thread
 from typing import Callable, List
 
+from isar.apis.models.models import MediaConfig
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -221,6 +222,19 @@ class RobotInterface(metaclass=ABCMeta):
             Catches other RobotExceptions that might have occurred during initialization
             where the result is that the mission is cancelled
 
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def generate_media_config(self) -> MediaConfig:
+        """
+        Generate a JSON containing the url and token needed to establish a media stream
+        connection to a robot.
+
+        Returns
+        -------
+        MediaConfig
+            An object containing the connection information for a media stream connection
         """
         raise NotImplementedError
 
