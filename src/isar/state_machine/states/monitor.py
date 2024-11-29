@@ -1,7 +1,7 @@
 import logging
 import time
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Optional, Tuple, Union
 
 from injector import inject
 from transitions import State

@@ -237,8 +237,6 @@ class StateMachine(object):
 
         self.current_state: State = States(self.state)  # type: ignore
 
-        self.predefined_mission_id: Optional[int] = None
-
         self.transitions_log_length: int = transitions_log_length
         self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
 
