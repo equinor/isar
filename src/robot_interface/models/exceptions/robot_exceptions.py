@@ -16,6 +16,7 @@ class ErrorReason(str, Enum):
     RobotRetrieveDataException: str = "robot_retrieve_data_exception"
     RobotRetrieveInspectionException: str = "robot_retrieve_inspection_exception"
     RobotTelemetryException: str = "robot_telemetry_exception"
+    RobotTelemetryNoUpdateException: str = "robot_telemetry_no_update_exception"
     RobotTelemetryPoseException: str = "robot_telemetry_pose_exception"
     RobotMapException: str = "robot_map_exception"
     RobotTransformException: str = "robot_transform_exception"
@@ -196,6 +197,17 @@ class RobotTelemetryPoseException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
             error_reason=ErrorReason.RobotTelemetryPoseException,
+            error_description=error_description,
+        )
+
+    pass
+
+
+# An exception which should be thrown by the robot package if there is no new telemetry update.
+class RobotTelemetryNoUpdateException(RobotException):
+    def __init__(self, error_description: str) -> None:
+        super().__init__(
+            error_reason=ErrorReason.RobotTelemetryNoUpdateException,
             error_description=error_description,
         )
 

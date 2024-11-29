@@ -7,6 +7,7 @@ from typing import Callable, Tuple
 
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotTelemetryException,
+    RobotTelemetryNoUpdateException,
     RobotTelemetryPoseException,
 )
 from robot_interface.telemetry.payloads import CloudHealthPayload
@@ -74,7 +75,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
             try:
                 payload = self.telemetry_method(isar_id=isar_id, robot_name=robot_name)
                 topic = self.topic
-            except RobotTelemetryPoseException:
+            except (RobotTelemetryPoseException, RobotTelemetryNoUpdateException):
                 time.sleep(self.interval)
                 continue
             except RobotTelemetryException:
