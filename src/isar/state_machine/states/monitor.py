@@ -49,7 +49,6 @@ class Monitor(State):
         if self.task_status_thread:
             self.task_status_thread.wait_for_thread()
         self.task_status_thread = None
-        self.request_status_failure_counter = 0
 
     def _run(self) -> None:
         transition: Callable
@@ -197,6 +196,7 @@ class Monitor(State):
         self.logger.info(f"Inspection: {str(inspection.id)[:8]} queued for upload")
 
     def _report_task_status(self, task: Task) -> None:
+        self.request_status_failure_counter = 0
         if task.status == TaskStatus.Failed:
             self.logger.warning(
                 f"Task: {str(task.id)[:8]} was reported as failed by the robot"
