@@ -75,13 +75,16 @@ class Monitor(State):
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
-
             except (
                 RobotCommunicationTimeoutException,
                 RobotCommunicationException,
             ) as e:
                 task_failed: bool = self._handle_communication_retry(e)
                 if task_failed:
+                    self.logger.error(
+                        f"Monitoring task {self.state_machine.current_task.id[:8]} failed "
+                        f"because: {e.error_description}"
+                    )
                     status = TaskStatus.Failed
                 else:
                     continue
