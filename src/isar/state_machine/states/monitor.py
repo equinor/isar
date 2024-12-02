@@ -88,6 +88,7 @@ class Monitor(State):
                     )
                     status = TaskStatus.Failed
                 else:
+                    time.sleep(self.state_machine.sleep_time)
                     continue
 
             except RobotTaskStatusException as e:
