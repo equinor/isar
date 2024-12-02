@@ -80,8 +80,8 @@ class Monitor(State):
                 RobotCommunicationTimeoutException,
                 RobotCommunicationException,
             ) as e:
-                task_failed: bool = self._handle_communication_retry(e)
-                if task_failed:
+                retry_limit_exceeded: bool = self._check_if_exceeded_retry_limit(e)
+                if retry_limit_exceeded:
                     self.logger.error(
                         f"Monitoring task {self.state_machine.current_task.id[:8]} failed "
                         f"because: {e.error_description}"
@@ -219,7 +219,7 @@ class Monitor(State):
         )
         self.state_machine.current_task.error_message = error_message
 
-    def _handle_communication_retry(
+    def _check_if_exceeded_retry_limit(
         self, e: Union[RobotCommunicationTimeoutException, RobotCommunicationException]
     ) -> bool:
         self.state_machine.current_mission.error_message = ErrorMessage(
