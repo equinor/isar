@@ -114,7 +114,7 @@ class Monitor(State):
                 )
                 break
 
-            if self.state_machine.current_task == None:
+            if self.state_machine.current_task is None:
                 self.state_machine.iterate_current_task()
 
             self.state_machine.current_task.status = status
@@ -145,7 +145,7 @@ class Monitor(State):
                     )
 
                     self.state_machine.iterate_current_task()
-                    if self.state_machine.current_task == None:
+                    if self.state_machine.current_task is None:
                         transition = self.state_machine.full_mission_finished  # type: ignore
                         break
 
