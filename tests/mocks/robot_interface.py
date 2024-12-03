@@ -15,7 +15,6 @@ from robot_interface.models.inspection.inspection import (
     Inspection,
 )
 from robot_interface.models.mission.mission import Mission
-
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask, Task
 from robot_interface.robot_interface import RobotInterface

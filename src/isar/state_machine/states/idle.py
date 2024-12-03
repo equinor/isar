@@ -34,6 +34,14 @@ class Idle(State):
             self.robot_status_thread.wait_for_thread()
         self.robot_status_thread = None
 
+    def _is_ready_to_poll_for_status(self) -> bool:
+        time_since_last_robot_status_poll = (
+            time.time() - self.last_robot_status_poll_time
+        )
+        return (
+            time_since_last_robot_status_poll > settings.ROBOT_API_STATUS_POLL_INTERVAL
+        )
+
     def _run(self) -> None:
         while True:
             if self.state_machine.should_stop_mission():
@@ -51,13 +59,7 @@ class Idle(State):
                 break
             time.sleep(self.state_machine.sleep_time)
 
-            time_from_last_robot_status_poll = (
-                time.time() - self.last_robot_status_poll_time
-            )
-            if (
-                time_from_last_robot_status_poll
-                < settings.ROBOT_API_STATUS_POLL_INTERVAL
-            ):
+            if not self._is_ready_to_poll_for_status():
                 continue
 
             if not self.robot_status_thread:
