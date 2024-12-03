@@ -33,7 +33,7 @@ from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.initialize.initialize_params import InitializeParams
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
-from robot_interface.models.mission.task import TASKS, Task
+from robot_interface.models.mission.task import TASKS
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
@@ -324,7 +324,7 @@ class StateMachine(object):
         self.current_mission.status = MissionStatus.InProgress
         self.publish_mission_status()
         self.current_task = self.task_selector.next_task()
-        if self.current_task == None:
+        if self.current_task is None:
             self._mission_finished()
         else:
             self.current_task.status = TaskStatus.InProgress
