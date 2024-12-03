@@ -23,7 +23,6 @@ ARBITRARY_IMAGE_METADATA = ImageMetadata(
     ),
     file_type="jpg",
 )
-DATA_BYTES: bytes = b"Lets say this is some image data"
 
 
 @pytest.fixture
