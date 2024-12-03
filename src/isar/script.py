@@ -20,10 +20,10 @@ from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
 from isar.services.service_connections.mqtt.robot_info_publisher import (
     RobotInfoPublisher,
 )
-from robot_interface.models.inspection.inspection import Inspection
-from robot_interface.models.mission.mission import Mission
 from isar.state_machine.state_machine import StateMachine, main
 from isar.storage.uploader import Uploader
+from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission.mission import Mission
 from robot_interface.robot_interface import RobotInterface
 
 
