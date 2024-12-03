@@ -1,4 +1,5 @@
 import logging
+import sys
 import time
 from logging import Logger
 from threading import Thread
@@ -20,10 +21,10 @@ from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
 from isar.services.service_connections.mqtt.robot_info_publisher import (
     RobotInfoPublisher,
 )
-from robot_interface.models.inspection.inspection import Inspection
-from robot_interface.models.mission.mission import Mission
 from isar.state_machine.state_machine import StateMachine, main
 from isar.storage.uploader import Uploader
+from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.mission.mission import Mission
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -168,5 +169,5 @@ def start():
         for thread in threads:
             if not thread.is_alive():
                 logger.critical("Thread '%s' failed - ISAR shutting down", thread.name)
-                exit(1)
+                sys.exit(1)
         time.sleep(state_machine.sleep_time)
