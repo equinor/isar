@@ -51,7 +51,7 @@ def test_should_upload_from_queue(uploader) -> None:
     )
 
     uploader.upload_queue.put(message)
-    time.sleep(1)
+    time.sleep(0.0001)
     assert uploader.storage_handlers[0].blob_exists(inspection)
 
 
@@ -67,7 +67,7 @@ def test_should_retry_failed_upload_from_queue(uploader) -> None:
     # Need it to fail so that it retries
     uploader.storage_handlers[0].will_fail = True
     uploader.upload_queue.put(message)
-    time.sleep(1)
+    time.sleep(0.0001)
 
     # Should not upload, instead raise StorageException
     assert not uploader.storage_handlers[0].blob_exists(inspection)
