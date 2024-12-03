@@ -65,7 +65,7 @@ class Keyvault:
             raise KeyvaultError  # type: ignore
 
     def get_secret_client(self) -> SecretClient:
-        if self.client == None:
+        if self.client is None:
             try:
                 credential: Union[ClientSecretCredential, DefaultAzureCredential]
                 if self.client_id and self.client_secret and self.tenant_id:
