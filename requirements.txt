@@ -139,7 +139,7 @@ pydantic-core==2.27.1
     # via pydantic
 pydantic-settings==2.6.1
     # via isar (pyproject.toml)
-pyjwt[crypto]==2.10.0
+pyjwt==2.10.1
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
