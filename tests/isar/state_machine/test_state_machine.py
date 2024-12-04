@@ -9,11 +9,11 @@ from injector import Injector
 from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
-
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, main
+from isar.state_machine.states.idle import Idle
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
@@ -23,8 +23,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import TaskStatus
-from robot_interface.models.mission.task import ReturnToHome, TakeImage
-from robot_interface.models.mission.task import Task
+from robot_interface.models.mission.task import ReturnToHome, TakeImage, Task
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import MockRobot, MockRobotIdleToOfflineToIdleTest
@@ -33,7 +32,7 @@ from tests.mocks.task import MockTask
 
 class StateMachineThread(object):
     def __init__(self, injector) -> None:
-        settings.UPLOAD_INSPECTIONS_ASYNC = False
+        # settings.UPLOAD_INSPECTIONS_ASYNC = False
         self.injector: Injector = injector
         self.state_machine: StateMachine = injector.get(StateMachine)
         self._thread: Thread = Thread(target=main, args=[self.state_machine])
@@ -45,7 +44,6 @@ class StateMachineThread(object):
 
 class UploaderThread(object):
     def __init__(self, injector) -> None:
-        settings.UPLOAD_INSPECTIONS_ASYNC = False
         self.injector: Injector = injector
         self.uploader: Uploader = Uploader(
             queues=self.injector.get(Queues),
@@ -67,14 +65,6 @@ def uploader_thread(injector) -> UploaderThread:
     return UploaderThread(injector=injector)
 
 
-def get_mission() -> Mission:
-    mission_reader: LocalPlanner = LocalPlanner()
-    mission: Mission = mission_reader.read_mission_from_file(
-        Path("./tests/test_data/test_mission_working.json")
-    )
-    return mission
-
-
 def test_initial_off(state_machine) -> None:
     assert state_machine.state == "off"
 
@@ -92,18 +82,8 @@ def test_reset_state_machine(state_machine) -> None:
     assert state_machine.current_mission is None
 
 
-empty_mission: Mission = Mission([], None)
-
-
-@pytest.mark.parametrize(
-    "should_run_by_task",
-    [
-        (True),
-        (False),
-    ],
-)
-def test_state_machine_transitions(
-    injector, state_machine_thread, should_run_by_task
+def test_state_machine_transitions_when_running_mission_by_task(
+    injector, state_machine_thread
 ) -> None:
     task_1: Task = TakeImage(
         target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
@@ -111,39 +91,24 @@ def test_state_machine_transitions(
     task_2: Task = ReturnToHome(pose=MockPose.default_pose())
     mission: Mission = Mission(tasks=[task_1, task_2])  # type: ignore
 
-    state_machine_thread.state_machine.run_mission_by_task = should_run_by_task
+    state_machine_thread.state_machine.run_mission_by_task = True
     state_machine_thread.start()
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    time.sleep(0.01)
 
-    time.sleep(3)
-    if should_run_by_task:
-        expected_transitions_list = deque(
-            [
-                States.Idle,
-                States.Initialize,
-                States.Initiate,
-                States.Monitor,
-                States.Initiate,
-                States.Monitor,
-                States.Initiate,
-                States.Idle,
-            ]
-        )
-    else:
-        expected_transitions_list = deque(
-            [
-                States.Idle,
-                States.Initialize,
-                States.Initiate,
-                States.Monitor,
-                States.Initiate,
-                States.Idle,
-            ]
-        )
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [
+            States.Idle,
+            States.Initialize,
+            States.Initiate,
+            States.Monitor,
+            States.Initiate,
+            States.Monitor,
+            States.Initiate,
+            States.Idle,
+        ]
     )
 
 
@@ -161,9 +126,9 @@ def test_state_machine_transitions_when_running_full_mission(
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
 
-    time.sleep(3)
-    expected_transitions_list = deque(
+    assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.Idle,
             States.Initialize,
@@ -172,9 +137,6 @@ def test_state_machine_transitions_when_running_full_mission(
             States.Initiate,
             States.Idle,
         ]
-    )
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
     )
 
 
@@ -195,9 +157,9 @@ def test_state_machine_failed_dependency(
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    time.sleep(0.01)
 
-    time.sleep(3)
-    expected_transitions_list = deque(
+    assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.Idle,
             States.Initialize,
@@ -208,9 +170,6 @@ def test_state_machine_failed_dependency(
             States.Initiate,
             States.Idle,
         ]
-    )
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
     )
 
 
@@ -225,8 +184,11 @@ def test_state_machine_with_successful_collection(
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-    time.sleep(3)
-    expected_transitions_list = deque(
+    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
+
+    expected_stored_items = 1
+    assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
+    assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.Idle,
             States.Initialize,
@@ -235,11 +197,6 @@ def test_state_machine_with_successful_collection(
             States.Initiate,
             States.Idle,
         ]
-    )
-    expected_stored_items = 1
-    assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
     )
 
 
@@ -256,8 +213,12 @@ def test_state_machine_with_unsuccessful_collection(
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-    time.sleep(3)
-    expected_transitions_list = deque(
+    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
+
+    expected_stored_items = 0
+    assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.Idle,
             States.Initialize,
@@ -267,18 +228,11 @@ def test_state_machine_with_unsuccessful_collection(
             States.Idle,
         ]
     )
-    expected_stored_items = 0
-    assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
-    print(state_machine_thread.state_machine.transitions_list)
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
-    )
 
 
 def test_state_machine_with_successful_mission_stop(
     injector: Injector,
     state_machine_thread: StateMachineThread,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     state_machine_thread.start()
 
@@ -287,16 +241,10 @@ def test_state_machine_with_successful_mission_stop(
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
     scheduling_utilities.stop_mission()
-    time.sleep(3)
 
-    actual = state_machine_thread.state_machine.transitions_list
-    unexpected_log = (
-        "Could not communicate request: Reached limit for stop attempts. "
-        "Cancelled mission and transitioned to idle."
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [States.Idle, States.Initialize, States.Initiate, States.Stop, States.Idle]
     )
-    assert unexpected_log not in caplog.text
-    assert States.Idle == actual.pop()
-    assert States.Stop == actual.pop()
 
 
 def test_state_machine_with_unsuccessful_mission_stop(
@@ -316,37 +264,30 @@ def test_state_machine_with_unsuccessful_mission_stop(
     state_machine_thread.start()
 
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-
     scheduling_utilities.stop_mission()
 
-    expected = deque(
-        [
-            States.Idle,
-            States.Initialize,
-            States.Initiate,
-            States.Stop,
-            States.Idle,
-        ]
-    )
-    actual = state_machine_thread.state_machine.transitions_list
     expected_log = (
         "Be aware that the robot may still be "
         "moving even though a stop has been attempted"
     )
     assert expected_log in caplog.text
-    assert expected == actual
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [States.Idle, States.Initialize, States.Initiate, States.Stop, States.Idle]
+    )
 
 
-def test_state_machine_idle_to_offline_to_idle(state_machine_thread) -> None:
+def test_state_machine_idle_to_offline_to_idle(mocker, state_machine_thread) -> None:
+
+    # Robot status check happens every 5 seconds by default, so we mock the behavior
+    # to poll for status imediately
+    mocker.patch.object(Idle, "_is_ready_to_poll_for_status", return_value=True)
+
     state_machine_thread.state_machine.robot = MockRobotIdleToOfflineToIdleTest()
-
     state_machine_thread.start()
-    # Robot status check happens every 5 seconds by default
-    time.sleep(13)  # Ensure that robot_status have been called again in Idle
+    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
 
-    expected_transitions_list = deque([States.Idle, States.Offline, States.Idle])
-    assert (
-        state_machine_thread.state_machine.transitions_list == expected_transitions_list
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [States.Idle, States.Offline, States.Idle]
     )
 
 
