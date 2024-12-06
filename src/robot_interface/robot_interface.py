@@ -3,7 +3,7 @@ from queue import Queue
 from threading import Thread
 from typing import Callable, List
 
-from isar.apis.models.models import MediaConfig
+from robot_interface.models.robots.media import MediaConfig
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission

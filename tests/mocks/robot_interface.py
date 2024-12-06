@@ -6,8 +6,8 @@ from typing import Callable, List, Sequence
 
 from alitra import Frame, Orientation, Pose, Position
 
-from isar.apis.models.media_connection_type import MediaConnectionType
-from isar.apis.models.models import MediaConfig
+from robot_interface.models.robots.media import MediaConnectionType
+from robot_interface.models.robots.media import MediaConfig
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import (
     Image,
@@ -22,7 +22,6 @@ from robot_interface.robot_interface import RobotInterface
 
 
 class MockRobot(RobotInterface):
-
     def __init__(
         self,
         mission_status: MissionStatus = MissionStatus.Successful,
