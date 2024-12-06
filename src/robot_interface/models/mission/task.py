@@ -30,6 +30,12 @@ class TaskTypes(str, Enum):
 
 
 @dataclass
+class ZoomDescription:
+    objectWidth: float
+    objectHeight: float
+
+
+@dataclass
 class Task:
     status: TaskStatus = field(default=TaskStatus.NotStarted, init=False)
     error_message: Optional[ErrorMessage] = field(default=None, init=False)
@@ -59,6 +65,7 @@ class InspectionTask(Task):
     inspection: Inspection = field(default=None, init=True)
     robot_pose: Pose = field(default=None, init=True)
     metadata: Optional[dict] = field(default_factory=dict, init=True)
+    zoom: Optional[ZoomDescription] = field(default=None)
 
     @staticmethod
     def get_inspection_type() -> Type[Inspection]:
