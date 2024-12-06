@@ -2,7 +2,7 @@ import logging
 
 from injector import inject
 
-from isar.apis.models.models import MediaConfig
+from robot_interface.models.robots.media import MediaConfig
 from robot_interface.robot_interface import RobotInterface
 
 
