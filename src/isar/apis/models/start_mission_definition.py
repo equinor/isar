@@ -19,6 +19,7 @@ from robot_interface.models.mission.task import (
     TakeThermalImage,
     TakeThermalVideo,
     TakeVideo,
+    ZoomDescription,
 )
 
 
@@ -52,6 +53,7 @@ class StartMissionTaskDefinition(BaseModel):
     inspection: Optional[StartMissionInspectionDefinition] = None
     tag: Optional[str] = None
     id: Optional[str] = None
+    zoom: Optional[ZoomDescription] = None
 
 
 class StartMissionDefinition(BaseModel):
@@ -148,6 +150,7 @@ def create_inspection_task(
             tag_id=start_mission_task_definition.tag,
             robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
             metadata=start_mission_task_definition.inspection.metadata,
+            zoom=start_mission_task_definition.zoom,
         )
     elif start_mission_task_definition.inspection.type == InspectionTypes.video:
         return TakeVideo(
@@ -156,6 +159,7 @@ def create_inspection_task(
             tag_id=start_mission_task_definition.tag,
             robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
             metadata=start_mission_task_definition.inspection.metadata,
+            zoom=start_mission_task_definition.zoom,
         )
 
     elif start_mission_task_definition.inspection.type == InspectionTypes.thermal_image:
@@ -164,6 +168,7 @@ def create_inspection_task(
             tag_id=start_mission_task_definition.tag,
             robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
             metadata=start_mission_task_definition.inspection.metadata,
+            zoom=start_mission_task_definition.zoom,
         )
 
     elif start_mission_task_definition.inspection.type == InspectionTypes.thermal_video:
@@ -173,6 +178,7 @@ def create_inspection_task(
             tag_id=start_mission_task_definition.tag,
             robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
             metadata=start_mission_task_definition.inspection.metadata,
+            zoom=start_mission_task_definition.zoom,
         )
 
     elif start_mission_task_definition.inspection.type == InspectionTypes.audio:
@@ -182,6 +188,7 @@ def create_inspection_task(
             tag_id=start_mission_task_definition.tag,
             robot_pose=start_mission_task_definition.pose.to_alitra_pose(),
             metadata=start_mission_task_definition.inspection.metadata,
+            zoom=start_mission_task_definition.zoom,
         )
     else:
         raise ValueError(
