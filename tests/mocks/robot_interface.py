@@ -1,13 +1,10 @@
-from dataclasses import field
 from datetime import datetime
 from queue import Queue
 from threading import Thread
-from typing import Callable, List, Sequence
+from typing import Callable, List
 
 from alitra import Frame, Orientation, Pose, Position
 
-from robot_interface.models.robots.media import MediaConnectionType
-from robot_interface.models.robots.media import MediaConfig
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import (
     Image,
@@ -17,6 +14,7 @@ from robot_interface.models.inspection.inspection import (
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask, Task
+from robot_interface.models.robots.media import MediaConfig, MediaConnectionType
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -58,9 +56,11 @@ class MockRobot(RobotInterface):
         return
 
     def get_inspection(self, task: InspectionTask) -> Inspection:
-        image: Image = Image(mock_image_metadata())
-        image.data = b"Some binary image data"
-        return image
+        return Image(
+            metadata=mock_image_metadata(),
+            id=task.inspection_id,
+            data=b"Some binary image data",
+        )
 
     def generate_media_config(self) -> MediaConfig:
         return MediaConfig(

@@ -9,6 +9,7 @@ from robot_interface.models.mission.task import TaskTypes
 class TaskResponse(BaseModel):
     id: str
     tag_id: Optional[str] = None
+    inspection_id: Optional[str] = None
     type: TaskTypes
 
 

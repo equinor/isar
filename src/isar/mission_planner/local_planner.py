@@ -1,8 +1,7 @@
+import json
 import logging
 from pathlib import Path
-from typing import List, Optional
 
-from alitra import Frame
 from injector import inject
 
 from isar.config.settings import settings
@@ -11,9 +10,7 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
     MissionPlannerInterface,
 )
-from isar.services.readers.base_reader import BaseReader, BaseReaderError
 from robot_interface.models.mission.mission import Mission
-
 
 logger = logging.getLogger("api")
 
@@ -39,16 +36,10 @@ class LocalPlanner(MissionPlannerInterface):
 
     @staticmethod
     def read_mission_from_file(mission_path: Path) -> Mission:
-        mission_dict: dict = BaseReader.read_json(location=mission_path)
+        with open(mission_path) as json_file:
+            mission_dict = json.load(json_file)
 
-        mission: Mission = BaseReader.dict_to_dataclass(
-            dataclass_dict=mission_dict,
-            target_dataclass=Mission,
-            cast_config=[Frame],
-            strict_config=True,
-        )
-
-        return mission
+        return Mission(**mission_dict)
 
     def get_predefined_missions(self) -> dict:
         missions: dict = {}
@@ -57,13 +48,8 @@ class LocalPlanner(MissionPlannerInterface):
         for file in json_files:
             mission_name = file.stem
             path_to_file = self.predefined_mission_folder.joinpath(file.name)
-            try:
-                mission: Mission = self.read_mission_from_file(path_to_file)
-            except BaseReaderError as e:
-                logger.warning(
-                    f"Failed to read predefined mission {path_to_file} \n {e}"
-                )
-                continue
+
+            mission: Mission = self.read_mission_from_file(path_to_file)
             if mission.id in invalid_mission_ids:
                 logger.warning(
                     f"Duplicate mission id {mission.id} : {path_to_file.as_posix()}"

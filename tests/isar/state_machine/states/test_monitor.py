@@ -2,7 +2,6 @@ import pytest
 
 from isar.state_machine.states.monitor import Monitor
 from robot_interface.models.mission.mission import Mission
-
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from robot_interface.models.mission.task import ReturnToHome, TakeImage
 from tests.mocks.task import MockTask
@@ -35,7 +34,7 @@ def test_should_only_upload_if_status_is_completed(
 ):
     task: TakeImage = MockTask.take_image()
     task.status = TaskStatus.Successful if is_status_successful else TaskStatus.Failed
-    mission: Mission = Mission(tasks=[task])
+    mission: Mission = Mission(name="Dummy misson", tasks=[task])
     mission.status = (
         MissionStatus.Successful if is_status_successful else MissionStatus.Failed
     )

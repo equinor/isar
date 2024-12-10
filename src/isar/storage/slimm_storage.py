@@ -71,7 +71,10 @@ class SlimmStorage(StorageInterface):
         return inspection_path
 
     def _ingest(
-        self, inspection: Inspection, multiform_body: MultipartEncoder, request_url: str
+        self,
+        inspection: Inspection,
+        multiform_body: MultipartEncoder,
+        request_url: str,
     ) -> str:
         token: str = self.credentials.get_token(self.request_scope).token
         try:

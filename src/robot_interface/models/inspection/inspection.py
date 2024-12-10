@@ -4,8 +4,7 @@ from datetime import datetime
 from typing import Optional, Type
 
 from alitra import Pose
-
-from robot_interface.utilities.uuid_string_factory import uuid4_string
+from pydantic import BaseModel, Field
 
 
 @dataclass
@@ -43,18 +42,16 @@ class AudioMetadata(InspectionMetadata):
     duration: Optional[float] = field(default=None)
 
 
-@dataclass
-class Inspection:
+class Inspection(BaseModel):
     metadata: InspectionMetadata
-    id: str = field(default_factory=uuid4_string, init=True)
-    data: Optional[bytes] = field(default=None, init=False)
+    id: str = Field(frozen=True)
+    data: Optional[bytes] = Field(default=None, frozen=True)
 
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:
         return InspectionMetadata
 
 
-@dataclass
 class Image(Inspection):
     metadata: ImageMetadata
 
@@ -63,7 +60,6 @@ class Image(Inspection):
         return ImageMetadata
 
 
-@dataclass
 class ThermalImage(Inspection):
     metadata: ThermalImageMetadata
 
@@ -72,7 +68,6 @@ class ThermalImage(Inspection):
         return ThermalImageMetadata
 
 
-@dataclass
 class Video(Inspection):
     metadata: VideoMetadata
 
@@ -81,7 +76,6 @@ class Video(Inspection):
         return VideoMetadata
 
 
-@dataclass
 class ThermalVideo(Inspection):
     metadata: ThermalVideoMetadata
 
@@ -90,7 +84,6 @@ class ThermalVideo(Inspection):
         return ThermalVideoMetadata
 
 
-@dataclass
 class Audio(Inspection):
     metadata: AudioMetadata
 

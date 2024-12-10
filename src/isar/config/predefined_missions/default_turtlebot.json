@@ -1,5 +1,6 @@
 {
   "id": "2",
+  "name": "Default mission Turtlebot",
   "tasks": [
     {
       "type": "take_image",
@@ -8,22 +9,22 @@
           "x": -3.6,
           "y": 4,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": -0.7286672256879113,
           "w": -0.6848660759820616,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       },
       "target": {
         "x": -4.7,
         "y": 4.9,
         "z": 0,
-        "frame": "robot"
+        "frame": {"name": "asset"}
       }
     },
 
@@ -34,22 +35,22 @@
           "x": 4.7,
           "y": 3,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": 0.5769585,
           "w": 0.8167734,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       },
       "target": {
         "x": 5.6,
         "y": 5.2,
         "z": 0,
-        "frame": "robot"
+        "frame": {"name": "asset"}
       }
     },
     {
@@ -59,22 +60,22 @@
           "x": 4.7,
           "y": 3,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": 0.5769585,
           "w": 0.8167734,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       },
       "target": {
         "x": 3.1,
         "y": 5.2,
         "z": 0,
-        "frame": "robot"
+        "frame": {"name": "asset"}
       }
     },
     {
@@ -84,22 +85,22 @@
           "x": 0.95,
           "y": 2.6,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": -0.6992469,
           "w": 0.7148802,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       },
       "target": {
         "x": 1.9,
         "y": 1.9,
         "z": 0,
-        "frame": "robot"
+        "frame": {"name": "asset"}
       }
     }
   ]

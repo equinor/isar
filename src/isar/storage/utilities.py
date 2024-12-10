@@ -34,10 +34,11 @@ def construct_metadata_file(
         "plant_code": settings.PLANT_CODE,
         "media_orientation_reference_system": settings.MEDIA_ORIENTATION_REFERENCE_SYSTEM,  # noqa: E501
         "additional_meta": {
+            "inspection_id": inspection.id,
             "mission_id": mission.id,
             "mission_name": mission.name,
-            "plant_name": settings.PLANT_NAME,
             "mission_date": datetime.now(timezone.utc).date(),
+            "plant_name": settings.PLANT_NAME,
             "isar_id": settings.ISAR_ID,
             "robot_name": settings.ROBOT_NAME,
             "analysis_type": (
@@ -69,9 +70,7 @@ def construct_metadata_file(
     return json.dumps(data, cls=EnhancedJSONEncoder, indent=4).encode()
 
 
-def get_filename(
-    inspection: Inspection,
-) -> str:
+def get_filename(inspection: Inspection) -> str:
     inspection_type: str = type(inspection).__name__
     tag: str = inspection.metadata.tag_id if inspection.metadata.tag_id else "no-tag"
     epoch_time: int = int(time.time())

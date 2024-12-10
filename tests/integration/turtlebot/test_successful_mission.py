@@ -1,3 +1,4 @@
+import json
 import shutil
 import time
 from copy import deepcopy
@@ -25,7 +26,6 @@ from isar.modules import (
     StateMachineModule,
     SchedulingUtilitiesModule,
 )
-from isar.services.readers.base_reader import BaseReader
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import ReturnToHome
@@ -118,7 +118,8 @@ def test_successful_mission(
 
     paths = mission_result_folder.rglob("*.json")
     for path in paths:
-        metadata: dict = BaseReader.read_json(path)
+        with open(path) as json_file:
+            metadata = json.load(json_file)
         files_metadata: dict = metadata["data"][0]["files"][0]
         filename: str = files_metadata["file_name"]
         inspection_file: Path = mission_result_folder.joinpath(filename)

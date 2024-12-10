@@ -13,11 +13,11 @@ from isar.services.utilities.threaded_request import (
 )
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
+    RobotCommunicationException,
     RobotCommunicationTimeoutException,
     RobotException,
     RobotRetrieveInspectionException,
     RobotTaskStatusException,
-    RobotCommunicationException,
 )
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -173,6 +173,12 @@ class Monitor(State):
             inspection: Inspection = self.state_machine.robot.get_inspection(
                 task=current_task
             )
+            if current_task.inspection_id == inspection.id:
+                self.logger.warning(
+                    f"The inspection_id of task ({current_task.inspection_id}) "
+                    f"and result ({inspection.id}) is not matching. "
+                    f"This may lead to confusions when accessing the inspection later"
+                )
 
         except (RobotRetrieveInspectionException, RobotException) as e:
             self._set_error_message(e)
@@ -183,7 +189,7 @@ class Monitor(State):
 
         if not inspection:
             self.logger.warning(
-                f"No inspection data retrieved for task {str(current_task.id)[:8]}"
+                f"No inspection result data retrieved for task {str(current_task.id)[:8]}"
             )
 
         inspection.metadata.tag_id = current_task.tag_id
@@ -193,7 +199,9 @@ class Monitor(State):
             mission,
         )
         self.state_machine.queues.upload_queue.put(message)
-        self.logger.info(f"Inspection: {str(inspection.id)[:8]} queued for upload")
+        self.logger.info(
+            f"Inspection result: {str(inspection.id)[:8]} queued for upload"
+        )
 
     def _report_task_status(self, task: Task) -> None:
         self.request_status_failure_counter = 0

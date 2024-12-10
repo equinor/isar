@@ -1,5 +1,6 @@
 {
   "id": "1",
+  "name": "Default mission",
   "tasks": [
     {
       "type": "take_image",
@@ -8,22 +9,22 @@
           "x": -2,
           "y": -2,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": 0.4794255,
           "w": 0.8775826,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       },
       "target": {
         "x": 2,
         "y": 2,
         "z": 0,
-        "frame": "robot"
+        "frame": {"name": "asset"}
       }
     },
     {
@@ -33,22 +34,22 @@
           "x": -2,
           "y": 2,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": 0.4794255,
           "w": 0.8775826,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       },
       "target": {
         "x": 2,
         "y": 2,
         "z": 0,
-        "frame": "robot"
+        "frame": {"name": "asset"}
       }
     },
     {
@@ -58,16 +59,16 @@
           "x": 2,
           "y": 2,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": 0.4794255,
           "w": 0.8775826,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       }
     }
   ]

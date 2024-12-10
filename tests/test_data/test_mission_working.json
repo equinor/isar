@@ -1,5 +1,6 @@
 {
   "id": "1",
+  "name": "Well defined mission",
   "tasks": [
     {
       "type": "return_to_home",
@@ -8,16 +9,16 @@
           "x": -2,
           "y": -2,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": 0.4794255,
           "w": 0.8775826,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       }
     },
     {
@@ -27,22 +28,22 @@
           "x": -2,
           "y": 2,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": 0.4794255,
           "w": 0.8775826,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       },
       "target": {
         "x": 2,
         "y": 2,
         "z": 0,
-        "frame": "robot"
+        "frame": {"name": "asset"}
       }
     },
     {
@@ -52,22 +53,22 @@
           "x": 2,
           "y": 2,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": 0.4794255,
           "w": 0.8775826,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       },
       "target": {
         "x": 2,
         "y": 2,
         "z": 0,
-        "frame": "robot"
+        "frame": {"name": "asset"}
       }
     },
     {
@@ -77,16 +78,16 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": 0.4794255,
           "w": 0.8775826,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       }
     }
   ]
