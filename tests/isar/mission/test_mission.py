@@ -1,12 +1,11 @@
 from alitra import Frame, Orientation, Pose, Position
 
-from isar.services.readers.base_reader import BaseReader
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
     TASKS,
+    ReturnToHome,
     TakeImage,
     TakeThermalImage,
-    ReturnToHome,
 )
 
 robot_pose_1 = Pose(
@@ -46,11 +45,13 @@ task_return_to_home = ReturnToHome(
 
 expected_mission = Mission(
     id="1",
+    name="Test mission",
     tasks=[task_take_image, task_take_thermal_image, task_return_to_home],
 )
 
 example_mission_dict = {
     "id": "1",
+    "name": "Test mission",
     "tasks": [
         {
             "type": "take_image",
@@ -116,12 +117,9 @@ example_mission_dict = {
 
 
 def test_mission_definition() -> None:
-    loaded_mission: Mission = BaseReader.dict_to_dataclass(
-        dataclass_dict=example_mission_dict,
-        target_dataclass=Mission,
-        strict_config=False,
-    )
+    loaded_mission: Mission = Mission(**example_mission_dict)
 
+    assert loaded_mission.id == expected_mission.id
     assert loaded_mission.id == expected_mission.id
     assert loaded_mission.status == expected_mission.status
 

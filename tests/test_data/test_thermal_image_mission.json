@@ -1,5 +1,6 @@
 {
   "id": "1",
+  "name": "Thermal image mission",
   "tasks": [
     {
       "type": "take_thermal_image",
@@ -7,23 +8,23 @@
         "x": 2,
         "y": 2,
         "z": 0,
-        "frame": "robot"
+        "frame": {"name": "asset"}
       },
       "robot_pose": {
         "position": {
           "x": -2,
           "y": 2,
           "z": 0,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": 0.4794255,
           "w": 0.8775826,
-          "frame": "asset"
+          "frame": {"name": "asset"}
         },
-        "frame": "asset"
+        "frame": {"name": "asset"}
       }
     }
   ]

@@ -9,7 +9,7 @@ class MissionPlannerInterface(metaclass=ABCMeta):
         """
         Parameters
         ----------
-        mission_id : int
+        mission_id : str
 
         Returns
         -------

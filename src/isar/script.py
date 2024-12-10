@@ -82,7 +82,7 @@ def print_startup_info():
     print()
 
 
-def start():
+def start() -> None:
     injector: Injector = get_injector()
 
     keyvault_client = injector.get(Keyvault)

@@ -412,7 +412,7 @@ class StateMachine(object):
         Transitions into idle state.
 
         """
-        self.to_idle()
+        self.to_idle()  # type: ignore
 
     def iterate_current_task(self):
         if self.current_task.is_finished():
@@ -426,7 +426,7 @@ class StateMachine(object):
 
     def update_state(self):
         """Updates the current state of the state machine."""
-        self.current_state = States(self.state)
+        self.current_state = States(self.state)  # type: ignore
         self.send_state_status()
         self._log_state_transition(self.current_state)
         self.logger.info(f"State: {self.current_state}")

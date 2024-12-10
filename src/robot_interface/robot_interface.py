@@ -3,12 +3,12 @@ from queue import Queue
 from threading import Thread
 from typing import Callable, List, Optional
 
-from robot_interface.models.robots.media import MediaConfig
 from robot_interface.models.initialize import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask, Task
+from robot_interface.models.robots.media import MediaConfig
 
 
 class RobotInterface(metaclass=ABCMeta):
@@ -166,8 +166,10 @@ class RobotInterface(metaclass=ABCMeta):
 
         Returns
         -------
-        Sequence[InspectionResult]
-            List containing all the inspection results connected to the given task
+        Sequence[Inspection]
+            List containing all the inspection connected to the given task.
+            get_inspection has responsibility to assign the inspection_id of the task
+            to the inspection that it returns.
 
         Raises
         ------

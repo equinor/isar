@@ -28,6 +28,7 @@ class MockMissionDefinition:
     mock_task_return_home = MockTask.return_home()
     default_mission = Mission(
         id="default_mission",
+        name="Dummy misson",
         tasks=[
             mock_task_take_image,
             mock_task_return_home,
@@ -37,21 +38,10 @@ class MockMissionDefinition:
         type=InspectionTypes.image,
         inspection_target=mock_input_target_position,
     )
-    mock_start_mission_inspection_definition_id_123 = StartMissionInspectionDefinition(
-        type=InspectionTypes.image,
-        inspection_target=mock_input_target_position,
-        id="123",
-    )
-    mock_start_mission_inspection_definition_id_123456 = (
-        StartMissionInspectionDefinition(
-            type=InspectionTypes.image,
-            inspection_target=mock_input_target_position,
-            id="123456",
-        )
-    )
     mock_task_response_take_image = TaskResponse(
         id=mock_task_take_image.id,
         tag_id=mock_task_take_image.tag_id,
+        inspection_id=mock_task_take_image.inspection_id,
         type=mock_task_take_image.type,
     )
 
@@ -78,42 +68,17 @@ class MockMissionDefinition:
             StartMissionTaskDefinition(
                 pose=mock_input_pose,
                 tag="dummy_tag",
-                inspection=mock_start_mission_inspection_definition_id_123,
-                id="123",
+                inspection=mock_start_mission_inspection_definition,
             ),
             StartMissionTaskDefinition(
                 pose=mock_input_pose,
                 tag="dummy_tag",
                 inspection=mock_start_mission_inspection_definition,
-                id="123456",
             ),
             StartMissionTaskDefinition(
                 pose=mock_input_pose,
                 tag="dummy_tag",
                 inspection=mock_start_mission_inspection_definition,
-                id="123456789",
-            ),
-        ]
-    )
-    mock_start_mission_definition_with_duplicate_task_ids = StartMissionDefinition(
-        tasks=[
-            StartMissionTaskDefinition(
-                pose=mock_input_pose,
-                tag="dummy_tag",
-                inspection=mock_start_mission_inspection_definition,
-                id="123",
-            ),
-            StartMissionTaskDefinition(
-                pose=mock_input_pose,
-                tag="dummy_tag",
-                inspection=mock_start_mission_inspection_definition,
-                id="123456",
-            ),
-            StartMissionTaskDefinition(
-                pose=mock_input_pose,
-                tag="dummy_tag",
-                inspection=mock_start_mission_inspection_definition,
-                id="123",
             ),
         ]
     )

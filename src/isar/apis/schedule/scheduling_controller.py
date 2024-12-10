@@ -21,7 +21,13 @@ from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import TASKS, Localize, MoveArm, ReturnToHome
+from robot_interface.models.mission.task import (
+    TASKS,
+    InspectionTask,
+    Localize,
+    MoveArm,
+    ReturnToHome,
+)
 
 
 class SchedulingController:
@@ -115,7 +121,9 @@ class SchedulingController:
         self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
 
         try:
-            mission: Mission = to_isar_mission(mission_definition)
+            mission: Mission = to_isar_mission(
+                start_mission_definition=mission_definition, return_pose=return_pose
+            )
         except MissionPlannerError as e:
             error_message = f"Bad Request - Cannot create ISAR mission: {e}"
             self.logger.warning(error_message)
@@ -127,9 +135,6 @@ class SchedulingController:
         self.scheduling_utilities.verify_robot_capable_of_mission(
             mission=mission, robot_capabilities=robot_settings.CAPABILITIES
         )
-        if return_pose:
-            pose: Pose = return_pose.to_alitra_pose()
-            mission.tasks.append(ReturnToHome(pose=pose))
 
         initial_pose_alitra: Optional[Pose] = (
             initial_pose.to_alitra_pose() if initial_pose else None
@@ -213,7 +218,9 @@ class SchedulingController:
         self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
 
         pose: Pose = target_pose.to_alitra_pose()
-        mission: Mission = Mission(tasks=[ReturnToHome(pose=pose)])
+        mission: Mission = Mission(
+            name="Drive to pose", tasks=[ReturnToHome(pose=pose)]
+        )
 
         self.logger.info(
             f"Starting drive to mission with ISAR Mission ID: '{mission.id}'"
@@ -237,7 +244,9 @@ class SchedulingController:
         self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
 
         pose: Pose = localization_pose.to_alitra_pose()
-        mission: Mission = Mission(tasks=[Localize(localization_pose=pose)])
+        mission: Mission = Mission(
+            name="Localization mission", tasks=[Localize(localization_pose=pose)]
+        )
 
         self.logger.info(
             f"Starting localization mission with ISAR Mission ID: '{mission.id}'"
@@ -284,7 +293,9 @@ class SchedulingController:
 
         self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
 
-        mission: Mission = Mission(tasks=[MoveArm(arm_pose=arm_pose_literal)])
+        mission: Mission = Mission(
+            name="Move arm mission", tasks=[MoveArm(arm_pose=arm_pose_literal)]
+        )
 
         self.logger.info(
             f"Starting move arm mission with ISAR Mission ID: '{mission.id}'"
@@ -302,4 +313,11 @@ class SchedulingController:
         )
 
     def _task_api_response(self, task: TASKS) -> TaskResponse:
-        return TaskResponse(id=task.id, tag_id=task.tag_id, type=task.type)
+        if isinstance(task, InspectionTask):
+            inspection_id = task.inspection_id
+        else:
+            inspection_id = None
+
+        return TaskResponse(
+            id=task.id, tag_id=task.tag_id, inspection_id=inspection_id, type=task.type
+        )

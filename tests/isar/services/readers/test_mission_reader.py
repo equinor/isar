@@ -1,10 +1,11 @@
 from pathlib import Path
-from typing import List, Union
+from typing import List
 
 import pytest
 from alitra import Frame, Orientation, Pose, Position
 
 from isar.config.settings import settings
+from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionNotFoundError
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
@@ -13,22 +14,21 @@ from robot_interface.models.mission.task import (
     TakeImage,
     TakeThermalImage,
 )
-from robot_interface.models.mission.task import Task
 
 
-@pytest.mark.parametrize(
-    "mission_path",
-    [
-        Path("./tests/test_data/test_mission_working_no_tasks.json"),
-        Path("./tests/test_data/test_mission_working.json"),
-    ],
-)
-def test_get_mission(mission_reader, mission_path) -> None:
-    output: Mission = mission_reader.read_mission_from_file(mission_path)
-    assert isinstance(output, Mission)
+def test_get_working_mission(mission_reader: LocalPlanner) -> None:
+    mission_path = Path("./tests/test_data/test_mission_working.json")
+    mission: Mission = mission_reader.read_mission_from_file(mission_path)
+    assert isinstance(mission, Mission)
 
 
-def test_read_mission_from_file(mission_reader) -> None:
+def test_get_mission_with_no_tasks(mission_reader: LocalPlanner) -> None:
+    mission_path = Path("./tests/test_data/test_mission_working_no_tasks.json")
+    mission: Mission = mission_reader.read_mission_from_file(mission_path)
+    assert isinstance(mission, Mission)
+
+
+def test_read_mission_from_file(mission_reader: LocalPlanner) -> None:
     expected_robot_pose_1 = Pose(
         position=Position(-2, -2, 0, Frame("asset")),
         orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
@@ -41,7 +41,7 @@ def test_read_mission_from_file(mission_reader) -> None:
         orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
         frame=Frame("asset"),
     )
-    expected_inspection_target_1 = Position(2, 2, 0, Frame("robot"))
+    expected_inspection_target_1 = Position(2, 2, 0, Frame("asset"))
     task_2: TakeImage = TakeImage(
         target=expected_inspection_target_1, robot_pose=expected_robot_pose_2
     )
@@ -51,7 +51,7 @@ def test_read_mission_from_file(mission_reader) -> None:
         orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
         frame=Frame("asset"),
     )
-    expected_inspection_target_2 = Position(2, 2, 0, Frame("robot"))
+    expected_inspection_target_2 = Position(2, 2, 0, Frame("asset"))
     task_3: TakeImage = TakeImage(
         target=expected_inspection_target_2, robot_pose=expected_robot_pose_3
     )
@@ -88,22 +88,22 @@ def test_read_mission_from_file(mission_reader) -> None:
         (Path("./tests/test_data/test_mission_not_working.json")),
     ],
 )
-def test_get_invalid_mission(mission_reader, mission_path) -> None:
+def test_get_invalid_mission(mission_reader: LocalPlanner, mission_path) -> None:
     with pytest.raises(Exception):
         mission_reader.read_mission_from_file(mission_path)
 
 
-def test_get_mission_by_id(mission_reader) -> None:
+def test_get_mission_by_id(mission_reader: LocalPlanner) -> None:
     output = mission_reader.get_mission("1")
     assert isinstance(output, Mission)
 
 
-def test_get_mission_by_invalid_id(mission_reader) -> None:
+def test_get_mission_by_invalid_id(mission_reader: LocalPlanner) -> None:
     with pytest.raises(MissionNotFoundError):
         mission_reader.get_mission("12345")
 
 
-def test_valid_predefined_missions_files(mission_reader) -> None:
+def test_valid_predefined_missions_files(mission_reader: LocalPlanner) -> None:
     # Checks that the predefined mission folder contains only valid missions!
     mission_list_dict = mission_reader.get_predefined_missions()
     predefined_mission_folder = Path(settings.PREDEFINED_MISSIONS_FOLDER)
@@ -116,7 +116,7 @@ def test_valid_predefined_missions_files(mission_reader) -> None:
         assert mission is not None
 
 
-def test_thermal_image_task(mission_reader) -> None:
+def test_thermal_image_task(mission_reader: LocalPlanner) -> None:
     mission_path: Path = Path("./tests/test_data/test_thermal_image_mission.json")
     output: Mission = mission_reader.read_mission_from_file(mission_path)
 

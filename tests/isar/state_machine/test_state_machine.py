@@ -89,7 +89,7 @@ def test_state_machine_transitions_when_running_mission_by_task(
         target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
     )
     task_2: Task = ReturnToHome(pose=MockPose.default_pose())
-    mission: Mission = Mission(tasks=[task_1, task_2])  # type: ignore
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
     state_machine_thread.state_machine.run_mission_by_task = True
     state_machine_thread.start()
@@ -122,7 +122,7 @@ def test_state_machine_transitions_when_running_full_mission(
         target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
     )
     task_2: Task = ReturnToHome(pose=MockPose.default_pose())
-    mission: Mission = Mission(tasks=[task_1, task_2])  # type: ignore
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
@@ -147,7 +147,7 @@ def test_state_machine_failed_dependency(
         target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
     )
     task_2: Task = ReturnToHome(pose=MockPose.default_pose())
-    mission: Mission = Mission(tasks=[task_1, task_2])  # type: ignore
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
     mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.Failed)
 
@@ -180,7 +180,7 @@ def test_state_machine_with_successful_collection(
 
     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
 
-    mission: Mission = Mission(tasks=[MockTask.take_image()])
+    mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
@@ -209,7 +209,7 @@ def test_state_machine_with_unsuccessful_collection(
 
     state_machine_thread.start()
 
-    mission: Mission = Mission(tasks=[MockTask.take_image()])
+    mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
@@ -236,7 +236,7 @@ def test_state_machine_with_successful_mission_stop(
 ) -> None:
     state_machine_thread.start()
 
-    mission: Mission = Mission(tasks=[MockTask.take_image()])
+    mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
@@ -253,7 +253,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
     state_machine_thread: StateMachineThread,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    mission: Mission = Mission(tasks=[MockTask.take_image()])
+    mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.InProgress)

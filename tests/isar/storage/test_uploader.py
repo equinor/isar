@@ -11,6 +11,7 @@ from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import ImageMetadata, Inspection
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.task import TakeImage
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 MISSION_ID = "some-mission-id"
@@ -42,8 +43,13 @@ def uploader(injector) -> Uploader:
 
 
 def test_should_upload_from_queue(uploader) -> None:
-    mission: Mission = Mission([])
-    inspection: Inspection = Inspection(metadata=ARBITRARY_IMAGE_METADATA)
+    take_image_task = TakeImage()
+    mission: Mission = Mission(name="Dummy misson", tasks=[take_image_task])
+
+    assert isinstance(mission.tasks[0], TakeImage)
+    inspection = Inspection(
+        metadata=ARBITRARY_IMAGE_METADATA, id=mission.tasks[0].inspection_id
+    )
 
     message: Tuple[Inspection, Mission] = (
         inspection,
@@ -56,8 +62,9 @@ def test_should_upload_from_queue(uploader) -> None:
 
 
 def test_should_retry_failed_upload_from_queue(uploader) -> None:
-    mission: Mission = Mission([])
-    inspection: Inspection = Inspection(metadata=ARBITRARY_IMAGE_METADATA)
+    INSPECTION_ID = "123-456"
+    inspection = Inspection(metadata=ARBITRARY_IMAGE_METADATA, id=INSPECTION_ID)
+    mission: Mission = Mission(name="Dummy Mission")
 
     message: Tuple[Inspection, Mission] = (
         inspection,
