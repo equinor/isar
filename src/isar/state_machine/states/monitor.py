@@ -110,7 +110,8 @@ class Monitor(State):
 
             if not isinstance(status, TaskStatus):
                 self.logger.error(
-                    f"Received an invalid status update when monitoring mission. Only TaskStatus is expected."
+                    f"Received an invalid status update {status} when monitoring mission. "
+                    "Only TaskStatus is expected."
                 )
                 break
 
