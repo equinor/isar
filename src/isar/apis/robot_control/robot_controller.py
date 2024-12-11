@@ -2,9 +2,7 @@ import logging
 
 from injector import inject
 
-from isar.apis.models.models import (
-    RobotInfoResponse,
-)
+from isar.apis.models.models import RobotInfoResponse
 from isar.config.settings import robot_settings, settings
 from isar.services.utilities.robot_utilities import RobotUtilities
 
