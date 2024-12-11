@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Iterator, Literal, Optional, Type, Union
+from typing import Literal, Optional, Type, Union
 
 from alitra import Pose, Position
 
