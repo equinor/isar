@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from isar.config import predefined_missions
 from robot_interface.models.robots.robot_model import RobotModel
-from robot_interface.telemetry.payloads import DocumentInfo, VideoStream
+from robot_interface.telemetry.payloads import DocumentInfo
 
 
 class Settings(BaseSettings):
@@ -193,22 +193,6 @@ class Settings(BaseSettings):
 
     # Info about robot documentation
     DOCUMENTATION: List[DocumentInfo] = Field(default=[])
-
-    # Endpoints to reach video streams for the robot
-    VIDEO_STREAMS: List[VideoStream] = Field(
-        default=[
-            VideoStream(
-                name="Front camera",
-                url="http://localhost:5000/videostream/front",
-                type="turtlebot",
-            ),
-            VideoStream(
-                name="Rear camera",
-                url="http://localhost:5000/videostream/rear",
-                type="turtlebot",
-            ),
-        ]
-    )
 
     # Data scheme the robot should adhere to
     # Options [DS0001]
