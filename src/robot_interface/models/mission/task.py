@@ -5,7 +5,7 @@ from alitra import Pose, Position
 from pydantic import BaseModel, Field
 
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.inspection import (
+from robot_interface.models.inspection.inspection import (
     Audio,
     Image,
     Inspection,

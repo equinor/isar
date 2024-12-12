@@ -1,6 +1,5 @@
 import time
 from collections import deque
-from pathlib import Path
 from threading import Thread
 from typing import List
 
@@ -8,8 +7,6 @@ import pytest
 from injector import Injector
 from pytest_mock import MockerFixture
 
-from isar.config.settings import settings
-from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.communication.queues.queues import Queues
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, main
@@ -32,7 +29,6 @@ from tests.mocks.task import MockTask
 
 class StateMachineThread(object):
     def __init__(self, injector) -> None:
-        # settings.UPLOAD_INSPECTIONS_ASYNC = False
         self.injector: Injector = injector
         self.state_machine: StateMachine = injector.get(StateMachine)
         self._thread: Thread = Thread(target=main, args=[self.state_machine])
