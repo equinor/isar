@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from alitra import Pose
 from transitions import State
 
 from robot_interface.models.mission.status import RobotStatus
+from robot_interface.models.robots.battery_state import BatteryState
 
 
 @dataclass
@@ -30,6 +31,7 @@ class TelemetryPosePayload(TelemetryPayload):
 @dataclass
 class TelemetryBatteryPayload(TelemetryPayload):
     battery_level: float
+    battery_state: Optional[BatteryState] = None
 
 
 @dataclass
