@@ -34,6 +34,11 @@ from robot_interface.models.mission.status import MissionStatus, RobotStatus, Ta
 from robot_interface.models.mission.task import TASKS
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
+from robot_interface.telemetry.payloads import (
+    RobotStatusPayload,
+    MissionPayload,
+    TaskPayload,
+)
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
@@ -482,24 +487,22 @@ class StateMachine(object):
         if self.current_mission:
             if self.current_mission.error_message:
                 error_message = self.current_mission.error_message
-        payload: str = json.dumps(
-            {
-                "isar_id": settings.ISAR_ID,
-                "robot_name": settings.ROBOT_NAME,
-                "mission_id": self.current_mission.id if self.current_mission else None,
-                "status": self.current_mission.status if self.current_mission else None,
-                "error_reason": error_message.error_reason if error_message else None,
-                "error_description": (
-                    error_message.error_description if error_message else None
-                ),
-                "timestamp": datetime.now(timezone.utc),
-            },
-            cls=EnhancedJSONEncoder,
+
+        payload: MissionPayload = MissionPayload(
+            isar_id=settings.ISAR_ID,
+            robot_name=settings.ROBOT_NAME,
+            mission_id=self.current_mission.id if self.current_mission else None,
+            status=self.current_mission.status if self.current_mission else None,
+            error_reason=error_message.error_reason if error_message else None,
+            error_description=(
+                error_message.error_description if error_message else None
+            ),
+            timestamp=datetime.now(timezone.utc),
         )
 
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_MISSION,
-            payload=payload,
+            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
             qos=1,
             retain=True,
         )
@@ -514,26 +517,23 @@ class StateMachine(object):
             if task.error_message:
                 error_message = task.error_message
 
-        payload: str = json.dumps(
-            {
-                "isar_id": settings.ISAR_ID,
-                "robot_name": settings.ROBOT_NAME,
-                "mission_id": self.current_mission.id if self.current_mission else None,
-                "task_id": task.id if task else None,
-                "status": task.status if task else None,
-                "task_type": task.type,
-                "error_reason": error_message.error_reason if error_message else None,
-                "error_description": (
-                    error_message.error_description if error_message else None
-                ),
-                "timestamp": datetime.now(timezone.utc),
-            },
-            cls=EnhancedJSONEncoder,
+        payload: TaskPayload = TaskPayload(
+            isar_id=settings.ISAR_ID,
+            robot_name=settings.ROBOT_NAME,
+            mission_id=self.current_mission.id if self.current_mission else None,
+            task_id=task.id if task else None,
+            status=task.status if task else None,
+            task_type=task.type if task else None,
+            error_reason=error_message.error_reason if error_message else None,
+            error_description=(
+                error_message.error_description if error_message else None
+            ),
+            timestamp=datetime.now(timezone.utc),
         )
 
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_TASK,
-            payload=payload,
+            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
             qos=1,
             retain=True,
         )
@@ -541,19 +541,17 @@ class StateMachine(object):
     def publish_status(self) -> None:
         if not self.mqtt_publisher:
             return
-        payload: str = json.dumps(
-            {
-                "isar_id": settings.ISAR_ID,
-                "robot_name": settings.ROBOT_NAME,
-                "status": self._current_status(),
-                "timestamp": datetime.now(timezone.utc),
-            },
-            cls=EnhancedJSONEncoder,
+
+        payload: RobotStatusPayload = RobotStatusPayload(
+            isar_id=settings.ISAR_ID,
+            robot_name=settings.ROBOT_NAME,
+            status=self._current_status(),
+            timestamp=datetime.now(timezone.utc),
         )
 
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_STATUS,
-            payload=payload,
+            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
             qos=1,
             retain=True,
         )
