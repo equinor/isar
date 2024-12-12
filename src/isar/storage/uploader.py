@@ -13,6 +13,7 @@ from isar.storage.storage_interface import StorageException, StorageInterface
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
+from robot_interface.telemetry.payloads import InspectionResultPayload
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
@@ -149,21 +150,19 @@ class Uploader:
         """
         if not self.mqtt_publisher:
             return
-        payload: str = json.dumps(
-            {
-                "isar_id": settings.ISAR_ID,
-                "robot_name": settings.ROBOT_NAME,
-                "inspection_id": inspection.id,
-                "inspection_path": inspection_path,
-                "installation_code": settings.PLANT_SHORT_NAME,
-                "analysis_to_be_run": inspection.metadata.analysis_type,
-                "timestamp": datetime.now(timezone.utc),
-            },
-            cls=EnhancedJSONEncoder,
+
+        payload: InspectionResultPayload = InspectionResultPayload(
+            isar_id=settings.ISAR_ID,
+            robot_name=settings.ROBOT_NAME,
+            inspection_id=inspection.id,
+            inspection_path=inspection_path,
+            installation_code=settings.PLANT_SHORT_NAME,
+            analysis_to_be_run=inspection.metadata.analysis_type,
+            timestamp=datetime.now(timezone.utc),
         )
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_INSPECTION_RESULT,
-            payload=payload,
+            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
             qos=1,
             retain=True,
         )
