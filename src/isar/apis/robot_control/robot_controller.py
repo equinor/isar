@@ -1,15 +1,12 @@
 import logging
-from typing import List
 
 from injector import inject
 
 from isar.apis.models.models import (
     RobotInfoResponse,
-    TaskResponse,
 )
 from isar.config.settings import robot_settings, settings
 from isar.services.utilities.robot_utilities import RobotUtilities
-from robot_interface.models.mission.task import Task
 
 
 class RobotController:
