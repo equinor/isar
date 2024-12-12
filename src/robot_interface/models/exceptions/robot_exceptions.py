@@ -6,7 +6,7 @@ from typing import Optional
 class ErrorReason(str, Enum):
     RobotCommunicationException: str = "robot_communication_exception"
     RobotCommunicationTimeoutException: str = "robot_communication_timeout_exception"
-    RobotInfeasibleTaskException: str = "robot_infeasible_step_exception"
+    RobotInfeasibleTaskException: str = "robot_infeasible_task_exception"
     RobotInfeasibleMissionException: str = "robot_infeasible_mission_exception"
     RobotMissionStatusException: str = "robot_mission_status_exception"
     RobotTaskStatusException: str = "robot_task_status_exception"
