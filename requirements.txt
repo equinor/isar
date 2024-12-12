@@ -62,7 +62,7 @@ fastapi-azure-auth==5.0.1
     # via isar (pyproject.toml)
 google-api-core==2.24.0
     # via opencensus
-google-auth==2.36.0
+google-auth==2.37.0
     # via google-api-core
 googleapis-common-protos==1.66.0
     # via google-api-core
