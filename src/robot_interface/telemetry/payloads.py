@@ -64,7 +64,6 @@ class RobotStatusPayload:
     current_isar_state: State
     current_mission_id: str
     current_task_id: str
-    current_step_id: str
     timestamp: datetime
 
 
