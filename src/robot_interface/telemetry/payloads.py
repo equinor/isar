@@ -49,13 +49,6 @@ class DocumentInfo:
 
 
 @dataclass
-class VideoStream:
-    name: str
-    url: str
-    type: str
-
-
-@dataclass
 class RobotStatusPayload:
     isar_id: str
     robot_name: str
@@ -76,7 +69,6 @@ class RobotInfoPayload:
     robot_serial_number: str
     robot_asset: str
     documentation: List[DocumentInfo]
-    video_streams: List[VideoStream]
     host: str
     port: int
     capabilities: List[str]
