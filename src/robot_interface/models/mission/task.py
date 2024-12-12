@@ -38,7 +38,7 @@ class Task(BaseModel):
     status: TaskStatus = Field(default=TaskStatus.NotStarted)
     error_message: Optional[ErrorMessage] = Field(default=None)
     tag_id: Optional[str] = Field(default=None)
-    id: str = Field(default_factory=uuid4_string)
+    id: str = Field(default_factory=uuid4_string, frozen=True)
 
     def is_finished(self) -> bool:
         if (
@@ -59,7 +59,7 @@ class InspectionTask(Task):
     Base class for all inspection tasks which produce results to be uploaded.
     """
 
-    inspection_id: str = Field(default_factory=uuid4_string)
+    inspection_id: str = Field(default_factory=uuid4_string, frozen=True)
     robot_pose: Pose = Field(default=None, init=True)
     metadata: Optional[dict] = Field(default_factory=dict)
     zoom: Optional[ZoomDescription] = Field(default=None)
