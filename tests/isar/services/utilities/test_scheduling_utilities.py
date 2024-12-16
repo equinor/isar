@@ -4,7 +4,8 @@ import pytest
 from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
-from isar.models.communication.queues import QueueIO, QueueTimeoutError
+from isar.models.communication.queues.queues import QueueIO
+from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States

@@ -3,7 +3,7 @@ from queue import Queue
 from threading import Thread
 from typing import Callable, List, Optional
 
-from robot_interface.models.initialize import InitializeParams
+from robot_interface.models.initialize.initialize_params import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
