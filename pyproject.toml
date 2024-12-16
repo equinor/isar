@@ -60,9 +60,7 @@ repository = "https://github.com/equinor/isar.git"
 [project.optional-dependencies]
 dev = [
     "black",
-    "flake8",
     "mypy",
-    "myst-parser",
     "pip-tools",
     "pre-commit",
     "pytest-dotenv",
@@ -71,7 +69,6 @@ dev = [
     "pytest",
     "requests-mock",
     "ruff",
-    "sphinx",
 ]
 
 [tool.setuptools_scm]
