@@ -48,3 +48,7 @@ jobs:
         run: |
           black --check .
           mypy .
+
+      - name: Unused imports and variables
+        run: |
+          pyflakes src tests
