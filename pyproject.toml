@@ -70,6 +70,7 @@ dev = [
     "pytest-xdist",
     "pytest",
     "requests-mock",
+    "ruff",
     "sphinx",
 ]
 
