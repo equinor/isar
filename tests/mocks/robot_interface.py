@@ -5,7 +5,7 @@ from typing import Callable, List
 
 from alitra import Frame, Orientation, Pose, Position
 
-from robot_interface.models.initialize import InitializeParams
+from robot_interface.models.initialize.initialize_params import InitializeParams
 from robot_interface.models.inspection.inspection import (
     Image,
     ImageMetadata,

@@ -47,7 +47,7 @@ class BlobStorage(StorageInterface):
     def _upload_file(self, path: Path, data: bytes) -> Union[str, dict]:
         blob_client = self._get_blob_client(path)
         try:
-            blob_properties = blob_client.upload_blob(data=data)
+            blob_client.upload_blob(data=data)
         except ResourceExistsError as e:
             self.logger.error(
                 f"Blob {path.as_posix()} already exists in container. Error: {e}"

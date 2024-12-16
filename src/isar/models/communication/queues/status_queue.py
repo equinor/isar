@@ -11,8 +11,8 @@ class StatusQueue(Queue):
         if not self._qsize():
             raise Empty
         with self.mutex:
-            l = list(self.queue)
-            return l.pop()
+            queueList = list(self.queue)
+            return queueList.pop()
 
     def update(self, item: Any):
         with self.mutex:
