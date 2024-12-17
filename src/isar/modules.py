@@ -7,8 +7,8 @@ from typing import Dict, List, Tuple, Union
 from injector import Injector, Module, multiprovider, provider, singleton
 
 from isar.apis.api import API
-from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.robot_control.robot_controller import RobotController
+from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
@@ -18,8 +18,8 @@ from isar.mission_planner.sequential_task_selector import SequentialTaskSelector
 from isar.mission_planner.task_selector_interface import TaskSelectorInterface
 from isar.models.communication.queues.queues import Queues
 from isar.services.service_connections.request_handler import RequestHandler
-from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.services.utilities.robot_utilities import RobotUtilities
+from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.storage.blob_storage import BlobStorage
 from isar.storage.local_storage import LocalStorage
@@ -70,9 +70,10 @@ class RobotModule(Module):
     @provider
     @singleton
     def provide_robot_interface(self) -> RobotInterface:
-        robot_package_name: str = settings.ROBOT_PACKAGE
-        robot: ModuleType = import_module(robot_package_name)
-        return robot.robotinterface.Robot()  # type: ignore
+        robot_interface: ModuleType = import_module(
+            f"{settings.ROBOT_PACKAGE}.robotinterface"
+        )
+        return robot_interface.Robot()  # type: ignore
 
 
 class QueuesModule(Module):
