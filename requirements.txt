@@ -30,7 +30,7 @@ backoff==2.2.1
     # via isar (pyproject.toml)
 cachetools==5.5.0
     # via google-auth
-certifi==2024.8.30
+certifi==2024.12.14
     # via
     #   httpcore
     #   httpx
@@ -62,7 +62,7 @@ fastapi-azure-auth==5.0.1
     # via isar (pyproject.toml)
 google-api-core==2.24.0
     # via opencensus
-google-auth==2.36.0
+google-auth==2.37.0
     # via google-api-core
 googleapis-common-protos==1.66.0
     # via google-api-core
@@ -115,7 +115,7 @@ portalocker==2.10.1
     # via msal-extensions
 proto-plus==1.25.0
     # via google-api-core
-protobuf==5.29.1
+protobuf==5.29.2
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -130,14 +130,14 @@ pyasn1-modules==0.4.1
     # via google-auth
 pycparser==2.22
     # via cffi
-pydantic==2.10.3
+pydantic==2.10.4
     # via
     #   fastapi
     #   isar (pyproject.toml)
     #   pydantic-settings
-pydantic-core==2.27.1
+pydantic-core==2.27.2
     # via pydantic
-pydantic-settings==2.6.1
+pydantic-settings==2.7.0
     # via isar (pyproject.toml)
 pyjwt[crypto]==2.10.1
     # via
@@ -188,7 +188,7 @@ typing-extensions==4.12.2
     #   pydantic-core
 urllib3==2.2.3
     # via requests
-uvicorn==0.32.1
+uvicorn==0.34.0
     # via isar (pyproject.toml)
 wrapt==1.17.0
     # via opencensus-ext-requests
