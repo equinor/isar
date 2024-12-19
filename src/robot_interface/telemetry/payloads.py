@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from alitra import Pose
-from transitions import State
 
-from robot_interface.models.mission.status import RobotStatus
 from robot_interface.models.robots.battery_state import BatteryState
+from robot_interface.models.mission.status import RobotStatus, MissionStatus, TaskStatus
+from robot_interface.models.mission.task import TaskTypes
+from robot_interface.models.exceptions.robot_exceptions import ErrorReason
 
 
 @dataclass
@@ -54,12 +55,7 @@ class DocumentInfo:
 class RobotStatusPayload:
     isar_id: str
     robot_name: str
-    robot_status: RobotStatus
-    previous_robot_status: RobotStatus
-    current_isar_state: State
-    current_mission_id: str
-    current_task_id: str
-    current_step_id: str
+    status: RobotStatus
     timestamp: datetime
 
 
@@ -81,4 +77,39 @@ class RobotInfoPayload:
 class RobotHeartbeatPayload:
     isar_id: str
     robot_name: str
+    timestamp: datetime
+
+
+@dataclass
+class MissionPayload:
+    isar_id: str
+    robot_name: str
+    mission_id: Optional[str]
+    status: Optional[MissionStatus]
+    error_reason: Optional[ErrorReason]
+    error_description: Optional[str]
+    timestamp: datetime
+
+
+@dataclass
+class TaskPayload:
+    isar_id: str
+    robot_name: str
+    mission_id: Optional[str]
+    task_id: Optional[str]
+    status: Optional[TaskStatus]
+    task_type: Optional[TaskTypes]
+    error_reason: Optional[ErrorReason]
+    error_description: Optional[str]
+    timestamp: datetime
+
+
+@dataclass
+class InspectionResultPayload:
+    isar_id: str
+    robot_name: str
+    inspection_id: str
+    inspection_path: Union[str, dict]
+    installation_code: str
+    analysis_to_be_run: Optional[str]
     timestamp: datetime
