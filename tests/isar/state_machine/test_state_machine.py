@@ -100,8 +100,6 @@ def test_state_machine_transitions_when_running_full_mission(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.Idle,
-            States.Initialize,
-            States.Initiate,
             States.Monitor,
             States.Idle,
         ]
@@ -128,8 +126,6 @@ def test_state_machine_failed_dependency(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.Idle,
-            States.Initialize,
-            States.Initiate,
             States.Monitor,
             States.Idle,
         ]
@@ -154,8 +150,6 @@ def test_state_machine_with_successful_collection(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.Idle,
-            States.Initialize,
-            States.Initiate,
             States.Monitor,
             States.Idle,
         ]
@@ -183,8 +177,6 @@ def test_state_machine_with_unsuccessful_collection(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.Idle,
-            States.Initialize,
-            States.Initiate,
             States.Monitor,
             States.Idle,
         ]
@@ -198,8 +190,9 @@ def test_state_machine_with_successful_mission_stop(
 ) -> None:
     state_machine_thread.start()
 
-    mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
-    mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.InProgress)
+    mission: Mission = Mission(
+        name="Dummy misson", tasks=[MockTask.take_image() for _ in range(0, 20)]
+    )
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission)
@@ -207,14 +200,7 @@ def test_state_machine_with_successful_mission_stop(
     scheduling_utilities.stop_mission()
 
     assert state_machine_thread.state_machine.transitions_list == deque(
-        [
-            States.Idle,
-            States.Initialize,
-            States.Initiate,
-            States.Monitor,
-            States.Stop,
-            States.Idle,
-        ]
+        [States.Idle, States.Monitor, States.Monitor, States.Stop, States.Idle]
     )
 
 
@@ -244,14 +230,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
     )
     assert expected_log in caplog.text
     assert state_machine_thread.state_machine.transitions_list == deque(
-        [
-            States.Idle,
-            States.Initialize,
-            States.Initiate,
-            States.Monitor,
-            States.Stop,
-            States.Idle,
-        ]
+        [States.Idle, States.Monitor, States.Stop, States.Idle]
     )
 
 

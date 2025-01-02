@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Callable, Optional
 
 from transitions import State
 
@@ -48,6 +48,7 @@ class Idle(State):
         )
 
     def _run(self) -> None:
+        transition: Callable
         while True:
             if self.state_machine.should_stop_mission():
                 transition = self.state_machine.stop  # type: ignore
@@ -96,5 +97,4 @@ class Idle(State):
                 break
 
             self.robot_status_thread = None
-
         transition()
