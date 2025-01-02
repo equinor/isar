@@ -21,7 +21,6 @@ from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.idle import Idle
-from isar.state_machine.states.initiate import Initiate
 from isar.state_machine.states.monitor import Monitor
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from tests.mocks.robot_interface import MockRobot
@@ -115,11 +114,6 @@ def state_machine(injector, robot):
 @pytest.fixture()
 def idle_state(state_machine):
     return Idle(state_machine)
-
-
-@pytest.fixture()
-def initiate(state_machine):
-    return Initiate(state_machine)
 
 
 @pytest.fixture()
