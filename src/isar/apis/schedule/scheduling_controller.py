@@ -128,7 +128,6 @@ class SchedulingController:
 
         if state not in [
             States.Monitor,
-            States.Initiate,
         ]:
             error_message = (
                 f"Conflict - Pause command received in invalid state - State: {state}"
