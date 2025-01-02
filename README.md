@@ -211,8 +211,6 @@ In general the states
 
 ```
 States.Off,
-States.Initialize,
-States.Initiate,
 States.Stop,
 States.Monitor,
 States.Paused,

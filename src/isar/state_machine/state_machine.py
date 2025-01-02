@@ -19,15 +19,18 @@ from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queues import Queues
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.idle import Idle
-from isar.state_machine.states.initialize import Initialize
-from isar.state_machine.states.initiate import Initiate
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.off import Off
 from isar.state_machine.states.offline import Offline
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.stop import Stop
 from isar.state_machine.states_enum import States
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+from robot_interface.models.exceptions.robot_exceptions import (
+    ErrorMessage,
+    RobotException,
+    RobotInfeasibleMissionException,
+    RobotInitializeException,
+)
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import TASKS
@@ -84,9 +87,7 @@ class StateMachine(object):
         self.stop_state: State = Stop(self)
         self.paused_state: State = Paused(self)
         self.idle_state: State = Idle(self)
-        self.initialize_state: State = Initialize(self)
         self.monitor_state: State = Monitor(self)
-        self.initiate_state: State = Initiate(self)
         self.off_state: State = Off(self)
         self.offline_state: State = Offline(self)
         self.blocked_protective_stop: State = BlockedProtectiveStop(self)
@@ -94,8 +95,6 @@ class StateMachine(object):
         self.states: List[State] = [
             self.off_state,
             self.idle_state,
-            self.initialize_state,
-            self.initiate_state,
             self.monitor_state,
             self.stop_state,
             self.paused_state,
@@ -112,12 +111,6 @@ class StateMachine(object):
                     "dest": self.idle_state,
                 },
                 {
-                    "trigger": "initiated",
-                    "source": self.initiate_state,
-                    "dest": self.monitor_state,
-                    "before": self._initiated,
-                },
-                {
                     "trigger": "pause",
                     "source": self.monitor_state,
                     "dest": self.paused_state,
@@ -127,35 +120,24 @@ class StateMachine(object):
                     "trigger": "stop",
                     "source": [
                         self.idle_state,
-                        self.initiate_state,
                         self.monitor_state,
                         self.paused_state,
                     ],
                     "dest": self.stop_state,
                 },
                 {
-                    "trigger": "mission_finished",
-                    "source": self.monitor_state,
-                    "dest": self.idle_state,
-                    "before": self._mission_finished,
+                    "trigger": "mission_started",
+                    "source": self.idle_state,
+                    "dest": self.monitor_state,
+                    "conditions": [
+                        self._put_start_mission_on_queue,
+                        self._try_start_mission,
+                    ],
                 },
                 {
                     "trigger": "mission_started",
                     "source": self.idle_state,
-                    "dest": self.initialize_state,
-                    "before": self._mission_started,
-                },
-                {
-                    "trigger": "initialization_successful",
-                    "source": self.initialize_state,
-                    "dest": self.initiate_state,
-                    "before": self._initialization_successful,
-                },
-                {
-                    "trigger": "initialization_failed",
-                    "source": self.initialize_state,
                     "dest": self.idle_state,
-                    "before": self._initialization_failed,
                 },
                 {
                     "trigger": "resume",
@@ -164,10 +146,16 @@ class StateMachine(object):
                     "before": self._resume,
                 },
                 {
-                    "trigger": "initiate_failed",
-                    "source": self.initiate_state,
+                    "trigger": "mission_finished",
+                    "source": self.monitor_state,
                     "dest": self.idle_state,
-                    "before": self._initiate_failed,
+                    "before": self._full_mission_finished,
+                },
+                {
+                    "trigger": "mission_paused",
+                    "source": self.stop_state,
+                    "dest": self.paused_state,
+                    "before": self._mission_paused,
                 },
                 {
                     "trigger": "mission_stopped",
@@ -268,8 +256,21 @@ class StateMachine(object):
             self.current_mission.status = MissionStatus.Successful
         self._finalize()
 
-    def _mission_started(self) -> None:
-        self.queues.start_mission.output.put(True)
+    def _initialize_robot(self) -> bool:
+        try:
+            self.robot.initialize()
+        except (RobotInitializeException, RobotException) as e:
+            self.current_task.error_message = ErrorMessage(
+                error_reason=e.error_reason, error_description=e.error_description
+            )
+            self.logger.error(
+                f"Failed to initialize robot because: {e.error_description}"
+            )
+            self._initialization_failed()
+            return False
+        return True
+
+    def _initiate_mission(self) -> bool:
         self.logger.info(
             f"Initialization successful. Starting new mission: "
             f"{self.current_mission.id}"
@@ -280,12 +281,82 @@ class StateMachine(object):
         self.publish_mission_status()
         self.current_task = self.task_selector.next_task()
         if self.current_task is None:
-            self._mission_finished()
+            return False
         else:
             self.current_task.status = TaskStatus.InProgress
             self.publish_task_status(task=self.current_task)
+        return True
+
+    def _set_mission_to_in_progress(self) -> None:
+        self.current_mission.status = MissionStatus.InProgress
+        self.publish_task_status(task=self.current_task)
+        self.logger.info(
+            f"Successfully initiated "
+            f"{type(self.current_task).__name__} "
+            f"task: {str(self.current_task.id)[:8]}"
+        )
+
+    def _try_initiate_mission(self) -> bool:
+        retries = 0
+        started_mission = False
+        try:
+            while not started_mission:
+                try:
+                    self.robot.initiate_mission(self.current_mission)
+                except RobotException as e:
+                    retries += 1
+                    self.logger.warning(
+                        f"Initiating failed #: {str(retries)} "
+                        f"because: {e.error_description}"
+                    )
+
+                    if retries >= settings.INITIATE_FAILURE_COUNTER_LIMIT:
+                        self.current_task.error_message = ErrorMessage(
+                            error_reason=e.error_reason,
+                            error_description=e.error_description,
+                        )
+                        self.logger.error(
+                            f"Mission will be cancelled after failing to initiate "
+                            f"{settings.INITIATE_FAILURE_COUNTER_LIMIT} times because: "
+                            f"{e.error_description}"
+                        )
+                        self._initiate_failed()
+                        return False
+                started_mission = True
+
+        except RobotInfeasibleMissionException as e:
+            self.current_mission.error_message = ErrorMessage(
+                error_reason=e.error_reason, error_description=e.error_description
+            )
+            self.logger.warning(
+                f"Failed to initiate mission "
+                f"{str(self.current_mission.id)[:8]} because: "
+                f"{e.error_description}"
+            )
+            self._initiate_failed()
+            return False
+        return True
+
+    def _put_start_mission_on_queue(self) -> bool:
+        self.queues.start_mission.output.put(True)
+        return True
+
+    def _try_start_mission(self) -> bool:
+        if not self._initiate_mission():
+            return False
+
+        if not self._initialize_robot():
+            return False
+
+        if not self._try_initiate_mission():
+            return False
+
+        self._set_mission_to_in_progress()
+
+        return True
 
     def _full_mission_finished(self) -> None:
+        self._mission_finished()
         self.current_task = None
 
     def _mission_paused(self) -> None:
