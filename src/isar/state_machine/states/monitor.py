@@ -1,23 +1,16 @@
 import logging
-import time
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Optional, Tuple
 
 from injector import inject
 from transitions import State
 
 from isar.config.settings import settings
-from isar.services.utilities.threaded_request import (
-    ThreadedRequest,
-    ThreadedRequestNotFinishedError,
-)
+from isar.services.utilities.threaded_request import ThreadedRequest
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
-    RobotCommunicationException,
-    RobotCommunicationTimeoutException,
     RobotException,
     RobotRetrieveInspectionException,
-    RobotTaskStatusException,
 )
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -33,26 +26,37 @@ class Monitor(State):
     def __init__(self, state_machine: "StateMachine") -> None:
         super().__init__(name="monitor", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
-        self.request_status_failure_counter: int = 0
-        self.request_status_failure_counter_limit: int = (
-            settings.REQUEST_STATUS_FAILURE_COUNTER_LIMIT
-        )
 
         self.logger = logging.getLogger("state_machine")
-        self.task_status_thread: Optional[ThreadedRequest] = None
 
     def start(self) -> None:
         self.state_machine.update_state()
         self._run()
 
     def stop(self) -> None:
-        if self.task_status_thread:
-            self.task_status_thread.wait_for_thread()
-        self.task_status_thread = None
+        return
 
     def _run(self) -> None:
         transition: Callable
         while True:
+            if self.state_machine.get_mission_started_event():
+                continue
+
+            mission_failed = self.state_machine.get_mission_failed_event()
+            if mission_failed is not None:
+                self.state_machine.logger.warning(
+                    f"Failed to initiate mission "
+                    f"{str(self.state_machine.current_mission.id)[:8]} because: "
+                    f"{mission_failed.error_description}"
+                )
+                self.state_machine.current_mission.error_message = ErrorMessage(
+                    error_reason=mission_failed.error_reason,
+                    error_description=mission_failed.error_description,
+                )
+
+                transition = self.state_machine.mission_failed_to_start  # type: ignore
+                break
+
             if self.state_machine.should_stop_mission():
                 transition = self.state_machine.stop  # type: ignore
                 break
@@ -61,50 +65,23 @@ class Monitor(State):
                 transition = self.state_machine.pause  # type: ignore
                 break
 
-            if not self.task_status_thread:
-                self._run_get_status_thread(
-                    status_function=self.state_machine.robot.task_status,
-                    function_argument=self.state_machine.current_task.id,
-                    thread_name="State Machine Monitor Get Task Status",
-                )
-            try:
-                status: TaskStatus = self.task_status_thread.get_output()
-                self.request_status_failure_counter = 0
-            except ThreadedRequestNotFinishedError:
-                time.sleep(self.state_machine.sleep_time)
-                continue
-            except (
-                RobotCommunicationTimeoutException,
-                RobotCommunicationException,
-            ) as e:
-                retry_limit_exceeded: bool = self._check_if_exceeded_retry_limit(e)
-                if retry_limit_exceeded:
-                    self.logger.error(
-                        f"Monitoring task {self.state_machine.current_task.id[:8]} failed "
-                        f"because: {e.error_description}"
-                    )
-                    status = TaskStatus.Failed
-                else:
-                    time.sleep(settings.REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY)
-                    continue
+            status: TaskStatus
 
-            except RobotTaskStatusException as e:
-                self.state_machine.current_task.error_message = ErrorMessage(
-                    error_reason=e.error_reason, error_description=e.error_description
-                )
+            task_failure: Optional[ErrorMessage] = (
+                self.state_machine.get_task_failure_event()
+            )
+            if task_failure is not None:
+                self.state_machine.current_task.error_message = task_failure
                 self.logger.error(
                     f"Monitoring task {self.state_machine.current_task.id[:8]} failed "
-                    f"because: {e.error_description}"
+                    f"because: {task_failure.error_description}"
                 )
                 status = TaskStatus.Failed
+            else:
+                status = self.state_machine.get_task_status_event()
 
-            except RobotException as e:
-                self._set_error_message(e)
-                status = TaskStatus.Failed
-
-                self.logger.error(
-                    f"Retrieving the status failed because: {e.error_description}"
-                )
+            if status is None:
+                continue
 
             if not isinstance(status, TaskStatus):
                 self.logger.error(
@@ -148,16 +125,7 @@ class Monitor(State):
                     task=self.state_machine.current_task
                 )
 
-            self.task_status_thread = None
-            time.sleep(self.state_machine.sleep_time)
-
         transition()
-
-    def _run_get_status_thread(
-        self, status_function: Callable, function_argument: str, thread_name: str
-    ) -> None:
-        self.task_status_thread = ThreadedRequest(request_func=status_function)
-        self.task_status_thread.start_thread(function_argument, name=thread_name)
 
     def _queue_inspections_for_upload(
         self, mission: Mission, current_task: InspectionTask
@@ -218,33 +186,3 @@ class Monitor(State):
             error_reason=e.error_reason, error_description=e.error_description
         )
         self.state_machine.current_task.error_message = error_message
-
-    def _check_if_exceeded_retry_limit(
-        self, e: Union[RobotCommunicationTimeoutException, RobotCommunicationException]
-    ) -> bool:
-        self.state_machine.current_mission.error_message = ErrorMessage(
-            error_reason=e.error_reason, error_description=e.error_description
-        )
-        self.task_status_thread = None
-        self.request_status_failure_counter += 1
-        self.logger.warning(
-            f"Monitoring task {self.state_machine.current_task.id} failed #: "
-            f"{self.request_status_failure_counter} failed because: {e.error_description}"
-        )
-
-        if (
-            self.request_status_failure_counter
-            >= self.request_status_failure_counter_limit
-        ):
-            self.state_machine.current_task.error_message = ErrorMessage(
-                error_reason=e.error_reason,
-                error_description=e.error_description,
-            )
-            self.logger.error(
-                f"Task will be cancelled after failing to get task status "
-                f"{self.request_status_failure_counter} times because: "
-                f"{e.error_description}"
-            )
-            return True
-
-        return False

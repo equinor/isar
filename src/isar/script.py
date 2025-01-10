@@ -14,6 +14,7 @@ from isar.config.log import setup_loggers
 from isar.config.settings import robot_settings, settings
 from isar.models.communication.queues.queues import Queues
 from isar.modules import get_injector
+from isar.robot.robot import Robot
 from isar.services.service_connections.mqtt.mqtt_client import MqttClient
 from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
     RobotHeartbeatPublisher,
@@ -94,6 +95,7 @@ def start() -> None:
     uploader: Uploader = injector.get(Uploader)
     robot: RobotInterface = injector.get(RobotInterface)
     queues: Queues = injector.get(Queues)
+    robot_service: Robot = injector.get(Robot)
 
     threads: List[Thread] = []
 
@@ -106,6 +108,11 @@ def start() -> None:
         target=uploader.run, name="ISAR Uploader", daemon=True
     )
     threads.append(uploader_thread)
+
+    robot_service_thread: Thread = Thread(
+        target=robot_service.run, name="Robot service", daemon=True
+    )
+    threads.append(robot_service_thread)
 
     if settings.UPLOAD_INSPECTIONS_ASYNC:
 
