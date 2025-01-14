@@ -4,28 +4,26 @@ from typing import Optional
 
 
 class ErrorReason(str, Enum):
-    RobotCommunicationException: str = "robot_communication_exception"
-    RobotCommunicationTimeoutException: str = "robot_communication_timeout_exception"
-    RobotInfeasibleTaskException: str = "robot_infeasible_task_exception"
-    RobotInfeasibleMissionException: str = "robot_infeasible_mission_exception"
-    RobotMissionStatusException: str = "robot_mission_status_exception"
-    RobotTaskStatusException: str = "robot_task_status_exception"
-    RobotAPIException: str = "robot_api_exception"
-    RobotActionException: str = "robot_action_exception"
-    RobotInitializeException: str = "robot_initialize_exception"
-    RobotRetrieveDataException: str = "robot_retrieve_data_exception"
-    RobotRetrieveInspectionException: str = "robot_retrieve_inspection_exception"
-    RobotTelemetryException: str = "robot_telemetry_exception"
-    RobotTelemetryNoUpdateException: str = "robot_telemetry_no_update_exception"
-    RobotTelemetryPoseException: str = "robot_telemetry_pose_exception"
-    RobotMapException: str = "robot_map_exception"
-    RobotTransformException: str = "robot_transform_exception"
-    RobotUnknownErrorException: str = "robot_unknown_error_exception"
-    RobotDisconnectedException: str = "robot_disconnected_exception"
-    RobotMissionNotSupportedException: str = "robot_mission_not_supported_exception"
-    RobotMissionMissingStartPoseException: str = (
-        "robot_mission_missing_start_pose_exception"
-    )
+    RobotCommunicationException = "robot_communication_exception"
+    RobotCommunicationTimeoutException = "robot_communication_timeout_exception"
+    RobotInfeasibleTaskException = "robot_infeasible_task_exception"
+    RobotInfeasibleMissionException = "robot_infeasible_mission_exception"
+    RobotMissionStatusException = "robot_mission_status_exception"
+    RobotTaskStatusException = "robot_task_status_exception"
+    RobotAPIException = "robot_api_exception"
+    RobotActionException = "robot_action_exception"
+    RobotInitializeException = "robot_initialize_exception"
+    RobotRetrieveDataException = "robot_retrieve_data_exception"
+    RobotRetrieveInspectionException = "robot_retrieve_inspection_exception"
+    RobotTelemetryException = "robot_telemetry_exception"
+    RobotTelemetryNoUpdateException = "robot_telemetry_no_update_exception"
+    RobotTelemetryPoseException = "robot_telemetry_pose_exception"
+    RobotMapException = "robot_map_exception"
+    RobotTransformException = "robot_transform_exception"
+    RobotUnknownErrorException = "robot_unknown_error_exception"
+    RobotDisconnectedException = "robot_disconnected_exception"
+    RobotMissionNotSupportedException = "robot_mission_not_supported_exception"
+    RobotMissionMissingStartPoseException = "robot_mission_missing_start_pose_exception"
 
 
 @dataclass
