@@ -3,7 +3,7 @@ from enum import Enum
 
 
 class MediaConnectionType(str, Enum):
-    LiveKit: str = "LiveKit"
+    LiveKit = "LiveKit"
 
 
 @dataclass

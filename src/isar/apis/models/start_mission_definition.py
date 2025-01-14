@@ -23,18 +23,18 @@ from robot_interface.models.mission.task import (
 
 
 class InspectionTypes(str, Enum):
-    image: str = "Image"
-    thermal_image: str = "ThermalImage"
-    video: str = "Video"
-    thermal_video: str = "ThermalVideo"
-    audio: str = "Audio"
+    image = "Image"
+    thermal_image = "ThermalImage"
+    video = "Video"
+    thermal_video = "ThermalVideo"
+    audio = "Audio"
 
 
 class TaskType(str, Enum):
-    Inspection: str = "inspection"
-    Localization: str = "localization"
-    ReturnToHome: str = "return_to_home"
-    Dock: str = "dock"
+    Inspection = "inspection"
+    Localization = "localization"
+    ReturnToHome = "return_to_home"
+    Dock = "dock"
 
 
 class StartMissionInspectionDefinition(BaseModel):
