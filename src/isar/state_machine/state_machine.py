@@ -269,19 +269,19 @@ class StateMachine(object):
 
     def should_start_mission(self) -> Optional[StartMissionMessage]:
         try:
-            return self.queues.start_mission.input.get(block=False)
+            return self.queues.api_start_mission.input.get(block=False)
         except queue.Empty:
             return None
 
     def should_stop_mission(self) -> bool:
         try:
-            return self.queues.stop_mission.input.get(block=False)
+            return self.queues.api_stop_mission.input.get(block=False)
         except queue.Empty:
             return False
 
     def should_pause_mission(self) -> bool:
         try:
-            return self.queues.pause_mission.input.get(block=False)
+            return self.queues.api_pause_mission.input.get(block=False)
         except queue.Empty:
             return False
 
@@ -311,7 +311,7 @@ class StateMachine(object):
 
     def should_resume_mission(self) -> bool:
         try:
-            return self.queues.resume_mission.input.get(block=False)
+            return self.queues.api_resume_mission.input.get(block=False)
         except queue.Empty:
             return False
 
@@ -432,7 +432,7 @@ class StateMachine(object):
         )
 
     def _queue_empty_response(self) -> None:
-        self.queues.stop_mission.output.put(
+        self.queues.api_stop_mission.output.put(
             ControlMissionResponse(
                 mission_id="None",
                 mission_status="None",
