@@ -7,10 +7,10 @@ from isar.models.communication.queues.status_queue import StatusQueue
 
 class Queues:
     def __init__(self) -> None:
-        self.start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.resume_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.api_start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.api_stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.api_pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.api_resume_mission: QueueIO = QueueIO(input_size=1, output_size=1)
 
         self.state_machine_start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
         self.state_machine_stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
