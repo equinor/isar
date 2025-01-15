@@ -26,3 +26,4 @@ class RobotStatus(Enum):
     Busy = "busy"
     Offline = "offline"
     Blocked = "blocked"
+    BlockedProtectiveStop = "blockedprotectivestop"

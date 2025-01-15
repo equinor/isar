@@ -24,6 +24,7 @@ from isar.state_machine.states.initiate import Initiate
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.off import Off
 from isar.state_machine.states.offline import Offline
+from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.stop import Stop
 from isar.state_machine.states_enum import States
@@ -92,6 +93,7 @@ class StateMachine(object):
         self.initiate_state: State = Initiate(self)
         self.off_state: State = Off(self)
         self.offline_state: State = Offline(self)
+        self.blocked_protective_stop: State = BlockedProtectiveStop(self)
 
         self.states: List[State] = [
             self.off_state,
@@ -102,6 +104,7 @@ class StateMachine(object):
             self.stop_state,
             self.paused_state,
             self.offline_state,
+            self.blocked_protective_stop,
         ]
 
         self.machine = Machine(self, states=self.states, initial="off", queued=True)
@@ -227,6 +230,18 @@ class StateMachine(object):
                     "dest": self.idle_state,
                     "before": self._online,
                 },
+                {
+                    "trigger": "robot_protective_stop_engaged",
+                    "source": [self.idle_state],
+                    "dest": self.blocked_protective_stop,
+                    "before": self._protective_stop_engaged,
+                },
+                {
+                    "trigger": "robot_protective_stop_disengaged",
+                    "source": self.blocked_protective_stop,
+                    "dest": self.idle_state,
+                    "before": self._protective_stop_disengaged,
+                },
             ]
         )
 
@@ -273,6 +288,12 @@ class StateMachine(object):
         return
 
     def _online(self) -> None:
+        return
+
+    def _protective_stop_engaged(self) -> None:
+        return
+
+    def _protective_stop_disengaged(self) -> None:
         return
 
     def _resume(self) -> None:
@@ -561,6 +582,8 @@ class StateMachine(object):
             return RobotStatus.Available
         elif self.current_state == States.Offline:
             return RobotStatus.Offline
+        elif self.current_state == States.BlockedProtectiveStop:
+            return RobotStatus.BlockedProtectiveStop
         else:
             return RobotStatus.Busy
 
