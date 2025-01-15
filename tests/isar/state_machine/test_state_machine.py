@@ -8,6 +8,7 @@ from injector import Injector
 from pytest_mock import MockerFixture
 
 from isar.models.communication.queues.queues import Queues
+from isar.robot.robot import Robot
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states.idle import Idle
@@ -21,6 +22,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import TaskStatus
 from robot_interface.models.mission.task import ReturnToHome, TakeImage, Task
+from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import (
@@ -55,6 +57,24 @@ class UploaderThread(object):
         self._thread.start()
 
 
+class RobotServiceThread(object):
+    def __init__(self, injector) -> None:
+        self.injector: Injector = injector
+
+    def start(self):
+        self.robot_service: Robot = Robot(
+            queues=self.injector.get(Queues),
+            robot=self.injector.get(RobotInterface),
+        )
+        self._thread: Thread = Thread(target=self.robot_service.run)
+        self._thread.daemon = True
+        self._thread.start()
+
+    def teardown(self):
+        self.robot_service.stop()
+        self._thread.join()
+
+
 @pytest.fixture
 def state_machine_thread(injector) -> StateMachineThread:
     return StateMachineThread(injector)
@@ -63,6 +83,13 @@ def state_machine_thread(injector) -> StateMachineThread:
 @pytest.fixture
 def uploader_thread(injector) -> UploaderThread:
     return UploaderThread(injector=injector)
+
+
+@pytest.fixture
+def robot_service_thread(injector):
+    robot_service_thread: RobotServiceThread = RobotServiceThread(injector=injector)
+    yield robot_service_thread
+    robot_service_thread.teardown()
 
 
 def test_initial_off(state_machine) -> None:
@@ -83,8 +110,9 @@ def test_reset_state_machine(state_machine) -> None:
 
 
 def test_state_machine_transitions_when_running_full_mission(
-    injector, state_machine_thread
+    injector, state_machine_thread, robot_service_thread
 ) -> None:
+    robot_service_thread.start()
     state_machine_thread.start()
 
     task_1: Task = TakeImage(
@@ -107,8 +135,9 @@ def test_state_machine_transitions_when_running_full_mission(
 
 
 def test_state_machine_failed_dependency(
-    injector, state_machine_thread, mocker
+    injector, state_machine_thread, robot_service_thread, mocker
 ) -> None:
+    robot_service_thread.start()
     task_1: Task = TakeImage(
         target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
     )
@@ -133,8 +162,9 @@ def test_state_machine_failed_dependency(
 
 
 def test_state_machine_with_successful_collection(
-    injector, state_machine_thread, uploader_thread
+    injector, state_machine_thread, robot_service_thread
 ) -> None:
+    robot_service_thread.start()
     state_machine_thread.start()
 
     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
@@ -157,11 +187,14 @@ def test_state_machine_with_successful_collection(
 
 
 def test_state_machine_with_unsuccessful_collection(
-    injector, mocker, state_machine_thread
+    injector, mocker, state_machine_thread, robot_service_thread
 ) -> None:
+    robot_service_thread.start()
     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
 
     mocker.patch.object(MockRobot, "get_inspection", return_value=[])
+
+    mocker.patch.object(Idle, "_is_ready_to_poll_for_status", return_value=True)
 
     state_machine_thread.start()
 
@@ -185,9 +218,10 @@ def test_state_machine_with_unsuccessful_collection(
 
 def test_state_machine_with_successful_mission_stop(
     injector: Injector,
-    mocker: MockerFixture,
+    robot_service_thread: RobotServiceThread,
     state_machine_thread: StateMachineThread,
 ) -> None:
+    robot_service_thread.start()
     state_machine_thread.start()
 
     mission: Mission = Mission(
@@ -209,7 +243,9 @@ def test_state_machine_with_unsuccessful_mission_stop(
     mocker: MockerFixture,
     state_machine_thread: StateMachineThread,
     caplog: pytest.LogCaptureFixture,
+    robot_service_thread: RobotServiceThread,
 ) -> None:
+    robot_service_thread.start()
     mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
@@ -234,8 +270,10 @@ def test_state_machine_with_unsuccessful_mission_stop(
     )
 
 
-def test_state_machine_idle_to_offline_to_idle(mocker, state_machine_thread) -> None:
-
+def test_state_machine_idle_to_offline_to_idle(
+    mocker, state_machine_thread, robot_service_thread
+) -> None:
+    robot_service_thread.start()
     # Robot status check happens every 5 seconds by default, so we mock the behavior
     # to poll for status imediately
     mocker.patch.object(Idle, "_is_ready_to_poll_for_status", return_value=True)
@@ -250,9 +288,9 @@ def test_state_machine_idle_to_offline_to_idle(mocker, state_machine_thread) -> 
 
 
 def test_state_machine_idle_to_blocked_protective_stop_to_idle(
-    mocker, state_machine_thread
+    mocker, state_machine_thread, robot_service_thread
 ) -> None:
-
+    robot_service_thread.start()
     # Robot status check happens every 5 seconds by default, so we mock the behavior
     # to poll for status imediately
     mocker.patch.object(Idle, "_is_ready_to_poll_for_status", return_value=True)
