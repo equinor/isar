@@ -232,18 +232,28 @@ def test_state_machine_with_unsuccessful_collection(
 
 def test_state_machine_with_successful_mission_stop(
     injector: Injector,
+    mocker: MockerFixture,
     state_machine_thread: StateMachineThread,
 ) -> None:
     state_machine_thread.start()
 
     mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
+    mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.InProgress)
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
     scheduling_utilities.stop_mission()
 
     assert state_machine_thread.state_machine.transitions_list == deque(
-        [States.Idle, States.Initialize, States.Initiate, States.Stop, States.Idle]
+        [
+            States.Idle,
+            States.Initialize,
+            States.Initiate,
+            States.Monitor,
+            States.Stop,
+            States.Idle,
+        ]
     )
 
 
@@ -264,6 +274,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
     state_machine_thread.start()
 
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
     scheduling_utilities.stop_mission()
 
     expected_log = (
@@ -272,7 +283,14 @@ def test_state_machine_with_unsuccessful_mission_stop(
     )
     assert expected_log in caplog.text
     assert state_machine_thread.state_machine.transitions_list == deque(
-        [States.Idle, States.Initialize, States.Initiate, States.Stop, States.Idle]
+        [
+            States.Idle,
+            States.Initialize,
+            States.Initiate,
+            States.Monitor,
+            States.Stop,
+            States.Idle,
+        ]
     )
 
 
