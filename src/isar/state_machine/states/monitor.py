@@ -1,4 +1,5 @@
 import logging
+import time
 from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, Optional, Tuple
 
@@ -34,13 +35,26 @@ class Monitor(State):
         self._run()
 
     def stop(self) -> None:
+        self.state_machine.mission_ongoing = False
         return
 
     def _run(self) -> None:
         transition: Callable
         while True:
-            if self.state_machine.get_mission_started_event():
-                continue
+            if self.state_machine.should_stop_mission():
+                transition = self.state_machine.stop  # type: ignore
+                break
+
+            if self.state_machine.should_pause_mission():
+                transition = self.state_machine.pause  # type: ignore
+                break
+
+            if not self.state_machine.mission_ongoing:
+                if self.state_machine.get_mission_started_event():
+                    self.state_machine.mission_ongoing = True
+                else:
+                    time.sleep(settings.FSM_SLEEP_TIME)
+                    continue
 
             mission_failed = self.state_machine.get_mission_failed_event()
             if mission_failed is not None:
@@ -55,14 +69,6 @@ class Monitor(State):
                 )
 
                 transition = self.state_machine.mission_failed_to_start  # type: ignore
-                break
-
-            if self.state_machine.should_stop_mission():
-                transition = self.state_machine.stop  # type: ignore
-                break
-
-            if self.state_machine.should_pause_mission():
-                transition = self.state_machine.pause  # type: ignore
                 break
 
             status: TaskStatus
