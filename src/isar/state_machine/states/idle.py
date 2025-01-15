@@ -24,6 +24,7 @@ class Idle(State):
         self.logger = logging.getLogger("state_machine")
         self.robot_status_thread: Optional[ThreadedRequest] = None
         self.last_robot_status_poll_time: float = time.time()
+        self.status_checked_at_least_once: bool = False
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -33,8 +34,12 @@ class Idle(State):
         if self.robot_status_thread:
             self.robot_status_thread.wait_for_thread()
         self.robot_status_thread = None
+        self.status_checked_at_least_once = False
 
     def _is_ready_to_poll_for_status(self) -> bool:
+        if not self.status_checked_at_least_once:
+            return True
+
         time_since_last_robot_status_poll = (
             time.time() - self.last_robot_status_poll_time
         )
@@ -47,17 +52,19 @@ class Idle(State):
             if self.state_machine.should_stop_mission():
                 transition = self.state_machine.stop  # type: ignore
                 break
-            start_mission: Optional[StartMissionMessage] = (
-                self.state_machine.should_start_mission()
-            )
-            if start_mission:
-                self.state_machine.start_mission(
-                    mission=start_mission.mission,
-                    initial_pose=start_mission.initial_pose,
+
+            if self.status_checked_at_least_once:
+                start_mission: Optional[StartMissionMessage] = (
+                    self.state_machine.should_start_mission()
                 )
-                transition = self.state_machine.mission_started  # type: ignore
-                break
-            time.sleep(self.state_machine.sleep_time)
+                if start_mission:
+                    self.state_machine.start_mission(
+                        mission=start_mission.mission,
+                        initial_pose=start_mission.initial_pose,
+                    )
+                    transition = self.state_machine.mission_started  # type: ignore
+                    break
+                time.sleep(self.state_machine.sleep_time)
 
             if not self._is_ready_to_poll_for_status():
                 continue
@@ -72,6 +79,7 @@ class Idle(State):
 
             try:
                 robot_status: RobotStatus = self.robot_status_thread.get_output()
+                self.status_checked_at_least_once = True
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
