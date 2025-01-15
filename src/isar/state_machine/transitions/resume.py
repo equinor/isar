@@ -13,6 +13,8 @@ def resume_mission(state_machine: "StateMachine") -> bool:
     state_machine.current_mission.error_message = None
     state_machine.current_task.status = TaskStatus.InProgress
 
+    state_machine.mission_ongoing = True
+
     state_machine.publish_mission_status()
     state_machine.publish_task_status(task=state_machine.current_task)
 

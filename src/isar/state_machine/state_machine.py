@@ -213,6 +213,8 @@ class StateMachine(object):
         self.current_mission: Optional[Mission] = None
         self.current_task: Optional[TASKS] = None
 
+        self.mission_ongoing: bool = False
+
         self.current_state: State = States(self.state)  # type: ignore
 
         self.transitions_log_length: int = transitions_log_length
