@@ -18,13 +18,14 @@ from isar.mission_planner.task_selector_interface import (
 )
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queues import Queues
+from isar.state_machine.states.blocked import Blocked
+from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.idle import Idle
 from isar.state_machine.states.initialize import Initialize
 from isar.state_machine.states.initiate import Initiate
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.off import Off
 from isar.state_machine.states.offline import Offline
-from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.stop import Stop
 from isar.state_machine.states_enum import States
@@ -36,8 +37,8 @@ from robot_interface.models.mission.task import TASKS
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
-    RobotStatusPayload,
     MissionPayload,
+    RobotStatusPayload,
     TaskPayload,
 )
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
@@ -93,6 +94,7 @@ class StateMachine(object):
         self.initiate_state: State = Initiate(self)
         self.off_state: State = Off(self)
         self.offline_state: State = Offline(self)
+        self.blocked: State = Blocked(self)
         self.blocked_protective_stop: State = BlockedProtectiveStop(self)
 
         self.states: List[State] = [
@@ -104,6 +106,7 @@ class StateMachine(object):
             self.stop_state,
             self.paused_state,
             self.offline_state,
+            self.blocked,
             self.blocked_protective_stop,
         ]
 
@@ -231,6 +234,18 @@ class StateMachine(object):
                     "before": self._online,
                 },
                 {
+                    "trigger": "robot_blocked",
+                    "source": self.idle_state,
+                    "dest": self.blocked,
+                    "before": self._blocked,
+                },
+                {
+                    "trigger": "robot_unblocked",
+                    "source": self.blocked,
+                    "dest": self.idle_state,
+                    "before": self._unblocked,
+                },
+                {
                     "trigger": "robot_protective_stop_engaged",
                     "source": [self.idle_state],
                     "dest": self.blocked_protective_stop,
@@ -288,6 +303,12 @@ class StateMachine(object):
         return
 
     def _online(self) -> None:
+        return
+
+    def _blocked(self) -> None:
+        return
+
+    def _unblocked(self) -> None:
         return
 
     def _protective_stop_engaged(self) -> None:
@@ -582,6 +603,8 @@ class StateMachine(object):
             return RobotStatus.Available
         elif self.current_state == States.Offline:
             return RobotStatus.Offline
+        elif self.current_state == States.Blocked:
+            return RobotStatus.Blocked
         elif self.current_state == States.BlockedProtectiveStop:
             return RobotStatus.BlockedProtectiveStop
         else:

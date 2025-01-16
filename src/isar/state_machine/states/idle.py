@@ -94,6 +94,9 @@ class Idle(State):
             if robot_status == RobotStatus.Offline:
                 transition = self.state_machine.robot_turned_offline  # type: ignore
                 break
+            elif robot_status == RobotStatus.Blocked:
+                transition = self.state_machine.robot_blocked  # type: ignore
+                break
             elif robot_status == RobotStatus.BlockedProtectiveStop:
                 transition = self.state_machine.robot_protective_stop_engaged  # type: ignore
                 break
