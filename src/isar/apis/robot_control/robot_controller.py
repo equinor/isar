@@ -5,6 +5,7 @@ from injector import inject
 from isar.apis.models.models import RobotInfoResponse
 from isar.config.settings import robot_settings, settings
 from isar.services.utilities.robot_utilities import RobotUtilities
+from fastapi import HTTPException
 
 
 class RobotController:
@@ -17,7 +18,13 @@ class RobotController:
         self.logger = logging.getLogger("api")
 
     def generate_media_config(self):
-        return self.robot_utilities.generate_media_config()
+        media_config = self.robot_utilities.generate_media_config()
+        if media_config is None:
+            raise HTTPException(
+                status_code=204,
+                detail="Robot has no media config",
+            )
+        return media_config
 
     def get_info(self):
         return RobotInfoResponse(

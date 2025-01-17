@@ -301,6 +301,14 @@ class API:
             methods=["GET"],
             dependencies=[authentication_dependency],
             summary="Generates a media stream connection config",
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Media stream was successfully generated",
+                },
+                HTTPStatus.NO_CONTENT.value: {
+                    "description": "Robot has no media config",
+                },
+            },
         )
 
         return router
