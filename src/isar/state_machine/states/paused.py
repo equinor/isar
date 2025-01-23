@@ -22,14 +22,11 @@ class Paused(State):
         transition: Callable
         while True:
             if self.state_machine.should_stop_mission():
-                transition = self.state_machine.mission_stopped  # type: ignore
+                transition = self.state_machine.stop  # type: ignore
                 break
 
             if self.state_machine.should_resume_mission():
-                if self.state_machine.run_mission_by_task:
-                    transition = self.state_machine.resume  # type: ignore
-                else:
-                    transition = self.state_machine.resume_full_mission  # type: ignore
+                transition = self.state_machine.resume  # type: ignore
                 break
 
             time.sleep(self.state_machine.sleep_time)

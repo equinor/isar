@@ -82,36 +82,6 @@ def test_reset_state_machine(state_machine) -> None:
     assert state_machine.current_mission is None
 
 
-def test_state_machine_transitions_when_running_mission_by_task(
-    injector, state_machine_thread
-) -> None:
-    task_1: Task = TakeImage(
-        target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
-    )
-    task_2: Task = ReturnToHome(pose=MockPose.default_pose())
-    mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
-
-    state_machine_thread.state_machine.run_mission_by_task = True
-    state_machine_thread.start()
-
-    scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-    time.sleep(0.01)
-
-    assert state_machine_thread.state_machine.transitions_list == deque(
-        [
-            States.Idle,
-            States.Initialize,
-            States.Initiate,
-            States.Monitor,
-            States.Initiate,
-            States.Monitor,
-            States.Initiate,
-            States.Idle,
-        ]
-    )
-
-
 def test_state_machine_transitions_when_running_full_mission(
     injector, state_machine_thread
 ) -> None:
@@ -126,7 +96,7 @@ def test_state_machine_transitions_when_running_full_mission(
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
+    time.sleep(0.21)  # Slightly more than the StateMachine sleep time
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
@@ -134,7 +104,6 @@ def test_state_machine_transitions_when_running_full_mission(
             States.Initialize,
             States.Initiate,
             States.Monitor,
-            States.Initiate,
             States.Idle,
         ]
     )
@@ -151,13 +120,11 @@ def test_state_machine_failed_dependency(
 
     mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.Failed)
 
-    state_machine_thread.state_machine.run_mission_by_task = True
-
     state_machine_thread.start()
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-    time.sleep(0.01)
+    time.sleep(0.21)  # Allow the state machine to transition through the mission
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
@@ -165,9 +132,6 @@ def test_state_machine_failed_dependency(
             States.Initialize,
             States.Initiate,
             States.Monitor,
-            States.Initiate,
-            States.Monitor,
-            States.Initiate,
             States.Idle,
         ]
     )
@@ -194,7 +158,6 @@ def test_state_machine_with_successful_collection(
             States.Initialize,
             States.Initiate,
             States.Monitor,
-            States.Initiate,
             States.Idle,
         ]
     )
@@ -224,7 +187,6 @@ def test_state_machine_with_unsuccessful_collection(
             States.Initialize,
             States.Initiate,
             States.Monitor,
-            States.Initiate,
             States.Idle,
         ]
     )

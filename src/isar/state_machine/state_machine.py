@@ -54,7 +54,6 @@ class StateMachine(object):
         mqtt_publisher: MqttClientInterface,
         task_selector: TaskSelectorInterface,
         sleep_time: float = settings.FSM_SLEEP_TIME,
-        run_mission_by_task: bool = settings.RUN_MISSION_BY_TASK,
         stop_robot_attempts_limit: int = settings.STOP_ROBOT_ATTEMPTS_LIMIT,
         transitions_log_length: int = settings.STATE_TRANSITIONS_LOG_LENGTH,
     ):
@@ -82,7 +81,6 @@ class StateMachine(object):
         self.robot: RobotInterface = robot
         self.mqtt_publisher: Optional[MqttClientInterface] = mqtt_publisher
         self.task_selector: TaskSelectorInterface = task_selector
-        self.run_mission_by_task: bool = run_mission_by_task
 
         # List of states
         self.stop_state: State = Stop(self)
@@ -122,32 +120,24 @@ class StateMachine(object):
                     "before": self._initiated,
                 },
                 {
-                    "trigger": "pause_full_mission",
-                    "source": [self.initiate_state, self.monitor_state],
+                    "trigger": "pause",
+                    "source": self.monitor_state,
                     "dest": self.paused_state,
                     "before": self._mission_paused,
                 },
                 {
-                    "trigger": "pause",
-                    "source": [self.initiate_state, self.monitor_state],
-                    "dest": self.stop_state,
-                    "before": self._pause,
-                },
-                {
                     "trigger": "stop",
                     "source": [
+                        self.idle_state,
                         self.initiate_state,
                         self.monitor_state,
-                        self.idle_state,
+                        self.paused_state,
                     ],
                     "dest": self.stop_state,
-                    "before": self._stop,
                 },
                 {
                     "trigger": "mission_finished",
-                    "source": [
-                        self.initiate_state,
-                    ],
+                    "source": self.monitor_state,
                     "dest": self.idle_state,
                     "before": self._mission_finished,
                 },
@@ -172,38 +162,8 @@ class StateMachine(object):
                 {
                     "trigger": "resume",
                     "source": self.paused_state,
-                    "dest": self.initiate_state,
-                    "before": self._resume,
-                },
-                {
-                    "trigger": "resume_full_mission",
-                    "source": self.paused_state,
                     "dest": self.monitor_state,
                     "before": self._resume,
-                },
-                {
-                    "trigger": "task_finished",
-                    "source": self.monitor_state,
-                    "dest": self.initiate_state,
-                    "before": self._task_finished,
-                },
-                {
-                    "trigger": "full_mission_finished",
-                    "source": self.monitor_state,
-                    "dest": self.initiate_state,
-                    "before": self._full_mission_finished,
-                },
-                {
-                    "trigger": "mission_paused",
-                    "source": self.stop_state,
-                    "dest": self.paused_state,
-                    "before": self._mission_paused,
-                },
-                {
-                    "trigger": "initiate_infeasible",
-                    "source": self.initiate_state,
-                    "dest": self.initiate_state,
-                    "before": self._initiate_infeasible,
                 },
                 {
                     "trigger": "initiate_failed",
@@ -213,13 +173,13 @@ class StateMachine(object):
                 },
                 {
                     "trigger": "mission_stopped",
-                    "source": [self.stop_state, self.paused_state],
+                    "source": self.stop_state,
                     "dest": self.idle_state,
                     "before": self._mission_stopped,
                 },
                 {
                     "trigger": "robot_turned_offline",
-                    "source": [self.idle_state],
+                    "source": self.idle_state,
                     "dest": self.offline_state,
                 },
                 {
@@ -229,7 +189,7 @@ class StateMachine(object):
                 },
                 {
                     "trigger": "robot_protective_stop_engaged",
-                    "source": [self.idle_state],
+                    "source": self.idle_state,
                     "dest": self.blocked_protective_stop,
                 },
                 {
@@ -243,7 +203,6 @@ class StateMachine(object):
         self.stop_robot_attempts_limit: int = stop_robot_attempts_limit
         self.sleep_time: float = sleep_time
 
-        self.stopped: bool = False
         self.current_mission: Optional[Mission] = None
         self.current_task: Optional[TASKS] = None
         self.initial_pose: Optional[Pose] = None
@@ -263,8 +222,6 @@ class StateMachine(object):
         self._finalize()
 
     def _initiated(self) -> None:
-        if self.run_mission_by_task:
-            self.current_task.status = TaskStatus.InProgress
         self.current_mission.status = MissionStatus.InProgress
         self.publish_task_status(task=self.current_task)
         self.logger.info(
@@ -331,11 +288,6 @@ class StateMachine(object):
             self.current_task.status = TaskStatus.InProgress
             self.publish_task_status(task=self.current_task)
 
-    def _task_finished(self) -> None:
-        self.publish_task_status(task=self.current_task)
-        self.current_task.update_task_status()
-        self.iterate_current_task()
-
     def _full_mission_finished(self) -> None:
         self.current_task = None
 
@@ -354,20 +306,11 @@ class StateMachine(object):
 
         self.robot.pause()
 
-    def _stop(self) -> None:
-        self.stopped = True
-
     def _initiate_failed(self) -> None:
         self.current_task.status = TaskStatus.Failed
         self.current_mission.status = MissionStatus.Failed
         self.publish_task_status(task=self.current_task)
         self._finalize()
-
-    def _initiate_infeasible(self) -> None:
-        if self.run_mission_by_task:
-            self.current_task.status = TaskStatus.Failed
-            self.publish_task_status(task=self.current_task)
-            self.iterate_current_task()
 
     def _mission_stopped(self) -> None:
         if self.current_mission is None:
@@ -435,7 +378,6 @@ class StateMachine(object):
 
     def reset_state_machine(self) -> None:
         self.logger.info("Resetting state machine")
-        self.stopped = False
         self.current_task = None
         self.current_mission = None
         self.initial_pose = None
