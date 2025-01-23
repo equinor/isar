@@ -43,9 +43,6 @@ class Stop(State):
                 self.stop_thread = ThreadedRequest(self.state_machine.robot.stop)
                 self.stop_thread.start_thread(name="State Machine Stop Robot")
 
-            if self.state_machine.should_stop_mission():
-                self.state_machine.stopped = True
-
             try:
                 self.stop_thread.get_output()
             except ThreadedRequestNotFinishedError:
@@ -70,10 +67,9 @@ class Stop(State):
 
                 self.stop_thread = None
                 continue
-            if self.state_machine.stopped:
-                transition = self.state_machine.mission_stopped  # type: ignore
-            else:
-                transition = self.state_machine.mission_paused  # type: ignore
+
+            transition = self.state_machine.mission_stopped  # type: ignore
+
             break
 
         transition()

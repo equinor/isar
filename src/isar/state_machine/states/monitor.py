@@ -58,10 +58,7 @@ class Monitor(State):
                 break
 
             if self.state_machine.should_pause_mission():
-                if self.state_machine.run_mission_by_task:
-                    transition = self.state_machine.pause  # type: ignore
-                else:
-                    transition = self.state_machine.pause_full_mission  # type: ignore
+                transition = self.state_machine.pause  # type: ignore
                 break
 
             if not self.task_status_thread:
@@ -133,28 +130,22 @@ class Monitor(State):
                     name="State Machine Get Inspections",
                 )
 
-            if self.state_machine.run_mission_by_task:
-                if self.state_machine.current_task.is_finished():
-                    self._report_task_status(self.state_machine.current_task)
-                    transition = self.state_machine.task_finished  # type: ignore
+            if self.state_machine.current_task.is_finished():
+                self._report_task_status(self.state_machine.current_task)
+                self.state_machine.publish_task_status(
+                    task=self.state_machine.current_task
+                )
+
+                self.state_machine.iterate_current_task()
+                if self.state_machine.current_task is None:
+                    transition = self.state_machine.mission_finished  # type: ignore
                     break
-            else:
-                if self.state_machine.current_task.is_finished():
-                    self._report_task_status(self.state_machine.current_task)
-                    self.state_machine.publish_task_status(
-                        task=self.state_machine.current_task
-                    )
 
-                    self.state_machine.iterate_current_task()
-                    if self.state_machine.current_task is None:
-                        transition = self.state_machine.full_mission_finished  # type: ignore
-                        break
-
-                    # Report and update next task
-                    self.state_machine.current_task.update_task_status()
-                    self.state_machine.publish_task_status(
-                        task=self.state_machine.current_task
-                    )
+                # Report and update next task
+                self.state_machine.current_task.update_task_status()
+                self.state_machine.publish_task_status(
+                    task=self.state_machine.current_task
+                )
 
             self.task_status_thread = None
             time.sleep(self.state_machine.sleep_time)

@@ -13,7 +13,6 @@ from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotException,
     RobotInfeasibleMissionException,
-    RobotInfeasibleTaskException,
 )
 
 if TYPE_CHECKING:
@@ -49,30 +48,12 @@ class Initiate(State):
                 transition = self.state_machine.stop  # type: ignore
                 break
 
-            if self.state_machine.should_pause_mission():
-                transition = self.state_machine.pause  # type: ignore
-                break
-
-            if not self.state_machine.current_task:
-                self.logger.info(
-                    f"Completed mission: {self.state_machine.current_mission.id}"
-                )
-                transition = self.state_machine.mission_finished  # type: ignore
-                break
-
             if not self.initiate_thread:
-                if self.state_machine.run_mission_by_task:
-                    self._run_initiate_thread(
-                        initiate_function=self.state_machine.robot.initiate_task,
-                        function_argument=self.state_machine.current_task,
-                        thread_name="State Machine Initiate Task",
-                    )
-                else:
-                    self._run_initiate_thread(
-                        initiate_function=self.state_machine.robot.initiate_mission,
-                        function_argument=self.state_machine.current_mission,
-                        thread_name="State Machine Initiate Mission",
-                    )
+                self._run_initiate_thread(
+                    initiate_function=self.state_machine.robot.initiate_mission,
+                    function_argument=self.state_machine.current_mission,
+                    thread_name="State Machine Initiate Mission",
+                )
 
             try:
                 self.initiate_thread.get_output()
@@ -81,18 +62,6 @@ class Initiate(State):
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
-            except RobotInfeasibleTaskException as e:
-                self.state_machine.current_task.error_message = ErrorMessage(
-                    error_reason=e.error_reason, error_description=e.error_description
-                )
-                self.logger.warning(
-                    f"Failed to initiate task "
-                    f"{str(self.state_machine.current_task.id)[:8]} after retrying "
-                    f"{self.initiate_failure_counter} times because: "
-                    f"{e.error_description}"
-                )
-                transition = self.state_machine.initiate_infeasible  # type: ignore
-                break
 
             except RobotInfeasibleMissionException as e:
                 self.state_machine.current_mission.error_message = ErrorMessage(

@@ -18,10 +18,6 @@ class RobotInterface(metaclass=ABCMeta):
     def initiate_mission(self, mission: Mission) -> None:
         """Send a mission to the robot and initiate execution of the mission
 
-        This function should be used in combination with the mission_status function
-        if the robot is designed to run full missions and not in a taskwise
-        configuration.
-
         Parameters
         ----------
         mission: Mission
@@ -38,8 +34,6 @@ class RobotInterface(metaclass=ABCMeta):
         RobotException
             Will catch all RobotExceptions not previously listed and retry scheduling of
             the mission until the number of allowed retries is exceeded
-        NotImplementedError
-            If the robot is designed for taskwise mission execution
 
         """
         raise NotImplementedError
@@ -47,10 +41,6 @@ class RobotInterface(metaclass=ABCMeta):
     @abstractmethod
     def initiate_task(self, task: Task) -> None:
         """Send a task to the robot and initiate the execution of the task
-
-        This function should be used in combination with the task_status function
-        if the robot is designed to run taskwise missions and not in a full mission
-        configuration.
 
         Parameters
         ----------
@@ -71,7 +61,7 @@ class RobotInterface(metaclass=ABCMeta):
             of the task until the number of allowed retries is exceeded before the task
             will be marked as failed and the mission cancelled
         NotImplementedError
-            If the robot is designed for full mission execution.
+            If there is a mismatch between the implemented tasks and listed capabilities
 
         """
         raise NotImplementedError
@@ -79,10 +69,6 @@ class RobotInterface(metaclass=ABCMeta):
     @abstractmethod
     def task_status(self, task_id: str) -> TaskStatus:
         """Gets the status of the currently active task on robot.
-
-        This function should be used in combination with the initiate_task function
-        if the robot is designed to run taskwise missions and not in a full mission
-        configuration.
 
         Returns
         -------
@@ -93,8 +79,6 @@ class RobotInterface(metaclass=ABCMeta):
         ------
         RobotException
             If the task status could not be retrieved.
-        NotImplementedError
-            If the robot is designed for full mission execution.
 
         """
         raise NotImplementedError
