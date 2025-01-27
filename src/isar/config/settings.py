@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     # Number of attempts to request a task status in monitor before cancelling
     REQUEST_STATUS_FAILURE_COUNTER_LIMIT: int = Field(default=3)
 
+    # Time allocated to reconnect when failing to retrieve status due to communication
+    # issues
+    REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY: float = Field(default=10)
+
     # Number of attempts to stop the robot before giving up
     STOP_ROBOT_ATTEMPTS_LIMIT: int = Field(default=10)
 

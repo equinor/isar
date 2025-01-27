@@ -87,7 +87,7 @@ class Monitor(State):
                     )
                     status = TaskStatus.Failed
                 else:
-                    time.sleep(self.state_machine.sleep_time)
+                    time.sleep(settings.REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY)
                     continue
 
             except RobotTaskStatusException as e:
