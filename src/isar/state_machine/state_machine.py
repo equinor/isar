@@ -114,7 +114,6 @@ class StateMachine(object):
                     "trigger": "start_machine",
                     "source": self.off_state,
                     "dest": self.idle_state,
-                    "before": self._off,
                 },
                 {
                     "trigger": "initiated",
@@ -222,25 +221,21 @@ class StateMachine(object):
                     "trigger": "robot_turned_offline",
                     "source": [self.idle_state],
                     "dest": self.offline_state,
-                    "before": self._offline,
                 },
                 {
                     "trigger": "robot_turned_online",
                     "source": self.offline_state,
                     "dest": self.idle_state,
-                    "before": self._online,
                 },
                 {
                     "trigger": "robot_protective_stop_engaged",
                     "source": [self.idle_state],
                     "dest": self.blocked_protective_stop,
-                    "before": self._protective_stop_engaged,
                 },
                 {
                     "trigger": "robot_protective_stop_disengaged",
                     "source": self.blocked_protective_stop,
                     "dest": self.idle_state,
-                    "before": self._protective_stop_disengaged,
                 },
             ]
         )
@@ -277,24 +272,6 @@ class StateMachine(object):
             f"{type(self.current_task).__name__} "
             f"task: {str(self.current_task.id)[:8]}"
         )
-
-    def _pause(self) -> None:
-        return
-
-    def _off(self) -> None:
-        return
-
-    def _offline(self) -> None:
-        return
-
-    def _online(self) -> None:
-        return
-
-    def _protective_stop_engaged(self) -> None:
-        return
-
-    def _protective_stop_disengaged(self) -> None:
-        return
 
     def _resume(self) -> None:
         self.logger.info(f"Resuming mission: {self.current_mission.id}")
