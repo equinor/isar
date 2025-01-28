@@ -25,8 +25,9 @@ from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import (
     MockRobot,
-    MockRobotIdleToOfflineToIdleTest,
     MockRobotIdleToBlockedProtectiveStopToIdleTest,
+    MockRobotIdleToBlockedToIdleTest,
+    MockRobotIdleToOfflineToIdleTest,
 )
 from tests.mocks.task import MockTask
 
@@ -306,6 +307,21 @@ def test_state_machine_idle_to_offline_to_idle(mocker, state_machine_thread) -> 
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [States.Idle, States.Offline, States.Idle]
+    )
+
+
+def test_state_machine_idle_to_blocked_to_idle(mocker, state_machine_thread) -> None:
+
+    # Robot status check happens every 5 seconds by default, so we mock the behavior
+    # to poll for status imediately
+    mocker.patch.object(Idle, "_is_ready_to_poll_for_status", return_value=True)
+
+    state_machine_thread.state_machine.robot = MockRobotIdleToBlockedToIdleTest()
+    state_machine_thread.start()
+    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [States.Idle, States.Blocked, States.Idle]
     )
 
 
