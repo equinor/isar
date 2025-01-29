@@ -1,4 +1,5 @@
 ## Ready for review checklist:
+
 - [ ] A self-review has been performed
 - [ ] All commits run individually
 - [ ] Temporary changes have been removed, like logging, TODO, etc.
@@ -9,3 +10,4 @@
 - [ ] Remaining work is documented in issues
   - [ ] There is no remaining work from this PR that requires new issues
 - [ ] The changes do not introduce dead code as unused imports, functions etc.
+- [ ] The incoming branch is rebased with `git fetch upstream && git rebase upstream/main`
