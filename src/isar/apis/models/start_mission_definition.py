@@ -18,6 +18,7 @@ from robot_interface.models.mission.task import (
     TakeThermalImage,
     TakeThermalVideo,
     TakeVideo,
+    TakeGasMeasurement,
     ZoomDescription,
 )
 
@@ -28,6 +29,7 @@ class InspectionTypes(str, Enum):
     video = "Video"
     thermal_video = "ThermalVideo"
     audio = "Audio"
+    gas_measurement = "GasMeasurement"
 
 
 class TaskType(str, Enum):
@@ -200,7 +202,6 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
                 target=task_definition.inspection.inspection_target.to_alitra_position(),
                 duration=inspection_definition.duration,
                 metadata=task_definition.inspection.metadata,
-                zoom=task_definition.zoom,
             )
         else:
             return RecordAudio(
@@ -209,7 +210,20 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
                 target=task_definition.inspection.inspection_target.to_alitra_position(),
                 duration=inspection_definition.duration,
                 metadata=task_definition.inspection.metadata,
-                zoom=task_definition.zoom,
+            )
+    elif inspection_definition.type == InspectionTypes.gas_measurement:
+        if task_definition.id:
+            return TakeGasMeasurement(
+                id=task_definition.id,
+                robot_pose=task_definition.pose.to_alitra_pose(),
+                tag_id=task_definition.tag,
+                metadata=task_definition.inspection.metadata,
+            )
+        else:
+            return TakeGasMeasurement(
+                robot_pose=task_definition.pose.to_alitra_pose(),
+                tag_id=task_definition.tag,
+                metadata=task_definition.inspection.metadata,
             )
     else:
         raise ValueError(

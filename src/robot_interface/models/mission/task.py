@@ -11,6 +11,7 @@ from robot_interface.models.inspection.inspection import (
     Inspection,
     ThermalImage,
     ThermalVideo,
+    GasMeasurement,
     Video,
 )
 from robot_interface.models.mission.status import TaskStatus
@@ -25,6 +26,7 @@ class TaskTypes(str, Enum):
     TakeThermalImage = "take_thermal_image"
     TakeVideo = "take_video"
     TakeThermalVideo = "take_thermal_video"
+    TakeGasMeasurement = "take_gas_measurement"
     RecordAudio = "record_audio"
     DockingProcedure = "docking_procedure"
 
@@ -179,6 +181,20 @@ class RecordAudio(InspectionTask):
         return Audio
 
 
+class TakeGasMeasurement(InspectionTask):
+    """
+    Task which causes the robot to take a CO2 measurement at its position.
+
+    Duration of audio is given in seconds.
+    """
+
+    type: Literal[TaskTypes.TakeGasMeasurement] = TaskTypes.TakeGasMeasurement
+
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return GasMeasurement
+
+
 TASKS = Union[
     ReturnToHome,
     Localize,
@@ -187,6 +203,7 @@ TASKS = Union[
     TakeThermalImage,
     TakeVideo,
     TakeThermalVideo,
+    TakeGasMeasurement,
     RecordAudio,
     DockingProcedure,
 ]

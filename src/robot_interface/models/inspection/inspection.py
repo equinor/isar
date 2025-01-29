@@ -42,6 +42,11 @@ class AudioMetadata(InspectionMetadata):
     duration: Optional[float] = field(default=None)
 
 
+@dataclass
+class GasMeasurementMetadata(InspectionMetadata):
+    pass
+
+
 class Inspection(BaseModel):
     metadata: InspectionMetadata
     id: str = Field(frozen=True)
@@ -90,3 +95,11 @@ class Audio(Inspection):
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:
         return AudioMetadata
+
+
+class GasMeasurement(Inspection):
+    metadata: GasMeasurementMetadata
+
+    @staticmethod
+    def get_metadata_type() -> Type[InspectionMetadata]:
+        return GasMeasurementMetadata
