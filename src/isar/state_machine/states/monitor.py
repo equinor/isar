@@ -165,7 +165,7 @@ class Monitor(State):
             inspection: Inspection = self.state_machine.robot.get_inspection(
                 task=current_task
             )
-            if current_task.inspection_id == inspection.id:
+            if current_task.inspection_id != inspection.id:
                 self.logger.warning(
                     f"The inspection_id of task ({current_task.inspection_id}) "
                     f"and result ({inspection.id}) is not matching. "
