@@ -15,6 +15,9 @@ class Queues:
         self.state_machine_start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
         self.state_machine_stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
         self.state_machine_pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.state_machine_task_status_request: QueueIO = QueueIO(
+            input_size=1, output_size=1
+        )
         self.state_machine_current_task: StatusQueue = StatusQueue()
 
         self.robot_offline: QueueIO = QueueIO(input_size=1, output_size=1)

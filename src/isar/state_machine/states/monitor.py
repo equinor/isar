@@ -39,6 +39,7 @@ class Monitor(State):
         return
 
     def _run(self) -> None:
+        awaiting_task_status: bool = False
         transition: Callable
         while True:
             if self.state_machine.should_stop_mission():
@@ -87,7 +88,14 @@ class Monitor(State):
                 status = self.state_machine.get_task_status_event()
 
             if status is None:
+                if not awaiting_task_status:
+                    self.state_machine.request_task_status(
+                        self.state_machine.current_task
+                    )
+                    awaiting_task_status = True
                 continue
+            else:
+                awaiting_task_status = False
 
             if not isinstance(status, TaskStatus):
                 self.logger.error(

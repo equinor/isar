@@ -293,6 +293,9 @@ class StateMachine(object):
         except queue.Empty:
             return None
 
+    def request_task_status(self, task_id: str) -> None:
+        self.queues.state_machine_task_status_request.input.put(task_id)
+
     def get_mission_started_event(self) -> bool:
         try:
             return self.queues.robot_mission_started.input.get(block=False)
