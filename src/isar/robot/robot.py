@@ -48,11 +48,6 @@ class Robot(object):
         )
         self.robot_status_thread.start()
 
-        self.robot_task_status_thread = RobotTaskStatusThread(
-            self.queues, self.robot, self.signal_thread_quitting
-        )
-        self.robot_task_status_thread.start()
-
         while True:
             if self.signal_thread_quitting.is_set():
                 break
@@ -72,4 +67,10 @@ class Robot(object):
                     start_mission_or_task,
                 )
                 self.start_mission_thread.start()
+            task_id = check_for_event(self.queues.state_machine_task_status_request)
+            if task_id:
+                self.robot_task_status_thread = RobotTaskStatusThread(
+                    self.queues, self.robot, self.signal_thread_quitting, task_id
+                )
+                self.robot_task_status_thread.start()
         self.logger.info("Exiting robot service main thread")
