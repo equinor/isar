@@ -69,6 +69,7 @@ class Monitor(State):
                 )
             try:
                 status: TaskStatus = self.task_status_thread.get_output()
+                self.request_status_failure_counter = 0
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
@@ -196,7 +197,6 @@ class Monitor(State):
         )
 
     def _report_task_status(self, task: Task) -> None:
-        self.request_status_failure_counter = 0
         if task.status == TaskStatus.Failed:
             self.logger.warning(
                 f"Task: {str(task.id)[:8]} was reported as failed by the robot"
