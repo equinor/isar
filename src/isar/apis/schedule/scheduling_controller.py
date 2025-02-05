@@ -24,7 +24,6 @@ from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
     TASKS,
     InspectionTask,
-    Localize,
     MoveArm,
     ReturnToHome,
 )
@@ -202,60 +201,6 @@ class SchedulingController:
             self.scheduling_utilities.stop_mission()
         )
         return stop_mission_response
-
-    def drive_to(
-        self,
-        target_pose: InputPose = Body(
-            default=None,
-            title="Target Pose",
-            description="The target pose for the drive_to task",
-        ),
-    ) -> StartMissionResponse:
-        self.logger.info("Received request to start new drive-to mission")
-
-        state: States = self.scheduling_utilities.get_state()
-
-        self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
-
-        pose: Pose = target_pose.to_alitra_pose()
-        mission: Mission = Mission(
-            name="Drive to pose", tasks=[ReturnToHome(pose=pose)]
-        )
-
-        self.logger.info(
-            f"Starting drive to mission with ISAR Mission ID: '{mission.id}'"
-        )
-        self.scheduling_utilities.start_mission(mission=mission, initial_pose=None)
-        return self._api_response(mission)
-
-    def start_localization_mission(
-        self,
-        localization_pose: InputPose = Body(
-            default=None,
-            embed=True,
-            title="Localization Pose",
-            description="The current position of the robot",
-        ),
-    ) -> StartMissionResponse:
-        self.logger.info("Received request to start new localization mission")
-
-        state: States = self.scheduling_utilities.get_state()
-
-        self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
-
-        pose: Pose = localization_pose.to_alitra_pose()
-        mission: Mission = Mission(
-            name="Localization mission", tasks=[Localize(localization_pose=pose)]
-        )
-
-        self.logger.info(
-            f"Starting localization mission with ISAR Mission ID: '{mission.id}'"
-        )
-        self.scheduling_utilities.start_mission(
-            mission=mission,
-            initial_pose=None,
-        )
-        return self._api_response(mission)
 
     def start_move_arm_mission(
         self,
