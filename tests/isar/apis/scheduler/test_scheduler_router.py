@@ -1,4 +1,3 @@
-import json
 import re
 from http import HTTPStatus
 from unittest import mock
@@ -240,33 +239,6 @@ class TestStopMission:
     def test_stop_mission_timeout(self, client: TestClient):
         response = client.post(url=self.schedule_stop_mission_path)
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
-
-
-class TestDriveTo:
-    schedule_drive_to_path = "/schedule/drive-to"
-    mock_target_pose = MockMissionDefinition.mock_input_pose
-    mock_data: str = json.dumps(jsonable_encoder(mock_target_pose))
-
-    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
-    @mock.patch.object(SchedulingUtilities, "_send_command", mock_void)
-    def test_drive_to(self, client: TestClient):
-        response = client.post(url=self.schedule_drive_to_path, data=self.mock_data)
-        assert response.status_code == HTTPStatus.OK
-
-    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
-    @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
-    def test_drive_to_timeout(self, client: TestClient):
-        response = client.post(url=self.schedule_drive_to_path, data=self.mock_data)
-        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
-        assert response.json() == {
-            "detail": "Internal Server Error - Failed to start mission in ISAR"
-        }
-
-    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_monitor)
-    @mock.patch.object(SchedulingUtilities, "_send_command", mock_void)
-    def test_state_machine_in_conflicting_state(self, client: TestClient):
-        response = client.post(url=self.schedule_drive_to_path, data=self.mock_data)
-        assert response.status_code == HTTPStatus.CONFLICT
 
 
 class TestInfoRobotSettings:
