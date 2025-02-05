@@ -10,7 +10,6 @@ from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
     TASKS,
-    Localize,
     RecordAudio,
     ReturnToHome,
     TakeImage,
@@ -33,7 +32,6 @@ class InspectionTypes(str, Enum):
 
 class TaskType(str, Enum):
     Inspection = "inspection"
-    Localization = "localization"
     ReturnToHome = "return_to_home"
 
 
@@ -96,8 +94,6 @@ def to_isar_mission(
 def to_isar_task(task_definition: StartMissionTaskDefinition) -> TASKS:
     if task_definition.type == TaskType.Inspection:
         return to_inspection_task(task_definition)
-    elif task_definition.type == TaskType.Localization:
-        return to_localization_task(task_definition)
     elif task_definition.type == TaskType.ReturnToHome:
         return create_return_to_home_task(task_definition)
     else:
@@ -221,10 +217,6 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
         raise ValueError(
             f"Inspection type '{inspection_definition.type}' not supported"
         )
-
-
-def to_localization_task(task_definition: StartMissionTaskDefinition) -> Localize:
-    return Localize(localization_pose=task_definition.pose.to_alitra_pose())
 
 
 def create_return_to_home_task(
