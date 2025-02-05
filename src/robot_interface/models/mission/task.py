@@ -28,7 +28,6 @@ class TaskTypes(str, Enum):
     TakeThermalVideo = "take_thermal_video"
     TakeGasMeasurement = "take_gas_measurement"
     RecordAudio = "record_audio"
-    DockingProcedure = "docking_procedure"
 
 
 class ZoomDescription(BaseModel):
@@ -69,15 +68,6 @@ class InspectionTask(Task):
     @staticmethod
     def get_inspection_type() -> Type[Inspection]:
         return Inspection
-
-
-class DockingProcedure(Task):
-    """
-    Task which causes the robot to dock or undock
-    """
-
-    behavior: Literal["dock", "undock"] = Field(default=None)
-    type: Literal[TaskTypes.DockingProcedure] = TaskTypes.DockingProcedure
 
 
 class ReturnToHome(Task):
@@ -205,5 +195,4 @@ TASKS = Union[
     TakeThermalVideo,
     TakeGasMeasurement,
     RecordAudio,
-    DockingProcedure,
 ]
