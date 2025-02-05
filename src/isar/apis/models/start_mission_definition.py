@@ -10,7 +10,6 @@ from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
     TASKS,
-    DockingProcedure,
     Localize,
     RecordAudio,
     ReturnToHome,
@@ -36,7 +35,6 @@ class TaskType(str, Enum):
     Inspection = "inspection"
     Localization = "localization"
     ReturnToHome = "return_to_home"
-    Dock = "dock"
 
 
 class StartMissionInspectionDefinition(BaseModel):
@@ -106,8 +104,6 @@ def to_isar_task(task_definition: StartMissionTaskDefinition) -> TASKS:
         return to_localization_task(task_definition)
     elif task_definition.type == TaskType.ReturnToHome:
         return create_return_to_home_task(task_definition)
-    elif task_definition.type == TaskType.Dock:
-        return create_dock_task()
     else:
         raise MissionPlannerError(
             f"Failed to create task: '{task_definition.type}' is not a valid"
@@ -239,10 +235,6 @@ def create_return_to_home_task(
     task_definition: StartMissionTaskDefinition,
 ) -> ReturnToHome:
     return ReturnToHome(pose=task_definition.pose.to_alitra_pose())
-
-
-def create_dock_task() -> DockingProcedure:
-    return DockingProcedure(behavior="dock")
 
 
 def _build_mission_name() -> str:
