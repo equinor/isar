@@ -58,8 +58,6 @@ class StartMissionDefinition(BaseModel):
     tasks: List[StartMissionTaskDefinition]
     name: Optional[str] = None
     start_pose: Optional[InputPose] = None
-    dock: Optional[bool] = Field(default=False)
-    undock: Optional[bool] = Field(default=False)
 
 
 def to_isar_mission(
@@ -92,8 +90,6 @@ def to_isar_mission(
         tasks=isar_tasks,
         name=isar_mission_name,
         start_pose=start_pose,
-        dock=start_mission_definition.dock,
-        undock=start_mission_definition.undock,
     )
 
 

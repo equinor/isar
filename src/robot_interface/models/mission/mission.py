@@ -14,7 +14,5 @@ class Mission(BaseModel):
     tasks: List[TASKS] = Field(default_factory=list, frozen=True)
     name: str = Field(frozen=True)
     start_pose: Optional[Pose] = Field(default=None, frozen=True)
-    dock: bool = Field(default=False, frozen=True)
-    undock: bool = Field(default=False, frozen=True)
     status: MissionStatus = MissionStatus.NotStarted
     error_message: Optional[ErrorMessage] = Field(default=None)
