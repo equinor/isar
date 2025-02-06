@@ -45,8 +45,7 @@ class Initialize(State):
                     self.state_machine.robot.initialize
                 )
                 self.initialize_thread.start_thread(
-                    self.state_machine.get_initialize_params(),
-                    name="State Machine Initialize Robot",
+                    name="State Machine Initialize Robot"
                 )
 
             try:

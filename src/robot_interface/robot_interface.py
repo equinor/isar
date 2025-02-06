@@ -3,7 +3,6 @@ from queue import Queue
 from threading import Thread
 from typing import Callable, List, Optional
 
-from robot_interface.models.initialize.initialize_params import InitializeParams
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
@@ -186,14 +185,10 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def initialize(self, params: InitializeParams) -> None:
+    def initialize(self) -> None:
         """Initializes the robot. The initialization needed is robot dependent and the
         function can be a simple return statement if no initialization is needed for the
         robot.
-
-        Parameters
-        ----------
-        params: InitializeParams
 
         Returns
         -------

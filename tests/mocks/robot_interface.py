@@ -5,7 +5,6 @@ from typing import Callable, List
 
 from alitra import Frame, Orientation, Pose, Position
 
-from robot_interface.models.initialize.initialize_params import InitializeParams
 from robot_interface.models.inspection.inspection import (
     Image,
     ImageMetadata,
@@ -74,7 +73,7 @@ class MockRobot(RobotInterface):
     ) -> None:
         return
 
-    def initialize(self, params: InitializeParams) -> None:
+    def initialize(self) -> None:
         return
 
     def get_telemetry_publishers(
