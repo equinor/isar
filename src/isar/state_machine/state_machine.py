@@ -5,7 +5,6 @@ from collections import deque
 from datetime import datetime, timezone
 from typing import Deque, List, Optional
 
-from alitra import Pose
 from injector import inject
 from transitions import Machine
 from transitions.core import State
@@ -204,7 +203,6 @@ class StateMachine(object):
 
         self.current_mission: Optional[Mission] = None
         self.current_task: Optional[TASKS] = None
-        self.initial_pose: Optional[Pose] = None
 
         self.current_state: State = States(self.state)  # type: ignore
 
@@ -375,12 +373,10 @@ class StateMachine(object):
         self.logger.info("Resetting state machine")
         self.current_task = None
         self.current_mission = None
-        self.initial_pose = None
 
-    def start_mission(self, mission: Mission, initial_pose: Pose):
+    def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
         self.current_mission = mission
-        self.initial_pose = initial_pose
 
         self.task_selector.initialize(tasks=self.current_mission.tasks)
 

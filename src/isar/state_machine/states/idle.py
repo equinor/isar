@@ -58,10 +58,7 @@ class Idle(State):
                     self.state_machine.should_start_mission()
                 )
                 if start_mission:
-                    self.state_machine.start_mission(
-                        mission=start_mission.mission,
-                        initial_pose=start_mission.initial_pose,
-                    )
+                    self.state_machine.start_mission(mission=start_mission.mission)
                     transition = self.state_machine.mission_started  # type: ignore
                     break
                 time.sleep(self.state_machine.sleep_time)

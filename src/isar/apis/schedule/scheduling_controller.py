@@ -45,12 +45,6 @@ class SchedulingController:
             title="Mission ID",
             description="ID-number for predefined mission",
         ),
-        initial_pose: Optional[InputPose] = Body(
-            default=None,
-            description="The starting point of the mission. Used for initial "
-            "localization of robot",
-            embed=True,
-        ),
         return_pose: Optional[InputPose] = Body(
             default=None,
             description="End pose of the mission. The robot return to the specified "
@@ -72,15 +66,9 @@ class SchedulingController:
             mission=mission, robot_capabilities=robot_settings.CAPABILITIES
         )
 
-        initial_pose_alitra: Optional[Pose] = (
-            initial_pose.to_alitra_pose() if initial_pose else None
-        )
-
         self.logger.info(f"Starting mission with ISAR Mission ID: '{mission.id}'")
 
-        self.scheduling_utilities.start_mission(
-            mission=mission, initial_pose=initial_pose_alitra
-        )
+        self.scheduling_utilities.start_mission(mission=mission)
 
         return self._api_response(mission)
 
@@ -91,12 +79,6 @@ class SchedulingController:
             embed=True,
             title="Mission Definition",
             description="Description of the mission in json format",
-        ),
-        initial_pose: Optional[InputPose] = Body(
-            default=None,
-            description="The starting point of the mission. Used for initial "
-            "localization of robot",
-            embed=True,
         ),
         return_pose: Optional[InputPose] = Body(
             default=None,
@@ -135,14 +117,8 @@ class SchedulingController:
             mission=mission, robot_capabilities=robot_settings.CAPABILITIES
         )
 
-        initial_pose_alitra: Optional[Pose] = (
-            initial_pose.to_alitra_pose() if initial_pose else None
-        )
-
         self.logger.info(f"Starting mission: {mission.id}")
-        self.scheduling_utilities.start_mission(
-            mission=mission, initial_pose=initial_pose_alitra
-        )
+        self.scheduling_utilities.start_mission(mission=mission)
         return self._api_response(mission)
 
     def pause_mission(self) -> ControlMissionResponse:
@@ -245,10 +221,7 @@ class SchedulingController:
         self.logger.info(
             f"Starting move arm mission with ISAR Mission ID: '{mission.id}'"
         )
-        self.scheduling_utilities.start_mission(
-            mission=mission,
-            initial_pose=None,
-        )
+        self.scheduling_utilities.start_mission(mission=mission)
         return self._api_response(mission)
 
     def _api_response(self, mission: Mission) -> StartMissionResponse:
