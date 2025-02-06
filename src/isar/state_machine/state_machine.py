@@ -29,7 +29,6 @@ from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.stop import Stop
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.initialize.initialize_params import InitializeParams
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import TASKS
@@ -388,9 +387,6 @@ class StateMachine(object):
         self.initial_pose = initial_pose
 
         self.task_selector.initialize(tasks=self.current_mission.tasks)
-
-    def get_initialize_params(self):
-        return InitializeParams(initial_pose=self.initial_pose)
 
     def should_start_mission(self) -> Optional[StartMissionMessage]:
         try:
