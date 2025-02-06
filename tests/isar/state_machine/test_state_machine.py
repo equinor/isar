@@ -95,7 +95,7 @@ def test_state_machine_transitions_when_running_full_mission(
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    scheduling_utilities.start_mission(mission=mission)
     time.sleep(0.21)  # Slightly more than the StateMachine sleep time
 
     assert state_machine_thread.state_machine.transitions_list == deque(
@@ -123,7 +123,7 @@ def test_state_machine_failed_dependency(
     state_machine_thread.start()
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    scheduling_utilities.start_mission(mission=mission)
     time.sleep(0.21)  # Allow the state machine to transition through the mission
 
     assert state_machine_thread.state_machine.transitions_list == deque(
@@ -147,7 +147,7 @@ def test_state_machine_with_successful_collection(
     mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    scheduling_utilities.start_mission(mission=mission)
     time.sleep(0.11)  # Slightly more than the StateMachine sleep time
 
     expected_stored_items = 1
@@ -175,7 +175,7 @@ def test_state_machine_with_unsuccessful_collection(
     mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    scheduling_utilities.start_mission(mission=mission)
     time.sleep(0.11)  # Slightly more than the StateMachine sleep time
 
     expected_stored_items = 0
@@ -203,7 +203,7 @@ def test_state_machine_with_successful_mission_stop(
     mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.InProgress)
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    scheduling_utilities.start_mission(mission=mission)
     time.sleep(0.11)  # Slightly more than the StateMachine sleep time
     scheduling_utilities.stop_mission()
 
@@ -235,7 +235,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
 
     state_machine_thread.start()
 
-    scheduling_utilities.start_mission(mission=mission, initial_pose=None)
+    scheduling_utilities.start_mission(mission=mission)
     time.sleep(0.11)  # Slightly more than the StateMachine sleep time
     scheduling_utilities.stop_mission()
 

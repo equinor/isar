@@ -2,9 +2,8 @@ import logging
 from copy import deepcopy
 from http import HTTPStatus
 from queue import Empty
-from typing import Any, List, Optional
+from typing import Any, List
 
-from alitra import Pose
 from fastapi import HTTPException
 from injector import inject
 from requests import HTTPError
@@ -137,7 +136,6 @@ class SchedulingUtilities:
     def start_mission(
         self,
         mission: Mission,
-        initial_pose: Optional[Pose],
     ) -> None:
         """Start mission
 
@@ -148,10 +146,7 @@ class SchedulingUtilities:
         """
         try:
             self._send_command(
-                StartMissionMessage(
-                    mission=deepcopy(mission),
-                    initial_pose=initial_pose,
-                ),
+                StartMissionMessage(mission=deepcopy(mission)),
                 self.queues.start_mission,
             )
         except QueueTimeoutError:
