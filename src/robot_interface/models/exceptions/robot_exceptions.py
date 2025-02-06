@@ -22,8 +22,6 @@ class ErrorReason(str, Enum):
     RobotTransformException = "robot_transform_exception"
     RobotUnknownErrorException = "robot_unknown_error_exception"
     RobotDisconnectedException = "robot_disconnected_exception"
-    RobotMissionNotSupportedException = "robot_mission_not_supported_exception"
-    RobotMissionMissingStartPoseException = "robot_mission_missing_start_pose_exception"
 
 
 @dataclass
@@ -255,28 +253,6 @@ class RobotDisconnectedException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
             error_reason=ErrorReason.RobotDisconnectedException,
-            error_description=error_description,
-        )
-
-    pass
-
-
-# An exception which should be thrown by the robot package if the robot is given a mission type it cannot run, such as a localisation mission
-class RobotMissionNotSupportedException(RobotException):
-    def __init__(self, error_description: str) -> None:
-        super().__init__(
-            error_reason=ErrorReason.RobotMissionNotSupportedException,
-            error_description=error_description,
-        )
-
-    pass
-
-
-# An exception which should be thrown by the robot package if the mission is missing start pose and it needed it
-class RobotMissionMissingStartPoseException(RobotException):
-    def __init__(self, error_description: str) -> None:
-        super().__init__(
-            error_reason=ErrorReason.RobotMissionMissingStartPoseException,
             error_description=error_description,
         )
 
