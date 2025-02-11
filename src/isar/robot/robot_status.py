@@ -4,8 +4,8 @@ from threading import Event, Thread
 from typing import Optional
 
 from isar.config.settings import settings
-from isar.models.communication.queues.queues import Queues
 from isar.models.communication.queues.queue_utils import trigger_event
+from isar.models.communication.queues.queues import Queues
 from isar.services.utilities.threaded_request import ThreadedRequest
 from robot_interface.models.mission.status import RobotStatus
 from robot_interface.robot_interface import RobotInterface

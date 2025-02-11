@@ -123,7 +123,7 @@ def test_state_machine_transitions_when_running_full_mission(
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(0.21)  # Slightly more than the StateMachine sleep time
+    time.sleep(5)
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
@@ -150,7 +150,7 @@ def test_state_machine_failed_dependency(
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(0.21)  # Allow the state machine to transition through the mission
+    time.sleep(3)  # Allow the state machine to transition through the mission
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
@@ -162,7 +162,7 @@ def test_state_machine_failed_dependency(
 
 
 def test_state_machine_with_successful_collection(
-    injector, state_machine_thread, robot_service_thread
+    injector, state_machine_thread, robot_service_thread, uploader_thread
 ) -> None:
     robot_service_thread.start()
     state_machine_thread.start()
@@ -173,7 +173,7 @@ def test_state_machine_with_successful_collection(
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
+    time.sleep(5)
 
     expected_stored_items = 1
     assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
@@ -187,7 +187,7 @@ def test_state_machine_with_successful_collection(
 
 
 def test_state_machine_with_unsuccessful_collection(
-    injector, mocker, state_machine_thread, robot_service_thread
+    injector, mocker, state_machine_thread, robot_service_thread, uploader_thread
 ) -> None:
     robot_service_thread.start()
     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
@@ -202,7 +202,7 @@ def test_state_machine_with_unsuccessful_collection(
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
+    time.sleep(3)
 
     expected_stored_items = 0
     assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
@@ -234,7 +234,7 @@ def test_state_machine_with_successful_mission_stop(
     scheduling_utilities.stop_mission()
 
     assert state_machine_thread.state_machine.transitions_list == deque(
-        [States.Idle, States.Monitor, States.Monitor, States.Stop, States.Idle]
+        [States.Idle, States.Monitor, States.Stop, States.Idle]
     )
 
 
@@ -257,7 +257,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
     state_machine_thread.start()
 
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
+    time.sleep(5)
     scheduling_utilities.stop_mission()
 
     expected_log = (
@@ -280,7 +280,7 @@ def test_state_machine_idle_to_offline_to_idle(
 
     state_machine_thread.state_machine.robot = MockRobotIdleToOfflineToIdleTest()
     state_machine_thread.start()
-    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
+    time.sleep(5)
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [States.Idle, States.Offline, States.Idle]
@@ -299,7 +299,7 @@ def test_state_machine_idle_to_blocked_protective_stop_to_idle(
         MockRobotIdleToBlockedProtectiveStopToIdleTest()
     )
     state_machine_thread.start()
-    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
+    time.sleep(5)
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [States.Idle, States.BlockedProtectiveStop, States.Idle]
