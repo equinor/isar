@@ -93,6 +93,7 @@ class Monitor(State):
                         self.state_machine.current_task
                     )
                     awaiting_task_status = True
+                time.sleep(settings.FSM_SLEEP_TIME)
                 continue
             else:
                 awaiting_task_status = False
