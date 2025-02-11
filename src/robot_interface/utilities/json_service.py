@@ -16,7 +16,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
     def default(self, o):
         if is_dataclass(o):
-            return asdict(o)
+            return asdict(o)  # type: ignore
         if isinstance(o, UUID):
             return str(o)
         if isinstance(o, Orientation):
