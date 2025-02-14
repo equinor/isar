@@ -3,6 +3,7 @@ from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
+from robot_interface.utilities.uuid_string_factory import uuid4_string
 
 from isar.apis.models.models import InputPose, InputPosition
 from isar.config.settings import settings
@@ -74,11 +75,11 @@ def to_isar_mission(
     if not isar_tasks:
         raise MissionPlannerError("Mission does not contain any valid tasks")
 
-    isar_mission_name: str
-    if start_mission_definition.name:
-        isar_mission_name = start_mission_definition.name
-    else:
-        isar_mission_name = _build_mission_name()
+    isar_mission_name: str = (
+        start_mission_definition.name
+        if start_mission_definition.name
+        else _build_mission_name()
+    )
 
     start_pose = None
     if start_mission_definition.start_pose:
@@ -106,113 +107,59 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
     inspection_definition = task_definition.inspection
 
     if inspection_definition.type == InspectionTypes.image:
-        if task_definition.id:
-            return TakeImage(
-                id=task_definition.id,
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                target=task_definition.inspection.inspection_target.to_alitra_position(),
-                metadata=task_definition.inspection.metadata,
-                zoom=task_definition.zoom,
-            )
-        else:
-            return TakeImage(
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                target=task_definition.inspection.inspection_target.to_alitra_position(),
-                metadata=task_definition.inspection.metadata,
-                zoom=task_definition.zoom,
-            )
+        return TakeImage(
+            id=task_definition.id if task_definition.id else uuid4_string(),
+            robot_pose=task_definition.pose.to_alitra_pose(),
+            tag_id=task_definition.tag,
+            target=task_definition.inspection.inspection_target.to_alitra_position(),
+            metadata=task_definition.inspection.metadata,
+            zoom=task_definition.zoom,
+        )
     elif inspection_definition.type == InspectionTypes.video:
-        if task_definition.id:
-            return TakeVideo(
-                id=task_definition.id,
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                target=task_definition.inspection.inspection_target.to_alitra_position(),
-                duration=inspection_definition.duration,
-                metadata=task_definition.inspection.metadata,
-                zoom=task_definition.zoom,
-            )
-        else:
-            return TakeVideo(
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                target=task_definition.inspection.inspection_target.to_alitra_position(),
-                duration=inspection_definition.duration,
-                metadata=task_definition.inspection.metadata,
-                zoom=task_definition.zoom,
-            )
+        return TakeVideo(
+            id=task_definition.id if task_definition.id else uuid4_string(),
+            robot_pose=task_definition.pose.to_alitra_pose(),
+            tag_id=task_definition.tag,
+            target=task_definition.inspection.inspection_target.to_alitra_position(),
+            duration=inspection_definition.duration,
+            metadata=task_definition.inspection.metadata,
+            zoom=task_definition.zoom,
+        )
     elif inspection_definition.type == InspectionTypes.thermal_image:
-        if task_definition.id:
-            return TakeThermalImage(
-                id=task_definition.id,
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                target=task_definition.inspection.inspection_target.to_alitra_position(),
-                metadata=task_definition.inspection.metadata,
-                zoom=task_definition.zoom,
-            )
-        else:
-            return TakeThermalImage(
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                target=task_definition.inspection.inspection_target.to_alitra_position(),
-                metadata=task_definition.inspection.metadata,
-                zoom=task_definition.zoom,
-            )
+        return TakeThermalImage(
+            id=task_definition.id if task_definition.id else uuid4_string(),
+            robot_pose=task_definition.pose.to_alitra_pose(),
+            tag_id=task_definition.tag,
+            target=task_definition.inspection.inspection_target.to_alitra_position(),
+            metadata=task_definition.inspection.metadata,
+            zoom=task_definition.zoom,
+        )
     elif inspection_definition.type == InspectionTypes.thermal_video:
-        if task_definition.id:
-            return TakeThermalVideo(
-                id=task_definition.id,
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                target=task_definition.inspection.inspection_target.to_alitra_position(),
-                duration=inspection_definition.duration,
-                metadata=task_definition.inspection.metadata,
-                zoom=task_definition.zoom,
-            )
-        else:
-            return TakeThermalVideo(
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                target=task_definition.inspection.inspection_target.to_alitra_position(),
-                duration=inspection_definition.duration,
-                metadata=task_definition.inspection.metadata,
-                zoom=task_definition.zoom,
-            )
+        return TakeThermalVideo(
+            id=task_definition.id if task_definition.id else uuid4_string(),
+            robot_pose=task_definition.pose.to_alitra_pose(),
+            tag_id=task_definition.tag,
+            target=task_definition.inspection.inspection_target.to_alitra_position(),
+            duration=inspection_definition.duration,
+            metadata=task_definition.inspection.metadata,
+            zoom=task_definition.zoom,
+        )
     elif inspection_definition.type == InspectionTypes.audio:
-        if task_definition.id:
-            return RecordAudio(
-                id=task_definition.id,
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                target=task_definition.inspection.inspection_target.to_alitra_position(),
-                duration=inspection_definition.duration,
-                metadata=task_definition.inspection.metadata,
-            )
-        else:
-            return RecordAudio(
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                target=task_definition.inspection.inspection_target.to_alitra_position(),
-                duration=inspection_definition.duration,
-                metadata=task_definition.inspection.metadata,
-            )
+        return RecordAudio(
+            id=task_definition.id if task_definition.id else uuid4_string(),
+            robot_pose=task_definition.pose.to_alitra_pose(),
+            tag_id=task_definition.tag,
+            target=task_definition.inspection.inspection_target.to_alitra_position(),
+            duration=inspection_definition.duration,
+            metadata=task_definition.inspection.metadata,
+        )
     elif inspection_definition.type == InspectionTypes.gas_measurement:
-        if task_definition.id:
-            return TakeGasMeasurement(
-                id=task_definition.id,
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                metadata=task_definition.inspection.metadata,
-            )
-        else:
-            return TakeGasMeasurement(
-                robot_pose=task_definition.pose.to_alitra_pose(),
-                tag_id=task_definition.tag,
-                metadata=task_definition.inspection.metadata,
-            )
+        return TakeGasMeasurement(
+            id=task_definition.id if task_definition.id else uuid4_string(),
+            robot_pose=task_definition.pose.to_alitra_pose(),
+            tag_id=task_definition.tag,
+            metadata=task_definition.inspection.metadata,
+        )
     else:
         raise ValueError(
             f"Inspection type '{inspection_definition.type}' not supported"

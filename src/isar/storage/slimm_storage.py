@@ -100,7 +100,7 @@ class SlimmStorage(StorageInterface):
     @staticmethod
     def _construct_multiform_request_image(
         filename: str, inspection: Inspection, mission: Mission
-    ):
+    ) -> MultipartEncoder:
         array_of_orientation = (
             inspection.metadata.pose.orientation.to_quat_array().tolist()
         )
@@ -148,7 +148,7 @@ class SlimmStorage(StorageInterface):
         filename: str,
         inspection: Inspection,
         mission: Mission,
-    ):
+    ) -> MultipartEncoder:
         array_of_orientation = (
             inspection.metadata.pose.orientation.to_quat_array().tolist()
         )

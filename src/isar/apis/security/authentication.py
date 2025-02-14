@@ -50,7 +50,7 @@ class Authenticator:
         enabled_string = "enabled" if self.authentication_enabled else "disabled"
         self.logger.info(f"API authentication is {enabled_string}")
 
-    def should_authenticate(self):
+    def should_authenticate(self) -> bool:
         return self.authentication_enabled
 
     def get_scheme(self):
@@ -58,7 +58,7 @@ class Authenticator:
             return validate_has_role
         return NoSecurity
 
-    async def load_config(self):
+    async def load_config(self) -> None:
         """
         Load OpenID config on startup.
         """

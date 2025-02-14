@@ -33,7 +33,6 @@ class MqttClientInterface(metaclass=ABCMeta):
 
         Returns
         -------
-
         """
         pass
 

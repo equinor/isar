@@ -7,6 +7,8 @@ from isar.config.settings import robot_settings, settings
 from isar.services.utilities.robot_utilities import RobotUtilities
 from fastapi import HTTPException
 
+from robot_interface.models.robots.media import MediaConfig
+
 
 class RobotController:
     @inject
@@ -17,8 +19,8 @@ class RobotController:
         self.robot_utilities: RobotUtilities = robot_utilities
         self.logger = logging.getLogger("api")
 
-    def generate_media_config(self):
-        media_config = self.robot_utilities.generate_media_config()
+    def generate_media_config(self) -> MediaConfig:
+        media_config: MediaConfig = self.robot_utilities.generate_media_config()
         if media_config is None:
             raise HTTPException(
                 status_code=204,
@@ -26,7 +28,7 @@ class RobotController:
             )
         return media_config
 
-    def get_info(self):
+    def get_info(self) -> RobotInfoResponse:
         return RobotInfoResponse(
             robot_package=settings.ROBOT_PACKAGE,
             isar_id=settings.ISAR_ID,
