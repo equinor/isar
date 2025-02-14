@@ -111,7 +111,7 @@ class Settings(BaseSettings):
     # Enabling this requires certain resources available for OAuth2 authentication
     # Currently supported authentication is Azure AD
     # (https://github.com/Intility/fastapi-azure-auth)
-    AUTHENTICATION_ENABLED: bool = Field(default=False)
+    AUTHENTICATION_ENABLED: bool = Field(default=True)
 
     # Tenant ID for the Azure tenant with your Azure Active Directory application
     AZURE_TENANT_ID: str = Field(default="3aa4a235-b6e2-48d5-9195-7fcf05b459b0")
