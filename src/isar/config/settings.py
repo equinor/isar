@@ -169,13 +169,13 @@ class Settings(BaseSettings):
     # submitted with the results once they have been uploaded.
 
     # Four digit code indicating facility
-    PLANT_CODE: str = Field(default="1320")
+    PLANT_CODE: str = Field(default="1210")
 
     # Name of the facility the robot is operating in
-    PLANT_NAME: str = Field(default="Kårstø")
+    PLANT_NAME: str = Field(default="Huldra")
 
     # Shortname of the facility the robot is operating in
-    PLANT_SHORT_NAME: str = Field(default="KAA")
+    PLANT_SHORT_NAME: str = Field(default="HUA")
 
     # Country the robot is operating in
     COUNTRY: str = Field(default="Norway")
