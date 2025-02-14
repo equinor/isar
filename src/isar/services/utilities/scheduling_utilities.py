@@ -2,7 +2,7 @@ import logging
 from copy import deepcopy
 from http import HTTPStatus
 from queue import Empty
-from typing import Any, List, Optional, Set
+from typing import Any, List, Optional
 
 from alitra import Pose
 from fastapi import HTTPException
@@ -102,14 +102,11 @@ class SchedulingUtilities:
         HTTPException 400 Bad request
             If the robot is not capable of performing mission
         """
-        is_capable: bool = True
-        missing_capabilities: Set[str] = set()
-        for task in mission.tasks:
-            if task.type not in robot_capabilities:
-                is_capable = False
-                missing_capabilities.add(task.type)
+        missing_capabilities = {
+            task.type for task in mission.tasks if task.type not in robot_capabilities
+        }
 
-        if not is_capable:
+        if missing_capabilities:
             error_message = (
                 f"Bad Request - Robot is not capable of performing mission."
                 f" Missing functionalities: {missing_capabilities}."
@@ -120,7 +117,7 @@ class SchedulingUtilities:
                 detail=error_message,
             )
 
-        return is_capable
+        return True
 
     def verify_state_machine_ready_to_receive_mission(self, state: States) -> bool:
         """Verify that the state machine is idle and ready to receive a mission
@@ -130,13 +127,12 @@ class SchedulingUtilities:
         HTTPException 409 Conflict
             If state machine is not idle and therefore can not start a new mission
         """
-        is_state_machine_ready_to_receive_mission = state == States.Idle
-        if not is_state_machine_ready_to_receive_mission:
+        if state != States.Idle:
             error_message = f"Conflict - Robot is not idle - State: {state}"
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
-        return is_state_machine_ready_to_receive_mission
+        return True
 
     def start_mission(
         self,

@@ -350,11 +350,7 @@ class StateMachine(object):
         self.reset_state_machine()
 
     def begin(self):
-        """Starts the state machine.
-
-        Transitions into idle state.
-
-        """
+        """Starts the state machine. Transitions into idle state."""
         self.to_idle()  # type: ignore
 
     def iterate_current_task(self):
@@ -412,7 +408,7 @@ class StateMachine(object):
         except queue.Empty:
             return False
 
-    def send_state_status(self):
+    def send_state_status(self) -> None:
         self.queues.state.update(self.current_state)
 
     def publish_mission_status(self) -> None:
@@ -502,11 +498,11 @@ class StateMachine(object):
         else:
             return RobotStatus.Busy
 
-    def _log_state_transition(self, next_state):
+    def _log_state_transition(self, next_state) -> None:
         """Logs all state transitions that are not self-transitions."""
         self.transitions_list.append(next_state)
 
-    def log_mission_overview(self, mission: Mission):
+    def log_mission_overview(self, mission: Mission) -> None:
         """Log an overview of the tasks in a mission"""
         log_statements: List[str] = []
         for task in mission.tasks:
@@ -525,7 +521,7 @@ class StateMachine(object):
             task_status=self.current_task.status,
         )
 
-    def _queue_empty_response(self):
+    def _queue_empty_response(self) -> None:
         self.queues.stop_mission.output.put(
             ControlMissionResponse(
                 mission_id="None",
