@@ -18,7 +18,7 @@ azure-core==1.32.0
     #   azure-keyvault-secrets
     #   azure-storage-blob
     #   opencensus-ext-azure
-azure-identity==1.19.0
+azure-identity==1.20.0
     # via
     #   isar (pyproject.toml)
     #   opencensus-ext-azure
@@ -43,7 +43,7 @@ click==8.1.8
     # via
     #   isar (pyproject.toml)
     #   uvicorn
-cryptography==44.0.0
+cryptography==44.0.1
     # via
     #   azure-identity
     #   azure-storage-blob
@@ -64,7 +64,7 @@ google-api-core==2.24.1
     # via opencensus
 google-auth==2.38.0
     # via google-api-core
-googleapis-common-protos==1.67.0rc1
+googleapis-common-protos==1.67.0
     # via google-api-core
 h11==0.14.0
     # via
@@ -91,7 +91,7 @@ msal==1.31.1
     #   msal-extensions
 msal-extensions==1.2.0
     # via azure-identity
-numpy==2.2.2
+numpy==2.2.3
     # via
     #   alitra
     #   isar (pyproject.toml)
@@ -120,7 +120,7 @@ protobuf==5.29.3
     #   google-api-core
     #   googleapis-common-protos
     #   proto-plus
-psutil==6.1.1
+psutil==7.0.0
     # via opencensus-ext-azure
 pyasn1==0.6.1
     # via
@@ -163,7 +163,7 @@ requests-toolbelt==1.0.0
     # via isar (pyproject.toml)
 rsa==4.9
     # via google-auth
-scipy==1.15.1
+scipy==1.15.2
     # via alitra
 six==1.17.0
     # via
