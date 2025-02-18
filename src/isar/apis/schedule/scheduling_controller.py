@@ -5,7 +5,7 @@ from typing import Optional
 from alitra import Pose
 from fastapi import Body, HTTPException, Path
 from injector import inject
-
+from threading import Lock
 from isar.apis.models.models import (
     ControlMissionResponse,
     TaskResponse,
@@ -37,6 +37,7 @@ class SchedulingController:
     ):
         self.scheduling_utilities: SchedulingUtilities = scheduling_utilities
         self.logger = logging.getLogger("api")
+        self.start_mission_lock: Lock = Lock()
 
     def start_mission_by_id(
         self,
@@ -108,42 +109,61 @@ class SchedulingController:
         self.logger.info("Received request to start new mission")
 
         if not mission_definition:
-            error_message: str = (
+            error_message_no_mission_definition: str = (
                 "Unprocessable entity - 'mission_definition' empty or invalid"
             )
-            self.logger.error(error_message)
+            self.logger.error(error_message_no_mission_definition)
             raise HTTPException(
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=error_message
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                detail=error_message_no_mission_definition,
             )
 
-        state: States = self.scheduling_utilities.get_state()
-        self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
+        if not self.start_mission_lock.acquire(blocking=False):
+            error_message_another_mission_starting: str = (
+                "Conflict - Another mission is currently being started"
+            )
+            self.logger.warning(error_message_another_mission_starting)
+            raise HTTPException(
+                status_code=HTTPStatus.CONFLICT,
+                detail=error_message_another_mission_starting,
+            )
 
         try:
-            mission: Mission = to_isar_mission(
-                start_mission_definition=mission_definition, return_pose=return_pose
-            )
-        except MissionPlannerError as e:
-            error_message = f"Bad Request - Cannot create ISAR mission: {e}"
-            self.logger.warning(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail=error_message,
+            state: States = self.scheduling_utilities.get_state()
+            self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(
+                state
             )
 
-        self.scheduling_utilities.verify_robot_capable_of_mission(
-            mission=mission, robot_capabilities=robot_settings.CAPABILITIES
-        )
+            try:
+                mission: Mission = to_isar_mission(
+                    start_mission_definition=mission_definition, return_pose=return_pose
+                )
+            except MissionPlannerError as e:
+                error_message_mission_planner: str = (
+                    f"Bad Request - Cannot create ISAR mission: {e}"
+                )
+                self.logger.warning(error_message_mission_planner)
+                raise HTTPException(
+                    status_code=HTTPStatus.BAD_REQUEST,
+                    detail=error_message_mission_planner,
+                )
 
-        initial_pose_alitra: Optional[Pose] = (
-            initial_pose.to_alitra_pose() if initial_pose else None
-        )
+            self.scheduling_utilities.verify_robot_capable_of_mission(
+                mission=mission, robot_capabilities=robot_settings.CAPABILITIES
+            )
 
-        self.logger.info(f"Starting mission: {mission.id}")
-        self.scheduling_utilities.start_mission(
-            mission=mission, initial_pose=initial_pose_alitra
-        )
-        return self._api_response(mission)
+            initial_pose_alitra: Optional[Pose] = (
+                initial_pose.to_alitra_pose() if initial_pose else None
+            )
+
+            self.logger.info(f"Starting mission: {mission.id}")
+            self.scheduling_utilities.start_mission(
+                mission=mission, initial_pose=initial_pose_alitra
+            )
+            return self._api_response(mission)
+
+        finally:
+            self.start_mission_lock.release()
 
     def pause_mission(self) -> ControlMissionResponse:
         self.logger.info("Received request to pause current mission")

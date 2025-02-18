@@ -1,7 +1,6 @@
 import re
 from http import HTTPStatus
 from unittest import mock
-
 import pytest
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
@@ -22,6 +21,7 @@ mock_return_idle = mock.Mock(return_value=States.Idle)
 mock_return_monitor = mock.Mock(return_value=States.Monitor)
 mock_return_paused = mock.Mock(return_value=States.Paused)
 mock_void = mock.Mock()
+
 
 mock_task = mock_mission.tasks[0]
 mock_start_mission_response = MockMissionDefinition.mock_start_mission_response
@@ -110,6 +110,21 @@ class TestStartMission:
             json=jsonable_encoder(self.mock_start_mission_content),
         )
         assert response.status_code == HTTPStatus.OK
+
+    @pytest.mark.asyncio
+    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_idle)
+    @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
+    async def test_start_two_mission_after_each_other(self, client: TestClient):
+        response1 = client.post(
+            url=self.schedule_start_mission_path,
+            json=jsonable_encoder(self.mock_start_mission_content),
+        )
+        response2 = client.post(
+            url=self.schedule_start_mission_path,
+            json=jsonable_encoder(self.mock_start_mission_content),
+        )
+        assert response1.status_code == HTTPStatus.OK
+        assert response2.status_code == HTTPStatus.OK
 
     def test_incomplete_request(self, client: TestClient):
         response = client.post(url=self.schedule_start_mission_path, json={})
