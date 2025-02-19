@@ -82,6 +82,9 @@ class Settings(BaseSettings):
     # FastAPI port
     API_PORT: int = Field(default=3000)
 
+    # Determines how long delay time should be allowed before returning home
+    RETURN_HOME_DELAY: int = Field(default=10)
+
     # Determines which mission planner module is used by ISAR
     MISSION_PLANNER: str = Field(default="local")
 

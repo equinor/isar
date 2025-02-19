@@ -14,6 +14,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotException,
     RobotInfeasibleMissionException,
 )
+from robot_interface.models.mission.task import ReturnToHome
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -41,6 +42,12 @@ class Initiate(State):
             self.initiate_thread.wait_for_thread()
         self.initiate_thread = None
 
+    def _is_return_to_home_mission(self) -> bool:
+        if len(self.state_machine.current_mission.tasks) > 1:
+            return False
+
+        return isinstance(self.state_machine.current_mission.tasks[0], ReturnToHome)
+
     def _run(self) -> None:
         transition: Callable
         while True:
@@ -57,6 +64,10 @@ class Initiate(State):
 
             try:
                 self.initiate_thread.get_output()
+                if self._is_return_to_home_mission():
+                    transition = self.state_machine.return_home_initiated
+                    break
+
                 transition = self.state_machine.initiated  # type: ignore
                 break
             except ThreadedRequestNotFinishedError:
