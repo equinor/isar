@@ -17,10 +17,13 @@ from isar.mission_planner.task_selector_interface import (
 )
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queues import Queues
+from isar.state_machine.states.docked import Docked
 from isar.state_machine.states.idle import Idle
 from isar.state_machine.states.initialize import Initialize
 from isar.state_machine.states.initiate import Initiate
 from isar.state_machine.states.monitor import Monitor
+from isar.state_machine.states.returning_home import ReturningHome
+from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.off import Off
 from isar.state_machine.states.offline import Offline
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
@@ -30,7 +33,7 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
-from robot_interface.models.mission.task import TASKS
+from robot_interface.models.mission.task import TASKS, ReturnToHome
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
@@ -83,9 +86,12 @@ class StateMachine(object):
         # List of states
         self.stop_state: State = Stop(self)
         self.paused_state: State = Paused(self)
+        self.docked_state: State = Docked(self)
         self.idle_state: State = Idle(self)
         self.initialize_state: State = Initialize(self)
         self.monitor_state: State = Monitor(self)
+        self.returning_home_state: State = ReturningHome(self)
+        self.await_next_mission_state: State = AwaitNextMission(self)
         self.initiate_state: State = Initiate(self)
         self.off_state: State = Off(self)
         self.offline_state: State = Offline(self)
@@ -93,10 +99,13 @@ class StateMachine(object):
 
         self.states: List[State] = [
             self.off_state,
+            self.docked_state,
             self.idle_state,
             self.initialize_state,
             self.initiate_state,
             self.monitor_state,
+            self.returning_home_state,
+            self.await_next_mission_state,
             self.stop_state,
             self.paused_state,
             self.offline_state,
@@ -126,9 +135,12 @@ class StateMachine(object):
                 {
                     "trigger": "stop",
                     "source": [
+                        self.docked_state,
                         self.idle_state,
                         self.initiate_state,
                         self.monitor_state,
+                        self.returning_home_state,
+                        self.await_next_mission_state,
                         self.paused_state,
                     ],
                     "dest": self.stop_state,
@@ -136,14 +148,35 @@ class StateMachine(object):
                 {
                     "trigger": "mission_finished",
                     "source": self.monitor_state,
-                    "dest": self.idle_state,
+                    "dest": self.await_next_mission_state,
                     "before": self._mission_finished,
                 },
                 {
                     "trigger": "mission_started",
-                    "source": self.idle_state,
+                    "source": [
+                        self.docked_state,
+                        self.idle_state,
+                        self.await_next_mission_state,
+                    ],
                     "dest": self.initialize_state,
                     "before": self._mission_started,
+                },
+                {
+                    "trigger": "return_home",
+                    "source": self.await_next_mission_state,
+                    "dest": self.initialize_state,
+                    "before": self._return_home,
+                },
+                {
+                    "trigger": "return_home_initiated",
+                    "source": self.initiate_state,
+                    "dest": self.returning_home_state,
+                },
+                {
+                    "trigger": "return_home_finished",
+                    "source": self.returning_home_state,
+                    "dest": self.idle_state,
+                    "before": self._return_home_finished,
                 },
                 {
                     "trigger": "initialization_successful",
@@ -183,6 +216,16 @@ class StateMachine(object):
                 {
                     "trigger": "robot_turned_online",
                     "source": self.offline_state,
+                    "dest": self.idle_state,
+                },
+                {
+                    "trigger": "robot_docked",
+                    "source": self.idle_state,
+                    "dest": self.docked_state,
+                },
+                {
+                    "trigger": "robot_undocked",
+                    "source": self.docked_state,
                     "dest": self.idle_state,
                 },
                 {
@@ -284,6 +327,22 @@ class StateMachine(object):
         else:
             self.current_task.status = TaskStatus.InProgress
             self.publish_task_status(task=self.current_task)
+
+    def _return_home(self) -> None:
+        self.start_mission(
+            Mission(
+                tasks=[ReturnToHome()],
+                name="Return Home",
+            )
+        )
+        self.log_mission_overview(mission=self.current_mission)
+        self.current_mission.status = MissionStatus.InProgress
+
+        self.current_task = self.task_selector.next_task()
+        self.current_task.status = TaskStatus.InProgress
+
+    def _return_home_finished(self) -> None:
+        self.reset_state_machine()
 
     def _full_mission_finished(self) -> None:
         self.current_task = None
@@ -485,7 +544,11 @@ class StateMachine(object):
         )
 
     def _current_status(self) -> RobotStatus:
-        if self.current_state == States.Idle:
+        if (
+            self.current_state == States.Docked
+            or self.current_state == States.Idle
+            or self.current_state == States.AwaitNextMission
+        ):
             return RobotStatus.Available
         elif self.current_state == States.Offline:
             return RobotStatus.Offline

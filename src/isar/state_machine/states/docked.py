@@ -17,14 +17,13 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class Idle(State):
+class Docked(State):
     def __init__(self, state_machine: "StateMachine") -> None:
-        super().__init__(name="idle", on_enter=self.start, on_exit=self.stop)
+        super().__init__(name="docked", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
         self.robot_status_thread: Optional[ThreadedRequest] = None
         self.last_robot_status_poll_time: float = time.time()
-        self.status_checked_at_least_once: bool = False
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -34,12 +33,8 @@ class Idle(State):
         if self.robot_status_thread:
             self.robot_status_thread.wait_for_thread()
         self.robot_status_thread = None
-        self.status_checked_at_least_once = False
 
     def _is_ready_to_poll_for_status(self) -> bool:
-        if not self.status_checked_at_least_once:
-            return True
-
         time_since_last_robot_status_poll = (
             time.time() - self.last_robot_status_poll_time
         )
@@ -53,16 +48,15 @@ class Idle(State):
                 transition = self.state_machine.stop  # type: ignore
                 break
 
-            if self.status_checked_at_least_once:
-                start_mission: Optional[StartMissionMessage] = (
-                    self.state_machine.should_start_mission()
-                )
-                if start_mission:
-                    self.state_machine.start_mission(mission=start_mission.mission)
-                    transition = self.state_machine.mission_started  # type: ignore
-                    break
+            start_mission: Optional[StartMissionMessage] = (
+                self.state_machine.should_start_mission()
+            )
+            if start_mission:
+                self.state_machine.start_mission(mission=start_mission.mission)
+                transition = self.state_machine.mission_started  # type: ignore
+                break
 
-                time.sleep(self.state_machine.sleep_time)
+            time.sleep(self.state_machine.sleep_time)
 
             if not self._is_ready_to_poll_for_status():
                 continue
@@ -77,7 +71,6 @@ class Idle(State):
 
             try:
                 robot_status: RobotStatus = self.robot_status_thread.get_output()
-                self.status_checked_at_least_once = True
             except ThreadedRequestNotFinishedError:
                 time.sleep(self.state_machine.sleep_time)
                 continue
@@ -89,14 +82,8 @@ class Idle(State):
 
             self.last_robot_status_poll_time = time.time()
 
-            if robot_status == RobotStatus.Offline:
-                transition = self.state_machine.robot_turned_offline  # type: ignore
-                break
-            elif robot_status == RobotStatus.BlockedProtectiveStop:
-                transition = self.state_machine.robot_protective_stop_engaged  # type: ignore
-                break
-            elif robot_status == RobotStatus.Docked:
-                transition = self.state_machine.robot_docked  # type: ignore
+            if robot_status != RobotStatus.Docked:
+                transition = self.state_machine.robot_undocked  # type: ignore
                 break
 
             self.robot_status_thread = None
