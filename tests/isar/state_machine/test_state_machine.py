@@ -85,7 +85,6 @@ def test_reset_state_machine(state_machine) -> None:
 def test_state_machine_transitions_when_running_full_mission(
     injector, state_machine_thread
 ) -> None:
-    state_machine_thread.state_machine.run_mission_by_task = False
     state_machine_thread.start()
 
     task_1: Task = TakeImage(
