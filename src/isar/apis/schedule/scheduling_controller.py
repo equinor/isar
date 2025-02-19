@@ -18,7 +18,11 @@ from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import TASKS, InspectionTask, MoveArm
+from robot_interface.models.mission.task import (
+    TASKS,
+    InspectionTask,
+    MoveArm,
+)
 
 
 class SchedulingController:
