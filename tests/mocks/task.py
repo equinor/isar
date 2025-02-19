@@ -1,13 +1,12 @@
 from alitra import Frame, Orientation, Pose, Position
 
 from robot_interface.models.mission.task import ReturnToHome, TakeImage
-from tests.mocks.pose import MockPose
 
 
 class MockTask:
     @staticmethod
     def return_home() -> ReturnToHome:
-        return ReturnToHome(pose=MockPose.default_pose())
+        return ReturnToHome()
 
     @staticmethod
     def take_image() -> TakeImage:

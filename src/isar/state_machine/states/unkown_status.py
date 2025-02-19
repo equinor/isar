@@ -1,19 +1,18 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable
 
 from transitions import State
 
-from isar.models.communication.message import StartMissionMessage
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class Idle(State):
+class UnknownStatus(State):
     def __init__(self, state_machine: "StateMachine") -> None:
-        super().__init__(name="idle", on_enter=self.start, on_exit=self.stop)
+        super().__init__(name="unknown_status", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
 
@@ -31,14 +30,6 @@ class Idle(State):
                 transition = self.state_machine.stop  # type: ignore
                 break
 
-            start_mission: Optional[StartMissionMessage] = (
-                self.state_machine.should_start_mission()
-            )
-            if start_mission:
-                self.state_machine.start_mission(mission=start_mission.mission)
-                transition = self.state_machine.request_mission_start  # type: ignore
-                break
-
             robot_status = self.state_machine.get_robot_status()
             if robot_status == RobotStatus.Docked:
                 transition = self.state_machine.robot_docked  # type: ignore
@@ -48,9 +39,6 @@ class Idle(State):
                 break
             elif robot_status == RobotStatus.BlockedProtectiveStop:
                 transition = self.state_machine.robot_protective_stop_engaged  # type: ignore
-                break
-            elif robot_status != RobotStatus.Available:
-                transition = self.state_machine.robot_is_not_available  # type: ignore
                 break
 
             time.sleep(self.state_machine.sleep_time)

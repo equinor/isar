@@ -1,14 +1,11 @@
 import logging
 from http import HTTPStatus
-from typing import Optional
 
-from alitra import Pose
 from fastapi import Body, HTTPException, Path
 from injector import inject
 
 from isar.apis.models.models import (
     ControlMissionResponse,
-    InputPose,
     StartMissionResponse,
     TaskResponse,
 )
@@ -25,7 +22,6 @@ from robot_interface.models.mission.task import (
     TASKS,
     InspectionTask,
     MoveArm,
-    ReturnToHome,
 )
 
 
@@ -45,12 +41,6 @@ class SchedulingController:
             title="Mission ID",
             description="ID-number for predefined mission",
         ),
-        return_pose: Optional[InputPose] = Body(
-            default=None,
-            description="End pose of the mission. The robot return to the specified "
-            "pose after finishing all inspections",
-            embed=True,
-        ),
     ) -> StartMissionResponse:
         self.logger.info(f"Received request to start mission with id {mission_id}")
 
@@ -58,9 +48,6 @@ class SchedulingController:
         self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
 
         mission: Mission = self.scheduling_utilities.get_mission(mission_id)
-        if return_pose:
-            pose: Pose = return_pose.to_alitra_pose()
-            mission.tasks.append(ReturnToHome(pose=pose))
 
         self.scheduling_utilities.verify_robot_capable_of_mission(
             mission=mission, robot_capabilities=robot_settings.CAPABILITIES
@@ -80,12 +67,6 @@ class SchedulingController:
             title="Mission Definition",
             description="Description of the mission in json format",
         ),
-        return_pose: Optional[InputPose] = Body(
-            default=None,
-            description="End pose of the mission. The robot return to the specified "
-            "pose after finishing all inspections",
-            embed=True,
-        ),
     ) -> StartMissionResponse:
         self.logger.info("Received request to start new mission")
 
@@ -103,7 +84,7 @@ class SchedulingController:
 
         try:
             mission: Mission = to_isar_mission(
-                start_mission_definition=mission_definition, return_pose=return_pose
+                start_mission_definition=mission_definition
             )
         except MissionPlannerError as e:
             error_message = f"Bad Request - Cannot create ISAR mission: {e}"

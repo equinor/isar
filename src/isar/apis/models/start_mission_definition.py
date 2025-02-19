@@ -61,16 +61,12 @@ class StartMissionDefinition(BaseModel):
 
 def to_isar_mission(
     start_mission_definition: StartMissionDefinition,
-    return_pose: Optional[InputPose] = None,
 ) -> Mission:
     isar_tasks: List[TASKS] = []
 
     for task_definition in start_mission_definition.tasks:
         task: TASKS = to_isar_task(task_definition)
         isar_tasks.append(task)
-
-    if return_pose:
-        isar_tasks.append(ReturnToHome(pose=return_pose.to_alitra_pose()))
 
     if not isar_tasks:
         raise MissionPlannerError("Mission does not contain any valid tasks")
@@ -96,7 +92,7 @@ def to_isar_task(task_definition: StartMissionTaskDefinition) -> TASKS:
     if task_definition.type == TaskType.Inspection:
         return to_inspection_task(task_definition)
     elif task_definition.type == TaskType.ReturnToHome:
-        return create_return_to_home_task(task_definition)
+        return ReturnToHome()
     else:
         raise MissionPlannerError(
             f"Failed to create task: '{task_definition.type}' is not a valid"
@@ -164,12 +160,6 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
         raise ValueError(
             f"Inspection type '{inspection_definition.type}' not supported"
         )
-
-
-def create_return_to_home_task(
-    task_definition: StartMissionTaskDefinition,
-) -> ReturnToHome:
-    return ReturnToHome(pose=task_definition.pose.to_alitra_pose())
 
 
 def _build_mission_name() -> str:

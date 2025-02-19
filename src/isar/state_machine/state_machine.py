@@ -18,12 +18,16 @@ from isar.mission_planner.task_selector_interface import (
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queues import Queues
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
+from isar.state_machine.states.docked import Docked
 from isar.state_machine.states.idle import Idle
 from isar.state_machine.states.monitor import Monitor
+from isar.state_machine.states.returning_home import ReturningHome
+from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.off import Off
 from isar.state_machine.states.offline import Offline
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.stop import Stop
+from isar.state_machine.states.unkown_status import UnknownStatus
 from isar.state_machine.states_enum import States
 from isar.state_machine.transitions.fail_mission import (
     report_failed_mission_and_finalize,
@@ -31,6 +35,7 @@ from isar.state_machine.transitions.fail_mission import (
 from isar.state_machine.transitions.finish_mission import finish_mission
 from isar.state_machine.transitions.pause import pause_mission
 from isar.state_machine.transitions.resume import resume_mission
+from isar.state_machine.transitions.return_home import return_home, return_home_finished
 from isar.state_machine.transitions.start_mission import (
     initialize_robot,
     initiate_mission,
@@ -96,110 +101,170 @@ class StateMachine(object):
         # List of states
         self.stop_state: State = Stop(self)
         self.paused_state: State = Paused(self)
+        self.docked_state: State = Docked(self)
         self.idle_state: State = Idle(self)
         self.monitor_state: State = Monitor(self)
+        self.returning_home_state: State = ReturningHome(self)
+        self.await_next_mission_state: State = AwaitNextMission(self)
         self.off_state: State = Off(self)
         self.offline_state: State = Offline(self)
-        self.blocked_protective_stop: State = BlockedProtectiveStop(self)
+        self.blocked_protective_stop_state: State = BlockedProtectiveStop(self)
+        self.unknown_status_state: State = UnknownStatus(self)
 
         self.states: List[State] = [
             self.off_state,
+            self.docked_state,
             self.idle_state,
             self.monitor_state,
+            self.returning_home_state,
+            self.await_next_mission_state,
             self.stop_state,
             self.paused_state,
             self.offline_state,
-            self.blocked_protective_stop,
+            self.blocked_protective_stop_state,
+            self.unknown_status_state,
         ]
 
         self.machine = Machine(self, states=self.states, initial="off", queued=True)
-        self.machine.add_transitions(
-            [
-                {
-                    "trigger": "start_machine",
-                    "source": self.off_state,
-                    "dest": self.idle_state,
-                },
-                {
-                    "trigger": "pause",
-                    "source": self.monitor_state,
-                    "dest": self.paused_state,
-                    "before": def_transition(self, pause_mission),
-                },
-                {
-                    "trigger": "stop",
-                    "source": [
-                        self.idle_state,
-                        self.monitor_state,
-                        self.paused_state,
-                    ],
-                    "dest": self.stop_state,
-                },
-                {
-                    "trigger": "request_mission_start",
-                    "source": self.idle_state,
-                    "dest": self.monitor_state,
-                    "prepare": def_transition(self, put_start_mission_on_queue),
-                    "conditions": [
-                        def_transition(self, initiate_mission),
-                        def_transition(self, initialize_robot),
-                    ],
-                    "before": [
-                        def_transition(self, set_mission_to_in_progress),
-                        def_transition(self, trigger_start_mission_or_task_event),
-                    ],
-                },
-                {
-                    "trigger": "request_mission_start",
-                    "source": self.idle_state,
-                    "dest": self.idle_state,
-                },
-                {
-                    "trigger": "mission_failed_to_start",
-                    "source": self.monitor_state,
-                    "dest": self.idle_state,
-                    "before": def_transition(self, report_failed_mission_and_finalize),
-                },
-                {
-                    "trigger": "resume",
-                    "source": self.paused_state,
-                    "dest": self.monitor_state,
-                    "before": def_transition(self, resume_mission),
-                },
-                {
-                    "trigger": "mission_finished",
-                    "source": self.monitor_state,
-                    "dest": self.idle_state,
-                    "before": def_transition(self, finish_mission),
-                },
-                {
-                    "trigger": "mission_stopped",
-                    "source": self.stop_state,
-                    "dest": self.idle_state,
-                    "before": def_transition(self, stop_mission),
-                },
-                {
-                    "trigger": "robot_turned_offline",
-                    "source": [self.idle_state, self.blocked_protective_stop],
-                    "dest": self.offline_state,
-                },
-                {
-                    "trigger": "robot_turned_online",
-                    "source": self.offline_state,
-                    "dest": self.idle_state,
-                },
-                {
-                    "trigger": "robot_protective_stop_engaged",
-                    "source": [self.idle_state, self.offline_state],
-                    "dest": self.blocked_protective_stop,
-                },
-                {
-                    "trigger": "robot_protective_stop_disengaged",
-                    "source": self.blocked_protective_stop,
-                    "dest": self.idle_state,
-                },
-            ]
-        )
+        self.transitions: List[dict] = [
+            {
+                "trigger": "start_machine",
+                "source": self.off_state,
+                "dest": self.idle_state,
+            },
+            {
+                "trigger": "pause",
+                "source": self.monitor_state,
+                "dest": self.paused_state,
+                "before": def_transition(self, pause_mission),
+            },
+            {
+                "trigger": "stop",
+                "source": [
+                    self.idle_state,
+                    self.monitor_state,
+                    self.returning_home_state,
+                    self.await_next_mission_state,
+                    self.paused_state,
+                ],
+                "dest": self.stop_state,
+            },
+            {
+                "trigger": "request_mission_start",
+                "source": [
+                    self.docked_state,
+                    self.idle_state,
+                    self.await_next_mission_state,
+                ],
+                "dest": self.monitor_state,
+                "prepare": def_transition(self, put_start_mission_on_queue),
+                "conditions": [
+                    def_transition(self, initiate_mission),
+                    def_transition(self, initialize_robot),
+                ],
+                "before": [
+                    def_transition(self, set_mission_to_in_progress),
+                    def_transition(self, trigger_start_mission_or_task_event),
+                ],
+            },
+            {
+                "trigger": "request_mission_start",
+                "source": self.idle_state,
+                "dest": self.idle_state,
+            },
+            {
+                "trigger": "mission_failed_to_start",
+                "source": self.monitor_state,
+                "dest": self.await_next_mission_state,
+                "before": def_transition(self, report_failed_mission_and_finalize),
+            },
+            {
+                "trigger": "return_home",
+                "source": self.await_next_mission_state,
+                "dest": self.returning_home_state,
+                "before": def_transition(self, return_home),
+            },
+            {
+                "trigger": "return_home_finished",
+                "source": self.returning_home_state,
+                "dest": self.idle_state,
+                "before": def_transition(self, return_home_finished),
+            },
+            {
+                "trigger": "resume",
+                "source": self.paused_state,
+                "dest": self.monitor_state,
+                "before": def_transition(self, resume_mission),
+            },
+            {
+                "trigger": "mission_finished",
+                "source": self.monitor_state,
+                "dest": self.await_next_mission_state,
+                "before": def_transition(self, finish_mission),
+            },
+            {
+                "trigger": "mission_stopped",
+                "source": self.stop_state,
+                "dest": self.idle_state,
+                "before": def_transition(self, stop_mission),
+            },
+            {
+                "trigger": "robot_is_available",
+                "source": [
+                    self.docked_state,
+                    self.blocked_protective_stop_state,
+                    self.offline_state,
+                    self.unknown_status_state,
+                ],
+                "dest": self.idle_state,
+            },
+            {
+                "trigger": "robot_is_not_available",
+                "source": self.idle_state,
+                "dest": self.unknown_status_state,
+            },
+            {
+                "trigger": "robot_turned_offline",
+                "source": [
+                    self.docked_state,
+                    self.idle_state,
+                    self.blocked_protective_stop_state,
+                    self.unknown_status_state,
+                ],
+                "dest": self.offline_state,
+            },
+            {
+                "trigger": "robot_turned_online",
+                "source": self.offline_state,
+                "dest": self.unknown_status_state,
+            },
+            {
+                "trigger": "robot_docked",
+                "source": [
+                    self.idle_state,
+                    self.blocked_protective_stop_state,
+                    self.offline_state,
+                    self.unknown_status_state,
+                ],
+                "dest": self.docked_state,
+            },
+            {
+                "trigger": "robot_undocked",
+                "source": self.docked_state,
+                "dest": self.unknown_status_state,
+            },
+            {
+                "trigger": "robot_protective_stop_engaged",
+                "source": [self.docked_state, self.idle_state, self.offline_state],
+                "dest": self.blocked_protective_stop_state,
+            },
+            {
+                "trigger": "robot_protective_stop_disengaged",
+                "source": self.blocked_protective_stop_state,
+                "dest": self.unknown_status_state,
+            },
+        ]
+        self.machine.add_transitions(self.transitions)
 
         self.stop_robot_attempts_limit: int = stop_robot_attempts_limit
         self.sleep_time: float = sleep_time
@@ -404,8 +469,15 @@ class StateMachine(object):
         )
 
     def _current_status(self) -> RobotStatus:
-        if self.current_state == States.Idle:
+        if (
+            self.current_state == States.Idle
+            or self.current_state == States.AwaitNextMission
+        ):
             return RobotStatus.Available
+        elif self.current_state == States.Docked:
+            return RobotStatus.Docked
+        elif self.current_state == States.ReturningHome:
+            return RobotStatus.ReturningHome
         elif self.current_state == States.Offline:
             return RobotStatus.Offline
         elif self.current_state == States.BlockedProtectiveStop:
