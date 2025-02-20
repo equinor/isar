@@ -50,6 +50,9 @@ class Robot(object):
                 self.start_mission_thread is not None
                 and self.start_mission_thread.is_alive()
             ):
+                self.logger.warning(
+                    "Attempted to start mission while another mission was starting."
+                )
                 self.start_mission_thread.join()
             self.start_mission_thread = RobotStartMissionThread(
                 self.queues,
