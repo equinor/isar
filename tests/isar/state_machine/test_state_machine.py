@@ -89,7 +89,7 @@ def uploader_thread(injector) -> UploaderThread:
 def robot_service_thread(injector):
     robot_service_thread: RobotServiceThread = RobotServiceThread(injector=injector)
     yield robot_service_thread
-    robot_service_thread.teardown()
+    # robot_service_thread.teardown() # Not consistent on python 3.10 and older
 
 
 def test_initial_off(state_machine) -> None:
