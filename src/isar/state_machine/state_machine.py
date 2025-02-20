@@ -186,7 +186,7 @@ class StateMachine(object):
                 },
                 {
                     "trigger": "robot_turned_offline",
-                    "source": self.idle_state,
+                    "source": [self.idle_state, self.blocked_protective_stop],
                     "dest": self.offline_state,
                 },
                 {
@@ -196,7 +196,7 @@ class StateMachine(object):
                 },
                 {
                     "trigger": "robot_protective_stop_engaged",
-                    "source": self.idle_state,
+                    "source": [self.idle_state, self.offline_state],
                     "dest": self.blocked_protective_stop,
                 },
                 {
@@ -317,6 +317,12 @@ class StateMachine(object):
     def should_resume_mission(self) -> bool:
         try:
             return self.queues.api_resume_mission.input.get(block=False)
+        except queue.Empty:
+            return False
+
+    def get_robot_status(self) -> bool:
+        try:
+            return self.queues.robot_status.check()
         except queue.Empty:
             return False
 

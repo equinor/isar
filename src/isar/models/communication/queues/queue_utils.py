@@ -16,6 +16,10 @@ def check_shared_state(queueio: StatusQueue) -> Any:
         return None
 
 
+def update_shared_state(queueio: StatusQueue, data: Any = None) -> None:
+    queueio.update(data if data is not None else True)
+
+
 def check_for_event(queueio: QueueIO) -> Any:
     try:
         return queueio.input.get(block=False)

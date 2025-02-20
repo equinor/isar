@@ -9,9 +9,9 @@ from pytest_mock import MockerFixture
 
 from isar.models.communication.queues.queues import Queues
 from isar.robot.robot import Robot
+from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, main
-from isar.state_machine.states.idle import Idle
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
@@ -60,12 +60,12 @@ class UploaderThread(object):
 class RobotServiceThread(object):
     def __init__(self, injector) -> None:
         self.injector: Injector = injector
-
-    def start(self):
         self.robot_service: Robot = Robot(
             queues=self.injector.get(Queues),
             robot=self.injector.get(RobotInterface),
         )
+
+    def start(self):
         self._thread: Thread = Thread(target=self.robot_service.run)
         self._thread.daemon = True
         self._thread.start()
@@ -137,7 +137,6 @@ def test_state_machine_transitions_when_running_full_mission(
 def test_state_machine_failed_dependency(
     injector, state_machine_thread, robot_service_thread, mocker
 ) -> None:
-    robot_service_thread.start()
     task_1: Task = TakeImage(
         target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
     )
@@ -146,11 +145,12 @@ def test_state_machine_failed_dependency(
 
     mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.Failed)
 
+    robot_service_thread.start()
     state_machine_thread.start()
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(3)  # Allow the state machine to transition through the mission
+    time.sleep(5)  # Allow the state machine to transition through the mission
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
@@ -162,15 +162,20 @@ def test_state_machine_failed_dependency(
 
 
 def test_state_machine_with_successful_collection(
-    injector, state_machine_thread, robot_service_thread, uploader_thread
+    injector, state_machine_thread, robot_service_thread, uploader_thread, mocker
 ) -> None:
-    robot_service_thread.start()
-    state_machine_thread.start()
 
     storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
 
+    mocker.patch.object(
+        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
+    )
+
     mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
+
+    robot_service_thread.start()
+    state_machine_thread.start()
 
     scheduling_utilities.start_mission(mission=mission)
     time.sleep(5)
@@ -194,7 +199,9 @@ def test_state_machine_with_unsuccessful_collection(
 
     mocker.patch.object(MockRobot, "get_inspection", return_value=[])
 
-    mocker.patch.object(Idle, "_is_ready_to_poll_for_status", return_value=True)
+    mocker.patch.object(
+        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
+    )
 
     state_machine_thread.start()
 
@@ -230,7 +237,7 @@ def test_state_machine_with_successful_mission_stop(
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(0.11)  # Slightly more than the StateMachine sleep time
+    time.sleep(3)
     scheduling_utilities.stop_mission()
 
     assert state_machine_thread.state_machine.transitions_list == deque(
@@ -245,7 +252,6 @@ def test_state_machine_with_unsuccessful_mission_stop(
     caplog: pytest.LogCaptureFixture,
     robot_service_thread: RobotServiceThread,
 ) -> None:
-    robot_service_thread.start()
     mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
@@ -254,6 +260,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
         MockRobot, "stop", side_effect=_mock_robot_exception_with_message
     )
 
+    robot_service_thread.start()
     state_machine_thread.start()
 
     scheduling_utilities.start_mission(mission=mission)
@@ -273,12 +280,16 @@ def test_state_machine_with_unsuccessful_mission_stop(
 def test_state_machine_idle_to_offline_to_idle(
     mocker, state_machine_thread, robot_service_thread
 ) -> None:
-    robot_service_thread.start()
     # Robot status check happens every 5 seconds by default, so we mock the behavior
     # to poll for status imediately
-    mocker.patch.object(Idle, "_is_ready_to_poll_for_status", return_value=True)
+    mocker.patch.object(
+        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
+    )
 
-    state_machine_thread.state_machine.robot = MockRobotIdleToOfflineToIdleTest()
+    robot_service_thread.robot_service.robot = MockRobotIdleToOfflineToIdleTest(
+        robot_service_thread.robot_service.queues.state
+    )
+    robot_service_thread.start()
     state_machine_thread.start()
     time.sleep(5)
 
@@ -290,14 +301,18 @@ def test_state_machine_idle_to_offline_to_idle(
 def test_state_machine_idle_to_blocked_protective_stop_to_idle(
     mocker, state_machine_thread, robot_service_thread
 ) -> None:
-    robot_service_thread.start()
     # Robot status check happens every 5 seconds by default, so we mock the behavior
     # to poll for status imediately
-    mocker.patch.object(Idle, "_is_ready_to_poll_for_status", return_value=True)
-
-    state_machine_thread.state_machine.robot = (
-        MockRobotIdleToBlockedProtectiveStopToIdleTest()
+    mocker.patch.object(
+        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
+    robot_service_thread.robot_service.robot = (
+        MockRobotIdleToBlockedProtectiveStopToIdleTest(
+            robot_service_thread.robot_service.queues.state
+        )
+    )
+
+    robot_service_thread.start()
     state_machine_thread.start()
     time.sleep(5)
 
