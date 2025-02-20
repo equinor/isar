@@ -1,10 +1,11 @@
 from datetime import datetime
-from queue import Queue
+from queue import Empty, Queue
 from threading import Thread
 from typing import Callable, List
 
 from alitra import Frame, Orientation, Pose, Position
 
+from isar.models.communication.queues.status_queue import StatusQueue
 from robot_interface.models.inspection.inspection import (
     Image,
     ImageMetadata,
@@ -98,24 +99,37 @@ def mock_image_metadata() -> ImageMetadata:
 
 
 class MockRobotIdleToOfflineToIdleTest(MockRobot):
-    def __init__(self):
-        self.first = True
+    def __init__(self, current_state: StatusQueue):
+        self.entered_offline = False
+        self.current_state = current_state
 
     def robot_status(self) -> RobotStatus:
-        if self.first:
-            self.first = False
-            return RobotStatus.Offline
+        try:
+            new_state = self.current_state.check()
+            if new_state == "offline":
+                self.entered_offline = True
+                return RobotStatus.Available
+            if not self.entered_offline and new_state == "idle":
+                return RobotStatus.Offline
+        except Empty:
+            pass
 
         return RobotStatus.Available
 
 
 class MockRobotIdleToBlockedProtectiveStopToIdleTest(MockRobot):
-    def __init__(self):
-        self.first = True
+    def __init__(self, current_state: StatusQueue):
+        self.entered_blocked_p_stop = False
+        self.current_state = current_state
 
     def robot_status(self) -> RobotStatus:
-        if self.first:
-            self.first = False
-            return RobotStatus.BlockedProtectiveStop
+        try:
+            if self.current_state.check() == "blocked_protective_stop":
+                self.entered_blocked_p_stop = True
+                return RobotStatus.Available
+            if not self.entered_blocked_p_stop and self.current_state.check() == "idle":
+                return RobotStatus.BlockedProtectiveStop
+        except Empty:
+            pass
 
         return RobotStatus.Available

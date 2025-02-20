@@ -4,12 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 from transitions import State
 
-from isar.config.settings import settings
-from isar.services.utilities.threaded_request import (
-    ThreadedRequest,
-    ThreadedRequestNotFinishedError,
-)
-from robot_interface.models.exceptions.robot_exceptions import RobotException
+from isar.services.utilities.threaded_request import ThreadedRequest
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
@@ -44,22 +39,15 @@ class BlockedProtectiveStop(State):
                     name="State Machine BlockedProtectiveStop Get Robot Status"
                 )
 
-            try:
-                robot_status: RobotStatus = self.robot_status_thread.get_output()
-            except ThreadedRequestNotFinishedError:
-                time.sleep(self.state_machine.sleep_time)
-                continue
+            robot_status = self.state_machine.get_robot_status()
 
-            except RobotException as e:
-                self.logger.error(
-                    f"Failed to get robot status because: {e.error_description}"
-                )
-
-            if robot_status != RobotStatus.BlockedProtectiveStop:
+            if robot_status == RobotStatus.Offline:
+                transition = self.state_machine.robot_turned_offline  # type: ignore
+                break
+            elif robot_status != RobotStatus.BlockedProtectiveStop:
                 transition = self.state_machine.robot_protective_stop_disengaged  # type: ignore
                 break
 
-            self.robot_status_thread = None
-            time.sleep(settings.ROBOT_API_STATUS_POLL_INTERVAL)
+            time.sleep(self.state_machine.sleep_time)
 
         transition()
