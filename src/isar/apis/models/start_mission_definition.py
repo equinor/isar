@@ -61,16 +61,12 @@ class StartMissionDefinition(BaseModel):
 
 def to_isar_mission(
     start_mission_definition: StartMissionDefinition,
-    return_pose: Optional[InputPose] = None,
 ) -> Mission:
     isar_tasks: List[TASKS] = []
 
     for task_definition in start_mission_definition.tasks:
         task: TASKS = to_isar_task(task_definition)
         isar_tasks.append(task)
-
-    if return_pose:
-        isar_tasks.append(ReturnToHome(pose=return_pose.to_alitra_pose()))
 
     if not isar_tasks:
         raise MissionPlannerError("Mission does not contain any valid tasks")
