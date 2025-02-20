@@ -18,17 +18,20 @@ class Queues:
         self.state_machine_task_status_request: QueueIO = QueueIO(
             input_size=1, output_size=1
         )
+        self.state_machine_robot_status_request: QueueIO = QueueIO(
+            input_size=1, output_size=1
+        )
         self.state_machine_current_task: StatusQueue = StatusQueue()
 
-        self.robot_offline: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.robot_online: QueueIO = QueueIO(input_size=1, output_size=1)
         self.robot_task_status: QueueIO = QueueIO(input_size=1, output_size=1)
         self.robot_task_status_failed: QueueIO = QueueIO(input_size=1, output_size=1)
         self.robot_mission_started: QueueIO = QueueIO(input_size=1, output_size=1)
         self.robot_mission_failed: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.robot_status_changed: QueueIO = QueueIO(input_size=1, output_size=1)
 
         self.upload_queue: Queue = Queue(maxsize=10)
         self.state: StatusQueue = StatusQueue()
+        self.robot_status: StatusQueue = StatusQueue()
 
         if settings.MQTT_ENABLED:
             self.mqtt_queue: Queue = Queue()
