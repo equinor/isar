@@ -26,6 +26,7 @@ from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.robot_interface import RobotInterface
+from isar.robot.robot import Robot
 
 
 def print_setting(
@@ -94,6 +95,7 @@ def start() -> None:
     uploader: Uploader = injector.get(Uploader)
     robot: RobotInterface = injector.get(RobotInterface)
     queues: Queues = injector.get(Queues)
+    robot_service: Robot = injector.get(Robot)
 
     threads: List[Thread] = []
 
@@ -106,6 +108,11 @@ def start() -> None:
         target=uploader.run, name="ISAR Uploader", daemon=True
     )
     threads.append(uploader_thread)
+
+    robot_service_thread: Thread = Thread(
+        target=robot_service.run, name="Robot service", daemon=True
+    )
+    threads.append(robot_service_thread)
 
     if settings.UPLOAD_INSPECTIONS_ASYNC:
 

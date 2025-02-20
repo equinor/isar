@@ -206,8 +206,6 @@ class TestResumeMission:
 class TestStopMission:
     schedule_stop_mission_path = "/schedule/stop-mission"
     valid_states = [
-        States.Initiate,
-        States.Initialize,
         States.Idle,
         States.Monitor,
         States.Paused,

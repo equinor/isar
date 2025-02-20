@@ -7,13 +7,31 @@ from isar.models.communication.queues.status_queue import StatusQueue
 
 class Queues:
     def __init__(self) -> None:
-        self.start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.resume_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.single_action: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.api_start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.api_stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.api_pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.api_resume_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+
+        self.state_machine_start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.state_machine_stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.state_machine_pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.state_machine_task_status_request: QueueIO = QueueIO(
+            input_size=1, output_size=1
+        )
+        self.state_machine_robot_status_request: QueueIO = QueueIO(
+            input_size=1, output_size=1
+        )
+        self.state_machine_current_task: StatusQueue = StatusQueue()
+
+        self.robot_task_status: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.robot_task_status_failed: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.robot_mission_started: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.robot_mission_failed: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.robot_status_changed: QueueIO = QueueIO(input_size=1, output_size=1)
+
         self.upload_queue: Queue = Queue(maxsize=10)
         self.state: StatusQueue = StatusQueue()
+        self.robot_status: StatusQueue = StatusQueue()
 
         if settings.MQTT_ENABLED:
             self.mqtt_queue: Queue = Queue()
