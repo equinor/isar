@@ -51,6 +51,6 @@ def test_state_machine_not_ready_to_receive_mission(
 ):
     with pytest.raises(HTTPException) as err:
         scheduling_utilities.verify_state_machine_ready_to_receive_mission(
-            States.Initialize
+            States.Monitor
         )
     assert err.value.status_code == HTTPStatus.CONFLICT

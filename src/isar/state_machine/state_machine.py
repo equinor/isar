@@ -18,8 +18,6 @@ from isar.mission_planner.task_selector_interface import (
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queues import Queues
 from isar.state_machine.states.idle import Idle
-from isar.state_machine.states.initialize import Initialize
-from isar.state_machine.states.initiate import Initiate
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.off import Off
 from isar.state_machine.states.offline import Offline
@@ -29,7 +27,7 @@ from isar.state_machine.states.stop import Stop
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
+from robot_interface.models.mission.status import RobotStatus, TaskStatus
 from robot_interface.models.mission.task import TASKS
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
@@ -39,6 +37,22 @@ from robot_interface.telemetry.payloads import (
     TaskPayload,
 )
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
+
+from isar.state_machine.transitions.fail_mission import (
+    report_failed_mission_and_finalize,
+)
+from isar.state_machine.transitions.finish_mission import finish_mission
+from isar.state_machine.transitions.pause import pause_mission
+from isar.state_machine.transitions.start_mission import (
+    put_start_mission_on_queue,
+    initialize_robot,
+    initiate_mission,
+    set_mission_to_in_progress,
+    trigger_start_mission_or_task_event,
+)
+from isar.state_machine.transitions.stop import stop_mission
+from isar.state_machine.transitions.resume import resume_mission
+from isar.state_machine.transitions.utils import def_transition
 
 
 class StateMachine(object):
@@ -84,9 +98,7 @@ class StateMachine(object):
         self.stop_state: State = Stop(self)
         self.paused_state: State = Paused(self)
         self.idle_state: State = Idle(self)
-        self.initialize_state: State = Initialize(self)
         self.monitor_state: State = Monitor(self)
-        self.initiate_state: State = Initiate(self)
         self.off_state: State = Off(self)
         self.offline_state: State = Offline(self)
         self.blocked_protective_stop: State = BlockedProtectiveStop(self)
@@ -94,8 +106,6 @@ class StateMachine(object):
         self.states: List[State] = [
             self.off_state,
             self.idle_state,
-            self.initialize_state,
-            self.initiate_state,
             self.monitor_state,
             self.stop_state,
             self.paused_state,
@@ -112,72 +122,72 @@ class StateMachine(object):
                     "dest": self.idle_state,
                 },
                 {
-                    "trigger": "initiated",
-                    "source": self.initiate_state,
-                    "dest": self.monitor_state,
-                    "before": self._initiated,
-                },
-                {
                     "trigger": "pause",
                     "source": self.monitor_state,
                     "dest": self.paused_state,
-                    "before": self._mission_paused,
+                    "before": def_transition(self, pause_mission),
                 },
                 {
                     "trigger": "stop",
                     "source": [
                         self.idle_state,
-                        self.initiate_state,
                         self.monitor_state,
                         self.paused_state,
                     ],
                     "dest": self.stop_state,
                 },
                 {
-                    "trigger": "mission_finished",
-                    "source": self.monitor_state,
-                    "dest": self.idle_state,
-                    "before": self._mission_finished,
+                    "trigger": "mission_started",
+                    "source": self.idle_state,
+                    "dest": self.monitor_state,
+                    "prepare": def_transition(self, put_start_mission_on_queue),
+                    "conditions": [
+                        def_transition(self, initiate_mission),
+                        def_transition(self, initialize_robot),
+                    ],
+                    "before": [
+                        def_transition(self, set_mission_to_in_progress),
+                        def_transition(self, trigger_start_mission_or_task_event),
+                    ],
                 },
                 {
                     "trigger": "mission_started",
                     "source": self.idle_state,
-                    "dest": self.initialize_state,
-                    "before": self._mission_started,
-                },
-                {
-                    "trigger": "initialization_successful",
-                    "source": self.initialize_state,
-                    "dest": self.initiate_state,
-                    "before": self._initialization_successful,
-                },
-                {
-                    "trigger": "initialization_failed",
-                    "source": self.initialize_state,
                     "dest": self.idle_state,
-                    "before": self._initialization_failed,
+                },
+                {
+                    "trigger": "mission_failed_to_start",
+                    "source": self.monitor_state,
+                    "dest": self.idle_state,
+                    "before": def_transition(self, report_failed_mission_and_finalize),
                 },
                 {
                     "trigger": "resume",
                     "source": self.paused_state,
                     "dest": self.monitor_state,
-                    "before": self._resume,
+                    "before": def_transition(self, resume_mission),
                 },
                 {
-                    "trigger": "initiate_failed",
-                    "source": self.initiate_state,
+                    "trigger": "mission_finished",
+                    "source": self.monitor_state,
                     "dest": self.idle_state,
-                    "before": self._initiate_failed,
+                    "before": def_transition(self, finish_mission),
+                },
+                {
+                    "trigger": "mission_paused",
+                    "source": self.stop_state,
+                    "dest": self.paused_state,
+                    "before": def_transition(self, pause_mission),
                 },
                 {
                     "trigger": "mission_stopped",
                     "source": self.stop_state,
                     "dest": self.idle_state,
-                    "before": self._mission_stopped,
+                    "before": def_transition(self, stop_mission),
                 },
                 {
                     "trigger": "robot_turned_offline",
-                    "source": self.idle_state,
+                    "source": [self.idle_state, self.blocked_protective_stop],
                     "dest": self.offline_state,
                 },
                 {
@@ -187,7 +197,7 @@ class StateMachine(object):
                 },
                 {
                     "trigger": "robot_protective_stop_engaged",
-                    "source": self.idle_state,
+                    "source": [self.idle_state, self.offline_state],
                     "dest": self.blocked_protective_stop,
                 },
                 {
@@ -204,134 +214,12 @@ class StateMachine(object):
         self.current_mission: Optional[Mission] = None
         self.current_task: Optional[TASKS] = None
 
+        self.mission_ongoing: bool = False
+
         self.current_state: State = States(self.state)  # type: ignore
 
         self.transitions_log_length: int = transitions_log_length
         self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
-
-    #################################################################################
-    # Transition Callbacks
-    def _initialization_successful(self) -> None:
-        return
-
-    def _initialization_failed(self) -> None:
-        self.queues.start_mission.output.put(False)
-        self._finalize()
-
-    def _initiated(self) -> None:
-        self.current_mission.status = MissionStatus.InProgress
-        self.publish_task_status(task=self.current_task)
-        self.logger.info(
-            f"Successfully initiated "
-            f"{type(self.current_task).__name__} "
-            f"task: {str(self.current_task.id)[:8]}"
-        )
-
-    def _resume(self) -> None:
-        self.logger.info(f"Resuming mission: {self.current_mission.id}")
-        self.current_mission.status = MissionStatus.InProgress
-        self.current_mission.error_message = None
-        self.current_task.status = TaskStatus.InProgress
-
-        self.publish_mission_status()
-        self.publish_task_status(task=self.current_task)
-
-        resume_mission_response: ControlMissionResponse = (
-            self._make_control_mission_response()
-        )
-        self.queues.resume_mission.output.put(resume_mission_response)
-
-        self.robot.resume()
-
-    def _mission_finished(self) -> None:
-        fail_statuses: List[TaskStatus] = [
-            TaskStatus.Cancelled,
-            TaskStatus.Failed,
-        ]
-        partially_fail_statuses = fail_statuses + [TaskStatus.PartiallySuccessful]
-
-        if len(self.current_mission.tasks) == 0:
-            self.current_mission.status = MissionStatus.Successful
-        elif all(task.status in fail_statuses for task in self.current_mission.tasks):
-            self.current_mission.error_message = ErrorMessage(
-                error_reason=None,
-                error_description="The mission failed because all tasks in the mission "
-                "failed",
-            )
-            self.current_mission.status = MissionStatus.Failed
-        elif any(
-            task.status in partially_fail_statuses
-            for task in self.current_mission.tasks
-        ):
-            self.current_mission.status = MissionStatus.PartiallySuccessful
-        else:
-            self.current_mission.status = MissionStatus.Successful
-        self._finalize()
-
-    def _mission_started(self) -> None:
-        self.queues.start_mission.output.put(True)
-        self.logger.info(
-            f"Initialization successful. Starting new mission: "
-            f"{self.current_mission.id}"
-        )
-        self.log_mission_overview(mission=self.current_mission)
-
-        self.current_mission.status = MissionStatus.InProgress
-        self.publish_mission_status()
-        self.current_task = self.task_selector.next_task()
-        if self.current_task is None:
-            self._mission_finished()
-        else:
-            self.current_task.status = TaskStatus.InProgress
-            self.publish_task_status(task=self.current_task)
-
-    def _full_mission_finished(self) -> None:
-        self.current_task = None
-
-    def _mission_paused(self) -> None:
-        self.logger.info(f"Pausing mission: {self.current_mission.id}")
-        self.current_mission.status = MissionStatus.Paused
-        self.current_task.status = TaskStatus.Paused
-
-        paused_mission_response: ControlMissionResponse = (
-            self._make_control_mission_response()
-        )
-        self.queues.pause_mission.output.put(paused_mission_response)
-
-        self.publish_mission_status()
-        self.publish_task_status(task=self.current_task)
-
-        self.robot.pause()
-
-    def _initiate_failed(self) -> None:
-        self.current_task.status = TaskStatus.Failed
-        self.current_mission.status = MissionStatus.Failed
-        self.publish_task_status(task=self.current_task)
-        self._finalize()
-
-    def _mission_stopped(self) -> None:
-        if self.current_mission is None:
-            self._queue_empty_response()
-            self.reset_state_machine()
-            return
-
-        self.current_mission.status = MissionStatus.Cancelled
-
-        for task in self.current_mission.tasks:
-            if task.status in [
-                TaskStatus.NotStarted,
-                TaskStatus.InProgress,
-                TaskStatus.Paused,
-            ]:
-                task.status = TaskStatus.Cancelled
-
-        stopped_mission_response: ControlMissionResponse = (
-            self._make_control_mission_response()
-        )
-        self.queues.stop_mission.output.put(stopped_mission_response)
-
-        self.publish_task_status(task=self.current_task)
-        self._finalize()
 
     #################################################################################
 
@@ -360,6 +248,7 @@ class StateMachine(object):
             except TaskSelectorStop:
                 # Indicates that all tasks are finished
                 self.current_task = None
+            self.send_task_status()
 
     def update_state(self):
         """Updates the current state of the state machine."""
@@ -372,6 +261,7 @@ class StateMachine(object):
     def reset_state_machine(self) -> None:
         self.logger.info("Resetting state machine")
         self.current_task = None
+        self.send_task_status()
         self.current_mission = None
 
     def start_mission(self, mission: Mission):
@@ -382,30 +272,66 @@ class StateMachine(object):
 
     def should_start_mission(self) -> Optional[StartMissionMessage]:
         try:
-            return self.queues.start_mission.input.get(block=False)
+            return self.queues.api_start_mission.input.get(block=False)
         except queue.Empty:
             return None
 
     def should_stop_mission(self) -> bool:
         try:
-            return self.queues.stop_mission.input.get(block=False)
+            return self.queues.api_stop_mission.input.get(block=False)
         except queue.Empty:
             return False
 
     def should_pause_mission(self) -> bool:
         try:
-            return self.queues.pause_mission.input.get(block=False)
+            return self.queues.api_pause_mission.input.get(block=False)
         except queue.Empty:
             return False
 
+    def get_task_status_event(self) -> Optional[TaskStatus]:
+        try:
+            return self.queues.robot_task_status.input.get(block=False)
+        except queue.Empty:
+            return None
+
+    def request_task_status(self, task_id: str) -> None:
+        self.queues.state_machine_task_status_request.input.put(task_id)
+
+    def get_mission_started_event(self) -> bool:
+        try:
+            return self.queues.robot_mission_started.input.get(block=False)
+        except queue.Empty:
+            return False
+
+    def get_mission_failed_event(self) -> Optional[ErrorMessage]:
+        try:
+            return self.queues.robot_mission_failed.input.get(block=False)
+        except queue.Empty:
+            return None
+
+    def get_task_failure_event(self) -> Optional[ErrorMessage]:
+        try:
+            return self.queues.robot_task_status_failed.input.get(block=False)
+        except queue.Empty:
+            return None
+
     def should_resume_mission(self) -> bool:
         try:
-            return self.queues.resume_mission.input.get(block=False)
+            return self.queues.api_resume_mission.input.get(block=False)
+        except queue.Empty:
+            return False
+
+    def get_robot_status(self) -> bool:
+        try:
+            return self.queues.robot_status.check()
         except queue.Empty:
             return False
 
     def send_state_status(self) -> None:
         self.queues.state.update(self.current_state)
+
+    def send_task_status(self):
+        self.queues.state_machine_current_task.update(self.current_task)
 
     def publish_mission_status(self) -> None:
         if not self.mqtt_publisher:
@@ -518,7 +444,7 @@ class StateMachine(object):
         )
 
     def _queue_empty_response(self) -> None:
-        self.queues.stop_mission.output.put(
+        self.queues.api_stop_mission.output.put(
             ControlMissionResponse(
                 mission_id="None",
                 mission_status="None",
