@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY: float = Field(default=10)
 
     # Number of attempts to stop the robot before giving up
-    STOP_ROBOT_ATTEMPTS_LIMIT: int = Field(default=10)
+    STOP_ROBOT_ATTEMPTS_LIMIT: int = Field(default=3)
 
     # Number of attempts to stop the robot before giving up
     UPLOAD_FAILURE_ATTEMPTS_LIMIT: int = Field(default=10)
