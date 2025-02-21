@@ -260,6 +260,8 @@ def test_state_machine_with_unsuccessful_mission_stop(
         MockRobot, "stop", side_effect=_mock_robot_exception_with_message
     )
 
+    state_machine_thread.state_machine.sleep_time = 0
+
     robot_service_thread.start()
     state_machine_thread.start()
 
