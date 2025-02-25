@@ -119,3 +119,27 @@ class MockRobotIdleToBlockedProtectiveStopToIdleTest(MockRobot):
             return RobotStatus.BlockedProtectiveStop
 
         return RobotStatus.Available
+
+
+class MockRobotIdleToDockedToIdleTest(MockRobot):
+    def __init__(self):
+        self.first = True
+
+    def robot_status(self) -> RobotStatus:
+        if self.first:
+            self.first = False
+            return RobotStatus.Docked
+
+        return RobotStatus.Available
+
+
+class MockRobotOfflineToDockedTest(MockRobot):
+    def __init__(self):
+        self.first = True
+
+    def robot_status(self) -> RobotStatus:
+        if self.first:
+            self.first = False
+            return RobotStatus.Offline
+
+        return RobotStatus.Docked
