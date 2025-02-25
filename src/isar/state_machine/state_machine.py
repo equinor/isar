@@ -173,12 +173,6 @@ class StateMachine(object):
                     "before": def_transition(self, finish_mission),
                 },
                 {
-                    "trigger": "mission_paused",
-                    "source": self.stop_state,
-                    "dest": self.paused_state,
-                    "before": def_transition(self, pause_mission),
-                },
-                {
                     "trigger": "mission_stopped",
                     "source": self.stop_state,
                     "dest": self.idle_state,
