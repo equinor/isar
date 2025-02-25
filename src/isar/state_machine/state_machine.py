@@ -136,7 +136,7 @@ class StateMachine(object):
                     "dest": self.stop_state,
                 },
                 {
-                    "trigger": "mission_started",
+                    "trigger": "request_mission_start",
                     "source": self.idle_state,
                     "dest": self.monitor_state,
                     "prepare": def_transition(self, put_start_mission_on_queue),
@@ -150,7 +150,7 @@ class StateMachine(object):
                     ],
                 },
                 {
-                    "trigger": "mission_started",
+                    "trigger": "request_mission_start",
                     "source": self.idle_state,
                     "dest": self.idle_state,
                 },
