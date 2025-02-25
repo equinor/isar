@@ -12,10 +12,10 @@ from isar.modules import (
     LocalPlannerModule,
     QueuesModule,
     RequestHandlerModule,
+    SchedulingUtilitiesModule,
     SequentialTaskSelectorModule,
     ServiceModule,
     StateMachineModule,
-    SchedulingUtilitiesModule,
 )
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities

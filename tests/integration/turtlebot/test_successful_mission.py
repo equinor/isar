@@ -22,9 +22,9 @@ from isar.modules import (
     QueuesModule,
     RequestHandlerModule,
     RobotModule,
+    SchedulingUtilitiesModule,
     ServiceModule,
     StateMachineModule,
-    SchedulingUtilitiesModule,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission

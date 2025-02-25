@@ -3,7 +3,6 @@ from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
-from robot_interface.utilities.uuid_string_factory import uuid4_string
 
 from isar.apis.models.models import InputPose, InputPosition
 from isar.config.settings import settings
@@ -13,13 +12,14 @@ from robot_interface.models.mission.task import (
     TASKS,
     RecordAudio,
     ReturnToHome,
+    TakeGasMeasurement,
     TakeImage,
     TakeThermalImage,
     TakeThermalVideo,
     TakeVideo,
-    TakeGasMeasurement,
     ZoomDescription,
 )
+from robot_interface.utilities.uuid_string_factory import uuid4_string
 
 
 class InspectionTypes(str, Enum):

@@ -8,9 +8,9 @@ from injector import inject
 
 from isar.apis.models.models import (
     ControlMissionResponse,
-    TaskResponse,
     InputPose,
     StartMissionResponse,
+    TaskResponse,
 )
 from isar.apis.models.start_mission_definition import (
     StartMissionDefinition,
