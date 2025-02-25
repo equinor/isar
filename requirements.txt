@@ -28,7 +28,7 @@ azure-storage-blob==12.24.1
     # via isar (pyproject.toml)
 backoff==2.2.1
     # via isar (pyproject.toml)
-cachetools==5.5.1
+cachetools==5.5.2
     # via google-auth
 certifi==2025.1.31
     # via
@@ -58,13 +58,13 @@ fastapi==0.115.8
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
-fastapi-azure-auth==5.0.1
+fastapi-azure-auth==5.1.0
     # via isar (pyproject.toml)
 google-api-core==2.24.1
     # via opencensus
 google-auth==2.38.0
     # via google-api-core
-googleapis-common-protos==1.67.0
+googleapis-common-protos==1.68.0
     # via google-api-core
 h11==0.14.0
     # via
@@ -137,7 +137,7 @@ pydantic==2.10.6
     #   pydantic-settings
 pydantic-core==2.27.2
     # via pydantic
-pydantic-settings==2.7.1
+pydantic-settings==2.8.0
     # via isar (pyproject.toml)
 pyjwt[crypto]==2.10.1
     # via
