@@ -25,8 +25,8 @@ from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import (
     MockRobot,
-    MockRobotIdleToOfflineToIdleTest,
     MockRobotIdleToBlockedProtectiveStopToIdleTest,
+    MockRobotIdleToOfflineToIdleTest,
 )
 from tests.mocks.task import MockTask
 

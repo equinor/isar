@@ -1,12 +1,11 @@
 import logging
 
+from fastapi import HTTPException
 from injector import inject
 
 from isar.apis.models.models import RobotInfoResponse
 from isar.config.settings import robot_settings, settings
 from isar.services.utilities.robot_utilities import RobotUtilities
-from fastapi import HTTPException
-
 from robot_interface.models.robots.media import MediaConfig
 
 

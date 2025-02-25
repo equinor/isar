@@ -4,10 +4,10 @@ from typing import List, Optional, Union
 
 from alitra import Pose
 
-from robot_interface.models.robots.battery_state import BatteryState
-from robot_interface.models.mission.status import RobotStatus, MissionStatus, TaskStatus
-from robot_interface.models.mission.task import TaskTypes
 from robot_interface.models.exceptions.robot_exceptions import ErrorReason
+from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
+from robot_interface.models.mission.task import TaskTypes
+from robot_interface.models.robots.battery_state import BatteryState
 
 
 @dataclass

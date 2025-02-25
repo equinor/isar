@@ -7,11 +7,11 @@ from pydantic import BaseModel, Field
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.inspection.inspection import (
     Audio,
+    GasMeasurement,
     Image,
     Inspection,
     ThermalImage,
     ThermalVideo,
-    GasMeasurement,
     Video,
 )
 from robot_interface.models.mission.status import TaskStatus

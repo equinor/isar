@@ -17,13 +17,13 @@ from isar.mission_planner.task_selector_interface import (
 )
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queues import Queues
+from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.idle import Idle
 from isar.state_machine.states.initialize import Initialize
 from isar.state_machine.states.initiate import Initiate
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.off import Off
 from isar.state_machine.states.offline import Offline
-from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.stop import Stop
 from isar.state_machine.states_enum import States
@@ -34,8 +34,8 @@ from robot_interface.models.mission.task import TASKS
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
-    RobotStatusPayload,
     MissionPayload,
+    RobotStatusPayload,
     TaskPayload,
 )
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
