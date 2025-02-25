@@ -46,7 +46,7 @@ class Idle(State):
             )
             if start_mission:
                 self.state_machine.start_mission(mission=start_mission.mission)
-                transition = self.state_machine.mission_started  # type: ignore
+                transition = self.state_machine.request_mission_start  # type: ignore
                 break
 
             robot_status = self.state_machine.get_robot_status()
