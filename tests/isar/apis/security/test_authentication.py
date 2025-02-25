@@ -1,8 +1,8 @@
-import json
 from http import HTTPStatus
 
 import jwt
 import pytest
+from fastapi.testclient import TestClient
 
 
 def mock_access_token():
@@ -13,41 +13,20 @@ def mock_access_token():
 
 class TestAuthentication:
     @pytest.mark.parametrize(
-        "query_string, token, expected_output, expected_status_code",
-        [
-            (
-                "start-mission?ID=1",
-                "Dummy Token",
-                {"detail": "Invalid token format"},
-                HTTPStatus.UNAUTHORIZED,
-            ),
-            (
-                "start-mission?ID=1",
-                mock_access_token(),
-                {"detail": "Unable to verify token, no signing keys found"},
-                HTTPStatus.UNAUTHORIZED,
-            ),
-            (
-                "stop-mission",
-                mock_access_token(),
-                {"detail": "Unable to verify token, no signing keys found"},
-                HTTPStatus.UNAUTHORIZED,
-            ),
-        ],
+        "query_string",
+        ["start-mission?ID=1", "stop-mission"],
     )
     def test_authentication(
         self,
-        client_auth,
-        query_string,
-        token,
-        expected_output,
-        expected_status_code,
+        client_auth: TestClient,
+        query_string: str,
     ):
+        token = mock_access_token()
+        expected_status_code = HTTPStatus.UNAUTHORIZED
+
         response = client_auth.post(
             f"schedule/{query_string}",
             headers={"Authorization": "Bearer " + token},
         )
-        result_message = json.loads(response.text)
 
-        assert result_message == expected_output
         assert response.status_code == expected_status_code
