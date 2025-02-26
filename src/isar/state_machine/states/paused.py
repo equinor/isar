@@ -24,11 +24,11 @@ class Paused(State):
     def _run(self) -> None:
         transition: Callable
         while True:
-            if check_for_event(self.events.api_requests.api_pause_mission.input):
+            if check_for_event(self.events.api_requests.pause_mission.input):
                 transition = self.state_machine.stop  # type: ignore
                 break
 
-            if check_for_event(self.events.api_requests.api_resume_mission.input):
+            if check_for_event(self.events.api_requests.resume_mission.input):
                 transition = self.state_machine.resume  # type: ignore
                 break
 

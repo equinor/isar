@@ -84,11 +84,11 @@ class Robot(object):
                 break
 
             self._check_and_handle_start_mission(
-                self.events.state_machine_events.state_machine_start_mission
+                self.events.state_machine_events.start_mission
             )
 
             self._check_and_handle_task_status_request(
-                self.events.state_machine_events.state_machine_task_status_request
+                self.events.state_machine_events.task_status_request
             )
 
         self.logger.info("Exiting robot service main thread")

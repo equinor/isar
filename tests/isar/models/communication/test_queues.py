@@ -8,23 +8,23 @@ from isar.models.communication.queues.events import Events, StatusQueue
 class TestQueues:
     def test_queues(self) -> None:
         queues: Events = Events()
-        assert queues.api_requests.api_start_mission is not None
+        assert queues.api_requests.start_mission is not None
         assert (
-            queues.api_requests.api_start_mission.input is not None
-            and queues.api_requests.api_start_mission.input.maxsize == 1
+            queues.api_requests.start_mission.input is not None
+            and queues.api_requests.start_mission.input.maxsize == 1
         )
         assert (
-            queues.api_requests.api_start_mission.output is not None
-            and queues.api_requests.api_start_mission.output.maxsize == 1
+            queues.api_requests.start_mission.output is not None
+            and queues.api_requests.start_mission.output.maxsize == 1
         )
-        assert queues.api_requests.api_stop_mission is not None
+        assert queues.api_requests.stop_mission is not None
         assert (
-            queues.api_requests.api_stop_mission.input is not None
-            and queues.api_requests.api_stop_mission.input.maxsize == 1
+            queues.api_requests.stop_mission.input is not None
+            and queues.api_requests.stop_mission.input.maxsize == 1
         )
         assert (
-            queues.api_requests.api_stop_mission.output is not None
-            and queues.api_requests.api_stop_mission.output.maxsize == 1
+            queues.api_requests.stop_mission.output is not None
+            and queues.api_requests.stop_mission.output.maxsize == 1
         )
 
 
