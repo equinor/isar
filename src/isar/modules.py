@@ -16,7 +16,7 @@ from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.mission_planner.sequential_task_selector import SequentialTaskSelector
 from isar.mission_planner.task_selector_interface import TaskSelectorInterface
-from isar.models.communication.queues.queues import Events, SharedState
+from isar.models.communication.queues.events import Events, SharedState
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.utilities.robot_utilities import RobotUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities

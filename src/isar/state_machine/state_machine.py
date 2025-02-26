@@ -16,7 +16,7 @@ from isar.mission_planner.task_selector_interface import (
     TaskSelectorStop,
 )
 from isar.models.communication.message import StartMissionMessage
-from isar.models.communication.queues.queues import Events, SharedState
+from isar.models.communication.queues.events import Events, SharedState
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.idle import Idle
 from isar.state_machine.states.monitor import Monitor

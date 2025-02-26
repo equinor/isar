@@ -5,8 +5,8 @@ from typing import Optional
 
 from injector import inject
 
+from isar.models.communication.queues.events import Events, SharedState
 from isar.models.communication.queues.queue_utils import check_for_event
-from isar.models.communication.queues.queues import Events, SharedState
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_task_status import RobotTaskStatusThread

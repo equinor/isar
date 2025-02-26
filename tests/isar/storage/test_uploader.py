@@ -6,7 +6,7 @@ from typing import List, Tuple
 import pytest
 from alitra import Frame, Orientation, Pose, Position
 
-from isar.models.communication.queues.queues import Events
+from isar.models.communication.queues.events import Events
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import ImageMetadata, Inspection

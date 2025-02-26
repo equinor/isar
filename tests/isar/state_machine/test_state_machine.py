@@ -7,7 +7,7 @@ import pytest
 from injector import Injector
 from pytest_mock import MockerFixture
 
-from isar.models.communication.queues.queues import Events, SharedState
+from isar.models.communication.queues.events import Events, SharedState
 from isar.robot.robot import Robot
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
