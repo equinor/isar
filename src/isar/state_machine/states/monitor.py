@@ -174,7 +174,7 @@ class Monitor(State):
             inspection,
             mission,
         )
-        self.state_machine.queues.upload_queue.put(message)
+        self.state_machine.events.upload_queue.put(message)
         self.logger.info(
             f"Inspection result: {str(inspection.id)[:8]} queued for upload"
         )

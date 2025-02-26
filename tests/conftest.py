@@ -6,15 +6,16 @@ from isar.apis.api import API
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.task_selector_interface import TaskSelectorInterface
-from isar.models.communication.queues.queues import Queues
+from isar.models.communication.queues.queues import Events, SharedState
 from isar.modules import (
     APIModule,
     LocalPlannerModule,
-    QueuesModule,
+    EventsModule,
     RequestHandlerModule,
     SchedulingUtilitiesModule,
     SequentialTaskSelectorModule,
     ServiceModule,
+    SharedStateModule,
     StateMachineModule,
 )
 from isar.services.service_connections.request_handler import RequestHandler
@@ -43,7 +44,8 @@ def injector():
             MockNoAuthenticationModule,
             MockRobotModule,
             MockStorageModule,
-            QueuesModule,
+            EventsModule,
+            SharedStateModule,
             RequestHandlerModule,
             ServiceModule,
             StateMachineModule,
@@ -63,7 +65,8 @@ def injector_auth():
             MockMqttModule,
             MockRobotModule,
             MockStorageModule,
-            QueuesModule,
+            EventsModule,
+            SharedStateModule,
             RequestHandlerModule,
             ServiceModule,
             StateMachineModule,
@@ -104,7 +107,8 @@ def keyvault(injector):
 @pytest.fixture()
 def state_machine(injector, robot):
     return StateMachine(
-        queues=injector.get(Queues),
+        events=injector.get(Events),
+        shared_state=injector.get(SharedState),
         robot=robot,
         mqtt_publisher=injector.get(MqttClientInterface),
         task_selector=injector.get(TaskSelectorInterface),

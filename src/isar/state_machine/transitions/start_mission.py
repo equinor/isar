@@ -12,7 +12,7 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
 def put_start_mission_on_queue(state_machine: "StateMachine") -> bool:
-    state_machine.queues.api_start_mission.output.put(True)
+    state_machine.events.api_requests.api_start_mission.output.put(True)
     return True
 
 
@@ -62,12 +62,12 @@ def set_mission_to_in_progress(state_machine: "StateMachine") -> bool:
 
 
 def trigger_start_mission_or_task_event(state_machine: "StateMachine") -> bool:
-    state_machine.queues.state_machine_start_mission.input.put(
+    state_machine.events.state_machine_events.state_machine_start_mission.put(
         state_machine.current_mission
     )
     return True
 
 
 def _initialization_failed(state_machine: "StateMachine") -> None:
-    state_machine.queues.api_start_mission.output.put(False)
+    state_machine.events.api_requests.api_start_mission.output.put(False)
     state_machine._finalize()

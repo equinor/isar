@@ -8,7 +8,7 @@ from typing import List, Union
 from injector import inject
 
 from isar.config.settings import settings
-from isar.models.communication.queues.queues import Queues
+from isar.models.communication.queues.queues import Events
 from isar.storage.storage_interface import StorageException, StorageInterface
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -48,7 +48,7 @@ class Uploader:
     @inject
     def __init__(
         self,
-        queues: Queues,
+        events: Events,
         storage_handlers: List[StorageInterface],
         mqtt_publisher: MqttClientInterface,
         max_wait_time: int = settings.UPLOAD_FAILURE_MAX_WAIT,
@@ -58,8 +58,8 @@ class Uploader:
 
         Parameters
         ----------
-        queues : Queues
-            Queues used for cross-thread communication.
+        events : Events
+            Events used for cross-thread communication.
         storage_handlers : List[StorageInterface]
             List of handlers for different upload options
         max_wait_time : float
@@ -67,7 +67,7 @@ class Uploader:
         max_retry_attempts : int
             Maximum attempts to retry an upload when it fails
         """
-        self.upload_queue: Queue = queues.upload_queue
+        self.upload_queue: Queue = events.upload_queue
         self.storage_handlers: List[StorageInterface] = storage_handlers
         self.mqtt_publisher = mqtt_publisher
 

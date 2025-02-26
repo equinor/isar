@@ -18,7 +18,7 @@ from isar.mission_planner.mission_planner_interface import (
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queue_io import QueueIO
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
-from isar.models.communication.queues.queues import Queues
+from isar.models.communication.queues.queues import APIRequests, Events, SharedState
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
@@ -33,11 +33,13 @@ class SchedulingUtilities:
     @inject
     def __init__(
         self,
-        queues: Queues,
+        events: Events,
+        shared_state: SharedState,
         mission_planner: MissionPlannerInterface,
         queue_timeout: int = settings.QUEUE_TIMEOUT,
     ):
-        self.queues: Queues = queues
+        self.api_events: APIRequests = events.api_requests
+        self.shared_state: SharedState = shared_state
         self.mission_planner: MissionPlannerInterface = mission_planner
         self.queue_timeout: int = queue_timeout
         self.logger = logging.getLogger("api")
@@ -51,7 +53,7 @@ class SchedulingUtilities:
             If the current state is not available on the queue
         """
         try:
-            return self.queues.state.check()
+            return self.shared_state.state.check()
         except Empty:
             error_message: str = (
                 "Internal Server Error - Current state of the state machine is unknown"
@@ -145,7 +147,7 @@ class SchedulingUtilities:
         try:
             self._send_command(
                 StartMissionMessage(mission=deepcopy(mission)),
-                self.queues.api_start_mission,
+                self.api_events.api_start_mission,
             )
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to start mission in ISAR"
@@ -164,7 +166,7 @@ class SchedulingUtilities:
             If there is a timeout while communicating with the state machine
         """
         try:
-            return self._send_command(True, self.queues.api_pause_mission)
+            return self._send_command(True, self.api_events.api_pause_mission)
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to pause mission"
             self.logger.error(error_message)
@@ -183,7 +185,7 @@ class SchedulingUtilities:
             If there is a timeout while communicating with the state machine
         """
         try:
-            return self._send_command(True, self.queues.api_resume_mission)
+            return self._send_command(True, self.api_events.api_resume_mission)
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to resume mission"
             self.logger.error(error_message)
@@ -203,7 +205,7 @@ class SchedulingUtilities:
         """
         try:
             stop_mission_response: ControlMissionResponse = self._send_command(
-                True, self.queues.api_stop_mission
+                True, self.api_events.api_stop_mission
             )
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to stop mission"

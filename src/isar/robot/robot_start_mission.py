@@ -4,7 +4,7 @@ from typing import Optional
 
 from isar.config.settings import settings
 from isar.models.communication.queues.queue_utils import trigger_event
-from isar.models.communication.queues.queues import Queues
+from isar.models.communication.queues.queues import Events
 from isar.services.utilities.threaded_request import ThreadedRequest
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -19,13 +19,13 @@ class RobotStartMissionThread(Thread):
 
     def __init__(
         self,
-        queues: Queues,
+        events: Events,
         robot: RobotInterface,
         signal_thread_quitting: Event,
         mission: Mission,
     ):
         self.logger = logging.getLogger("robot")
-        self.queues: Queues = queues
+        self.events: Events = events
         self.robot: RobotInterface = robot
         self.start_mission_thread: Optional[ThreadedRequest] = None
         self.signal_thread_quitting: Event = signal_thread_quitting
@@ -56,7 +56,7 @@ class RobotStartMissionThread(Thread):
                         )
 
                         trigger_event(
-                            self.queues.robot_mission_failed,
+                            self.events.robot_service_events.robot_mission_failed,
                             ErrorMessage(
                                 error_reason=e.error_reason,
                                 error_description=error_description,
@@ -65,9 +65,9 @@ class RobotStartMissionThread(Thread):
                 started_mission = True
         except RobotInfeasibleMissionException as e:
             trigger_event(
-                self.queues.robot_mission_failed,
+                self.events.robot_service_events.robot_mission_failed,
                 ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 ),
             )
-        trigger_event(self.queues.robot_mission_started)
+        trigger_event(self.events.robot_service_events.robot_mission_started)
