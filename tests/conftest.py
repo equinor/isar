@@ -6,7 +6,7 @@ from isar.apis.api import API
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.task_selector_interface import TaskSelectorInterface
-from isar.models.communication.queues.queues import Events, SharedState
+from isar.models.communication.queues.events import Events, SharedState
 from isar.modules import (
     APIModule,
     LocalPlannerModule,

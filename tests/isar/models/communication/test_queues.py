@@ -2,7 +2,7 @@ from queue import Empty
 
 import pytest
 
-from isar.models.communication.queues.queues import Events, StatusQueue
+from isar.models.communication.queues.events import Events, StatusQueue
 
 
 class TestQueues:

@@ -3,8 +3,8 @@ import time
 from threading import Event, Thread
 
 from isar.config.settings import settings
+from isar.models.communication.queues.events import SharedState
 from isar.models.communication.queues.queue_utils import update_shared_state
-from isar.models.communication.queues.queues import SharedState
 from robot_interface.robot_interface import RobotInterface
 
 
