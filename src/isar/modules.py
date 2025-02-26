@@ -16,7 +16,7 @@ from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerInterface
 from isar.mission_planner.sequential_task_selector import SequentialTaskSelector
 from isar.mission_planner.task_selector_interface import TaskSelectorInterface
-from isar.models.communication.queues.queues import Queues
+from isar.models.communication.queues.queues import Events, SharedState
 from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.utilities.robot_utilities import RobotUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -76,11 +76,18 @@ class RobotModule(Module):
         return robot_interface.Robot()  # type: ignore
 
 
-class QueuesModule(Module):
+class EventsModule(Module):
     @provider
     @singleton
-    def provide_queues(self) -> Queues:
-        return Queues()
+    def provide_events(self) -> Events:
+        return Events()
+
+
+class SharedStateModule(Module):
+    @provider
+    @singleton
+    def provide_shared_state(self) -> SharedState:
+        return SharedState()
 
 
 class RequestHandlerModule(Module):
@@ -125,13 +132,15 @@ class StateMachineModule(Module):
     @singleton
     def provide_state_machine(
         self,
-        queues: Queues,
+        events: Events,
+        shared_state: SharedState,
         robot: RobotInterface,
         mqtt_client: MqttClientInterface,
         task_selector: TaskSelectorInterface,
     ) -> StateMachine:
         return StateMachine(
-            queues=queues,
+            events=events,
+            shared_state=shared_state,
             robot=robot,
             mqtt_publisher=mqtt_client,
             task_selector=task_selector,
@@ -143,12 +152,12 @@ class UploaderModule(Module):
     @singleton
     def provide_uploader(
         self,
-        queues: Queues,
+        events: Events,
         storage_handlers: List[StorageInterface],
         mqtt_client: MqttClientInterface,
     ) -> Uploader:
         return Uploader(
-            queues=queues,
+            events=events,
             storage_handlers=storage_handlers,
             mqtt_publisher=mqtt_client,
         )
@@ -158,9 +167,12 @@ class SchedulingUtilitiesModule(Module):
     @provider
     @singleton
     def provide_scheduling_utilities(
-        self, queues: Queues, mission_planner: MissionPlannerInterface
+        self,
+        events: Events,
+        shared_state: SharedState,
+        mission_planner: MissionPlannerInterface,
     ) -> SchedulingUtilities:
-        return SchedulingUtilities(queues, mission_planner)
+        return SchedulingUtilities(events, shared_state, mission_planner)
 
 
 class RobotUtilitiesModule(Module):
@@ -180,9 +192,9 @@ class ServiceModule(Module):
 class MqttModule(Module):
     @provider
     @singleton
-    def provide_mqtt_client(self, queues: Queues) -> MqttClientInterface:
+    def provide_mqtt_client(self, events: Events) -> MqttClientInterface:
         if settings.MQTT_ENABLED:
-            return MqttPublisher(mqtt_queue=queues.mqtt_queue)
+            return MqttPublisher(mqtt_queue=events.mqtt_queue)
         return None
 
 
@@ -196,7 +208,8 @@ class SequentialTaskSelectorModule(Module):
 modules: Dict[str, Tuple[Module, Union[str, bool]]] = {
     "api": (APIModule, "required"),
     "authentication": (AuthenticationModule, "required"),
-    "queues": (QueuesModule, "required"),
+    "events": (EventsModule, "required"),
+    "shared_state": (SharedStateModule, "required"),
     "request_handler": (RequestHandlerModule, "required"),
     "robot_package": (RobotModule, settings.ROBOT_PACKAGE),
     "isar_id": (RobotModule, settings.ISAR_ID),

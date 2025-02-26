@@ -4,17 +4,20 @@ from threading import Event, Thread
 
 from isar.config.settings import settings
 from isar.models.communication.queues.queue_utils import update_shared_state
-from isar.models.communication.queues.queues import Queues
+from isar.models.communication.queues.queues import SharedState
 from robot_interface.robot_interface import RobotInterface
 
 
 class RobotStatusThread(Thread):
 
     def __init__(
-        self, queues: Queues, robot: RobotInterface, signal_thread_quitting: Event
+        self,
+        robot: RobotInterface,
+        signal_thread_quitting: Event,
+        shared_state: SharedState,
     ):
         self.logger = logging.getLogger("robot")
-        self.queues: Queues = queues
+        self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
         self.last_robot_status_poll_time: float = time.time()
@@ -41,6 +44,6 @@ class RobotStatusThread(Thread):
 
             robot_status = self.robot.robot_status()
 
-            update_shared_state(self.queues.robot_status, robot_status)
+            update_shared_state(self.shared_state.robot_status, robot_status)
             self.last_robot_status_poll_time = time.time()
         self.logger.info("Exiting robot status thread")

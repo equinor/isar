@@ -6,7 +6,7 @@ from typing import List, Tuple
 import pytest
 from alitra import Frame, Orientation, Pose, Position
 
-from isar.models.communication.queues.queues import Queues
+from isar.models.communication.queues.queues import Events
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import ImageMetadata, Inspection
@@ -29,7 +29,7 @@ ARBITRARY_IMAGE_METADATA = ImageMetadata(
 @pytest.fixture
 def uploader(injector) -> Uploader:
     uploader: Uploader = Uploader(
-        queues=injector.get(Queues),
+        events=injector.get(Events),
         storage_handlers=injector.get(List[StorageInterface]),
         mqtt_publisher=injector.get(MqttClientInterface),
     )

@@ -12,7 +12,7 @@ from isar.apis.api import API
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.log import setup_loggers
 from isar.config.settings import robot_settings, settings
-from isar.models.communication.queues.queues import Queues
+from isar.models.communication.queues.queues import Events
 from isar.modules import get_injector
 from isar.robot.robot import Robot
 from isar.services.service_connections.mqtt.mqtt_client import MqttClient
@@ -94,7 +94,7 @@ def start() -> None:
     state_machine: StateMachine = injector.get(StateMachine)
     uploader: Uploader = injector.get(Uploader)
     robot: RobotInterface = injector.get(RobotInterface)
-    queues: Queues = injector.get(Queues)
+    events: Events = injector.get(Events)
     robot_service: Robot = injector.get(Robot)
 
     threads: List[Thread] = []
@@ -121,12 +121,12 @@ def start() -> None:
                 inspection,
                 mission,
             )
-            state_machine.queues.upload_queue.put(message)
+            state_machine.events.upload_queue.put(message)
 
         robot.register_inspection_callback(inspections_callback)
 
     if settings.MQTT_ENABLED:
-        mqtt_client: MqttClient = MqttClient(mqtt_queue=queues.mqtt_queue)
+        mqtt_client: MqttClient = MqttClient(mqtt_queue=events.mqtt_queue)
 
         mqtt_thread: Thread = Thread(
             target=mqtt_client.run, name="ISAR MQTT Client", daemon=True
@@ -134,7 +134,7 @@ def start() -> None:
         threads.append(mqtt_thread)
 
         robot_info_publisher: RobotInfoPublisher = RobotInfoPublisher(
-            mqtt_queue=queues.mqtt_queue
+            mqtt_queue=events.mqtt_queue
         )
         robot_info_thread: Thread = Thread(
             target=robot_info_publisher.run,
@@ -144,7 +144,7 @@ def start() -> None:
         threads.append(robot_info_thread)
 
         robot_heartbeat_publisher: RobotHeartbeatPublisher = RobotHeartbeatPublisher(
-            mqtt_queue=queues.mqtt_queue
+            mqtt_queue=events.mqtt_queue
         )
 
         robot_heartbeat_thread: Thread = Thread(
@@ -155,7 +155,7 @@ def start() -> None:
         threads.append(robot_heartbeat_thread)
 
         publishers: List[Thread] = robot.get_telemetry_publishers(
-            queue=queues.mqtt_queue,
+            queue=events.mqtt_queue,
             robot_name=settings.ROBOT_NAME,
             isar_id=settings.ISAR_ID,
         )
