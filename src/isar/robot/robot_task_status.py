@@ -84,11 +84,11 @@ class RobotTaskStatusThread(Thread):
                 break
 
             trigger_event(
-                self.events.robot_service_events.robot_task_status, task_status
+                self.events.robot_service_events.task_status_updated, task_status
             )
             return
 
         trigger_event(
-            self.events.robot_service_events.robot_task_status_failed,
+            self.events.robot_service_events.task_status_failed,
             failed_task_error,
         )

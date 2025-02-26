@@ -43,12 +43,12 @@ class Idle(State):
     def _run(self) -> None:
         transition: Callable
         while True:
-            if check_for_event(self.events.api_requests.api_stop_mission.input):
+            if check_for_event(self.events.api_requests.stop_mission.input):
                 transition = self.state_machine.stop  # type: ignore
                 break
 
             start_mission: Optional[StartMissionMessage] = check_for_event(
-                self.events.api_requests.api_start_mission.input
+                self.events.api_requests.start_mission.input
             )
             if start_mission:
                 self.state_machine.start_mission(mission=start_mission.mission)

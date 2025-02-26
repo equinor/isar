@@ -56,7 +56,7 @@ class RobotStartMissionThread(Thread):
                         )
 
                         trigger_event(
-                            self.events.robot_service_events.robot_mission_failed,
+                            self.events.robot_service_events.mission_failed,
                             ErrorMessage(
                                 error_reason=e.error_reason,
                                 error_description=error_description,
@@ -65,9 +65,9 @@ class RobotStartMissionThread(Thread):
                 started_mission = True
         except RobotInfeasibleMissionException as e:
             trigger_event(
-                self.events.robot_service_events.robot_mission_failed,
+                self.events.robot_service_events.mission_failed,
                 ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 ),
             )
-        trigger_event(self.events.robot_service_events.robot_mission_started)
+        trigger_event(self.events.robot_service_events.mission_started)

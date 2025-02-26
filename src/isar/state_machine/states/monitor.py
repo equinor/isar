@@ -44,25 +44,23 @@ class Monitor(State):
         awaiting_task_status: bool = False
         transition: Callable
         while True:
-            if check_for_event(self.events.api_requests.api_stop_mission.input):
+            if check_for_event(self.events.api_requests.stop_mission.input):
                 transition = self.state_machine.stop  # type: ignore
                 break
 
-            if check_for_event(self.events.api_requests.api_pause_mission.input):
+            if check_for_event(self.events.api_requests.pause_mission.input):
                 transition = self.state_machine.pause  # type: ignore
                 break
 
             if not self.state_machine.mission_ongoing:
-                if check_for_event(
-                    self.events.robot_service_events.robot_mission_started
-                ):
+                if check_for_event(self.events.robot_service_events.mission_started):
                     self.state_machine.mission_ongoing = True
                 else:
                     time.sleep(settings.FSM_SLEEP_TIME)
                     continue
 
             mission_failed: Optional[ErrorMessage] = check_for_event(
-                self.events.robot_service_events.robot_mission_failed
+                self.events.robot_service_events.mission_failed
             )
             if mission_failed is not None:
                 self.state_machine.logger.warning(
@@ -81,7 +79,7 @@ class Monitor(State):
             status: TaskStatus
 
             task_failure: Optional[ErrorMessage] = check_for_event(
-                self.events.robot_service_events.robot_task_status_failed
+                self.events.robot_service_events.task_status_failed
             )
             if task_failure is not None:
                 self.state_machine.current_task.error_message = task_failure
@@ -92,13 +90,13 @@ class Monitor(State):
                 status = TaskStatus.Failed
             else:
                 status = check_for_event(
-                    self.events.robot_service_events.robot_task_status
+                    self.events.robot_service_events.task_status_updated
                 )
 
             if status is None:
                 if not awaiting_task_status:
                     trigger_event(
-                        self.events.state_machine_events.state_machine_task_status_request,
+                        self.events.state_machine_events.task_status_request,
                         self.state_machine.current_task,
                     )
                     awaiting_task_status = True

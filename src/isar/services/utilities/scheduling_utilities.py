@@ -147,7 +147,7 @@ class SchedulingUtilities:
         try:
             self._send_command(
                 StartMissionMessage(mission=deepcopy(mission)),
-                self.api_events.api_start_mission,
+                self.api_events.start_mission,
             )
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to start mission in ISAR"
@@ -166,7 +166,7 @@ class SchedulingUtilities:
             If there is a timeout while communicating with the state machine
         """
         try:
-            return self._send_command(True, self.api_events.api_pause_mission)
+            return self._send_command(True, self.api_events.pause_mission)
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to pause mission"
             self.logger.error(error_message)
@@ -185,7 +185,7 @@ class SchedulingUtilities:
             If there is a timeout while communicating with the state machine
         """
         try:
-            return self._send_command(True, self.api_events.api_resume_mission)
+            return self._send_command(True, self.api_events.resume_mission)
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to resume mission"
             self.logger.error(error_message)
@@ -205,7 +205,7 @@ class SchedulingUtilities:
         """
         try:
             stop_mission_response: ControlMissionResponse = self._send_command(
-                True, self.api_events.api_stop_mission
+                True, self.api_events.stop_mission
             )
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to stop mission"

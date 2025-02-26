@@ -19,27 +19,27 @@ class Events:
 
 class APIRequests:
     def __init__(self) -> None:
-        self.api_start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.api_stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.api_pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.api_resume_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.resume_mission: QueueIO = QueueIO(input_size=1, output_size=1)
 
 
 class StateMachineEvents:
     def __init__(self) -> None:
-        self.state_machine_start_mission: Queue = Queue(maxsize=1)
-        self.state_machine_stop_mission: Queue = Queue(maxsize=1)
-        self.state_machine_pause_mission: Queue = Queue(maxsize=1)
-        self.state_machine_task_status_request: Queue = Queue(maxsize=1)
-        self.state_machine_robot_status_request: Queue = Queue(maxsize=1)
+        self.start_mission: Queue = Queue(maxsize=1)
+        self.stop_mission: Queue = Queue(maxsize=1)
+        self.pause_mission: Queue = Queue(maxsize=1)
+        self.task_status_request: Queue = Queue(maxsize=1)
+        self.robot_status_request: Queue = Queue(maxsize=1)
 
 
 class RobotServiceEvents:
     def __init__(self) -> None:
-        self.robot_task_status: Queue = Queue(maxsize=1)
-        self.robot_task_status_failed: Queue = Queue(maxsize=1)
-        self.robot_mission_started: Queue = Queue(maxsize=1)
-        self.robot_mission_failed: Queue = Queue(maxsize=1)
+        self.task_status_updated: Queue = Queue(maxsize=1)
+        self.task_status_failed: Queue = Queue(maxsize=1)
+        self.mission_started: Queue = Queue(maxsize=1)
+        self.mission_failed: Queue = Queue(maxsize=1)
         self.robot_status_changed: Queue = Queue(maxsize=1)
 
 

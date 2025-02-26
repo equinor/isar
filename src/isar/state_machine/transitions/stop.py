@@ -26,9 +26,7 @@ def stop_mission(state_machine: "StateMachine") -> bool:
     stopped_mission_response: ControlMissionResponse = (
         state_machine._make_control_mission_response()
     )
-    state_machine.events.api_requests.api_stop_mission.output.put(
-        stopped_mission_response
-    )
+    state_machine.events.api_requests.stop_mission.output.put(stopped_mission_response)
 
     state_machine.publish_task_status(task=state_machine.current_task)
     state_machine._finalize()

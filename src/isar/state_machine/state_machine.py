@@ -380,7 +380,7 @@ class StateMachine(object):
         )
 
     def _queue_empty_response(self) -> None:
-        self.events.api_requests.api_stop_mission.output.put(
+        self.events.api_requests.stop_mission.output.put(
             ControlMissionResponse(
                 mission_id="None",
                 mission_status="None",
