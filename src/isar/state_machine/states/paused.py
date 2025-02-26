@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Callable
 
 from transitions import State
 
+from isar.models.communication.queues.queue_utils import check_for_event
+
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
@@ -13,6 +15,7 @@ class Paused(State):
         super().__init__(name="paused", on_enter=self.start)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
+        self.events = self.state_machine.events
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -21,11 +24,11 @@ class Paused(State):
     def _run(self) -> None:
         transition: Callable
         while True:
-            if self.state_machine.should_stop_mission():
+            if check_for_event(self.events.api_requests.api_pause_mission.input):
                 transition = self.state_machine.stop  # type: ignore
                 break
 
-            if self.state_machine.should_resume_mission():
+            if check_for_event(self.events.api_requests.api_resume_mission.input):
                 transition = self.state_machine.resume  # type: ignore
                 break
 

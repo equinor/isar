@@ -97,12 +97,6 @@ def test_initial_off(state_machine) -> None:
     assert state_machine.state == "off"
 
 
-def test_send_status(state_machine) -> None:
-    state_machine.send_state_status()
-    message = state_machine.shared_state.state.check()
-    assert message == state_machine.current_state
-
-
 def test_reset_state_machine(state_machine) -> None:
     state_machine.reset_state_machine()
 
