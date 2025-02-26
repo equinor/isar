@@ -9,8 +9,8 @@ from isar.mission_planner.task_selector_interface import TaskSelectorInterface
 from isar.models.communication.queues.events import Events, SharedState
 from isar.modules import (
     APIModule,
-    LocalPlannerModule,
     EventsModule,
+    LocalPlannerModule,
     RequestHandlerModule,
     SchedulingUtilitiesModule,
     SequentialTaskSelectorModule,

@@ -17,14 +17,14 @@ from isar.apis.api import API
 from isar.config.settings import settings
 from isar.modules import (
     APIModule,
+    EventsModule,
     LocalPlannerModule,
     LocalStorageModule,
-    EventsModule,
-    SharedStateModule,
     RequestHandlerModule,
     RobotModule,
     SchedulingUtilitiesModule,
     ServiceModule,
+    SharedStateModule,
     StateMachineModule,
 )
 from isar.state_machine.states_enum import States

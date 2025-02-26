@@ -6,6 +6,10 @@ from transitions import State
 
 from isar.config.settings import settings
 from isar.models.communication.message import StartMissionMessage
+from isar.models.communication.queues.queue_utils import (
+    check_for_event,
+    check_shared_state,
+)
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
@@ -18,6 +22,8 @@ class Idle(State):
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
         self.last_robot_status_poll_time: float = time.time()
+        self.events = self.state_machine.events
+        self.shared_state = self.state_machine.shared_state
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -37,19 +43,19 @@ class Idle(State):
     def _run(self) -> None:
         transition: Callable
         while True:
-            if self.state_machine.should_stop_mission():
+            if check_for_event(self.events.api_requests.api_stop_mission.input):
                 transition = self.state_machine.stop  # type: ignore
                 break
 
-            start_mission: Optional[StartMissionMessage] = (
-                self.state_machine.should_start_mission()
+            start_mission: Optional[StartMissionMessage] = check_for_event(
+                self.events.api_requests.api_start_mission.input
             )
             if start_mission:
                 self.state_machine.start_mission(mission=start_mission.mission)
                 transition = self.state_machine.request_mission_start  # type: ignore
                 break
 
-            robot_status = self.state_machine.get_robot_status()
+            robot_status = check_shared_state(self.shared_state.robot_status)
             if robot_status == RobotStatus.Offline:
                 transition = self.state_machine.robot_turned_offline  # type: ignore
                 break

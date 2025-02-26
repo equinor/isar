@@ -7,6 +7,7 @@ from injector import inject
 from transitions import State
 
 from isar.config.settings import settings
+from isar.models.communication.queues.queue_utils import check_for_event, trigger_event
 from isar.services.utilities.threaded_request import ThreadedRequest
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -29,6 +30,7 @@ class Monitor(State):
         self.state_machine: "StateMachine" = state_machine
 
         self.logger = logging.getLogger("state_machine")
+        self.events = self.state_machine.events
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -42,22 +44,26 @@ class Monitor(State):
         awaiting_task_status: bool = False
         transition: Callable
         while True:
-            if self.state_machine.should_stop_mission():
+            if check_for_event(self.events.api_requests.api_stop_mission.input):
                 transition = self.state_machine.stop  # type: ignore
                 break
 
-            if self.state_machine.should_pause_mission():
+            if check_for_event(self.events.api_requests.api_pause_mission.input):
                 transition = self.state_machine.pause  # type: ignore
                 break
 
             if not self.state_machine.mission_ongoing:
-                if self.state_machine.get_mission_started_event():
+                if check_for_event(
+                    self.events.robot_service_events.robot_mission_started
+                ):
                     self.state_machine.mission_ongoing = True
                 else:
                     time.sleep(settings.FSM_SLEEP_TIME)
                     continue
 
-            mission_failed = self.state_machine.get_mission_failed_event()
+            mission_failed: Optional[ErrorMessage] = check_for_event(
+                self.events.robot_service_events.robot_mission_failed
+            )
             if mission_failed is not None:
                 self.state_machine.logger.warning(
                     f"Failed to initiate mission "
@@ -74,8 +80,8 @@ class Monitor(State):
 
             status: TaskStatus
 
-            task_failure: Optional[ErrorMessage] = (
-                self.state_machine.get_task_failure_event()
+            task_failure: Optional[ErrorMessage] = check_for_event(
+                self.events.robot_service_events.robot_task_status_failed
             )
             if task_failure is not None:
                 self.state_machine.current_task.error_message = task_failure
@@ -85,12 +91,15 @@ class Monitor(State):
                 )
                 status = TaskStatus.Failed
             else:
-                status = self.state_machine.get_task_status_event()
+                status = check_for_event(
+                    self.events.robot_service_events.robot_task_status
+                )
 
             if status is None:
                 if not awaiting_task_status:
-                    self.state_machine.request_task_status(
-                        self.state_machine.current_task
+                    trigger_event(
+                        self.events.state_machine_events.state_machine_task_status_request,
+                        self.state_machine.current_task,
                     )
                     awaiting_task_status = True
                 time.sleep(settings.FSM_SLEEP_TIME)
