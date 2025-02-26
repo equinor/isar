@@ -1,7 +1,8 @@
 import logging
 import time
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable, Optional, Tuple
+from queue import Queue
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from injector import inject
 from transitions import State
@@ -32,6 +33,8 @@ class Monitor(State):
         self.logger = logging.getLogger("state_machine")
         self.events = self.state_machine.events
 
+        self.awaiting_task_status: bool = False
+
     def start(self) -> None:
         self.state_machine.update_state()
         self._run()
@@ -40,114 +43,132 @@ class Monitor(State):
         self.state_machine.mission_ongoing = False
         return
 
-    def _run(self) -> None:
-        awaiting_task_status: bool = False
-        transition: Callable
-        while True:
-            if check_for_event(self.events.api_requests.stop_mission.input):
-                transition = self.state_machine.stop  # type: ignore
-                break
+    def _check_and_handle_stop_mission_event(self, event: Queue) -> bool:
+        if check_for_event(event):
+            self.state_machine.stop()  # type: ignore
+            return True
+        return False
 
-            if check_for_event(self.events.api_requests.pause_mission.input):
-                transition = self.state_machine.pause  # type: ignore
-                break
+    def _check_and_handle_pause_mission_event(self, event: Queue) -> bool:
+        if check_for_event(event):
+            self.state_machine.pause()  # type: ignore
+            return True
+        return False
 
-            if not self.state_machine.mission_ongoing:
-                if check_for_event(self.events.robot_service_events.mission_started):
-                    self.state_machine.mission_ongoing = True
-                else:
-                    time.sleep(settings.FSM_SLEEP_TIME)
-                    continue
+    def _check_and_handle_mission_started_event(self, event: Queue) -> None:
+        if not self.state_machine.mission_ongoing:
+            if check_for_event(event):
+                self.state_machine.mission_ongoing = True
 
-            mission_failed: Optional[ErrorMessage] = check_for_event(
-                self.events.robot_service_events.mission_failed
+    def _check_and_handle_mission_failed_event(self, event: Queue) -> bool:
+        mission_failed: Optional[ErrorMessage] = check_for_event(event)
+        if mission_failed is not None:
+            self.state_machine.logger.warning(
+                f"Failed to initiate mission "
+                f"{str(self.state_machine.current_mission.id)[:8]} because: "
+                f"{mission_failed.error_description}"
             )
-            if mission_failed is not None:
-                self.state_machine.logger.warning(
-                    f"Failed to initiate mission "
-                    f"{str(self.state_machine.current_mission.id)[:8]} because: "
-                    f"{mission_failed.error_description}"
-                )
-                self.state_machine.current_mission.error_message = ErrorMessage(
-                    error_reason=mission_failed.error_reason,
-                    error_description=mission_failed.error_description,
-                )
-
-                transition = self.state_machine.mission_failed_to_start  # type: ignore
-                break
-
-            status: TaskStatus
-
-            task_failure: Optional[ErrorMessage] = check_for_event(
-                self.events.robot_service_events.task_status_failed
+            self.state_machine.current_mission.error_message = ErrorMessage(
+                error_reason=mission_failed.error_reason,
+                error_description=mission_failed.error_description,
             )
-            if task_failure is not None:
-                self.state_machine.current_task.error_message = task_failure
-                self.logger.error(
-                    f"Monitoring task {self.state_machine.current_task.id[:8]} failed "
-                    f"because: {task_failure.error_description}"
-                )
-                status = TaskStatus.Failed
-            else:
-                status = check_for_event(
-                    self.events.robot_service_events.task_status_updated
-                )
 
-            if status is None:
-                if not awaiting_task_status:
-                    trigger_event(
-                        self.events.state_machine_events.task_status_request,
-                        self.state_machine.current_task,
-                    )
-                    awaiting_task_status = True
-                time.sleep(settings.FSM_SLEEP_TIME)
-                continue
-            else:
-                awaiting_task_status = False
+            self.state_machine.mission_failed_to_start()  # type: ignore
+            return True
+        return False
 
-            if not isinstance(status, TaskStatus):
-                self.logger.error(
-                    f"Received an invalid status update {status} when monitoring mission. "
-                    "Only TaskStatus is expected."
-                )
-                break
+    def _check_and_handle_task_status_failed_event(self, event: Queue) -> bool:
+        task_failure: Optional[ErrorMessage] = check_for_event(event)
+        if task_failure is not None:
+            self.awaiting_task_status = False
+            self.state_machine.current_task.error_message = task_failure
+            self.logger.error(
+                f"Monitoring task {self.state_machine.current_task.id[:8]} failed "
+                f"because: {task_failure.error_description}"
+            )
+            return self._handle_new_task_status(TaskStatus.Failed)
+        elif not self.awaiting_task_status:
+            trigger_event(
+                self.events.state_machine_events.task_status_request,
+                self.state_machine.current_task,
+            )
+            self.awaiting_task_status = True
+        return False
 
+    def _check_and_handle_task_status_event(self, event: Queue) -> bool:
+        status: Optional[TaskStatus] = check_for_event(event)
+        if status is not None:
+            self.awaiting_task_status = False
+            return self._handle_new_task_status(status)
+        elif not self.awaiting_task_status:
+            trigger_event(
+                self.events.state_machine_events.task_status_request,
+                self.state_machine.current_task,
+            )
+            self.awaiting_task_status = True
+        return False
+
+    def _handle_new_task_status(self, status: TaskStatus) -> bool:
+        if self.state_machine.current_task is None:
+            self.state_machine.iterate_current_task()
+
+        self.state_machine.current_task.status = status
+
+        if not settings.UPLOAD_INSPECTIONS_ASYNC and self._should_upload_inspections():
+            get_inspection_thread = ThreadedRequest(self._queue_inspections_for_upload)
+            get_inspection_thread.start_thread(
+                deepcopy(self.state_machine.current_mission),
+                deepcopy(self.state_machine.current_task),
+                name="State Machine Get Inspections",
+            )
+
+        if self.state_machine.current_task.is_finished():
+            self._report_task_status(self.state_machine.current_task)
+            self.state_machine.publish_task_status(task=self.state_machine.current_task)
+
+            self.state_machine.iterate_current_task()
             if self.state_machine.current_task is None:
-                self.state_machine.iterate_current_task()
+                self.state_machine.mission_finished()  # type: ignore
+                return True
 
-            self.state_machine.current_task.status = status
+            # Report and update next task
+            self.state_machine.current_task.update_task_status()
+            self.state_machine.publish_task_status(task=self.state_machine.current_task)
+        return False
 
-            if (
-                not settings.UPLOAD_INSPECTIONS_ASYNC
-                and self._should_upload_inspections()
+    def _run(self) -> None:
+        self.awaiting_task_status = False
+        while True:
+            if self._check_and_handle_stop_mission_event(
+                self.events.api_requests.stop_mission.input
             ):
-                get_inspection_thread = ThreadedRequest(
-                    self._queue_inspections_for_upload
-                )
-                get_inspection_thread.start_thread(
-                    deepcopy(self.state_machine.current_mission),
-                    deepcopy(self.state_machine.current_task),
-                    name="State Machine Get Inspections",
-                )
+                break
 
-            if self.state_machine.current_task.is_finished():
-                self._report_task_status(self.state_machine.current_task)
-                self.state_machine.publish_task_status(
-                    task=self.state_machine.current_task
-                )
+            if self._check_and_handle_pause_mission_event(
+                self.events.api_requests.pause_mission.input
+            ):
+                break
 
-                self.state_machine.iterate_current_task()
-                if self.state_machine.current_task is None:
-                    transition = self.state_machine.mission_finished  # type: ignore
-                    break
+            self._check_and_handle_mission_started_event(
+                self.events.robot_service_events.mission_started
+            )
 
-                # Report and update next task
-                self.state_machine.current_task.update_task_status()
-                self.state_machine.publish_task_status(
-                    task=self.state_machine.current_task
-                )
+            if self._check_and_handle_mission_failed_event(
+                self.events.robot_service_events.mission_failed
+            ):
+                break
 
-        transition()
+            if self._check_and_handle_task_status_failed_event(
+                self.events.robot_service_events.task_status_failed
+            ):
+                break
+
+            if self._check_and_handle_task_status_event(
+                self.events.robot_service_events.task_status_updated
+            ):
+                break
+
+            time.sleep(settings.FSM_SLEEP_TIME)
 
     def _queue_inspections_for_upload(
         self, mission: Mission, current_task: InspectionTask
