@@ -235,6 +235,8 @@ def test_state_machine_with_successful_mission_stop(
     time.sleep(3)
     scheduling_utilities.stop_mission()
 
+    time.sleep(1)
+
     assert state_machine_thread.state_machine.transitions_list == deque(
         [States.Idle, States.Monitor, States.Stop, States.Idle]
     )

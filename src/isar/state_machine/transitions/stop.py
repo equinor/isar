@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from isar.models.communication.queues.queue_utils import trigger_event
+
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
@@ -7,7 +9,12 @@ from isar.apis.models.models import ControlMissionResponse
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
-def stop_mission(state_machine: "StateMachine") -> bool:
+def trigger_stop_mission_event(state_machine: "StateMachine") -> bool:
+    trigger_event(state_machine.events.state_machine_events.stop_mission)
+    return True
+
+
+def stop_mission_cleanup(state_machine: "StateMachine") -> bool:
     if state_machine.current_mission is None:
         state_machine._queue_empty_response()
         state_machine.reset_state_machine()

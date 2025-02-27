@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     # Determines the number of state transitions that are kept in the log
     STATE_TRANSITIONS_LOG_LENGTH: int = Field(default=20)
 
-    # Number of attempts to initiate a task or mission before cancelling
+    # Number of attempts to initiate a mission before cancelling
     INITIATE_FAILURE_COUNTER_LIMIT: int = Field(default=10)
 
     # Number of attempts to request a task status in monitor before cancelling
