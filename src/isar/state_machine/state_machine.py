@@ -37,7 +37,10 @@ from isar.state_machine.transitions.start_mission import (
     set_mission_to_in_progress,
     trigger_start_mission_or_task_event,
 )
-from isar.state_machine.transitions.stop import stop_mission
+from isar.state_machine.transitions.stop import (
+    stop_mission_cleanup,
+    trigger_stop_mission_event,
+)
 from isar.state_machine.transitions.utils import def_transition
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
@@ -135,6 +138,7 @@ class StateMachine(object):
                         self.paused_state,
                     ],
                     "dest": self.stop_state,
+                    "before": def_transition(self, trigger_stop_mission_event),
                 },
                 {
                     "trigger": "request_mission_start",
@@ -177,7 +181,7 @@ class StateMachine(object):
                     "trigger": "mission_stopped",
                     "source": self.stop_state,
                     "dest": self.idle_state,
-                    "before": def_transition(self, stop_mission),
+                    "before": def_transition(self, stop_mission_cleanup),
                 },
                 {
                     "trigger": "robot_turned_offline",

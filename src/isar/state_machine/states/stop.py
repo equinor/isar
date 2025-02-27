@@ -1,18 +1,12 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, Optional
+from queue import Queue
+from typing import TYPE_CHECKING, Optional
 
 from transitions import State
 
-from isar.services.utilities.threaded_request import (
-    ThreadedRequest,
-    ThreadedRequestNotFinishedError,
-)
-from robot_interface.models.exceptions.robot_exceptions import (
-    ErrorMessage,
-    RobotActionException,
-    RobotException,
-)
+from isar.models.communication.queues.queue_utils import check_for_event
+from isar.services.utilities.threaded_request import ThreadedRequest
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -23,6 +17,7 @@ class Stop(State):
         super().__init__(name="stop", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
+        self.events = self.state_machine.events
         self.stop_thread: Optional[ThreadedRequest] = None
         self._count_number_retries: int = 0
 
@@ -36,56 +31,31 @@ class Stop(State):
         self.stop_thread = None
         self._count_number_retries = 0
 
-    def _run(self) -> None:
-        transition: Callable
-        while True:
-            if not self.stop_thread:
-                self.stop_thread = ThreadedRequest(self.state_machine.robot.stop)
-                self.stop_thread.start_thread(name="State Machine Stop Robot")
-
-            try:
-                self.stop_thread.get_output()
-            except ThreadedRequestNotFinishedError:
-                time.sleep(self.state_machine.sleep_time)
-                continue
-
-            except (RobotActionException, RobotException) as e:
-                if self.handle_stop_fail(
-                    retry_limit=self.state_machine.stop_robot_attempts_limit,
-                    error_message=ErrorMessage(
-                        error_reason=e.error_reason,
-                        error_description=e.error_description,
-                    ),
-                ):
-                    transition = self.state_machine.mission_stopped  # type: ignore
-                    break
-
-                self.logger.warning(
-                    f"\nFailed to stop robot because: {e.error_description}"
-                    f"\nAttempting to stop the robot again"
-                )
-
-                self.stop_thread = None
-                continue
-
-            transition = self.state_machine.mission_stopped  # type: ignore
-
-            break
-
-        transition()
-
-    def handle_stop_fail(self, retry_limit: int, error_message: ErrorMessage) -> bool:
-        self._count_number_retries += 1
-        if self._count_number_retries > retry_limit:
-            self.state_machine.current_task.error_message = error_message
-
-            self.logger.error(
-                f"\nFailed to stop the robot after {retry_limit} attempts because: "
-                f"{error_message.error_description}"
-                f"\nBe aware that the robot may still be moving even though a stop has "
-                "been attempted"
-            )
-
+    def _check_and_handle_failed_stop(self, event: Queue) -> bool:
+        error_message = check_for_event(event)
+        if error_message is not None:
+            self.logger.warning(error_message)
+            self.state_machine.mission_stopped()  # type: ignore
             return True
-        time.sleep(self.state_machine.sleep_time)
         return False
+
+    def _check_and_handle_successful_stop(self, event: Queue) -> bool:
+        if check_for_event(event):
+            self.state_machine.mission_stopped()  # type: ignore
+            return True
+        return False
+
+    def _run(self) -> None:
+        while True:
+
+            if self._check_and_handle_failed_stop(
+                self.events.robot_service_events.mission_failed_to_stop
+            ):
+                break
+
+            if self._check_and_handle_successful_stop(
+                self.events.robot_service_events.mission_successfully_stopped
+            ):
+                break
+
+            time.sleep(self.state_machine.sleep_time)

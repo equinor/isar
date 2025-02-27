@@ -1,11 +1,9 @@
 import logging
 from threading import Event, Thread
-from typing import Optional
 
 from isar.config.settings import settings
 from isar.models.communication.queues.events import Events
 from isar.models.communication.queues.queue_utils import trigger_event
-from isar.services.utilities.threaded_request import ThreadedRequest
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotException,
@@ -27,7 +25,6 @@ class RobotStartMissionThread(Thread):
         self.logger = logging.getLogger("robot")
         self.events: Events = events
         self.robot: RobotInterface = robot
-        self.start_mission_thread: Optional[ThreadedRequest] = None
         self.signal_thread_quitting: Event = signal_thread_quitting
         self.mission = mission
         Thread.__init__(self, name="Robot start mission thread")
