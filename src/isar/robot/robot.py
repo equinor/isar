@@ -72,8 +72,8 @@ class Robot(object):
             )
             self.start_mission_thread.start()
 
-    def _check_and_handle_task_status_request(self, event: Queue) -> None:
-        task_id = check_for_event(event)
+    def _check_and_handle_task_status_request(self, event: Queue[str]) -> None:
+        task_id: str = check_for_event(event)
         if task_id:
             self.robot_task_status_thread = RobotTaskStatusThread(
                 self.events, self.robot, self.signal_thread_quitting, task_id

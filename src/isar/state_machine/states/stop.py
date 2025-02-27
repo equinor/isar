@@ -7,6 +7,7 @@ from transitions import State
 
 from isar.models.communication.queues.queue_utils import check_for_event
 from isar.services.utilities.threaded_request import ThreadedRequest
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -31,15 +32,15 @@ class Stop(State):
         self.stop_thread = None
         self._count_number_retries = 0
 
-    def _check_and_handle_failed_stop(self, event: Queue) -> bool:
-        error_message = check_for_event(event)
+    def _check_and_handle_failed_stop(self, event: Queue[ErrorMessage]) -> bool:
+        error_message: Optional[ErrorMessage] = check_for_event(event)
         if error_message is not None:
-            self.logger.warning(error_message)
+            self.logger.warning(error_message.error_description)
             self.state_machine.mission_stopped()  # type: ignore
             return True
         return False
 
-    def _check_and_handle_successful_stop(self, event: Queue) -> bool:
+    def _check_and_handle_successful_stop(self, event: Queue[bool]) -> bool:
         if check_for_event(event):
             self.state_machine.mission_stopped()  # type: ignore
             return True

@@ -39,7 +39,9 @@ class Idle(State):
             return True
         return False
 
-    def _check_and_handle_start_mission_event(self, event: Queue) -> bool:
+    def _check_and_handle_start_mission_event(
+        self, event: Queue[StartMissionMessage]
+    ) -> bool:
         start_mission: Optional[StartMissionMessage] = check_for_event(event)
         if start_mission:
             self.state_machine.start_mission(mission=start_mission.mission)
@@ -47,8 +49,10 @@ class Idle(State):
             return True
         return False
 
-    def _check_and_handle_robot_status_event(self, event: StatusQueue) -> bool:
-        robot_status = check_shared_state(event)
+    def _check_and_handle_robot_status_event(
+        self, event: StatusQueue[RobotStatus]
+    ) -> bool:
+        robot_status: RobotStatus = check_shared_state(event)
         if robot_status == RobotStatus.Offline:
             self.state_machine.robot_turned_offline()  # type: ignore
             return True

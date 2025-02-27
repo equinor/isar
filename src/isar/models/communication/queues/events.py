@@ -1,8 +1,14 @@
 from queue import Queue
 
+from transitions import State
+
 from isar.config.settings import settings
 from isar.models.communication.queues.queue_io import QueueIO
 from isar.models.communication.queues.status_queue import StatusQueue
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.status import RobotStatus, TaskStatus
+from robot_interface.models.mission.task import TASKS
 
 
 class Events:
@@ -27,26 +33,25 @@ class APIRequests:
 
 class StateMachineEvents:
     def __init__(self) -> None:
-        self.start_mission: Queue = Queue(maxsize=1)
-        self.stop_mission: Queue = Queue(maxsize=1)
-        self.pause_mission: Queue = Queue(maxsize=1)
-        self.task_status_request: Queue = Queue(maxsize=1)
-        self.robot_status_request: Queue = Queue(maxsize=1)
+        self.start_mission: Queue[Mission] = Queue(maxsize=1)
+        self.stop_mission: Queue[bool] = Queue(maxsize=1)
+        self.pause_mission: Queue[bool] = Queue(maxsize=1)
+        self.task_status_request: Queue[str] = Queue(maxsize=1)
 
 
 class RobotServiceEvents:
     def __init__(self) -> None:
-        self.task_status_updated: Queue = Queue(maxsize=1)
-        self.task_status_failed: Queue = Queue(maxsize=1)
-        self.mission_started: Queue = Queue(maxsize=1)
-        self.mission_failed: Queue = Queue(maxsize=1)
-        self.robot_status_changed: Queue = Queue(maxsize=1)
-        self.mission_failed_to_stop: Queue = Queue(maxsize=1)
-        self.mission_successfully_stopped: Queue = Queue(maxsize=1)
+        self.task_status_updated: Queue[TaskStatus] = Queue(maxsize=1)
+        self.task_status_failed: Queue[ErrorMessage] = Queue(maxsize=1)
+        self.mission_started: Queue[bool] = Queue(maxsize=1)
+        self.mission_failed: Queue[ErrorMessage] = Queue(maxsize=1)
+        self.robot_status_changed: Queue[bool] = Queue(maxsize=1)
+        self.mission_failed_to_stop: Queue[ErrorMessage] = Queue(maxsize=1)
+        self.mission_successfully_stopped: Queue[bool] = Queue(maxsize=1)
 
 
 class SharedState:
     def __init__(self) -> None:
-        self.state: StatusQueue = StatusQueue()
-        self.robot_status: StatusQueue = StatusQueue()
-        self.state_machine_current_task: StatusQueue = StatusQueue()
+        self.state: StatusQueue[State] = StatusQueue()
+        self.robot_status: StatusQueue[RobotStatus] = StatusQueue()
+        self.state_machine_current_task: StatusQueue[TASKS] = StatusQueue()
