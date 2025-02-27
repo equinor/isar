@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from isar.models.communication.queues.queue_utils import trigger_event
+from isar.models.communication.queues.queue_utils import trigger_event_without_data
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -10,7 +10,7 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
 def trigger_stop_mission_event(state_machine: "StateMachine") -> bool:
-    trigger_event(state_machine.events.state_machine_events.stop_mission)
+    trigger_event_without_data(state_machine.events.state_machine_events.stop_mission)
     return True
 
 

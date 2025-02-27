@@ -90,7 +90,7 @@ class Monitor(State):
         elif not self.awaiting_task_status:
             trigger_event(
                 self.events.state_machine_events.task_status_request,
-                self.state_machine.current_task,
+                self.state_machine.current_task.id,
             )
             self.awaiting_task_status = True
         return False
@@ -103,7 +103,7 @@ class Monitor(State):
         elif not self.awaiting_task_status:
             trigger_event(
                 self.events.state_machine_events.task_status_request,
-                self.state_machine.current_task,
+                self.state_machine.current_task.id,
             )
             self.awaiting_task_status = True
         return False

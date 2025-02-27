@@ -3,7 +3,10 @@ from threading import Event, Thread
 
 from isar.config.settings import settings
 from isar.models.communication.queues.events import Events
-from isar.models.communication.queues.queue_utils import trigger_event
+from isar.models.communication.queues.queue_utils import (
+    trigger_event,
+    trigger_event_without_data,
+)
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotException,
@@ -67,4 +70,4 @@ class RobotStartMissionThread(Thread):
                     error_reason=e.error_reason, error_description=e.error_description
                 ),
             )
-        trigger_event(self.events.robot_service_events.mission_started)
+        trigger_event_without_data(self.events.robot_service_events.mission_started)
