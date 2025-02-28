@@ -2,7 +2,7 @@ import logging
 from threading import Event, Thread
 
 from isar.config.settings import settings
-from isar.models.communication.queues.events import Events
+from isar.models.communication.queues.events import RobotServiceEvents
 from isar.models.communication.queues.queue_utils import (
     trigger_event,
     trigger_event_without_data,
@@ -20,13 +20,13 @@ class RobotStartMissionThread(Thread):
 
     def __init__(
         self,
-        events: Events,
+        robot_service_events: RobotServiceEvents,
         robot: RobotInterface,
         signal_thread_quitting: Event,
         mission: Mission,
     ):
         self.logger = logging.getLogger("robot")
-        self.events: Events = events
+        self.robot_service_events: RobotServiceEvents = robot_service_events
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
         self.mission = mission
@@ -56,7 +56,7 @@ class RobotStartMissionThread(Thread):
                         )
 
                         trigger_event(
-                            self.events.robot_service_events.mission_failed,
+                            self.robot_service_events.mission_failed,
                             ErrorMessage(
                                 error_reason=e.error_reason,
                                 error_description=error_description,
@@ -65,9 +65,9 @@ class RobotStartMissionThread(Thread):
                 started_mission = True
         except RobotInfeasibleMissionException as e:
             trigger_event(
-                self.events.robot_service_events.mission_failed,
+                self.robot_service_events.mission_failed,
                 ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 ),
             )
-        trigger_event_without_data(self.events.robot_service_events.mission_started)
+        trigger_event_without_data(self.robot_service_events.mission_started)
