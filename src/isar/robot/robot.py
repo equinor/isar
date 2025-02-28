@@ -5,7 +5,12 @@ from typing import Optional
 
 from injector import inject
 
-from isar.models.communication.queues.events import Events, SharedState
+from isar.models.communication.queues.events import (
+    Events,
+    RobotServiceEvents,
+    SharedState,
+    StateMachineEvents,
+)
 from isar.models.communication.queues.queue_utils import check_for_event
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_status import RobotStatusThread
@@ -21,7 +26,8 @@ class Robot(object):
         self, events: Events, robot: RobotInterface, shared_state: SharedState
     ):
         self.logger = logging.getLogger("robot")
-        self.events: Events = events
+        self.state_machine_events: StateMachineEvents = events.state_machine_events
+        self.robot_service_events: RobotServiceEvents = events.robot_service_events
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.start_mission_thread: Optional[RobotStartMissionThread] = None
@@ -65,7 +71,7 @@ class Robot(object):
                 )
                 self.start_mission_thread.join()
             self.start_mission_thread = RobotStartMissionThread(
-                self.events,
+                self.robot_service_events,
                 self.robot,
                 self.signal_thread_quitting,
                 start_mission,
@@ -76,7 +82,10 @@ class Robot(object):
         task_id: str = check_for_event(event)
         if task_id:
             self.robot_task_status_thread = RobotTaskStatusThread(
-                self.events, self.robot, self.signal_thread_quitting, task_id
+                self.robot_service_events,
+                self.robot,
+                self.signal_thread_quitting,
+                task_id,
             )
             self.robot_task_status_thread.start()
 
@@ -88,7 +97,7 @@ class Robot(object):
             ):
                 return
             self.stop_mission_thread_thread = RobotStopMissionThread(
-                self.events, self.robot, self.signal_thread_quitting
+                self.robot_service_events, self.robot, self.signal_thread_quitting
             )
             self.stop_mission_thread_thread.start()
 
@@ -103,15 +112,13 @@ class Robot(object):
                 break
 
             self._check_and_handle_start_mission(
-                self.events.state_machine_events.start_mission
+                self.state_machine_events.start_mission
             )
 
             self._check_and_handle_task_status_request(
-                self.events.state_machine_events.task_status_request
+                self.state_machine_events.task_status_request
             )
 
-            self._check_and_handle_stop_mission(
-                self.events.state_machine_events.stop_mission
-            )
+            self._check_and_handle_stop_mission(self.state_machine_events.stop_mission)
 
         self.logger.info("Exiting robot service main thread")

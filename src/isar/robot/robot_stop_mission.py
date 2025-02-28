@@ -4,7 +4,7 @@ from threading import Event, Thread
 from typing import Optional
 
 from isar.config.settings import settings
-from isar.models.communication.queues.events import Events
+from isar.models.communication.queues.events import RobotServiceEvents
 from isar.models.communication.queues.queue_utils import (
     trigger_event,
     trigger_event_without_data,
@@ -21,12 +21,12 @@ class RobotStopMissionThread(Thread):
 
     def __init__(
         self,
-        events: Events,
+        robot_service_events: RobotServiceEvents,
         robot: RobotInterface,
         signal_thread_quitting: Event,
     ):
         self.logger = logging.getLogger("robot")
-        self.events: Events = events
+        self.robot_service_events: RobotServiceEvents = robot_service_events
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
         Thread.__init__(self, name="Robot start mission thread")
@@ -53,7 +53,7 @@ class RobotStopMissionThread(Thread):
                 continue
 
             trigger_event_without_data(
-                self.events.robot_service_events.mission_successfully_stopped
+                self.robot_service_events.mission_successfully_stopped
             )
             return
 
@@ -69,6 +69,4 @@ class RobotStopMissionThread(Thread):
             error_description=error_description,
         )
 
-        trigger_event(
-            self.events.robot_service_events.mission_failed_to_stop, error_message
-        )
+        trigger_event(self.robot_service_events.mission_failed_to_stop, error_message)
