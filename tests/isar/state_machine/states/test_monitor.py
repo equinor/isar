@@ -45,6 +45,6 @@ def test_should_only_upload_if_status_is_completed(
     if monitor._should_upload_inspections():
         monitor._queue_inspections_for_upload(mission, task)
 
-    assert monitor.state_machine.queues.upload_queue.empty() == (
+    assert monitor.state_machine.events.upload_queue.empty() == (
         not should_queue_upload
     )

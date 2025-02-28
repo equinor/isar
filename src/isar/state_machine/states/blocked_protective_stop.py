@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 from transitions import State
 
+from isar.models.communication.queues.queue_utils import check_shared_state
 from isar.services.utilities.threaded_request import ThreadedRequest
 from robot_interface.models.mission.status import RobotStatus
 
@@ -19,27 +20,18 @@ class BlockedProtectiveStop(State):
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
         self.robot_status_thread: Optional[ThreadedRequest] = None
+        self.shared_state = self.state_machine.shared_state
 
     def start(self) -> None:
         self.state_machine.update_state()
         self._run()
 
     def stop(self) -> None:
-        if self.robot_status_thread:
-            self.robot_status_thread.wait_for_thread()
-        self.robot_status_thread = None
+        return
 
     def _run(self) -> None:
         while True:
-            if not self.robot_status_thread:
-                self.robot_status_thread = ThreadedRequest(
-                    request_func=self.state_machine.robot.robot_status
-                )
-                self.robot_status_thread.start_thread(
-                    name="State Machine BlockedProtectiveStop Get Robot Status"
-                )
-
-            robot_status = self.state_machine.get_robot_status()
+            robot_status = check_shared_state(self.shared_state.robot_status)
 
             if robot_status == RobotStatus.Offline:
                 transition = self.state_machine.robot_turned_offline  # type: ignore

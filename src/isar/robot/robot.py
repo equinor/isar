@@ -1,14 +1,20 @@
 import logging
+from queue import Queue
 from threading import Event
 from typing import Optional
 
 from injector import inject
 
-from isar.models.communication.queues.queue_io import QueueIO
+from isar.models.communication.queues.events import (
+    Events,
+    RobotServiceEvents,
+    SharedState,
+    StateMachineEvents,
+)
 from isar.models.communication.queues.queue_utils import check_for_event
-from isar.models.communication.queues.queues import Queues
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_status import RobotStatusThread
+from isar.robot.robot_stop_mission import RobotStopMissionThread
 from isar.robot.robot_task_status import RobotTaskStatusThread
 from robot_interface.robot_interface import RobotInterface
 
@@ -16,13 +22,18 @@ from robot_interface.robot_interface import RobotInterface
 class Robot(object):
 
     @inject
-    def __init__(self, queues: Queues, robot: RobotInterface):
+    def __init__(
+        self, events: Events, robot: RobotInterface, shared_state: SharedState
+    ):
         self.logger = logging.getLogger("robot")
-        self.queues: Queues = queues
+        self.state_machine_events: StateMachineEvents = events.state_machine_events
+        self.robot_service_events: RobotServiceEvents = events.robot_service_events
+        self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.start_mission_thread: Optional[RobotStartMissionThread] = None
         self.robot_status_thread: Optional[RobotStatusThread] = None
         self.robot_task_status_thread: Optional[RobotTaskStatusThread] = None
+        self.stop_mission_thread_thread: Optional[RobotStopMissionThread] = None
         self.signal_thread_quitting: Event = Event()
 
     def stop(self) -> None:
@@ -39,12 +50,17 @@ class Robot(object):
             and self.robot_status_thread.is_alive()
         ):
             self.start_mission_thread.join()
+        if (
+            self.stop_mission_thread_thread is not None
+            and self.stop_mission_thread_thread.is_alive()
+        ):
+            self.stop_mission_thread_thread.join()
         self.robot_status_thread = None
         self.robot_task_status_thread = None
         self.start_mission_thread = None
 
-    def _check_and_handle_start_mission(self, queue: QueueIO) -> None:
-        start_mission = check_for_event(queue)
+    def _check_and_handle_start_mission(self, event: Queue) -> None:
+        start_mission = check_for_event(event)
         if start_mission is not None:
             if (
                 self.start_mission_thread is not None
@@ -55,24 +71,39 @@ class Robot(object):
                 )
                 self.start_mission_thread.join()
             self.start_mission_thread = RobotStartMissionThread(
-                self.queues,
+                self.robot_service_events,
                 self.robot,
                 self.signal_thread_quitting,
                 start_mission,
             )
             self.start_mission_thread.start()
 
-    def _check_and_handle_task_status_request(self, queue: QueueIO) -> None:
-        task_id = check_for_event(queue)
+    def _check_and_handle_task_status_request(self, event: Queue[str]) -> None:
+        task_id: str = check_for_event(event)
         if task_id:
             self.robot_task_status_thread = RobotTaskStatusThread(
-                self.queues, self.robot, self.signal_thread_quitting, task_id
+                self.robot_service_events,
+                self.robot,
+                self.signal_thread_quitting,
+                task_id,
             )
             self.robot_task_status_thread.start()
 
+    def _check_and_handle_stop_mission(self, event: Queue) -> None:
+        if check_for_event(event):
+            if (
+                self.stop_mission_thread_thread is not None
+                and self.start_mission_thread.is_alive()
+            ):
+                return
+            self.stop_mission_thread_thread = RobotStopMissionThread(
+                self.robot_service_events, self.robot, self.signal_thread_quitting
+            )
+            self.stop_mission_thread_thread.start()
+
     def run(self) -> None:
         self.robot_status_thread = RobotStatusThread(
-            self.queues, self.robot, self.signal_thread_quitting
+            self.robot, self.signal_thread_quitting, self.shared_state
         )
         self.robot_status_thread.start()
 
@@ -81,11 +112,13 @@ class Robot(object):
                 break
 
             self._check_and_handle_start_mission(
-                self.queues.state_machine_start_mission
+                self.state_machine_events.start_mission
             )
 
             self._check_and_handle_task_status_request(
-                self.queues.state_machine_task_status_request
+                self.state_machine_events.task_status_request
             )
+
+            self._check_and_handle_stop_mission(self.state_machine_events.stop_mission)
 
         self.logger.info("Exiting robot service main thread")

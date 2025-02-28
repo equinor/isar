@@ -1,6 +1,5 @@
 import json
 import logging
-import queue
 from collections import deque
 from datetime import datetime, timezone
 from typing import Deque, List, Optional
@@ -15,8 +14,8 @@ from isar.mission_planner.task_selector_interface import (
     TaskSelectorInterface,
     TaskSelectorStop,
 )
-from isar.models.communication.message import StartMissionMessage
-from isar.models.communication.queues.queues import Queues
+from isar.models.communication.queues.events import Events, SharedState
+from isar.models.communication.queues.queue_utils import update_shared_state
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.idle import Idle
 from isar.state_machine.states.monitor import Monitor
@@ -38,7 +37,10 @@ from isar.state_machine.transitions.start_mission import (
     set_mission_to_in_progress,
     trigger_start_mission_or_task_event,
 )
-from isar.state_machine.transitions.stop import stop_mission
+from isar.state_machine.transitions.stop import (
+    stop_mission_cleanup,
+    trigger_stop_mission_event,
+)
 from isar.state_machine.transitions.utils import def_transition
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
@@ -60,7 +62,8 @@ class StateMachine(object):
     @inject
     def __init__(
         self,
-        queues: Queues,
+        events: Events,
+        shared_state: SharedState,
         robot: RobotInterface,
         mqtt_publisher: MqttClientInterface,
         task_selector: TaskSelectorInterface,
@@ -72,8 +75,8 @@ class StateMachine(object):
 
         Parameters
         ----------
-        queues : Queues
-            Queues used for API communication.
+        events : Events
+            Events used for API and robot service communication.
         robot : RobotInterface
             Instance of robot interface.
         mqtt_publisher : MqttClientInterface
@@ -88,7 +91,8 @@ class StateMachine(object):
         """
         self.logger = logging.getLogger("state_machine")
 
-        self.queues: Queues = queues
+        self.events: Events = events
+        self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.mqtt_publisher: Optional[MqttClientInterface] = mqtt_publisher
         self.task_selector: TaskSelectorInterface = task_selector
@@ -134,6 +138,7 @@ class StateMachine(object):
                         self.paused_state,
                     ],
                     "dest": self.stop_state,
+                    "before": def_transition(self, trigger_stop_mission_event),
                 },
                 {
                     "trigger": "request_mission_start",
@@ -176,7 +181,7 @@ class StateMachine(object):
                     "trigger": "mission_stopped",
                     "source": self.stop_state,
                     "dest": self.idle_state,
-                    "before": def_transition(self, stop_mission),
+                    "before": def_transition(self, stop_mission_cleanup),
                 },
                 {
                     "trigger": "robot_turned_offline",
@@ -246,7 +251,7 @@ class StateMachine(object):
     def update_state(self):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)  # type: ignore
-        self.send_state_status()
+        update_shared_state(self.shared_state.state, self.current_state)
         self._log_state_transition(self.current_state)
         self.logger.info(f"State: {self.current_state}")
         self.publish_status()
@@ -263,68 +268,10 @@ class StateMachine(object):
 
         self.task_selector.initialize(tasks=self.current_mission.tasks)
 
-    def should_start_mission(self) -> Optional[StartMissionMessage]:
-        try:
-            return self.queues.api_start_mission.input.get(block=False)
-        except queue.Empty:
-            return None
-
-    def should_stop_mission(self) -> bool:
-        try:
-            return self.queues.api_stop_mission.input.get(block=False)
-        except queue.Empty:
-            return False
-
-    def should_pause_mission(self) -> bool:
-        try:
-            return self.queues.api_pause_mission.input.get(block=False)
-        except queue.Empty:
-            return False
-
-    def get_task_status_event(self) -> Optional[TaskStatus]:
-        try:
-            return self.queues.robot_task_status.input.get(block=False)
-        except queue.Empty:
-            return None
-
-    def request_task_status(self, task_id: str) -> None:
-        self.queues.state_machine_task_status_request.input.put(task_id)
-
-    def get_mission_started_event(self) -> bool:
-        try:
-            return self.queues.robot_mission_started.input.get(block=False)
-        except queue.Empty:
-            return False
-
-    def get_mission_failed_event(self) -> Optional[ErrorMessage]:
-        try:
-            return self.queues.robot_mission_failed.input.get(block=False)
-        except queue.Empty:
-            return None
-
-    def get_task_failure_event(self) -> Optional[ErrorMessage]:
-        try:
-            return self.queues.robot_task_status_failed.input.get(block=False)
-        except queue.Empty:
-            return None
-
-    def should_resume_mission(self) -> bool:
-        try:
-            return self.queues.api_resume_mission.input.get(block=False)
-        except queue.Empty:
-            return False
-
-    def get_robot_status(self) -> bool:
-        try:
-            return self.queues.robot_status.check()
-        except queue.Empty:
-            return False
-
-    def send_state_status(self) -> None:
-        self.queues.state.update(self.current_state)
-
     def send_task_status(self):
-        self.queues.state_machine_current_task.update(self.current_task)
+        update_shared_state(
+            self.shared_state.state_machine_current_task, self.current_task
+        )
 
     def publish_mission_status(self) -> None:
         if not self.mqtt_publisher:
@@ -437,7 +384,7 @@ class StateMachine(object):
         )
 
     def _queue_empty_response(self) -> None:
-        self.queues.api_stop_mission.output.put(
+        self.events.api_requests.stop_mission.output.put(
             ControlMissionResponse(
                 mission_id="None",
                 mission_status="None",

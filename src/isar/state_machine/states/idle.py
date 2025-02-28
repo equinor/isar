@@ -1,11 +1,16 @@
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, Optional
+from queue import Queue
+from typing import TYPE_CHECKING, Optional
 
 from transitions import State
 
-from isar.config.settings import settings
 from isar.models.communication.message import StartMissionMessage
+from isar.models.communication.queues.queue_utils import (
+    check_for_event,
+    check_shared_state,
+)
+from isar.models.communication.queues.status_queue import StatusQueue
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
@@ -18,6 +23,8 @@ class Idle(State):
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
         self.last_robot_status_poll_time: float = time.time()
+        self.events = self.state_machine.events
+        self.shared_state = self.state_machine.shared_state
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -26,36 +33,49 @@ class Idle(State):
     def stop(self) -> None:
         return
 
-    def _is_ready_to_poll_for_status(self) -> bool:
-        time_since_last_robot_status_poll = (
-            time.time() - self.last_robot_status_poll_time
-        )
-        return (
-            time_since_last_robot_status_poll > settings.ROBOT_API_STATUS_POLL_INTERVAL
-        )
+    def _check_and_handle_stop_mission_event(self, event: Queue) -> bool:
+        if check_for_event(event):
+            self.state_machine.stop()  # type: ignore
+            return True
+        return False
+
+    def _check_and_handle_start_mission_event(
+        self, event: Queue[StartMissionMessage]
+    ) -> bool:
+        start_mission: Optional[StartMissionMessage] = check_for_event(event)
+        if start_mission:
+            self.state_machine.start_mission(mission=start_mission.mission)
+            self.state_machine.request_mission_start()  # type: ignore
+            return True
+        return False
+
+    def _check_and_handle_robot_status_event(
+        self, event: StatusQueue[RobotStatus]
+    ) -> bool:
+        robot_status: RobotStatus = check_shared_state(event)
+        if robot_status == RobotStatus.Offline:
+            self.state_machine.robot_turned_offline()  # type: ignore
+            return True
+        elif robot_status == RobotStatus.BlockedProtectiveStop:
+            self.state_machine.robot_protective_stop_engaged()  # type: ignore
+            return True
+        return False
 
     def _run(self) -> None:
-        transition: Callable
         while True:
-            if self.state_machine.should_stop_mission():
-                transition = self.state_machine.stop  # type: ignore
+            if self._check_and_handle_stop_mission_event(
+                self.events.api_requests.stop_mission.input
+            ):
                 break
 
-            start_mission: Optional[StartMissionMessage] = (
-                self.state_machine.should_start_mission()
-            )
-            if start_mission:
-                self.state_machine.start_mission(mission=start_mission.mission)
-                transition = self.state_machine.request_mission_start  # type: ignore
+            if self._check_and_handle_start_mission_event(
+                self.events.api_requests.start_mission.input
+            ):
                 break
 
-            robot_status = self.state_machine.get_robot_status()
-            if robot_status == RobotStatus.Offline:
-                transition = self.state_machine.robot_turned_offline  # type: ignore
-                break
-            elif robot_status == RobotStatus.BlockedProtectiveStop:
-                transition = self.state_machine.robot_protective_stop_engaged  # type: ignore
+            if self._check_and_handle_robot_status_event(
+                self.shared_state.robot_status
+            ):
                 break
 
             time.sleep(self.state_machine.sleep_time)
-        transition()

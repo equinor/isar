@@ -17,13 +17,14 @@ from isar.apis.api import API
 from isar.config.settings import settings
 from isar.modules import (
     APIModule,
+    EventsModule,
     LocalPlannerModule,
     LocalStorageModule,
-    QueuesModule,
     RequestHandlerModule,
     RobotModule,
     SchedulingUtilitiesModule,
     ServiceModule,
+    SharedStateModule,
     StateMachineModule,
 )
 from isar.state_machine.states_enum import States
@@ -50,7 +51,8 @@ def injector_turtlebot():
         [
             APIModule,
             MockNoAuthenticationModule,
-            QueuesModule,
+            EventsModule,
+            SharedStateModule,
             RequestHandlerModule,
             RobotModule,
             ServiceModule,

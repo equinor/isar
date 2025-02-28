@@ -1,27 +1,32 @@
-import queue
-from typing import Any
+from queue import Empty, Queue
+from typing import Optional, TypeVar
 
-from isar.models.communication.queues.queue_io import QueueIO
 from isar.models.communication.queues.status_queue import StatusQueue
 
-
-def trigger_event(queueio: QueueIO, data: Any = None) -> None:
-    queueio.input.put(data if data is not None else True)
+T = TypeVar("T")
 
 
-def check_shared_state(queueio: StatusQueue) -> Any:
+def trigger_event_without_data(queue: Queue[bool]) -> None:
+    queue.put(True)
+
+
+def trigger_event(queue: Queue[T], data: T) -> None:
+    queue.put(data)
+
+
+def check_shared_state(queue: StatusQueue[T]) -> Optional[T]:
     try:
-        return queueio.check()
-    except queue.Empty:
+        return queue.check()
+    except Empty:
         return None
 
 
-def update_shared_state(queueio: StatusQueue, data: Any = None) -> None:
-    queueio.update(data if data is not None else True)
+def update_shared_state(queue: StatusQueue[T], data: T) -> None:
+    queue.update(data)
 
 
-def check_for_event(queueio: QueueIO) -> Any:
+def check_for_event(queue: Queue[T]) -> Optional[T]:
     try:
-        return queueio.input.get(block=False)
-    except queue.Empty:
+        return queue.get(block=False)
+    except Empty:
         return None

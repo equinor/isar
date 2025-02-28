@@ -7,7 +7,7 @@ import pytest
 from injector import Injector
 from pytest_mock import MockerFixture
 
-from isar.models.communication.queues.queues import Queues
+from isar.models.communication.queues.events import Events, SharedState
 from isar.robot.robot import Robot
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -48,7 +48,7 @@ class UploaderThread(object):
     def __init__(self, injector) -> None:
         self.injector: Injector = injector
         self.uploader: Uploader = Uploader(
-            queues=self.injector.get(Queues),
+            events=self.injector.get(Events),
             storage_handlers=injector.get(List[StorageInterface]),
             mqtt_publisher=injector.get(MqttClientInterface),
         )
@@ -61,8 +61,9 @@ class RobotServiceThread(object):
     def __init__(self, injector) -> None:
         self.injector: Injector = injector
         self.robot_service: Robot = Robot(
-            queues=self.injector.get(Queues),
+            events=self.injector.get(Events),
             robot=self.injector.get(RobotInterface),
+            shared_state=self.injector.get(SharedState),
         )
 
     def start(self):
@@ -94,12 +95,6 @@ def robot_service_thread(injector):
 
 def test_initial_off(state_machine) -> None:
     assert state_machine.state == "off"
-
-
-def test_send_status(state_machine) -> None:
-    state_machine.send_state_status()
-    message = state_machine.queues.state.check()
-    assert message == state_machine.current_state
 
 
 def test_reset_state_machine(state_machine) -> None:
@@ -240,6 +235,8 @@ def test_state_machine_with_successful_mission_stop(
     time.sleep(3)
     scheduling_utilities.stop_mission()
 
+    time.sleep(1)
+
     assert state_machine_thread.state_machine.transitions_list == deque(
         [States.Idle, States.Monitor, States.Stop, States.Idle]
     )
@@ -289,7 +286,7 @@ def test_state_machine_idle_to_offline_to_idle(
     )
 
     robot_service_thread.robot_service.robot = MockRobotIdleToOfflineToIdleTest(
-        robot_service_thread.robot_service.queues.state
+        robot_service_thread.robot_service.shared_state.state
     )
     robot_service_thread.start()
     state_machine_thread.start()
@@ -310,7 +307,7 @@ def test_state_machine_idle_to_blocked_protective_stop_to_idle(
     )
     robot_service_thread.robot_service.robot = (
         MockRobotIdleToBlockedProtectiveStopToIdleTest(
-            robot_service_thread.robot_service.queues.state
+            robot_service_thread.robot_service.shared_state.state
         )
     )
 
