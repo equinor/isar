@@ -163,6 +163,12 @@ class Monitor(State):
             )
             return
 
+        except Exception as e:
+            self.logger.error(
+                f"Failed to retrieve inspections because of unexpected error: {e}"
+            )
+            return
+
         if not inspection:
             self.logger.warning(
                 f"No inspection result data retrieved for task {str(current_task.id)[:8]}"
