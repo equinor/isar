@@ -21,8 +21,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # We need the Personal Access Token for the automated tests to run on the PR
-          token: ${{ secrets.PAT }}
           ssh-key: ${{ secrets.deploy_key }}
 
       - name: Set up Python
