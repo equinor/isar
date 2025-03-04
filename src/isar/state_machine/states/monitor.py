@@ -114,7 +114,7 @@ class Monitor(State):
 
         self.state_machine.current_task.status = status
 
-        if not settings.UPLOAD_INSPECTIONS_ASYNC and self._should_upload_inspections():
+        if self._should_upload_inspections():
             get_inspection_thread = ThreadedRequest(self._queue_inspections_for_upload)
             get_inspection_thread.start_thread(
                 deepcopy(self.state_machine.current_mission),
@@ -218,6 +218,9 @@ class Monitor(State):
             )
 
     def _should_upload_inspections(self) -> bool:
+        if settings.UPLOAD_INSPECTIONS_ASYNC:
+            return False
+
         return (
             self.state_machine.current_task.is_finished()
             and self.state_machine.current_task.status == TaskStatus.Successful
