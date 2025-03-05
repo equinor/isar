@@ -114,21 +114,6 @@ In [this](./src/isar/config/predefined_missions) folder there are predefined def
 corresponding to `mission_id=1`. A new mission may be added by adding a new json-file with a mission description. Note,
 the mission IDs must be unique.
 
-### Running with docker-compose
-
-ISAR may be started with an instance of the [isar-robot](https://github.com/equinor/isar-robot) package by
-
-```shell
-docker-compose up --build
-```
-
-Provided that the simulator from [isar-turtlebot](https://github.com/equinor/isar-turtlebot) is running ISAR may be
-started with the turtlebot by
-
-```shell
-docker-compose -f docker-compose-turtlebot.yml up --build
-```
-
 ### Configuration
 
 The system consists of many configuration variables which may alter the functionality. As an example, it is possible to
