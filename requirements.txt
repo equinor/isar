@@ -64,7 +64,7 @@ google-api-core==2.24.1
     # via opencensus
 google-auth==2.38.0
     # via google-api-core
-googleapis-common-protos==1.69.0
+googleapis-common-protos==1.69.1
     # via google-api-core
 h11==0.14.0
     # via
