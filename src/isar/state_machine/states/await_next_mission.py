@@ -5,33 +5,34 @@ from typing import TYPE_CHECKING, Optional
 
 from transitions import State
 
+from isar.config.settings import settings
 from isar.models.communication.message import StartMissionMessage
-from isar.models.communication.queues.queue_utils import (
-    check_for_event,
-    check_shared_state,
-)
-from isar.models.communication.queues.status_queue import StatusQueue
-from robot_interface.models.mission.status import RobotStatus
+from isar.models.communication.queues.queue_utils import check_for_event
 from robot_interface.models.mission.task import TaskTypes
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class Idle(State):
+class AwaitNextMission(State):
     def __init__(self, state_machine: "StateMachine") -> None:
-        super().__init__(name="idle", on_enter=self.start, on_exit=self.stop)
+        super().__init__(
+            name="await_next_mission", on_enter=self.start, on_exit=self.stop
+        )
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
+        self.entered_time: float = time.time()
+        self.return_home_delay: float = settings.RETURN_HOME_DELAY
         self.events = self.state_machine.events
         self.shared_state = self.state_machine.shared_state
 
     def start(self) -> None:
         self.state_machine.update_state()
+        self.entered_time = time.time()
         self._run()
 
     def stop(self) -> None:
-        return
+        pass
 
     def _check_and_handle_stop_mission_event(self, event: Queue) -> bool:
         if check_for_event(event):
@@ -53,31 +54,16 @@ class Idle(State):
                 return True
         return False
 
-    def _check_and_handle_robot_status_event(
-        self, event: StatusQueue[RobotStatus]
-    ) -> bool:
-        robot_status: RobotStatus = check_shared_state(event)
-        if robot_status == RobotStatus.Docked:
-            self.state_machine.robot_docked()  # type: ignore
-            return True
-        elif robot_status == RobotStatus.Offline:
-            self.state_machine.robot_turned_offline()  # type: ignore
-            return True
-        elif robot_status == RobotStatus.BlockedProtectiveStop:
-            self.state_machine.robot_protective_stop_engaged()  # type: ignore
-            return True
-        elif robot_status != RobotStatus.Available:
-            self.state_machine.robot_is_not_available()  # type: ignore
-            return True
-
-        return False
-
     def _is_return_home_mission(self, mission: StartMissionMessage) -> bool:
         if len(mission.mission.tasks) != 1:
             return False
         if mission.mission.tasks[0].type != TaskTypes.ReturnToHome:
             return False
         return True
+
+    def _should_return_home(self) -> bool:
+        time_since_entered = time.time() - self.entered_time
+        return time_since_entered > self.return_home_delay
 
     def _run(self) -> None:
         while True:
@@ -91,9 +77,8 @@ class Idle(State):
             ):
                 break
 
-            if self._check_and_handle_robot_status_event(
-                self.shared_state.robot_status
-            ):
+            if self._should_return_home():
+                self.state_machine.request_return_home()  # type: ignore
                 break
 
             time.sleep(self.state_machine.sleep_time)

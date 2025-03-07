@@ -24,6 +24,8 @@ class TaskStatus(str, Enum):
 class RobotStatus(Enum):
     Available = "available"
     Busy = "busy"
+    Docked = "docked"
     Offline = "offline"
     Blocked = "blocked"
     BlockedProtectiveStop = "blockedprotectivestop"
+    ReturningHome = "returninghome"

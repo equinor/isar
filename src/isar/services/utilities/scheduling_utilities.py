@@ -124,14 +124,20 @@ class SchedulingUtilities:
         Raises
         ------
         HTTPException 409 Conflict
-            If state machine is not idle and therefore can not start a new mission
+            If state machine is not docked, idle or awaiting next mission
+            and therefore cannot start a new mission
         """
-        if state != States.Idle:
-            error_message = f"Conflict - Robot is not idle - State: {state}"
-            self.logger.warning(error_message)
-            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        if (
+            state == States.Docked
+            or state == States.Idle
+            or state == States.AwaitNextMission
+            or state == States.ReturningHome
+        ):
+            return True
 
-        return True
+        error_message = f"Conflict - Robot is not docked, idle or awaiting next mission - State: {state}"
+        self.logger.warning(error_message)
+        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
     def start_mission(
         self,

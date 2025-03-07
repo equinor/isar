@@ -98,7 +98,7 @@ def mock_image_metadata() -> ImageMetadata:
     )
 
 
-class MockRobotIdleToOfflineToIdleTest(MockRobot):
+class MockRobotOfflineToIdleTest(MockRobot):
     def __init__(self, current_state: StatusQueue):
         self.entered_offline = False
         self.current_state = current_state
@@ -109,7 +109,7 @@ class MockRobotIdleToOfflineToIdleTest(MockRobot):
             if new_state == "offline":
                 self.entered_offline = True
                 return RobotStatus.Available
-            if not self.entered_offline and new_state == "idle":
+            if not self.entered_offline:
                 return RobotStatus.Offline
         except Empty:
             pass
@@ -117,7 +117,7 @@ class MockRobotIdleToOfflineToIdleTest(MockRobot):
         return RobotStatus.Available
 
 
-class MockRobotIdleToBlockedProtectiveStopToIdleTest(MockRobot):
+class MockRobotBlockedProtectiveStopToIdleTest(MockRobot):
     def __init__(self, current_state: StatusQueue):
         self.entered_blocked_p_stop = False
         self.current_state = current_state
@@ -127,9 +127,45 @@ class MockRobotIdleToBlockedProtectiveStopToIdleTest(MockRobot):
             if self.current_state.check() == "blocked_protective_stop":
                 self.entered_blocked_p_stop = True
                 return RobotStatus.Available
-            if not self.entered_blocked_p_stop and self.current_state.check() == "idle":
+            if not self.entered_blocked_p_stop:
                 return RobotStatus.BlockedProtectiveStop
         except Empty:
             pass
 
         return RobotStatus.Available
+
+
+class MockRobotDockedToIdleTest(MockRobot):
+    def __init__(self, current_state: StatusQueue):
+        self.entered_docked = False
+        self.current_state = current_state
+
+    def robot_status(self) -> RobotStatus:
+        try:
+            if self.current_state.check() == "docked":
+                self.entered_docked = True
+                return RobotStatus.Available
+            if not self.entered_docked:
+                return RobotStatus.Docked
+        except Empty:
+            pass
+
+        return RobotStatus.Available
+
+
+class MockRobotOfflineToDockedTest(MockRobot):
+    def __init__(self, current_state: StatusQueue):
+        self.entered_offline = False
+        self.current_state = current_state
+
+    def robot_status(self) -> RobotStatus:
+        try:
+            if self.current_state.check() == "offline":
+                self.entered_offline = True
+                return RobotStatus.Docked
+            if not self.entered_offline:
+                return RobotStatus.Offline
+        except Empty:
+            pass
+
+        return RobotStatus.Docked

@@ -33,7 +33,13 @@ class BlockedProtectiveStop(State):
         while True:
             robot_status = check_shared_state(self.shared_state.robot_status)
 
-            if robot_status == RobotStatus.Offline:
+            if robot_status == RobotStatus.Docked:
+                transition = self.state_machine.robot_docked  # type: ignore
+                break
+            elif robot_status == RobotStatus.Available:
+                transition = self.state_machine.robot_is_available  # type: ignore
+                break
+            elif robot_status == RobotStatus.Offline:
                 transition = self.state_machine.robot_turned_offline  # type: ignore
                 break
             elif robot_status != RobotStatus.BlockedProtectiveStop:

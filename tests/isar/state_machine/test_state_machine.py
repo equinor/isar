@@ -12,6 +12,9 @@ from isar.robot.robot import Robot
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, main
+from isar.state_machine.states.docked import Docked
+from isar.state_machine.states.idle import Idle
+from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
@@ -27,8 +30,10 @@ from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from tests.mocks.pose import MockPose
 from tests.mocks.robot_interface import (
     MockRobot,
-    MockRobotIdleToBlockedProtectiveStopToIdleTest,
-    MockRobotIdleToOfflineToIdleTest,
+    MockRobotDockedToIdleTest,
+    MockRobotOfflineToDockedTest,
+    MockRobotOfflineToIdleTest,
+    MockRobotBlockedProtectiveStopToIdleTest,
 )
 from tests.mocks.task import MockTask
 
@@ -108,22 +113,27 @@ def test_state_machine_transitions_when_running_full_mission(
     injector, state_machine_thread, robot_service_thread
 ) -> None:
     robot_service_thread.start()
+    state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
     state_machine_thread.start()
 
     task_1: Task = TakeImage(
         target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
     )
-    task_2: Task = ReturnToHome(pose=MockPose.default_pose())
+    task_2: Task = ReturnToHome()
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(5)
+    time.sleep(5)  # Allow enough time to run mission and return home
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
+            States.UnknownStatus,
             States.Idle,
             States.Monitor,
+            States.AwaitNextMission,
+            States.ReturningHome,
+            States.UnknownStatus,
             States.Idle,
         ]
     )
@@ -135,12 +145,13 @@ def test_state_machine_failed_dependency(
     task_1: Task = TakeImage(
         target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
     )
-    task_2: Task = ReturnToHome(pose=MockPose.default_pose())
+    task_2: Task = ReturnToHome()
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
     mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.Failed)
 
     robot_service_thread.start()
+    state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
     state_machine_thread.start()
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
@@ -149,8 +160,12 @@ def test_state_machine_failed_dependency(
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
+            States.UnknownStatus,
             States.Idle,
             States.Monitor,
+            States.AwaitNextMission,
+            States.ReturningHome,
+            States.UnknownStatus,
             States.Idle,
         ]
     )
@@ -170,17 +185,22 @@ def test_state_machine_with_successful_collection(
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     robot_service_thread.start()
+    state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
     state_machine_thread.start()
 
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(5)
+    time.sleep(5)  # Allow enough time to run mission and return home
 
     expected_stored_items = 1
     assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
+            States.UnknownStatus,
             States.Idle,
             States.Monitor,
+            States.AwaitNextMission,
+            States.ReturningHome,
+            States.UnknownStatus,
             States.Idle,
         ]
     )
@@ -198,21 +218,26 @@ def test_state_machine_with_unsuccessful_collection(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
 
+    state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
     state_machine_thread.start()
 
     mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
 
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(3)
+    time.sleep(3)  # Allow enough time to run mission and return home
 
     expected_stored_items = 0
     assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
+            States.UnknownStatus,
             States.Idle,
             States.Monitor,
+            States.AwaitNextMission,
+            States.ReturningHome,
+            States.UnknownStatus,
             States.Idle,
         ]
     )
@@ -220,10 +245,19 @@ def test_state_machine_with_unsuccessful_collection(
 
 def test_state_machine_with_successful_mission_stop(
     injector: Injector,
+    mocker,
     robot_service_thread: RobotServiceThread,
     state_machine_thread: StateMachineThread,
 ) -> None:
     robot_service_thread.start()
+    storage_mock: StorageInterface = injector.get(List[StorageInterface])[0]
+
+    mocker.patch.object(MockRobot, "get_inspection", return_value=[])
+
+    mocker.patch.object(
+        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
+    )
+
     state_machine_thread.start()
 
     mission: Mission = Mission(
@@ -238,7 +272,14 @@ def test_state_machine_with_successful_mission_stop(
     time.sleep(1)
 
     assert state_machine_thread.state_machine.transitions_list == deque(
-        [States.Idle, States.Monitor, States.Stop, States.Idle]
+        [
+            States.UnknownStatus,
+            States.Idle,
+            States.Monitor,
+            States.Stop,
+            States.UnknownStatus,
+            States.Idle,
+        ]
     )
 
 
@@ -249,6 +290,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
     caplog: pytest.LogCaptureFixture,
     robot_service_thread: RobotServiceThread,
 ) -> None:
+    robot_service_thread.start()
     mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
 
     scheduling_utilities: SchedulingUtilities = injector.get(SchedulingUtilities)
@@ -259,7 +301,6 @@ def test_state_machine_with_unsuccessful_mission_stop(
 
     state_machine_thread.state_machine.sleep_time = 0
 
-    robot_service_thread.start()
     state_machine_thread.start()
 
     scheduling_utilities.start_mission(mission=mission)
@@ -272,11 +313,18 @@ def test_state_machine_with_unsuccessful_mission_stop(
     )
     assert expected_log in caplog.text
     assert state_machine_thread.state_machine.transitions_list == deque(
-        [States.Idle, States.Monitor, States.Stop, States.Idle]
+        [
+            States.UnknownStatus,
+            States.Idle,
+            States.Monitor,
+            States.Stop,
+            States.UnknownStatus,
+            States.Idle,
+        ]
     )
 
 
-def test_state_machine_idle_to_offline_to_idle(
+def test_state_machine_offline_to_idle(
     mocker, state_machine_thread, robot_service_thread
 ) -> None:
     # Robot status check happens every 5 seconds by default, so we mock the behavior
@@ -285,7 +333,7 @@ def test_state_machine_idle_to_offline_to_idle(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
 
-    robot_service_thread.robot_service.robot = MockRobotIdleToOfflineToIdleTest(
+    robot_service_thread.robot_service.robot = MockRobotOfflineToIdleTest(
         robot_service_thread.robot_service.shared_state.state
     )
     robot_service_thread.start()
@@ -293,11 +341,11 @@ def test_state_machine_idle_to_offline_to_idle(
     time.sleep(5)
 
     assert state_machine_thread.state_machine.transitions_list == deque(
-        [States.Idle, States.Offline, States.Idle]
+        [States.UnknownStatus, States.Offline, States.Idle]
     )
 
 
-def test_state_machine_idle_to_blocked_protective_stop_to_idle(
+def test_state_machine_blocked_protective_stop_to_idle(
     mocker, state_machine_thread, robot_service_thread
 ) -> None:
     # Robot status check happens every 5 seconds by default, so we mock the behavior
@@ -305,10 +353,8 @@ def test_state_machine_idle_to_blocked_protective_stop_to_idle(
     mocker.patch.object(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
-    robot_service_thread.robot_service.robot = (
-        MockRobotIdleToBlockedProtectiveStopToIdleTest(
-            robot_service_thread.robot_service.shared_state.state
-        )
+    robot_service_thread.robot_service.robot = MockRobotBlockedProtectiveStopToIdleTest(
+        robot_service_thread.robot_service.shared_state.state
     )
 
     robot_service_thread.start()
@@ -316,7 +362,49 @@ def test_state_machine_idle_to_blocked_protective_stop_to_idle(
     time.sleep(5)
 
     assert state_machine_thread.state_machine.transitions_list == deque(
-        [States.Idle, States.BlockedProtectiveStop, States.Idle]
+        [States.UnknownStatus, States.BlockedProtectiveStop, States.Idle]
+    )
+
+
+def test_state_machine_docked_to_idle(
+    mocker, state_machine_thread, robot_service_thread
+) -> None:
+    # Robot status check happens every 5 seconds by default, so we mock the behavior
+    # to poll for status imediately
+    mocker.patch.object(
+        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
+    )
+    robot_service_thread.robot_service.robot = MockRobotDockedToIdleTest(
+        robot_service_thread.robot_service.shared_state.state
+    )
+
+    robot_service_thread.start()
+    state_machine_thread.start()
+    time.sleep(5)
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [States.UnknownStatus, States.Docked, States.Idle]
+    )
+
+
+def test_state_machine_offline_to_docked(
+    mocker, state_machine_thread, robot_service_thread
+) -> None:
+    # Robot status check happens every 5 seconds by default, so we mock the behavior
+    # to poll for status imediately
+    mocker.patch.object(
+        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
+    )
+    robot_service_thread.robot_service.robot = MockRobotOfflineToDockedTest(
+        robot_service_thread.robot_service.shared_state.state
+    )
+
+    robot_service_thread.start()
+    state_machine_thread.start()
+    time.sleep(5)
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [States.UnknownStatus, States.Offline, States.Docked]
     )
 
 
