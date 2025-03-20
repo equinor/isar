@@ -11,11 +11,12 @@ from isar.models.communication.queues.events import (
     SharedState,
     StateMachineEvents,
 )
-from isar.models.communication.queues.queue_utils import check_for_event
+from isar.models.communication.queues.queue_utils import check_for_event, trigger_event
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import RobotStopMissionThread
 from isar.robot.robot_task_status import RobotTaskStatusThread
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -94,6 +95,14 @@ class Robot(object):
                 self.stop_mission_thread_thread is not None
                 and self.start_mission_thread.is_alive()
             ):
+                error_description = "Received stop mission event mission while trying to start a mission. Aborting stop attempt."
+                error_message = ErrorMessage(
+                    error_reason=ErrorReason.RobotStillStartingMissionException,
+                    error_description=error_description,
+                )
+                trigger_event(
+                    self.robot_service_events.mission_failed_to_stop, error_message
+                )
                 return
             self.stop_mission_thread_thread = RobotStopMissionThread(
                 self.robot_service_events, self.robot, self.signal_thread_quitting
