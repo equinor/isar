@@ -95,7 +95,7 @@ class Robot(object):
                 self.stop_mission_thread_thread is not None
                 and self.start_mission_thread.is_alive()
             ):
-                error_description = "Received stop mission event mission while trying to start a mission. Aborting stop attempt."
+                error_description = "Received stop mission event while trying to start a mission. Aborting stop attempt."
                 error_message = ErrorMessage(
                     error_reason=ErrorReason.RobotStillStartingMissionException,
                     error_description=error_description,

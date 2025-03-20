@@ -25,13 +25,11 @@ class MockMissionDefinition:
     )
     mock_input_target_position = InputPosition(x=5, y=5, z=5, frame_name="robot")
     mock_task_take_image = MockTask.take_image()
-    mock_task_return_home = MockTask.return_home()
     default_mission = Mission(
         id="default_mission",
         name="Dummy misson",
         tasks=[
             mock_task_take_image,
-            mock_task_return_home,
         ],
     )
     mock_start_mission_inspection_definition = StartMissionInspectionDefinition(
@@ -45,14 +43,9 @@ class MockMissionDefinition:
         type=mock_task_take_image.type,
     )
 
-    mock_task_response_return_home = TaskResponse(
-        id=mock_task_return_home.id,
-        tag_id=mock_task_return_home.tag_id,
-        type=mock_task_return_home.type,
-    )
     mock_start_mission_response = StartMissionResponse(
         id=default_mission.id,
-        tasks=[mock_task_response_take_image, mock_task_response_return_home],
+        tasks=[mock_task_response_take_image],
     )
     mock_start_mission_definition = StartMissionDefinition(
         tasks=[

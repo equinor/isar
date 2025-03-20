@@ -30,44 +30,31 @@ def test_get_mission_with_no_tasks(mission_reader: LocalPlanner) -> None:
 
 def test_read_mission_from_file(mission_reader: LocalPlanner) -> None:
     expected_robot_pose_1 = Pose(
-        position=Position(-2, -2, 0, Frame("asset")),
-        orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
-        frame=Frame("asset"),
-    )
-    task_1: ReturnToHome = ReturnToHome(pose=expected_robot_pose_1)
-
-    expected_robot_pose_2 = Pose(
         position=Position(-2, 2, 0, Frame("asset")),
         orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
         frame=Frame("asset"),
     )
     expected_inspection_target_1 = Position(2, 2, 0, Frame("asset"))
-    task_2: TakeImage = TakeImage(
-        target=expected_inspection_target_1, robot_pose=expected_robot_pose_2
+    task_1: TakeImage = TakeImage(
+        target=expected_inspection_target_1, robot_pose=expected_robot_pose_1
     )
 
-    expected_robot_pose_3 = Pose(
+    expected_robot_pose_2 = Pose(
         position=Position(2, 2, 0, Frame("asset")),
         orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
         frame=Frame("asset"),
     )
     expected_inspection_target_2 = Position(2, 2, 0, Frame("asset"))
-    task_3: TakeImage = TakeImage(
-        target=expected_inspection_target_2, robot_pose=expected_robot_pose_3
+    task_2: TakeImage = TakeImage(
+        target=expected_inspection_target_2, robot_pose=expected_robot_pose_2
     )
 
-    expected_robot_pose_4 = Pose(
-        position=Position(0, 0, 0, Frame("asset")),
-        orientation=Orientation(0, 0, 0.4794255, 0.8775826, Frame("asset")),
-        frame=Frame("asset"),
-    )
-    task_4: ReturnToHome = ReturnToHome(pose=expected_robot_pose_4)
+    task_3: ReturnToHome = ReturnToHome()
 
     expected_tasks: List[TASKS] = [
         task_1,
         task_2,
         task_3,
-        task_4,
     ]
     mission: Mission = mission_reader.read_mission_from_file(
         Path("./tests/test_data/test_mission_working.json")
@@ -75,7 +62,9 @@ def test_read_mission_from_file(mission_reader: LocalPlanner) -> None:
 
     for expected_task, task in zip(expected_tasks, mission.tasks):
         if isinstance(expected_task, ReturnToHome) and isinstance(task, ReturnToHome):
-            assert expected_task.pose == task.pose
+            assert isinstance(expected_task, ReturnToHome) and isinstance(
+                task, ReturnToHome
+            )
         if isinstance(expected_task, TakeImage) and isinstance(task, TakeImage):
             assert expected_task.target == task.target
             assert expected_task.robot_pose == task.robot_pose

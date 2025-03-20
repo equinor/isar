@@ -41,11 +41,8 @@ class BlockedProtectiveStop(State):
             robot_status: RobotStatus = check_shared_state(
                 self.shared_state.robot_status
             )
-            if robot_status == RobotStatus.Offline:
-                transition = self.state_machine.robot_turned_offline  # type: ignore
-                break
-            elif robot_status != RobotStatus.BlockedProtectiveStop:
-                transition = self.state_machine.robot_protective_stop_disengaged  # type: ignore
+            if robot_status != RobotStatus.BlockedProtectiveStop:
+                transition = self.state_machine.robot_status_changed  # type: ignore
                 break
 
             time.sleep(self.state_machine.sleep_time)

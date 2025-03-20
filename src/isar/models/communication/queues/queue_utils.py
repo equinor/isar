@@ -30,3 +30,9 @@ def check_for_event(queue: Queue[T]) -> Optional[T]:
         return queue.get(block=False)
     except Empty:
         return None
+
+
+def check_for_event_without_consumption(queue: Queue[T]) -> bool:
+    return (
+        queue.qsize() != 0
+    )  # Queue size is not reliable, but should be sufficient for this case

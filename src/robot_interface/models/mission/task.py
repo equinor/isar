@@ -74,7 +74,6 @@ class ReturnToHome(Task):
     Task which cases the robot to return home
     """
 
-    pose: Pose = Field(default=None)
     type: Literal[TaskTypes.ReturnToHome] = TaskTypes.ReturnToHome
 
 
