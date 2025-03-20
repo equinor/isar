@@ -1,0 +1,109 @@
+from typing import TYPE_CHECKING, List
+
+from isar.state_machine.transitions.functions.fail_mission import (
+    report_failed_mission_and_finalize,
+)
+from isar.state_machine.transitions.functions.return_home import (
+    return_home_finished,
+    set_return_home_status,
+    start_return_home_mission,
+)
+from isar.state_machine.transitions.functions.robot_status import (
+    is_available,
+    is_blocked_protective_stop,
+    is_home,
+    is_offline,
+)
+from isar.state_machine.transitions.functions.start_mission import (
+    initialize_robot,
+    put_start_mission_on_queue,
+    trigger_start_mission_event,
+)
+from isar.state_machine.transitions.functions.utils import def_transition
+
+if TYPE_CHECKING:
+    from isar.state_machine.state_machine import StateMachine
+
+
+def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
+    return_home_transitions: List[dict] = [
+        {
+            "trigger": "request_return_home_from_api",
+            "source": [
+                state_machine.await_next_mission_state,
+                state_machine.home_state,
+                state_machine.robot_standing_still_state,
+            ],
+            "dest": state_machine.returning_home_state,
+            "prepare": def_transition(state_machine, put_start_mission_on_queue),
+            "conditions": [
+                def_transition(state_machine, set_return_home_status),
+                def_transition(state_machine, initialize_robot),
+            ],
+            "before": def_transition(state_machine, trigger_start_mission_event),
+        },
+        {
+            "trigger": "request_return_home_from_api",
+            "source": state_machine.await_next_mission_state,
+            "dest": state_machine.await_next_mission_state,
+            "before": def_transition(state_machine, report_failed_mission_and_finalize),
+        },
+        {
+            "trigger": "request_return_home_from_api",
+            "source": state_machine.home_state,
+            "dest": state_machine.home_state,
+            "before": def_transition(state_machine, report_failed_mission_and_finalize),
+        },
+        {
+            "trigger": "request_return_home_from_api",
+            "source": state_machine.robot_standing_still_state,
+            "dest": state_machine.robot_standing_still_state,
+            "before": def_transition(state_machine, report_failed_mission_and_finalize),
+        },
+        {
+            "trigger": "request_return_home",
+            "source": state_machine.await_next_mission_state,
+            "dest": state_machine.returning_home_state,
+            "conditions": [
+                def_transition(state_machine, start_return_home_mission),
+                def_transition(state_machine, set_return_home_status),
+                def_transition(state_machine, initialize_robot),
+            ],
+            "before": def_transition(state_machine, trigger_start_mission_event),
+        },
+        {
+            "trigger": "return_home_finished",
+            "source": state_machine.returning_home_state,
+            "dest": state_machine.robot_standing_still_state,
+            "conditions": def_transition(state_machine, is_available),
+            "before": def_transition(state_machine, return_home_finished),
+        },
+        {
+            "trigger": "return_home_finished",
+            "source": state_machine.returning_home_state,
+            "dest": state_machine.home_state,
+            "conditions": def_transition(state_machine, is_home),
+            "before": def_transition(state_machine, return_home_finished),
+        },
+        {
+            "trigger": "return_home_finished",
+            "source": state_machine.returning_home_state,
+            "dest": state_machine.offline_state,
+            "conditions": def_transition(state_machine, is_offline),
+            "before": def_transition(state_machine, return_home_finished),
+        },
+        {
+            "trigger": "return_home_finished",
+            "source": state_machine.returning_home_state,
+            "dest": state_machine.blocked_protective_stopping_state,
+            "conditions": def_transition(state_machine, is_blocked_protective_stop),
+            "before": def_transition(state_machine, return_home_finished),
+        },
+        {
+            "trigger": "return_home_finished",
+            "source": state_machine.returning_home_state,
+            "dest": state_machine.unknown_status_state,
+            "before": def_transition(state_machine, return_home_finished),
+        },
+    ]
+    return return_home_transitions

@@ -195,16 +195,15 @@ The state machine is based on the [transitions](https://github.com/pytransitions
 In general the states
 
 ```
-States.Off,
-States.Stop,
+States.Stopping,
 States.Monitor,
 States.Paused,
 ```
 
-indicates that the state machine is already running. For running a mission the state machine need to be in the state
+indicates that the state machine is already running. For running a mission the state machine need to be in the states
 
 ```
-States.Idle
+States.Home, States.RobotStandingStill, States.AwaitNextMission or States.ReturningHome
 ```
 
 ### FastAPI

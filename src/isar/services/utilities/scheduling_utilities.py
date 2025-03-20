@@ -119,19 +119,47 @@ class SchedulingUtilities:
         return True
 
     def verify_state_machine_ready_to_receive_mission(self, state: States) -> bool:
-        """Verify that the state machine is idle and ready to receive a mission
+        """Verify that the state machine is ready to receive a mission
 
         Raises
         ------
         HTTPException 409 Conflict
-            If state machine is not idle and therefore can not start a new mission
+            If state machine is not home, robot standing still, awaiting next mission
+            or returning home and therefore cannot start a new mission
         """
-        if state != States.Idle:
-            error_message = f"Conflict - Robot is not idle - State: {state}"
-            self.logger.warning(error_message)
-            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        if (
+            state == States.RobotStandingStill
+            or state == States.Home
+            or state == States.AwaitNextMission
+            or state == States.ReturningHome
+        ):
+            return True
 
-        return True
+        error_message = f"Conflict - Robot is not home, robot standing still, awaiting next mission or returning home - State: {state}"
+        self.logger.warning(error_message)
+        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+
+    def verify_state_machine_ready_to_receive_return_home_mission(
+        self, state: States
+    ) -> bool:
+        """Verify that the state machine is ready to receive a return home mission
+
+        Raises
+        ------
+        HTTPException 409 Conflict
+            If state machine is not home, robot standing still or awaiting next mission
+            and therefore cannot start a new return home mission
+        """
+        if (
+            state == States.RobotStandingStill
+            or state == States.Home
+            or state == States.AwaitNextMission
+        ):
+            return True
+
+        error_message = f"Conflict - Robot is not home, robot standing still, awaiting next mission or returning home - State: {state}"
+        self.logger.warning(error_message)
+        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
     def start_mission(
         self,
