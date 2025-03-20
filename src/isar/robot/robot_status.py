@@ -20,7 +20,9 @@ class RobotStatusThread(Thread):
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
-        self.last_robot_status_poll_time: float = time.time()
+        self.last_robot_status_poll_time: float = (
+            time.time() - settings.ROBOT_API_STATUS_POLL_INTERVAL
+        )
         Thread.__init__(self, name="Robot status thread")
 
     def stop(self) -> None:
