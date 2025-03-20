@@ -150,6 +150,31 @@ class API:
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
                 },
+                HTTPStatus.BAD_REQUEST.value: {
+                    "description": "Bad request - Robot does not have the capabilities to perform the mission",
+                },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error - Current state of state machine unknown",
+                },
+            },
+        )
+        router.add_api_route(
+            path="/schedule/return-home",
+            endpoint=self.scheduling_controller.return_home,
+            methods=["POST"],
+            dependencies=[authentication_dependency],
+            summary="Start return home mission",
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Return home mission succesfully started",
+                    "model": StartMissionResponse,
+                },
+                HTTPStatus.UNPROCESSABLE_ENTITY.value: {
+                    "description": "Invalid body - The JSON is incorrect",
+                },
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Invalid command in the current state",
+                },
                 HTTPStatus.INTERNAL_SERVER_ERROR.value: {
                     "description": "Internal Server Error - Current state of state machine unknown",
                 },

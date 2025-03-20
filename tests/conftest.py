@@ -10,8 +10,8 @@ from isar.config.settings import settings
 from isar.modules import ApplicationContainer
 from isar.robot.robot import Robot
 from isar.state_machine.state_machine import StateMachine
-from isar.state_machine.states.idle import Idle
 from isar.state_machine.states.monitor import Monitor
+from isar.state_machine.states.robot_standing_still import RobotStandingStill
 from isar.storage.uploader import Uploader
 from tests.isar.state_machine.test_state_machine import (
     RobotServiceThreadMock,
@@ -111,9 +111,9 @@ def state_machine(container: ApplicationContainer, robot):
 
 
 @pytest.fixture()
-def idle_state(state_machine):
-    """Fixture to provide the Idle state."""
-    return Idle(state_machine)
+def robot_standing_still_state(state_machine):
+    """Fixture to provide the Robot Standing Still state."""
+    return RobotStandingStill(state_machine)
 
 
 @pytest.fixture()

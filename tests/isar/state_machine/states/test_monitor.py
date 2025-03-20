@@ -3,7 +3,7 @@ import pytest
 from isar.state_machine.states.monitor import Monitor
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
-from robot_interface.models.mission.task import ReturnToHome, TakeImage
+from robot_interface.models.mission.task import TakeImage
 from tests.mocks.task import MockTask
 
 
@@ -16,7 +16,7 @@ from tests.mocks.task import MockTask
     ],
 )
 def test_task_finished(monitor: Monitor, mock_status, expected_output):
-    task: ReturnToHome = MockTask.return_home()
+    task: TakeImage = MockTask.take_image()
     task.status = mock_status
     task_completed: bool = task.is_finished()
     assert task_completed == expected_output

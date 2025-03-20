@@ -1,44 +1,33 @@
 import logging
-import time
-from copy import deepcopy
 from queue import Queue
-from threading import Event
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
-from dependency_injector.wiring import inject
 from transitions import State
 
-from isar.config.settings import settings
-from isar.models.communication.queues.queue_utils import check_for_event, trigger_event
-from isar.services.utilities.threaded_request import ThreadedRequest
-from robot_interface.models.exceptions.robot_exceptions import (
-    ErrorMessage,
-    RobotException,
-    RobotRetrieveInspectionException,
+from isar.models.communication.message import StartMissionMessage
+from isar.models.communication.queues.queue_utils import (
+    check_for_event,
+    check_for_event_without_consumption,
+    trigger_event,
 )
-from robot_interface.models.inspection.inspection import Inspection
-from robot_interface.models.mission.mission import Mission
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import TaskStatus
-from robot_interface.models.mission.task import InspectionTask, Task
+from robot_interface.models.mission.task import Task
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class Monitor(State):
-    @inject
+class ReturningHome(State):
     def __init__(self, state_machine: "StateMachine") -> None:
-        super().__init__(name="monitor", on_enter=self.start, on_exit=self.stop)
+        super().__init__(name="returning_home", on_enter=self.start, on_exit=self.stop)
         self.state_machine: "StateMachine" = state_machine
 
         self.logger = logging.getLogger("state_machine")
         self.events = self.state_machine.events
 
         self.awaiting_task_status: bool = False
-
-        self.signal_state_machine_to_stop: Event = (
-            state_machine.signal_state_machine_to_stop
-        )
+        self.signal_state_machine_to_stop = state_machine.signal_state_machine_to_stop
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -54,15 +43,15 @@ class Monitor(State):
             return True
         return False
 
-    def _check_and_handle_pause_mission_event(self, event: Queue) -> bool:
-        if check_for_event(event):
-            self.state_machine.pause()  # type: ignore
-            return True
-        return False
+    def _check_and_handle_mission_started_event(self, event: Queue) -> bool:
+        if self.state_machine.mission_ongoing:
+            return False
 
-    def _check_and_handle_mission_started_event(self, event: Queue) -> None:
         if check_for_event(event):
             self.state_machine.mission_ongoing = True
+            return False
+
+        return True
 
     def _check_and_handle_mission_failed_event(self, event: Queue) -> bool:
         mission_failed: Optional[ErrorMessage] = check_for_event(event)
@@ -82,9 +71,6 @@ class Monitor(State):
         return False
 
     def _check_and_handle_task_status_failed_event(self, event: Queue) -> bool:
-        if not self.state_machine.mission_ongoing:
-            return False
-
         task_failure: Optional[ErrorMessage] = check_for_event(event)
         if task_failure is not None:
             self.awaiting_task_status = False
@@ -103,9 +89,6 @@ class Monitor(State):
         return False
 
     def _check_and_handle_task_status_event(self, event: Queue) -> bool:
-        if not self.state_machine.mission_ongoing:
-            return False
-
         status: Optional[TaskStatus] = check_for_event(event)
         if status is not None:
             self.awaiting_task_status = False
@@ -124,21 +107,15 @@ class Monitor(State):
 
         self.state_machine.current_task.status = status
 
-        if self._should_upload_inspections():
-            get_inspection_thread = ThreadedRequest(self._queue_inspections_for_upload)
-            get_inspection_thread.start_thread(
-                deepcopy(self.state_machine.current_mission),
-                deepcopy(self.state_machine.current_task),
-                name="State Machine Get Inspections",
-            )
-
         if self.state_machine.current_task.is_finished():
             self._report_task_status(self.state_machine.current_task)
             self.state_machine.publish_task_status(task=self.state_machine.current_task)
 
             self.state_machine.iterate_current_task()
             if self.state_machine.current_task is None:
-                self.state_machine.mission_finished()  # type: ignore
+                if status != TaskStatus.Successful:
+                    self.state_machine.return_home_failed()  # type: ignore
+                self.state_machine.returned_home()  # type: ignore
                 return True
 
             # Report and update next task
@@ -146,8 +123,16 @@ class Monitor(State):
             self.state_machine.publish_task_status(task=self.state_machine.current_task)
         return False
 
+    def _check_and_handle_start_mission_event(
+        self, event: Queue[StartMissionMessage]
+    ) -> bool:
+        if check_for_event_without_consumption(event):
+            self.state_machine.stop()  # type: ignore
+            return True
+
+        return False
+
     def _run(self) -> None:
-        self.awaiting_task_status = False
         while True:
             if self.signal_state_machine_to_stop.is_set():
                 self.logger.info(
@@ -160,14 +145,20 @@ class Monitor(State):
             ):
                 break
 
-            if self._check_and_handle_pause_mission_event(
-                self.events.api_requests.pause_mission.input
+            if self._check_and_handle_mission_started_event(
+                self.events.robot_service_events.mission_started
+            ):
+                continue
+
+            if self._check_and_handle_task_status_event(
+                self.events.robot_service_events.task_status_updated
             ):
                 break
 
-            self._check_and_handle_mission_started_event(
-                self.events.robot_service_events.mission_started
-            )
+            if self._check_and_handle_start_mission_event(
+                self.events.api_requests.start_mission.input
+            ):
+                break
 
             if self._check_and_handle_mission_failed_event(
                 self.events.robot_service_events.mission_failed
@@ -184,51 +175,6 @@ class Monitor(State):
             ):
                 break
 
-            time.sleep(settings.FSM_SLEEP_TIME)
-
-    def _queue_inspections_for_upload(
-        self, mission: Mission, current_task: InspectionTask
-    ) -> None:
-        try:
-            inspection: Inspection = self.state_machine.robot.get_inspection(
-                task=current_task
-            )
-            if current_task.inspection_id != inspection.id:
-                self.logger.warning(
-                    f"The inspection_id of task ({current_task.inspection_id}) "
-                    f"and result ({inspection.id}) is not matching. "
-                    f"This may lead to confusions when accessing the inspection later"
-                )
-
-        except (RobotRetrieveInspectionException, RobotException) as e:
-            self._set_error_message(e)
-            self.logger.error(
-                f"Failed to retrieve inspections because: {e.error_description}"
-            )
-            return
-
-        except Exception as e:
-            self.logger.error(
-                f"Failed to retrieve inspections because of unexpected error: {e}"
-            )
-            return
-
-        if not inspection:
-            self.logger.warning(
-                f"No inspection result data retrieved for task {str(current_task.id)[:8]}"
-            )
-
-        inspection.metadata.tag_id = current_task.tag_id
-
-        message: Tuple[Inspection, Mission] = (
-            inspection,
-            mission,
-        )
-        self.state_machine.events.upload_queue.put(message)
-        self.logger.info(
-            f"Inspection result: {str(inspection.id)[:8]} queued for upload"
-        )
-
     def _report_task_status(self, task: Task) -> None:
         if task.status == TaskStatus.Failed:
             self.logger.warning(
@@ -238,19 +184,3 @@ class Monitor(State):
             self.logger.info(
                 f"{type(task).__name__} task: {str(task.id)[:8]} completed"
             )
-
-    def _should_upload_inspections(self) -> bool:
-        if settings.UPLOAD_INSPECTIONS_ASYNC:
-            return False
-
-        return (
-            self.state_machine.current_task.is_finished()
-            and self.state_machine.current_task.status == TaskStatus.Successful
-            and isinstance(self.state_machine.current_task, InspectionTask)
-        )
-
-    def _set_error_message(self, e: RobotException) -> None:
-        error_message: ErrorMessage = ErrorMessage(
-            error_reason=e.error_reason, error_description=e.error_description
-        )
-        self.state_machine.current_task.error_message = error_message

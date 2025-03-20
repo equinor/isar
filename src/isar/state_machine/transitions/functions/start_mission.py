@@ -61,7 +61,7 @@ def set_mission_to_in_progress(state_machine: "StateMachine") -> bool:
     return True
 
 
-def trigger_start_mission_or_task_event(state_machine: "StateMachine") -> bool:
+def trigger_start_mission_event(state_machine: "StateMachine") -> bool:
     state_machine.events.state_machine_events.start_mission.put(
         state_machine.current_mission
     )
