@@ -18,7 +18,12 @@ from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import TASKS, InspectionTask, MoveArm
+from robot_interface.models.mission.task import (
+    TASKS,
+    InspectionTask,
+    MoveArm,
+    ReturnToHome,
+)
 
 
 class SchedulingController:
@@ -98,6 +103,23 @@ class SchedulingController:
         self.scheduling_utilities.start_mission(mission=mission)
         return self._api_response(mission)
 
+    def return_home(self) -> StartMissionResponse:
+        self.logger.info("Received request to return home")
+
+        state: States = self.scheduling_utilities.get_state()
+        self.scheduling_utilities.verify_state_machine_ready_to_receive_return_home_mission(
+            state
+        )
+
+        mission = Mission(
+            tasks=[ReturnToHome()],
+            name="Return Home",
+        )
+
+        self.logger.info(f"Starting mission: {mission.id}")
+        self.scheduling_utilities.start_mission(mission=mission)
+        return self._api_response(mission)
+
     def pause_mission(self) -> ControlMissionResponse:
         self.logger.info("Received request to pause current mission")
 
@@ -142,7 +164,13 @@ class SchedulingController:
 
         state: States = self.scheduling_utilities.get_state()
 
-        if state == States.Off:
+        if (
+            state == States.UnknownStatus
+            or state == States.Stopping
+            or state == States.BlockedProtectiveStop
+            or state == States.Offline
+            or state == States.Home
+        ):
             error_message = (
                 f"Conflict - Stop command received in invalid state - State: {state}"
             )
