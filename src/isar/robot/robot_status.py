@@ -5,6 +5,7 @@ from threading import Event, Thread
 from isar.config.settings import settings
 from isar.models.communication.queues.events import SharedState
 from isar.models.communication.queues.queue_utils import update_shared_state
+from robot_interface.models.exceptions.robot_exceptions import RobotException
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -41,9 +42,12 @@ class RobotStatusThread(Thread):
 
             if not self._is_ready_to_poll_for_status():
                 continue
+            try:
+                robot_status = self.robot.robot_status()
 
-            robot_status = self.robot.robot_status()
-
-            update_shared_state(self.shared_state.robot_status, robot_status)
-            self.last_robot_status_poll_time = time.time()
+                update_shared_state(self.shared_state.robot_status, robot_status)
+                self.last_robot_status_poll_time = time.time()
+            except RobotException as e:
+                self.logger.error(f"Failed to retrieve robot status: {e}")
+                continue
         self.logger.info("Exiting robot status thread")
