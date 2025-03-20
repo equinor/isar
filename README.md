@@ -189,8 +189,16 @@ The system consists of two main components.
 The state machine handles interaction with the robots API and monitors the execution of missions. It also enables
 interacting with the robot before, during and after missions.
 
-The state machine is based on the [transitions](https://github.com/pytransitions/transitions) package for Python. An visualization of the state machine can be seen below:
-![State Machine](./docs/state_machine_diagram.png)
+The state machine is based on the [transitions](https://github.com/pytransitions/transitions) package for Python. The following are some visualizations of the state machine:
+
+Mission behavior without the robot status changed transition that enable the resting states to transition between each other if the robot status changes:
+![State Machine extended](./docs/extended_state_machine_diagram.png)
+
+Robot status changed transition:
+![State Machine robot status changed](./docs/robot_status_state_machine_diagram.png)
+
+Full state machine:
+![State Machine full](./docs/full_state_machine_diagram.png)
 
 In general the states
 
