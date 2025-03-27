@@ -18,7 +18,7 @@ class BlobStorage(StorageInterface):
     @inject
     def __init__(
         self, keyvault: Keyvault, container_name: str = settings.BLOB_CONTAINER
-    ):
+    ) -> None:
         self.keyvault = keyvault
         self.storage_connection_string = self.keyvault.get_secret(
             "AZURE-STORAGE-CONNECTION-STRING"
@@ -71,7 +71,7 @@ class BlobStorage(StorageInterface):
                 self.storage_connection_string
             )
         except Exception as e:
-            self.logger.error(f"Unable to retrieve blob service client. Error: {e}")
+            self.logger.error("Unable to retrieve blob service client. Error: %s", e)
             raise e
 
     def _get_container_client(

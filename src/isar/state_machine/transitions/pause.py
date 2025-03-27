@@ -8,7 +8,7 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
 def pause_mission(state_machine: "StateMachine") -> bool:
-    state_machine.logger.info(f"Pausing mission: {state_machine.current_mission.id}")
+    state_machine.logger.info("Pausing mission: %s", state_machine.current_mission.id)
     state_machine.current_mission.status = MissionStatus.Paused
     state_machine.current_task.status = TaskStatus.Paused
 

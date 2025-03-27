@@ -242,6 +242,6 @@ def get_injector() -> Injector:
         )
 
     logger: Logger = logging.getLogger("modules")
-    logger.info(f"Loaded the following module configurations:{module_overview}")
+    logger.info("Loaded the following module configurations: %s", module_overview)
 
     return Injector(injector_modules)

@@ -8,7 +8,7 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
 def resume_mission(state_machine: "StateMachine") -> bool:
-    state_machine.logger.info(f"Resuming mission: {state_machine.current_mission.id}")
+    state_machine.logger.info("Resuming mission: %s", state_machine.current_mission.id)
     state_machine.current_mission.status = MissionStatus.InProgress
     state_machine.current_mission.error_message = None
     state_machine.current_task.status = TaskStatus.InProgress
