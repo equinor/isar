@@ -3,7 +3,7 @@ from queue import Queue
 from threading import Event
 from typing import Optional
 
-from injector import inject
+from dependency_injector.wiring import inject
 
 from isar.models.communication.queues.events import (
     Events,
