@@ -169,7 +169,7 @@ def start() -> None:
 
     for thread in threads:
         thread.start()
-        logger.info(f"Started thread: {thread.name}")
+        logger.info("Started thread: %s", thread.name)
 
     while True:
         for thread in threads:

@@ -230,7 +230,7 @@ class StateMachine(object):
                 for i, transition in enumerate(list(self.transitions_list))
             ]
         )
-        self.logger.info(f"State transitions:\n  {state_transitions}")
+        self.logger.info("State transitions:\n  %s", state_transitions)
         self.reset_state_machine()
 
     def begin(self):
@@ -253,7 +253,7 @@ class StateMachine(object):
         self.current_state = States(self.state)  # type: ignore
         update_shared_state(self.shared_state.state, self.current_state)
         self._log_state_transition(self.current_state)
-        self.logger.info(f"State: {self.current_state}")
+        self.logger.info("State: %s", self.current_state)
         self.publish_status()
 
     def reset_state_machine(self) -> None:
@@ -373,7 +373,7 @@ class StateMachine(object):
             )
         log_statement: str = "\n".join(log_statements)
 
-        self.logger.info(f"Mission overview:\n{log_statement}")
+        self.logger.info("Mission overview:\n%s", log_statement)
 
     def _make_control_mission_response(self) -> ControlMissionResponse:
         return ControlMissionResponse(

@@ -38,7 +38,7 @@ class SchedulingController:
             description="ID-number for predefined mission",
         ),
     ) -> StartMissionResponse:
-        self.logger.info(f"Received request to start mission with id {mission_id}")
+        self.logger.info("Received request to start mission with id %s", mission_id)
 
         state: States = self.scheduling_utilities.get_state()
         self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
@@ -49,7 +49,7 @@ class SchedulingController:
             mission=mission, robot_capabilities=robot_settings.CAPABILITIES
         )
 
-        self.logger.info(f"Starting mission with ISAR Mission ID: '{mission.id}'")
+        self.logger.info("Starting mission with ISAR Mission ID: '%s'", mission.id)
 
         self.scheduling_utilities.start_mission(mission=mission)
 
@@ -94,7 +94,7 @@ class SchedulingController:
             mission=mission, robot_capabilities=robot_settings.CAPABILITIES
         )
 
-        self.logger.info(f"Starting mission: {mission.id}")
+        self.logger.info("Starting mission: %s", mission.id)
         self.scheduling_utilities.start_mission(mission=mission)
         return self._api_response(mission)
 

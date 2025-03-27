@@ -87,7 +87,7 @@ class SlimmStorage(StorageInterface):
                 },
             )
             guid = json.loads(response.text)["guid"]
-            self.logger.info(f"SLIMM upload GUID: {guid}")
+            self.logger.info("SLIMM upload GUID: %s", guid)
         except (RequestException, HTTPError) as e:
             self.logger.warning(
                 f"Failed to upload inspection: {inspection.id} to SLIMM due to a "

@@ -48,7 +48,7 @@ class Authenticator:
         self.logger = logging.getLogger("api")
         self.authentication_enabled: bool = authentication_enabled
         enabled_string = "enabled" if self.authentication_enabled else "disabled"
-        self.logger.info(f"API authentication is {enabled_string}")
+        self.logger.info("API authentication is %s", enabled_string)
 
     def should_authenticate(self) -> bool:
         return self.authentication_enabled
