@@ -2,7 +2,7 @@ import json
 import logging
 from pathlib import Path
 
-from injector import inject
+from dependency_injector.wiring import inject
 
 from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import (

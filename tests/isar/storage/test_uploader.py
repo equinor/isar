@@ -6,13 +6,12 @@ from typing import List, Tuple
 import pytest
 from alitra import Frame, Orientation, Pose, Position
 
-from isar.models.communication.queues.events import Events
+from isar.modules import ApplicationContainer
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import ImageMetadata, Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TakeImage
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(
@@ -24,22 +23,6 @@ ARBITRARY_IMAGE_METADATA = ImageMetadata(
     ),
     file_type="jpg",
 )
-
-
-@pytest.fixture
-def uploader(injector) -> Uploader:
-    uploader: Uploader = Uploader(
-        events=injector.get(Events),
-        storage_handlers=injector.get(List[StorageInterface]),
-        mqtt_publisher=injector.get(MqttClientInterface),
-    )
-
-    # The thread is deliberately started but not joined so that it runs in the
-    # background and stops when the test ends
-    thread = Thread(target=uploader.run, daemon=True)
-    thread.start()
-
-    return uploader
 
 
 def test_should_upload_from_queue(uploader) -> None:
