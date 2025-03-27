@@ -1,6 +1,6 @@
 import logging
 
-from injector import inject
+from dependency_injector.wiring import inject
 
 from robot_interface.models.robots.media import MediaConfig
 from robot_interface.robot_interface import RobotInterface

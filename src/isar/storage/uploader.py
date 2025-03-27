@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from queue import Empty, Queue
 from typing import List, Union
 
-from injector import inject
+from dependency_injector.wiring import inject
 
 from isar.config.settings import settings
 from isar.models.communication.queues.events import Events

@@ -3,7 +3,7 @@ import logging
 from fastapi import Depends
 from fastapi.security.base import SecurityBase
 from fastapi_azure_auth import SingleTenantAzureAuthorizationCodeBearer
-from fastapi_azure_auth.exceptions import InvalidAuth
+from fastapi_azure_auth.exceptions import InvalidAuthHttp
 from fastapi_azure_auth.user import User
 from pydantic import BaseModel
 
@@ -35,7 +35,7 @@ async def validate_has_role(user: User = Depends(azure_scheme)) -> None:
     Raises a 403 authorization error if not.
     """
     if settings.REQUIRED_ROLE not in user.roles:
-        raise InvalidAuth(
+        raise InvalidAuthHttp(
             "Current user does not possess the required role for this endpoint"
         )
 

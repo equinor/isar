@@ -34,7 +34,7 @@ dependencies = [
     "dacite",
     "fastapi-azure-auth",
     "fastapi",
-    "injector",
+    "dependency-injector",
     "numpy",
     "opencensus-ext-azure",
     "opencensus-ext-logging",
