@@ -1,8 +1,8 @@
 import logging
 from http import HTTPStatus
 
+from dependency_injector.wiring import inject
 from fastapi import Body, HTTPException, Path
-from injector import inject
 
 from isar.apis.models.models import (
     ControlMissionResponse,

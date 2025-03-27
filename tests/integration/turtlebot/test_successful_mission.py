@@ -1,5 +1,4 @@
 import json
-import shutil
 import time
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
@@ -7,26 +6,11 @@ from pathlib import Path
 from typing import List
 
 import numpy as np
-import pytest
 from alitra import Frame, Position
 from fastapi import FastAPI
-from injector import Injector
 from starlette.testclient import TestClient
 
 from isar.apis.api import API
-from isar.config.settings import settings
-from isar.modules import (
-    APIModule,
-    EventsModule,
-    LocalPlannerModule,
-    LocalStorageModule,
-    RequestHandlerModule,
-    RobotModule,
-    SchedulingUtilitiesModule,
-    ServiceModule,
-    SharedStateModule,
-    StateMachineModule,
-)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import ReturnToHome
@@ -34,56 +18,6 @@ from tests.isar.state_machine.test_state_machine import (
     StateMachineThread,
     UploaderThread,
 )
-from tests.test_modules import MockMqttModule, MockNoAuthenticationModule
-
-
-@pytest.fixture()
-def injector_turtlebot():
-    settings.ROBOT_PACKAGE = "isar_turtlebot"
-    settings.LOCAL_STORAGE_PATH = "./tests/results"
-    settings.PREDEFINED_MISSIONS_FOLDER = (
-        "./tests/integration/turtlebot/config/missions"
-    )
-    settings.MAPS_FOLDER = "tests/integration/turtlebot/config/maps"
-    settings.DEFAULT_MAP = "turtleworld"
-
-    return Injector(
-        [
-            APIModule,
-            MockNoAuthenticationModule,
-            EventsModule,
-            SharedStateModule,
-            RequestHandlerModule,
-            RobotModule,
-            ServiceModule,
-            StateMachineModule,
-            LocalPlannerModule,
-            LocalStorageModule,
-            SchedulingUtilitiesModule,
-            MockMqttModule,
-        ]
-    )
-
-
-@pytest.fixture()
-def state_machine_thread(injector_turtlebot) -> StateMachineThread:
-    return StateMachineThread(injector=injector_turtlebot)
-
-
-@pytest.fixture()
-def uploader_thread(injector_turtlebot) -> UploaderThread:
-    return UploaderThread(injector=injector_turtlebot)
-
-
-@pytest.fixture(autouse=True)
-def run_before_and_after_tests() -> None:  # type: ignore
-    results_folder: Path = Path("tests/results")
-    yield
-
-    print("Removing temporary results folder for testing")
-    if results_folder.exists():
-        shutil.rmtree(results_folder)
-    print("Cleanup finished")
 
 
 def test_successful_mission(

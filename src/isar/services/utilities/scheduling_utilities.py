@@ -4,8 +4,8 @@ from http import HTTPStatus
 from queue import Empty
 from typing import Any, List
 
+from dependency_injector.wiring import inject
 from fastapi import HTTPException
-from injector import inject
 from requests import HTTPError
 
 from isar.apis.models.models import ControlMissionResponse

@@ -2,7 +2,7 @@ import json
 import logging
 
 from azure.identity import DefaultAzureCredential
-from injector import inject
+from dependency_injector.wiring import inject
 from requests import HTTPError, RequestException
 from requests_toolbelt import MultipartEncoder
 
