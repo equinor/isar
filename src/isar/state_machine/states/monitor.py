@@ -4,7 +4,7 @@ from copy import deepcopy
 from queue import Queue
 from typing import TYPE_CHECKING, Optional, Tuple
 
-from injector import inject
+from dependency_injector.wiring import inject
 from transitions import State
 
 from isar.config.settings import settings

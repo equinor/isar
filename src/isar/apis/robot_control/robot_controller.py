@@ -1,7 +1,7 @@
 import logging
 
+from dependency_injector.wiring import inject
 from fastapi import HTTPException
-from injector import inject
 
 from isar.apis.models.models import RobotInfoResponse
 from isar.config.settings import robot_settings, settings
