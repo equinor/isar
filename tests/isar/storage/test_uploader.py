@@ -7,6 +7,7 @@ import pytest
 from alitra import Frame, Orientation, Pose, Position
 
 from isar.models.communication.queues.events import Events
+from isar.modules import ApplicationContainer
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import ImageMetadata, Inspection
@@ -27,11 +28,11 @@ ARBITRARY_IMAGE_METADATA = ImageMetadata(
 
 
 @pytest.fixture
-def uploader(injector) -> Uploader:
+def uploader(container: ApplicationContainer) -> Uploader:
     uploader: Uploader = Uploader(
-        events=injector.get(Events),
-        storage_handlers=injector.get(List[StorageInterface]),
-        mqtt_publisher=injector.get(MqttClientInterface),
+        events=container.events(),
+        storage_handlers=container.storage_handlers(List[StorageInterface]),
+        mqtt_publisher=container.mqtt_client(),
     )
 
     # The thread is deliberately started but not joined so that it runs in the

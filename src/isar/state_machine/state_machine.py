@@ -4,7 +4,7 @@ from collections import deque
 from datetime import datetime, timezone
 from typing import Deque, List, Optional
 
-from injector import inject
+from dependency_injector.wiring import inject
 from transitions import Machine
 from transitions.core import State
 

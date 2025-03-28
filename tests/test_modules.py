@@ -1,6 +1,7 @@
 from typing import List
 
-from injector import Module, multiprovider, provider, singleton
+from dependency_injector import containers
+from dependency_injector.wiring import providers
 
 from isar.apis.security.authentication import Authenticator
 from isar.storage.storage_interface import StorageInterface
@@ -11,36 +12,17 @@ from tests.mocks.mqtt_client import MqttClientMock
 from tests.mocks.robot_interface import MockRobot
 
 
-class MockStorageModule(Module):
-    @multiprovider
-    @singleton
-    def provide_storage(self) -> List[StorageInterface]:
-        return [StorageMock()]
+class MockContainer(containers.DeclarativeContainer):
+    storage_provider = providers.List(providers.Singleton(StorageMock))
 
+    mqtt_provider = providers.Singleton(MqttClientMock)
 
-class MockMqttModule(Module):
-    @provider
-    @singleton
-    def provide_mqtt(self) -> MqttClientInterface:
-        return MqttClientMock()
+    robot_provider = providers.Singleton(MockRobot)
 
+    no_authentication_provider = providers.Singleton(
+        Authenticator, authentication_enabled=False
+    )
 
-class MockRobotModule(Module):
-    @provider
-    @singleton
-    def provide_robot(self) -> RobotInterface:
-        return MockRobot()
-
-
-class MockNoAuthenticationModule(Module):
-    @provider
-    @singleton
-    def provide_authenticator(self) -> Authenticator:
-        return Authenticator(authentication_enabled=False)
-
-
-class MockAuthenticationModule(Module):
-    @provider
-    @singleton
-    def provide_authenticator(self) -> Authenticator:
-        return Authenticator(authentication_enabled=True)
+    authentication_provider = providers.Singleton(
+        Authenticator, authentication_enabled=True
+    )
