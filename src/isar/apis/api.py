@@ -5,10 +5,10 @@ from typing import List, Union
 
 import click
 import uvicorn
+from dependency_injector.wiring import inject
 from fastapi import FastAPI, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRouter
-from injector import inject
 from opencensus.ext.azure.trace_exporter import AzureExporter
 from opencensus.trace.attributes_helper import COMMON_ATTRIBUTES
 from opencensus.trace.samplers import ProbabilitySampler
@@ -36,14 +36,14 @@ class API:
         authenticator: Authenticator,
         scheduling_controller: SchedulingController,
         robot_controller: RobotController,
-        keyvault_client: Keyvault,
+        keyvault: Keyvault,
         port: int = settings.API_PORT,
         azure_ai_logging_enabled: bool = settings.LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED,
     ) -> None:
         self.authenticator: Authenticator = authenticator
         self.scheduling_controller: SchedulingController = scheduling_controller
         self.robot_controller: RobotController = robot_controller
-        self.keyvault_client: Keyvault = keyvault_client
+        self.keyvault: Keyvault = keyvault
         self.host: str = "0.0.0.0"  # Locking uvicorn to use 0.0.0.0
         self.port: int = port
         self.azure_ai_logging_enabled: bool = azure_ai_logging_enabled
@@ -295,7 +295,7 @@ class API:
     def _add_request_logging_middleware(self, app: FastAPI) -> None:
         connection_string: str
         try:
-            connection_string = self.keyvault_client.get_secret(
+            connection_string = self.keyvault.get_secret(
                 "application-insights-connection-string"
             ).value
         except KeyvaultError:
