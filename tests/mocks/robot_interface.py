@@ -6,6 +6,9 @@ from typing import Callable, List
 from alitra import Frame, Orientation, Pose, Position
 
 from isar.models.communication.queues.status_queue import StatusQueue
+from robot_interface.models.exceptions.robot_exceptions import (
+    RobotCommunicationException,
+)
 from robot_interface.models.inspection.inspection import (
     Image,
     ImageMetadata,
@@ -98,7 +101,7 @@ def mock_image_metadata() -> ImageMetadata:
     )
 
 
-class MockRobotIdleToOfflineToIdleTest(MockRobot):
+class MockRobotOfflineToRobotStandingStillTest(MockRobot):
     def __init__(self, current_state: StatusQueue):
         self.entered_offline = False
         self.current_state = current_state
@@ -109,15 +112,16 @@ class MockRobotIdleToOfflineToIdleTest(MockRobot):
             if new_state == "offline":
                 self.entered_offline = True
                 return RobotStatus.Available
-            if not self.entered_offline and new_state == "idle":
+
+            if not self.entered_offline:
                 return RobotStatus.Offline
+
+            return RobotStatus.Available
         except Empty:
-            pass
-
-        return RobotStatus.Available
+            raise RobotCommunicationException("Could not read state machine state")
 
 
-class MockRobotIdleToBlockedProtectiveStopToIdleTest(MockRobot):
+class MockRobotBlockedProtectiveStopToRobotStandingStillTest(MockRobot):
     def __init__(self, current_state: StatusQueue):
         self.entered_blocked_p_stop = False
         self.current_state = current_state
@@ -127,9 +131,42 @@ class MockRobotIdleToBlockedProtectiveStopToIdleTest(MockRobot):
             if self.current_state.check() == "blocked_protective_stop":
                 self.entered_blocked_p_stop = True
                 return RobotStatus.Available
-            if not self.entered_blocked_p_stop and self.current_state.check() == "idle":
+            if not self.entered_blocked_p_stop:
                 return RobotStatus.BlockedProtectiveStop
+            return RobotStatus.Available
         except Empty:
-            pass
+            raise RobotCommunicationException("Could not read state machine state")
 
-        return RobotStatus.Available
+
+class MockRobotHomeToRobotStandingStillTest(MockRobot):
+    def __init__(self, current_state: StatusQueue):
+        self.entered_home = False
+        self.current_state = current_state
+
+    def robot_status(self) -> RobotStatus:
+        try:
+            if self.current_state.check() == "home":
+                self.entered_home = True
+                return RobotStatus.Available
+            if not self.entered_home:
+                return RobotStatus.Home
+            return RobotStatus.Available
+        except Empty:
+            raise RobotCommunicationException("Could not read state machine state")
+
+
+class MockRobotOfflineToHomeTest(MockRobot):
+    def __init__(self, current_state: StatusQueue):
+        self.entered_offline = False
+        self.current_state = current_state
+
+    def robot_status(self) -> RobotStatus:
+        try:
+            if self.current_state.check() == "offline":
+                self.entered_offline = True
+                return RobotStatus.Home
+            if not self.entered_offline:
+                return RobotStatus.Offline
+            return RobotStatus.Home
+        except Empty:
+            raise RobotCommunicationException("Could not read state machine state")

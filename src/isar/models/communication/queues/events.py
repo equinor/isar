@@ -29,6 +29,7 @@ class APIRequests:
         self.stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
         self.pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)
         self.resume_mission: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.return_home: QueueIO = QueueIO(input_size=1, output_size=1)
 
 
 class StateMachineEvents:
