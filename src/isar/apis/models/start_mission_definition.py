@@ -39,9 +39,8 @@ class TaskType(str, Enum):
 class StartMissionInspectionDefinition(BaseModel):
     type: InspectionTypes = Field(default=InspectionTypes.image)
     inspection_target: InputPosition
-    analysis_type: Optional[str] = None
+    inspection_description: Optional[str] = None
     duration: Optional[float] = None
-    metadata: Optional[dict] = None
 
 
 class StartMissionTaskDefinition(BaseModel):
@@ -107,8 +106,8 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             id=task_definition.id if task_definition.id else uuid4_string(),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
+            inspection_description=task_definition.inspection.inspection_description,
             target=task_definition.inspection.inspection_target.to_alitra_position(),
-            metadata=task_definition.inspection.metadata,
             zoom=task_definition.zoom,
         )
     elif inspection_definition.type == InspectionTypes.video:
@@ -116,9 +115,9 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             id=task_definition.id if task_definition.id else uuid4_string(),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
+            inspection_description=task_definition.inspection.inspection_description,
             target=task_definition.inspection.inspection_target.to_alitra_position(),
             duration=inspection_definition.duration,
-            metadata=task_definition.inspection.metadata,
             zoom=task_definition.zoom,
         )
     elif inspection_definition.type == InspectionTypes.thermal_image:
@@ -126,8 +125,8 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             id=task_definition.id if task_definition.id else uuid4_string(),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
+            inspection_description=task_definition.inspection.inspection_description,
             target=task_definition.inspection.inspection_target.to_alitra_position(),
-            metadata=task_definition.inspection.metadata,
             zoom=task_definition.zoom,
         )
     elif inspection_definition.type == InspectionTypes.thermal_video:
@@ -135,9 +134,9 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             id=task_definition.id if task_definition.id else uuid4_string(),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
+            inspection_description=task_definition.inspection.inspection_description,
             target=task_definition.inspection.inspection_target.to_alitra_position(),
             duration=inspection_definition.duration,
-            metadata=task_definition.inspection.metadata,
             zoom=task_definition.zoom,
         )
     elif inspection_definition.type == InspectionTypes.audio:
@@ -145,16 +144,16 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             id=task_definition.id if task_definition.id else uuid4_string(),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
+            inspection_description=task_definition.inspection.inspection_description,
             target=task_definition.inspection.inspection_target.to_alitra_position(),
             duration=inspection_definition.duration,
-            metadata=task_definition.inspection.metadata,
         )
     elif inspection_definition.type == InspectionTypes.gas_measurement:
         return TakeGasMeasurement(
             id=task_definition.id if task_definition.id else uuid4_string(),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
-            metadata=task_definition.inspection.metadata,
+            inspection_description=task_definition.inspection.inspection_description,
         )
     else:
         raise ValueError(
