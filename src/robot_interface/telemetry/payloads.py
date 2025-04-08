@@ -111,5 +111,7 @@ class InspectionResultPayload:
     inspection_id: str
     inspection_path: Union[str, dict]
     installation_code: str
-    analysis_to_be_run: Optional[str]
+    tag_id: Optional[str]
+    inspection_type: Optional[str]
+    inspection_description: Optional[str]
     timestamp: datetime

@@ -163,8 +163,10 @@ class Uploader:
             inspection_id=inspection.id,
             inspection_path=inspection_path,
             installation_code=settings.PLANT_SHORT_NAME,
-            analysis_to_be_run=inspection.metadata.analysis_type,
-            timestamp=datetime.now(timezone.utc),
+            tag_id=inspection.metadata.tag_id,
+            inspection_type=type(inspection).__name__,
+            inspection_description=inspection.metadata.inspection_description,
+            timestamp=inspection.metadata.start_time,
         )
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_INSPECTION_RESULT,

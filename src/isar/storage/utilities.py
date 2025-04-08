@@ -41,11 +41,7 @@ def construct_metadata_file(
             "plant_name": settings.PLANT_NAME,
             "isar_id": settings.ISAR_ID,
             "robot_name": settings.ROBOT_NAME,
-            "analysis_type": (
-                inspection.metadata.additional["analysis_type"]
-                if inspection.metadata.additional
-                else "N/A"
-            ),
+            "inspection_description": inspection.metadata.inspection_description,
         },
         "data": [
             {
