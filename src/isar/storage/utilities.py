@@ -1,5 +1,4 @@
 import json
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Tuple
@@ -67,12 +66,16 @@ def construct_metadata_file(
 
 
 def get_filename(inspection: Inspection) -> str:
-    inspection_type: str = type(inspection).__name__
+    utc_time: str = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     tag: str = inspection.metadata.tag_id if inspection.metadata.tag_id else "no-tag"
-    epoch_time: int = int(time.time())
-    return f"{tag}__{inspection_type}__{epoch_time}"
+    inspection_type: str = type(inspection).__name__
+    inspection_description: str = inspection.metadata.inspection_description.replace(
+        " ", "-"
+    )
+    return f"{tag}__{inspection_type}__{inspection_description}__{utc_time}"
 
 
 def get_foldername(mission: Mission) -> str:
+    utc_date: str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     mission_name: str = mission.name.replace(" ", "-")
-    return f"{datetime.now(timezone.utc).date()}__{settings.PLANT_SHORT_NAME}__{mission_name}__{mission.id}"
+    return f"{utc_date}__{settings.PLANT_SHORT_NAME}__{mission_name}__{mission.id}"
