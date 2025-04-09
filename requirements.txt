@@ -12,7 +12,7 @@ anyio==4.9.0
     # via
     #   httpx
     #   starlette
-azure-core==1.32.0
+azure-core==1.33.0
     # via
     #   azure-identity
     #   azure-keyvault-secrets
@@ -24,7 +24,7 @@ azure-identity==1.21.0
     #   opencensus-ext-azure
 azure-keyvault-secrets==4.9.0
     # via isar (pyproject.toml)
-azure-storage-blob==12.25.0
+azure-storage-blob==12.25.1
     # via isar (pyproject.toml)
 backoff==2.2.1
     # via isar (pyproject.toml)
@@ -113,7 +113,7 @@ paho-mqtt==2.1.0
     # via isar (pyproject.toml)
 proto-plus==1.26.1
     # via google-api-core
-protobuf==6.30.1
+protobuf==6.30.2
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -124,16 +124,16 @@ pyasn1==0.6.1
     # via
     #   pyasn1-modules
     #   rsa
-pyasn1-modules==0.4.1
+pyasn1-modules==0.4.2
     # via google-auth
 pycparser==2.22
     # via cffi
-pydantic==2.10.6
+pydantic==2.11.3
     # via
     #   fastapi
     #   isar (pyproject.toml)
     #   pydantic-settings
-pydantic-core==2.27.2
+pydantic-core==2.33.1
     # via pydantic
 pydantic-settings==2.8.1
     # via isar (pyproject.toml)
@@ -174,7 +174,7 @@ starlette==0.46.1
     # via fastapi
 transitions==0.9.2
     # via isar (pyproject.toml)
-typing-extensions==4.12.2
+typing-extensions==4.13.1
     # via
     #   azure-core
     #   azure-identity
@@ -183,6 +183,9 @@ typing-extensions==4.12.2
     #   fastapi
     #   pydantic
     #   pydantic-core
+    #   typing-inspection
+typing-inspection==0.4.0
+    # via pydantic
 urllib3==2.3.0
     # via requests
 uvicorn==0.34.0
