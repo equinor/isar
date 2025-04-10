@@ -28,8 +28,6 @@
                             "z": 0,
                             "frame": "robot"
                         },
-                        "analysis_types": "CarSeal, Rust"
-                        ,
                         "metadata": {
                             "zoom": "2x"
                         }
@@ -41,8 +39,7 @@
                             "y": 4.9,
                             "z": 0,
                             "frame": "robot"
-                        },
-                        "analysis_types": "GasDetection"
+                        }
                     }
                 ]
             },
@@ -72,9 +69,7 @@
                             "y": 5.2,
                             "z": 0,
                             "frame": "robot"
-                        },
-                        "analysis_types": "ColdSpot, HotSpot"
-                        
+                        }
                     }
                 ]
             },
@@ -104,8 +99,7 @@
                             "y": 5.2,
                             "z": 0,
                             "frame": "robot"
-                        },
-                        "analysis_types": "ColdSpot, HotSpot"
+                        }
                     },
                     {
                         "type": "ThermalImage",
@@ -114,8 +108,7 @@
                             "y": 1.9,
                             "z": 0,
                             "frame": "robot"
-                        },
-                        "analysis_types": "ColdSpot, HotSpot"
+                        }
                     }
                 ]
             }
