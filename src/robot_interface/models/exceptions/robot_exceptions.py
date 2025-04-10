@@ -15,6 +15,7 @@ class ErrorReason(str, Enum):
     RobotInitializeException = "robot_initialize_exception"
     RobotRetrieveDataException = "robot_retrieve_data_exception"
     RobotRetrieveInspectionException = "robot_retrieve_inspection_exception"
+    RobotStillStartingMissionException = "robot_still_starting_mission_exception"
     RobotTelemetryException = "robot_telemetry_exception"
     RobotTelemetryNoUpdateException = "robot_telemetry_no_update_exception"
     RobotTelemetryPoseException = "robot_telemetry_pose_exception"
@@ -168,6 +169,19 @@ class RobotRetrieveInspectionException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
             error_reason=ErrorReason.RobotRetrieveInspectionException,
+            error_description=error_description,
+        )
+
+    pass
+
+
+# An exception which should be thrown by the robot package if it is still starting the
+# mission when another action is requested. An example of this can be trying to stop
+# the robot while it is still starting the mission.
+class RobotStillStartingMissionException(RobotException):
+    def __init__(self, error_description: str) -> None:
+        super().__init__(
+            error_reason=ErrorReason.RobotStillStartingMissionException,
             error_description=error_description,
         )
 

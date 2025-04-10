@@ -82,6 +82,9 @@ class Settings(BaseSettings):
     # FastAPI port
     API_PORT: int = Field(default=3000)
 
+    # Determines how long delay time should be allowed before returning home
+    RETURN_HOME_DELAY: int = Field(default=10)
+
     # Determines which mission planner module is used by ISAR
     MISSION_PLANNER: str = Field(default="local")
 
@@ -311,7 +314,7 @@ class RobotSettings(BaseSettings):
 
     # ISAR steps the robot is capable of performing
     # This should be set in the robot package settings.env file
-    CAPABILITIES: List[str] = Field(default=["return_to_home", "take_image"])
+    CAPABILITIES: List[str] = Field(default=["take_image"])
 
     # Model of the robot which ISAR is connected to
     # This should be set in the robot package settings.env file
