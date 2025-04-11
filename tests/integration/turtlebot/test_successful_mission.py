@@ -14,10 +14,6 @@ from isar.apis.api import API
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import ReturnToHome
-from tests.isar.state_machine.test_state_machine import (
-    StateMachineThread,
-    UploaderThread,
-)
 
 
 def test_successful_mission(

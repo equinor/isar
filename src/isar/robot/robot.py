@@ -20,11 +20,10 @@ from robot_interface.robot_interface import RobotInterface
 
 
 class Robot(object):
-
     @inject
     def __init__(
         self, events: Events, robot: RobotInterface, shared_state: SharedState
-    ):
+    ) -> None:
         self.logger = logging.getLogger("robot")
         self.state_machine_events: StateMachineEvents = events.state_machine_events
         self.robot_service_events: RobotServiceEvents = events.robot_service_events
@@ -107,10 +106,7 @@ class Robot(object):
         )
         self.robot_status_thread.start()
 
-        while True:
-            if self.signal_thread_quitting.is_set():
-                break
-
+        while not self.signal_thread_quitting.wait(0):
             self._check_and_handle_start_mission(
                 self.state_machine_events.start_mission
             )
