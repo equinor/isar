@@ -6,35 +6,51 @@ from dependency_injector.wiring import providers
 from fastapi.testclient import TestClient
 
 from isar.apis.security.authentication import Authenticator
-from isar.config import settings
+from isar.config.settings import settings
 from isar.modules import ApplicationContainer
+from isar.robot.robot import Robot
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.idle import Idle
 from isar.state_machine.states.monitor import Monitor
 from isar.storage.uploader import Uploader
 from tests.isar.state_machine.test_state_machine import (
-    RobotServiceThread,
-    StateMachineThread,
-    UploaderThread,
+    RobotServiceThreadMock,
+    StateMachineThreadMock,
+    UploaderThreadMock,
 )
 from tests.mocks.blob_storage import StorageMock
 from tests.mocks.mqtt_client import MqttClientMock
 from tests.mocks.robot_interface import MockRobot
+
+# Speed up tests
+settings.FSM_SLEEP_TIME = 0.001
+settings.ROBOT_API_STATUS_POLL_INTERVAL = 0
+settings.UPLOAD_FAILURE_MAX_WAIT = 3
 
 
 @pytest.fixture()
 def container():
     """Fixture to provide the dependency-injector container without auth."""
     container = ApplicationContainer()
-    container.storage_handlers.override(providers.List([StorageMock]))
+    container.storage_handlers.override(
+        providers.List(providers.Singleton(StorageMock))
+    )
     container.mqtt_client.override(providers.Singleton(MqttClientMock))
-    container.robot.override(providers.Singleton(MockRobot))
+    container.robot_interface.override(providers.Singleton(MockRobot))
     container.uploader.override(
         providers.Singleton(
             Uploader,
             container.events(),
             container.storage_handlers(),
             container.mqtt_client(),
+        )
+    )
+    container.robot.override(
+        providers.Singleton(
+            Robot,
+            events=container.events(),
+            robot=container.robot_interface(),
+            shared_state=container.shared_state(),
         )
     )
     return container
@@ -136,63 +152,35 @@ def mission_reader(container: ApplicationContainer):
     return container.scheduling_utilities().mission_planner
 
 
-# @pytest.fixture
-# def uploader(container: ApplicationContainer) -> Uploader:
-#     uploader: Uploader = Uploader(
-#         events=container.events(),
-#         storage_handlers=container.storage_handlers(),
-#         mqtt_publisher=container.mqtt_client(),
-#     )
-#     container.uploader.override(uploader)
-
-#     # The thread is deliberately started but not joined so that it runs in the
-#     # background and stops when the test ends
-#     thread = Thread(target=uploader.run, daemon=True)
-#     thread.start()
-
-#     return uploader
+@pytest.fixture
+def state_machine_thread(container: ApplicationContainer):
+    state_machine_thread: StateMachineThreadMock = StateMachineThreadMock(
+        container=container,
+    )
+    yield state_machine_thread
+    state_machine_thread.join()
 
 
 @pytest.fixture
-def state_machine_thread(container: ApplicationContainer) -> StateMachineThread:
-    return StateMachineThread(container)
-
-
-@pytest.fixture
-def uploader_thread(container: ApplicationContainer) -> UploaderThread:
-    return UploaderThread(container=container)
+def uploader_thread(container: ApplicationContainer):
+    uploader_thread: UploaderThreadMock = UploaderThreadMock(container=container)
+    yield uploader_thread
+    uploader_thread.join()
 
 
 @pytest.fixture
 def robot_service_thread(container: ApplicationContainer):
-    robot_service_thread: RobotServiceThread = RobotServiceThread(container=container)
+    robot_service: Robot = Robot(
+        events=container.events(),
+        robot=container.robot_interface(),
+        shared_state=container.shared_state(),
+    )
+
+    robot_service_thread: RobotServiceThreadMock = RobotServiceThreadMock(
+        robot_service=robot_service
+    )
     yield robot_service_thread
-    robot_service_thread.teardown()
-
-
-# @pytest.fixture()
-# def turtlebot_container(container: ApplicationContainer) -> ApplicationContainer:
-#     container.config.from_dict(
-#         {
-#             "ROBOT_PACKAGE": "isar_turtlebot",
-#             "LOCAL_STORAGE_PATH": "./tests/results",
-#             "PREDEFINED_MISSIONS_FOLDER": "./tests/integration/turtlebot/config/missions",
-#             "MAPS_FOLDER": "tests/integration/turtlebot/config/maps",
-#             "DEFAULT_MAP": "turtleworld",
-#         }
-#     )
-#     # TODO FIX
-#     return container
-
-
-# @pytest.fixture()
-# def state_machine_thread(turtlebot_container) -> StateMachineThread:
-#     return StateMachineThread(turtlebot_container)
-
-
-# @pytest.fixture()
-# def uploader_thread(turtlebot_container) -> UploaderThread:
-#     return UploaderThread(turtlebot_container)
+    robot_service_thread.join()
 
 
 @pytest.fixture(autouse=True)

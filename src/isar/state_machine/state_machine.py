@@ -2,6 +2,7 @@ import json
 import logging
 from collections import deque
 from datetime import datetime, timezone
+from threading import Event
 from typing import Deque, List, Optional
 
 from dependency_injector.wiring import inject
@@ -96,6 +97,8 @@ class StateMachine(object):
         self.robot: RobotInterface = robot
         self.mqtt_publisher: Optional[MqttClientInterface] = mqtt_publisher
         self.task_selector: TaskSelectorInterface = task_selector
+
+        self.signal_state_machine_to_stop: Event = Event()
 
         # List of states
         self.stop_state: State = Stop(self)
@@ -236,6 +239,10 @@ class StateMachine(object):
     def begin(self):
         """Starts the state machine. Transitions into idle state."""
         self.to_idle()  # type: ignore
+
+    def terminate(self):
+        self.logger.info("Stopping state machine")
+        self.signal_state_machine_to_stop.set()
 
     def iterate_current_task(self):
         if self.current_task.is_finished():

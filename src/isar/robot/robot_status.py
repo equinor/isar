@@ -9,7 +9,6 @@ from robot_interface.robot_interface import RobotInterface
 
 
 class RobotStatusThread(Thread):
-
     def __init__(
         self,
         robot: RobotInterface,
@@ -21,7 +20,7 @@ class RobotStatusThread(Thread):
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
         self.last_robot_status_poll_time: float = time.time()
-        Thread.__init__(self, name="Robot status thread", daemon=True)
+        Thread.__init__(self, name="Robot status thread")
 
     def stop(self) -> None:
         return
@@ -35,10 +34,10 @@ class RobotStatusThread(Thread):
         )
 
     def run(self):
-        while True:
-            if self.signal_thread_quitting.is_set():
-                break
+        if self.signal_thread_quitting.is_set():
+            return
 
+        while not self.signal_thread_quitting.wait(0.001):
             if not self._is_ready_to_poll_for_status():
                 continue
 
