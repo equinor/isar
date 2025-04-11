@@ -25,6 +25,7 @@ class Idle(State):
         self.last_robot_status_poll_time: float = time.time()
         self.events = self.state_machine.events
         self.shared_state = self.state_machine.shared_state
+        self.signal_state_machine_to_stop = state_machine.signal_state_machine_to_stop
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -63,6 +64,12 @@ class Idle(State):
 
     def _run(self) -> None:
         while True:
+            if self.signal_state_machine_to_stop.is_set():
+                self.logger.info(
+                    "Stopping state machine from %s state", self.__class__.__name__
+                )
+                break
+
             if self._check_and_handle_stop_mission_event(
                 self.events.api_requests.stop_mission.input
             ):

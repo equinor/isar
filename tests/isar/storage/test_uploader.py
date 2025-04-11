@@ -1,18 +1,16 @@
 import time
 from datetime import datetime
-from threading import Thread
-from typing import List, Tuple
+from typing import Tuple
 
-import pytest
 from alitra import Frame, Orientation, Pose, Position
 
-from isar.models.communication.queues.events import Events
-from isar.storage.storage_interface import StorageInterface
+from isar.modules import ApplicationContainer
 from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import ImageMetadata, Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TakeImage
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
+from tests.isar.state_machine.test_state_machine import UploaderThreadMock
+from tests.mocks.blob_storage import StorageMock
 
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(
@@ -26,23 +24,11 @@ ARBITRARY_IMAGE_METADATA = ImageMetadata(
 )
 
 
-@pytest.fixture
-def uploader(injector) -> Uploader:
-    uploader: Uploader = Uploader(
-        events=injector.get(Events),
-        storage_handlers=injector.get(List[StorageInterface]),
-        mqtt_publisher=injector.get(MqttClientInterface),
-    )
+def test_should_upload_from_queue(
+    container: ApplicationContainer, uploader_thread: UploaderThreadMock
+) -> None:
+    uploader_thread.start()
 
-    # The thread is deliberately started but not joined so that it runs in the
-    # background and stops when the test ends
-    thread = Thread(target=uploader.run, daemon=True)
-    thread.start()
-
-    return uploader
-
-
-def test_should_upload_from_queue(uploader) -> None:
     take_image_task = TakeImage()
     mission: Mission = Mission(name="Dummy misson", tasks=[take_image_task])
 
@@ -56,12 +42,20 @@ def test_should_upload_from_queue(uploader) -> None:
         mission,
     )
 
+    uploader: Uploader = container.uploader()
+
     uploader.upload_queue.put(message)
-    time.sleep(0.0001)
-    assert uploader.storage_handlers[0].blob_exists(inspection)
+    time.sleep(0.01)
+
+    storage_handler: StorageMock = uploader.storage_handlers[0]  # type: ignore
+    assert inspection in storage_handler.stored_inspections
 
 
-def test_should_retry_failed_upload_from_queue(uploader) -> None:
+def test_should_retry_failed_upload_from_queue(
+    container: ApplicationContainer, uploader_thread: UploaderThreadMock
+) -> None:
+    uploader_thread.start()
+
     INSPECTION_ID = "123-456"
     inspection = Inspection(metadata=ARBITRARY_IMAGE_METADATA, id=INSPECTION_ID)
     mission: Mission = Mission(name="Dummy Mission")
@@ -71,15 +65,18 @@ def test_should_retry_failed_upload_from_queue(uploader) -> None:
         mission,
     )
 
+    uploader: Uploader = container.uploader()
+    storage_handler: StorageMock = uploader.storage_handlers[0]  # type: ignore
+
     # Need it to fail so that it retries
-    uploader.storage_handlers[0].will_fail = True
+    storage_handler.will_fail = True
     uploader.upload_queue.put(message)
-    time.sleep(0.0001)
+    time.sleep(1)
 
     # Should not upload, instead raise StorageException
-    assert not uploader.storage_handlers[0].blob_exists(inspection)
-    uploader.storage_handlers[0].will_fail = False
+    assert not storage_handler.blob_exists(inspection)
+    storage_handler.will_fail = False
     time.sleep(3)
 
-    # After 3 seconds, it should have retried and now it should be successful
-    assert uploader.storage_handlers[0].blob_exists(inspection)
+    # After some time, it should have retried and now it should be successful
+    assert storage_handler.blob_exists(inspection)

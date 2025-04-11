@@ -17,7 +17,6 @@ from robot_interface.robot_interface import RobotInterface
 
 
 class RobotStartMissionThread(Thread):
-
     def __init__(
         self,
         robot_service_events: RobotServiceEvents,

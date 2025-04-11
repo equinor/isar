@@ -5,15 +5,12 @@ from logging import Logger
 from threading import Thread
 from typing import Any, List, Tuple
 
-from injector import Injector
-
 import isar
 from isar.apis.api import API
-from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.log import setup_loggers
 from isar.config.settings import robot_settings, settings
 from isar.models.communication.queues.events import Events
-from isar.modules import get_injector
+from isar.modules import ApplicationContainer, get_injector
 from isar.robot.robot import Robot
 from isar.services.service_connections.mqtt.mqtt_client import MqttClient
 from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
@@ -83,19 +80,19 @@ def print_startup_info():
 
 
 def start() -> None:
-    injector: Injector = get_injector()
+    injector: ApplicationContainer = get_injector()
 
-    keyvault_client = injector.get(Keyvault)
-    setup_loggers(keyvault=keyvault_client)
+    keyvault = injector.keyvault()
+    setup_loggers(keyvault=keyvault)
     logger: Logger = logging.getLogger("main")
 
     print_startup_info()
 
-    state_machine: StateMachine = injector.get(StateMachine)
-    uploader: Uploader = injector.get(Uploader)
-    robot: RobotInterface = injector.get(RobotInterface)
-    events: Events = injector.get(Events)
-    robot_service: Robot = injector.get(Robot)
+    state_machine: StateMachine = injector.state_machine()
+    uploader: Uploader = injector.uploader()
+    robot_interface: RobotInterface = injector.robot_interface()
+    events: Events = injector.events()
+    robot: Robot = injector.robot()
 
     threads: List[Thread] = []
 
@@ -110,7 +107,7 @@ def start() -> None:
     threads.append(uploader_thread)
 
     robot_service_thread: Thread = Thread(
-        target=robot_service.run, name="Robot service", daemon=True
+        target=robot.run, name="Robot service", daemon=True
     )
     threads.append(robot_service_thread)
 
@@ -123,7 +120,7 @@ def start() -> None:
             )
             state_machine.events.upload_queue.put(message)
 
-        robot.register_inspection_callback(inspections_callback)
+        robot_interface.register_inspection_callback(inspections_callback)
 
     if settings.MQTT_ENABLED:
         mqtt_client: MqttClient = MqttClient(mqtt_queue=events.mqtt_queue)
@@ -154,7 +151,7 @@ def start() -> None:
         )
         threads.append(robot_heartbeat_thread)
 
-        publishers: List[Thread] = robot.get_telemetry_publishers(
+        publishers: List[Thread] = robot_interface.get_telemetry_publishers(
             queue=events.mqtt_queue,
             robot_name=settings.ROBOT_NAME,
             isar_id=settings.ISAR_ID,
@@ -163,7 +160,7 @@ def start() -> None:
         if publishers:
             threads.extend(publishers)
 
-    api: API = injector.get(API)
+    api: API = injector.api()
     api_thread: Thread = Thread(target=api.run_app, name="ISAR API", daemon=True)
     threads.append(api_thread)
 

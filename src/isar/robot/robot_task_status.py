@@ -19,7 +19,6 @@ from robot_interface.robot_interface import RobotInterface
 
 
 class RobotTaskStatusThread(Thread):
-
     def __init__(
         self,
         robot_service_events: RobotServiceEvents,

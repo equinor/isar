@@ -21,6 +21,7 @@ class Stop(State):
         self.events = self.state_machine.events
         self.stop_thread: Optional[ThreadedRequest] = None
         self._count_number_retries: int = 0
+        self.signal_state_machine_to_stop = state_machine.signal_state_machine_to_stop
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -48,6 +49,11 @@ class Stop(State):
 
     def _run(self) -> None:
         while True:
+            if self.signal_state_machine_to_stop.is_set():
+                self.logger.info(
+                    "Stopping state machine from %s state", self.__class__.__name__
+                )
+                break
 
             if self._check_and_handle_failed_stop(
                 self.events.robot_service_events.mission_failed_to_stop

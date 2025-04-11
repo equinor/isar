@@ -21,6 +21,7 @@ class BlockedProtectiveStop(State):
         self.logger = logging.getLogger("state_machine")
         self.robot_status_thread: Optional[ThreadedRequest] = None
         self.shared_state = self.state_machine.shared_state
+        self.signal_state_machine_to_stop = state_machine.signal_state_machine_to_stop
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -31,8 +32,15 @@ class BlockedProtectiveStop(State):
 
     def _run(self) -> None:
         while True:
-            robot_status = check_shared_state(self.shared_state.robot_status)
+            if self.signal_state_machine_to_stop.is_set():
+                self.logger.info(
+                    "Stopping state machine from %s state", self.__class__.__name__
+                )
+                break
 
+            robot_status: RobotStatus = check_shared_state(
+                self.shared_state.robot_status
+            )
             if robot_status == RobotStatus.Offline:
                 transition = self.state_machine.robot_turned_offline  # type: ignore
                 break
