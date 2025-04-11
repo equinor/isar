@@ -174,7 +174,7 @@ starlette==0.46.1
     # via fastapi
 transitions==0.9.2
     # via isar (pyproject.toml)
-typing-extensions==4.13.1
+typing-extensions==4.13.2
     # via
     #   azure-core
     #   azure-identity
@@ -186,7 +186,7 @@ typing-extensions==4.13.1
     #   typing-inspection
 typing-inspection==0.4.0
     # via pydantic
-urllib3==2.3.0
+urllib3==2.4.0
     # via requests
 uvicorn==0.34.0
     # via isar (pyproject.toml)
