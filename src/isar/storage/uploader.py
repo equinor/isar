@@ -3,6 +3,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from queue import Empty, Queue
+from threading import Event
 from typing import List, Union
 
 from dependency_injector.wiring import inject
@@ -75,11 +76,16 @@ class Uploader:
         self.max_retry_attempts = max_retry_attempts
         self._internal_upload_queue: List[UploaderQueueItem] = []
 
+        self.signal_thread_quitting: Event = Event()
+
         self.logger = logging.getLogger("uploader")
+
+    def stop(self) -> None:
+        self.signal_thread_quitting.set()
 
     def run(self) -> None:
         self.logger.info("Started uploader")
-        while True:
+        while not self.signal_thread_quitting.wait(0):
             inspection: Inspection
             mission: Mission
             try:

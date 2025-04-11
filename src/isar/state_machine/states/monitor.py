@@ -2,6 +2,7 @@ import logging
 import time
 from copy import deepcopy
 from queue import Queue
+from threading import Event
 from typing import TYPE_CHECKING, Optional, Tuple
 
 from dependency_injector.wiring import inject
@@ -34,6 +35,10 @@ class Monitor(State):
         self.events = self.state_machine.events
 
         self.awaiting_task_status: bool = False
+
+        self.signal_state_machine_to_stop: Event = (
+            state_machine.signal_state_machine_to_stop
+        )
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -139,6 +144,12 @@ class Monitor(State):
     def _run(self) -> None:
         self.awaiting_task_status = False
         while True:
+            if self.signal_state_machine_to_stop.is_set():
+                self.logger.info(
+                    "Stopping state machine from %s state", self.__class__.__name__
+                )
+                break
+
             if self._check_and_handle_stop_mission_event(
                 self.events.api_requests.stop_mission.input
             ):
