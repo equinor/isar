@@ -54,6 +54,8 @@ dacite==1.9.2
     # via
     #   alitra
     #   isar (pyproject.toml)
+dependency-injector==4.46.0
+    # via isar (pyproject.toml)
 fastapi==0.115.12
     # via
     #   fastapi-azure-auth
@@ -66,11 +68,11 @@ google-auth==2.39.0
     # via google-api-core
 googleapis-common-protos==1.70.0
     # via google-api-core
-h11==0.14.0
+h11==0.16.0
     # via
     #   httpcore
     #   uvicorn
-httpcore==1.0.8
+httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via fastapi-azure-auth
@@ -79,13 +81,11 @@ idna==3.10
     #   anyio
     #   httpx
     #   requests
-injector==0.22.0
-    # via isar (pyproject.toml)
 isodate==0.7.2
     # via
     #   azure-keyvault-secrets
     #   azure-storage-blob
-msal==1.32.0
+msal==1.32.2
     # via
     #   azure-identity
     #   msal-extensions
