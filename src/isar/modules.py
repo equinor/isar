@@ -70,12 +70,19 @@ class ApplicationContainer(containers.DeclarativeContainer):
     )
 
     # Storage
-    local_storage = providers.Singleton(LocalStorage)
-    blob_storage = providers.Singleton(BlobStorage, keyvault=keyvault)
-    slimm_storage = providers.Singleton(
-        SlimmStorage, request_handler=providers.Singleton(RequestHandler)
-    )
-    storage_handlers = providers.List(local_storage, blob_storage, slimm_storage)
+    storage_handlers_temp = []
+    if settings.STORAGE_LOCAL_ENABLED:
+        local_storage = providers.Singleton(LocalStorage)
+        storage_handlers_temp.append(local_storage)
+    if settings.STORAGE_BLOB_ENABLED:
+        blob_storage = providers.Singleton(BlobStorage, keyvault=keyvault)
+        storage_handlers_temp.append(blob_storage)
+    if settings.STORAGE_SLIMM_ENABLED:
+        slimm_storage = providers.Singleton(
+            SlimmStorage, request_handler=providers.Singleton(RequestHandler)
+        )
+        storage_handlers_temp.append(slimm_storage)
+    storage_handlers = providers.List(*storage_handlers_temp)
 
     # Mqtt client
     mqtt_client = (
