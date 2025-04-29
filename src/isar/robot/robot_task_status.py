@@ -50,15 +50,15 @@ class RobotTaskStatusThread(Thread):
 
             try:
                 task_status = self.robot.task_status(self.task_id)
-                self.request_status_failure_counter = 0
+                request_status_failure_counter = 0
             except (
                 RobotCommunicationTimeoutException,
                 RobotCommunicationException,
             ) as e:
-                self.request_status_failure_counter += 1
+                request_status_failure_counter += 1
                 self.logger.error(
                     f"Failed to get task status "
-                    f"{self.request_status_failure_counter} times because: "
+                    f"{request_status_failure_counter} times because: "
                     f"{e.error_description}"
                 )
 
