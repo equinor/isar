@@ -1,5 +1,6 @@
 import logging
 from http import HTTPStatus
+from threading import Lock
 
 from dependency_injector.wiring import inject
 from fastapi import Body, HTTPException, Path
@@ -29,6 +30,7 @@ class SchedulingController:
     ):
         self.scheduling_utilities: SchedulingUtilities = scheduling_utilities
         self.logger = logging.getLogger("api")
+        self.start_mission_lock: Lock = Lock()
 
     def start_mission_by_id(
         self,
@@ -67,46 +69,76 @@ class SchedulingController:
         self.logger.info("Received request to start new mission")
 
         if not mission_definition:
-            error_message: str = (
+            error_message_no_mission_definition: str = (
                 "Unprocessable entity - 'mission_definition' empty or invalid"
             )
-            self.logger.error(error_message)
+            self.logger.error(error_message_no_mission_definition)
             raise HTTPException(
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=error_message
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                detail=error_message_no_mission_definition,
             )
 
-        state: States = self.scheduling_utilities.get_state()
-        self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
+        if not self.start_mission_lock.acquire(blocking=False):
+            error_message_another_mission_starting: str = (
+                "Conflict - Another mission is currently being started"
+            )
+            self.logger.warning(error_message_another_mission_starting)
+            raise HTTPException(
+                status_code=HTTPStatus.CONFLICT,
+                detail=error_message_another_mission_starting,
+            )
 
         try:
-            mission: Mission = to_isar_mission(
-                start_mission_definition=mission_definition
-            )
-        except MissionPlannerError as e:
-            error_message = f"Bad Request - Cannot create ISAR mission: {e}"
-            self.logger.warning(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail=error_message,
+            state: States = self.scheduling_utilities.get_state()
+            self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(
+                state
             )
 
-        self.scheduling_utilities.verify_robot_capable_of_mission(
-            mission=mission, robot_capabilities=robot_settings.CAPABILITIES
-        )
+            try:
+                mission: Mission = to_isar_mission(
+                    start_mission_definition=mission_definition
+                )
+            except MissionPlannerError as e:
+                error_message = f"Bad Request - Cannot create ISAR mission: {e}"
+                self.logger.warning(error_message)
+                raise HTTPException(
+                    status_code=HTTPStatus.BAD_REQUEST,
+                    detail=error_message,
+                )
 
-        self.logger.info("Starting mission: %s", mission.id)
-        self.scheduling_utilities.start_mission(mission=mission)
-        return self._api_response(mission)
+            self.scheduling_utilities.verify_robot_capable_of_mission(
+                mission=mission, robot_capabilities=robot_settings.CAPABILITIES
+            )
+
+            self.logger.info("Starting mission: %s", mission.id)
+            self.scheduling_utilities.start_mission(mission=mission)
+            return self._api_response(mission)
+
+        finally:
+            self.start_mission_lock.release()
 
     def return_home(self) -> None:
         self.logger.info("Received request to return home")
 
-        state: States = self.scheduling_utilities.get_state()
-        self.scheduling_utilities.verify_state_machine_ready_to_receive_return_home_mission(
-            state
-        )
+        if not self.start_mission_lock.acquire(blocking=False):
+            error_message_another_mission_starting: str = (
+                "Conflict - Another mission is currently being started"
+            )
+            self.logger.warning(error_message_another_mission_starting)
+            raise HTTPException(
+                status_code=HTTPStatus.CONFLICT,
+                detail=error_message_another_mission_starting,
+            )
 
-        self.scheduling_utilities.return_home()
+        try:
+            state: States = self.scheduling_utilities.get_state()
+            self.scheduling_utilities.verify_state_machine_ready_to_receive_return_home_mission(
+                state
+            )
+
+            self.scheduling_utilities.return_home()
+        finally:
+            self.start_mission_lock.release()
 
     def pause_mission(self) -> ControlMissionResponse:
         self.logger.info("Received request to pause current mission")
