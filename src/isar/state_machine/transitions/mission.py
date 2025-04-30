@@ -15,6 +15,7 @@ from isar.state_machine.transitions.functions.start_mission import (
 )
 from isar.state_machine.transitions.functions.stop import (
     stop_mission_cleanup,
+    stop_return_home_mission_cleanup,
     trigger_stop_mission_event,
 )
 from isar.state_machine.transitions.functions.utils import def_transition
@@ -59,7 +60,7 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "return_home_mission_stopped",
             "source": state_machine.stopping_state,
             "dest": state_machine.robot_standing_still_state,
-            "before": def_transition(state_machine, stop_mission_cleanup),
+            "before": def_transition(state_machine, stop_return_home_mission_cleanup),
         },
         {
             "trigger": "request_mission_start",
