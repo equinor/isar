@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Optional
 from transitions import State
 
 from isar.models.communication.queues.queue_utils import check_for_event
-from isar.services.utilities.threaded_request import ThreadedRequest
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
 if TYPE_CHECKING:
@@ -19,7 +18,6 @@ class Stopping(State):
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
         self.events = self.state_machine.events
-        self.stop_thread: Optional[ThreadedRequest] = None
         self._count_number_retries: int = 0
         self.signal_state_machine_to_stop = state_machine.signal_state_machine_to_stop
         self.stopping_return_home_mission: bool = False
@@ -33,9 +31,6 @@ class Stopping(State):
         self._run()
 
     def stop(self) -> None:
-        if self.stop_thread:
-            self.stop_thread.wait_for_thread()
-        self.stop_thread = None
         self._count_number_retries = 0
         self.stopping_return_home_mission = False
 
