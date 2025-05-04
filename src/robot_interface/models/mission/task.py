@@ -61,7 +61,7 @@ class InspectionTask(Task):
 
     inspection_id: str = Field(default_factory=uuid4_string, frozen=True)
     robot_pose: Pose = Field(default=None, init=True)
-    metadata: Optional[dict] = Field(default_factory=dict)
+    inspection_description: Optional[str] = Field(default=None)
     zoom: Optional[ZoomDescription] = Field(default=None)
 
     @staticmethod

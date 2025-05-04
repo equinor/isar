@@ -28,7 +28,6 @@
                             "z": 0,
                             "frame_name": "robot"
                         },
-                        "analysis_types": "CarSeal, Rust",
                         "metadata": {
                             "zoom": "2x"
                         }
@@ -41,8 +40,6 @@
                             "z": 0,
                             "frame_name": "robot"
                         },
-                        "analysis_types": "GasDetection"
-                        ,
                         "duration": 10
                     }
                 ]
@@ -72,8 +69,7 @@
                             "y": 0,
                             "z": 0,
                             "frame_name": "robot"
-                        },
-                        "analysis_types": "ColdSpot,HotSpot"
+                        }
                     },
                     {
                         "type": "Video",

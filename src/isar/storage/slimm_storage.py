@@ -125,13 +125,11 @@ class SlimmStorage(StorageInterface):
                 "ImageMetadata.CameraOrientation2": str(array_of_orientation[1]),
                 "ImageMetadata.CameraOrientation3": str(array_of_orientation[2]),
                 "ImageMetadata.CameraOrientation4": str(array_of_orientation[3]),
-                "ImageMetadata.AnalysisMethods": (
-                    inspection.metadata.additional["analysis_type"]
-                    if inspection.metadata.additional
-                    and inspection.metadata.additional["analysis_type"]
+                "ImageMetadata.Description": (
+                    inspection.metadata.inspection_description
+                    if inspection.metadata.inspection_description
                     else "N/A"
                 ),
-                "ImageMetadata.Description": str(inspection.metadata.additional),
                 "ImageMetadata.FunctionalLocation": (
                     inspection.metadata.tag_id  # noqa: E501
                     if inspection.metadata.tag_id
@@ -175,13 +173,11 @@ class SlimmStorage(StorageInterface):
                 "VideoMetadata.CameraOrientation2": str(array_of_orientation[1]),
                 "VideoMetadata.CameraOrientation3": str(array_of_orientation[2]),
                 "VideoMetadata.CameraOrientation4": str(array_of_orientation[3]),
-                "VideoMetadata.AnalysisMethods": (
-                    inspection.metadata.additional["analysis_type"]
-                    if inspection.metadata.additional
-                    and inspection.metadata.additional["analysis_type"]
+                "VideoMetadata.Description": (
+                    inspection.metadata.inspection_description
+                    if inspection.metadata.inspection_description
                     else "N/A"
                 ),
-                "VideoMetadata.Description": str(inspection.metadata.additional),
                 "VideoMetadata.FunctionalLocation": (
                     inspection.metadata.tag_id  # noqa: E501
                     if inspection.metadata.tag_id
