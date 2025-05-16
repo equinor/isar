@@ -93,6 +93,14 @@ class Robot(object):
         if check_for_event(event):
             if (
                 self.stop_mission_thread_thread is not None
+                and self.stop_mission_thread_thread.is_alive()
+            ):
+                self.logger.warning(
+                    "Received stop mission event while trying to stop a mission. Aborting stop attempt."
+                )
+                return
+            if (
+                self.start_mission_thread is not None
                 and self.start_mission_thread.is_alive()
             ):
                 error_description = "Received stop mission event while trying to start a mission. Aborting stop attempt."
