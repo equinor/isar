@@ -33,7 +33,7 @@ class Robot(object):
         self.start_mission_thread: Optional[RobotStartMissionThread] = None
         self.robot_status_thread: Optional[RobotStatusThread] = None
         self.robot_task_status_thread: Optional[RobotTaskStatusThread] = None
-        self.stop_mission_thread_thread: Optional[RobotStopMissionThread] = None
+        self.stop_mission_thread: Optional[RobotStopMissionThread] = None
         self.signal_thread_quitting: Event = Event()
 
     def stop(self) -> None:
@@ -50,11 +50,8 @@ class Robot(object):
             and self.start_mission_thread.is_alive()
         ):
             self.start_mission_thread.join()
-        if (
-            self.stop_mission_thread_thread is not None
-            and self.stop_mission_thread_thread.is_alive()
-        ):
-            self.stop_mission_thread_thread.join()
+        if self.stop_mission_thread is not None and self.stop_mission_thread.is_alive():
+            self.stop_mission_thread.join()
         self.robot_status_thread = None
         self.robot_task_status_thread = None
         self.start_mission_thread = None
@@ -92,8 +89,8 @@ class Robot(object):
     def _check_and_handle_stop_mission(self, event: Queue) -> None:
         if check_for_event(event):
             if (
-                self.stop_mission_thread_thread is not None
-                and self.stop_mission_thread_thread.is_alive()
+                self.stop_mission_thread is not None
+                and self.stop_mission_thread.is_alive()
             ):
                 self.logger.warning(
                     "Received stop mission event while trying to stop a mission. Aborting stop attempt."
@@ -112,10 +109,10 @@ class Robot(object):
                     self.robot_service_events.mission_failed_to_stop, error_message
                 )
                 return
-            self.stop_mission_thread_thread = RobotStopMissionThread(
+            self.stop_mission_thread = RobotStopMissionThread(
                 self.robot_service_events, self.robot, self.signal_thread_quitting
             )
-            self.stop_mission_thread_thread.start()
+            self.stop_mission_thread.start()
 
     def run(self) -> None:
         self.robot_status_thread = RobotStatusThread(
