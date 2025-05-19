@@ -42,12 +42,12 @@ class Robot(object):
             self.robot_status_thread.join()
         if (
             self.robot_task_status_thread is not None
-            and self.robot_status_thread.is_alive()
+            and self.robot_task_status_thread.is_alive()
         ):
             self.robot_task_status_thread.join()
         if (
             self.start_mission_thread is not None
-            and self.robot_status_thread.is_alive()
+            and self.start_mission_thread.is_alive()
         ):
             self.start_mission_thread.join()
         if (
