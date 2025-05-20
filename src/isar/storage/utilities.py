@@ -69,8 +69,10 @@ def get_filename(inspection: Inspection) -> str:
     utc_time: str = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     tag: str = inspection.metadata.tag_id if inspection.metadata.tag_id else "no-tag"
     inspection_type: str = type(inspection).__name__
-    inspection_description: str = inspection.metadata.inspection_description.replace(
-        " ", "-"
+    inspection_description: str = (
+        inspection.metadata.inspection_description.replace(" ", "-")
+        if inspection.metadata.inspection_description
+        else "NA"
     )
     return f"{tag}__{inspection_type}__{inspection_description}__{utc_time}"
 
