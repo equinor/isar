@@ -49,14 +49,22 @@ class GasMeasurementMetadata(InspectionMetadata):
 class Inspection(BaseModel):
     metadata: InspectionMetadata
     id: str = Field(frozen=True)
-    data: Optional[bytes] = Field(default=None, frozen=True)
 
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:
         return InspectionMetadata
 
 
-class Image(Inspection):
+class InspectionValue(Inspection):
+    value: float = Field(frozen=True)
+    unit: str = Field(frozen=True)
+
+
+class InspectionBlob(Inspection):
+    data: Optional[bytes] = Field(default=None, frozen=True)
+
+
+class Image(InspectionBlob):
     metadata: ImageMetadata
 
     @staticmethod
@@ -64,7 +72,7 @@ class Image(Inspection):
         return ImageMetadata
 
 
-class ThermalImage(Inspection):
+class ThermalImage(InspectionBlob):
     metadata: ThermalImageMetadata
 
     @staticmethod
@@ -72,7 +80,7 @@ class ThermalImage(Inspection):
         return ThermalImageMetadata
 
 
-class Video(Inspection):
+class Video(InspectionBlob):
     metadata: VideoMetadata
 
     @staticmethod
@@ -80,7 +88,7 @@ class Video(Inspection):
         return VideoMetadata
 
 
-class ThermalVideo(Inspection):
+class ThermalVideo(InspectionBlob):
     metadata: ThermalVideoMetadata
 
     @staticmethod
@@ -88,7 +96,7 @@ class ThermalVideo(Inspection):
         return ThermalVideoMetadata
 
 
-class Audio(Inspection):
+class Audio(InspectionBlob):
     metadata: AudioMetadata
 
     @staticmethod
@@ -96,9 +104,13 @@ class Audio(Inspection):
         return AudioMetadata
 
 
-class GasMeasurement(Inspection):
+class GasMeasurement(InspectionValue):
     metadata: GasMeasurementMetadata
 
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:
         return GasMeasurementMetadata
+
+
+class CO2Measurement(GasMeasurement):
+    pass

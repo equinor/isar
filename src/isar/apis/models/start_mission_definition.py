@@ -12,7 +12,7 @@ from robot_interface.models.mission.task import (
     TASKS,
     RecordAudio,
     ReturnToHome,
-    TakeGasMeasurement,
+    TakeCO2Measurement,
     TakeImage,
     TakeThermalImage,
     TakeThermalVideo,
@@ -28,7 +28,7 @@ class InspectionTypes(str, Enum):
     video = "Video"
     thermal_video = "ThermalVideo"
     audio = "Audio"
-    gas_measurement = "GasMeasurement"
+    co2_measurement = "CO2Measurement"
 
 
 class TaskType(str, Enum):
@@ -148,8 +148,8 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             target=task_definition.inspection.inspection_target.to_alitra_position(),
             duration=inspection_definition.duration,
         )
-    elif inspection_definition.type == InspectionTypes.gas_measurement:
-        return TakeGasMeasurement(
+    elif inspection_definition.type == InspectionTypes.co2_measurement:
+        return TakeCO2Measurement(
             id=task_definition.id if task_definition.id else uuid4_string(),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
