@@ -228,6 +228,9 @@ class Settings(BaseSettings):
     TOPIC_ISAR_INSPECTION_RESULT: str = Field(
         default="inspection_result", validate_default=True
     )
+    TOPIC_ISAR_INSPECTION_VALUE: str = Field(
+        default="inspection_value", validate_default=True
+    )
     TOPIC_ISAR_ROBOT_INFO: str = Field(default="robot_info", validate_default=True)
     TOPIC_ISAR_ROBOT_HEARTBEAT: str = Field(
         default="robot_heartbeat", validate_default=True
