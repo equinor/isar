@@ -115,3 +115,20 @@ class InspectionResultPayload:
     inspection_type: Optional[str]
     inspection_description: Optional[str]
     timestamp: datetime
+
+
+@dataclass
+class InspectionValuePayload:
+    isar_id: str
+    robot_name: str
+    inspection_id: str
+    installation_code: str
+    tag_id: Optional[str]
+    inspection_type: Optional[str]
+    inspection_description: Optional[str]
+    value: float
+    unit: str
+    x: float
+    y: float
+    z: float
+    timestamp: datetime

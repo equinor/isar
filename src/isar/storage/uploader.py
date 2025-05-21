@@ -11,10 +11,13 @@ from dependency_injector.wiring import inject
 from isar.config.settings import settings
 from isar.models.communication.queues.events import Events
 from isar.storage.storage_interface import StorageException, StorageInterface
-from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.inspection.inspection import Inspection, InspectionValue
 from robot_interface.models.mission.mission import Mission
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
-from robot_interface.telemetry.payloads import InspectionResultPayload
+from robot_interface.telemetry.payloads import (
+    InspectionResultPayload,
+    InspectionValuePayload,
+)
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
@@ -147,6 +150,39 @@ class Uploader:
             self._publish_inspection_result(
                 inspection=item.inspection, inspection_path=inspection_path
             )
+
+    def _publish_inspection_value(self, inspection: Inspection) -> None:
+        if not self.mqtt_publisher:
+            return
+
+        if not isinstance(inspection, InspectionValue):
+            logging.warning(
+                "Wrong type. Can only publish inspections of type InspectionValue, got %s",
+                type(inspection).__name__,
+            )
+            return
+
+        payload: InspectionValuePayload = InspectionValuePayload(
+            isar_id=settings.ISAR_ID,
+            robot_name=settings.ROBOT_NAME,
+            inspection_id=inspection.id,
+            installation_code=settings.PLANT_SHORT_NAME,
+            tag_id=inspection.metadata.tag_id,
+            inspection_type=type(inspection).__name__,
+            inspection_description=inspection.metadata.inspection_description,
+            value=inspection.value,
+            unit=inspection.unit,
+            x=inspection.metadata.pose.position.x,
+            y=inspection.metadata.pose.position.y,
+            z=inspection.metadata.pose.position.z,
+            timestamp=inspection.metadata.start_time,
+        )
+        self.mqtt_publisher.publish(
+            topic=settings.TOPIC_ISAR_INSPECTION_VALUE,
+            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+            qos=1,
+            retain=True,
+        )
 
     def _publish_inspection_result(
         self, inspection: Inspection, inspection_path: Union[str, dict]

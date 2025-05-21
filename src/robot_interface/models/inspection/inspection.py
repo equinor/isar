@@ -56,6 +56,11 @@ class Inspection(BaseModel):
         return InspectionMetadata
 
 
+class InspectionValue(Inspection):
+    value: float = Field(frozen=True)
+    unit: str = Field(frozen=True)
+
+
 class Image(Inspection):
     metadata: ImageMetadata
 
@@ -96,7 +101,7 @@ class Audio(Inspection):
         return AudioMetadata
 
 
-class GasMeasurement(Inspection):
+class GasMeasurement(InspectionValue):
     metadata: GasMeasurementMetadata
 
     @staticmethod
