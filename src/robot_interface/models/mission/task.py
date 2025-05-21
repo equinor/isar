@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.inspection.inspection import (
     Audio,
-    GasMeasurement,
+    CO2Measurement,
     Image,
     Inspection,
     ThermalImage,
@@ -25,7 +25,7 @@ class TaskTypes(str, Enum):
     TakeThermalImage = "take_thermal_image"
     TakeVideo = "take_video"
     TakeThermalVideo = "take_thermal_video"
-    TakeGasMeasurement = "take_gas_measurement"
+    TakeCO2Measurement = "take_co2_measurement"
     RecordAudio = "record_audio"
 
 
@@ -160,18 +160,16 @@ class RecordAudio(InspectionTask):
         return Audio
 
 
-class TakeGasMeasurement(InspectionTask):
+class TakeCO2Measurement(InspectionTask):
     """
     Task which causes the robot to take a CO2 measurement at its position.
-
-    Duration of audio is given in seconds.
     """
 
-    type: Literal[TaskTypes.TakeGasMeasurement] = TaskTypes.TakeGasMeasurement
+    type: Literal[TaskTypes.TakeCO2Measurement] = TaskTypes.TakeCO2Measurement
 
     @staticmethod
     def get_inspection_type() -> Type[Inspection]:
-        return GasMeasurement
+        return CO2Measurement
 
 
 TASKS = Union[
@@ -181,6 +179,6 @@ TASKS = Union[
     TakeThermalImage,
     TakeVideo,
     TakeThermalVideo,
-    TakeGasMeasurement,
+    TakeCO2Measurement,
     RecordAudio,
 ]

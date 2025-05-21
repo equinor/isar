@@ -6,7 +6,11 @@ from alitra import Frame, Orientation, Pose, Position
 
 from isar.modules import ApplicationContainer
 from isar.storage.uploader import Uploader
-from robot_interface.models.inspection.inspection import ImageMetadata, Inspection
+from robot_interface.models.inspection.inspection import (
+    ImageMetadata,
+    Inspection,
+    InspectionBlob,
+)
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TakeImage
 from tests.isar.state_machine.test_state_machine import UploaderThreadMock
@@ -33,7 +37,7 @@ def test_should_upload_from_queue(
     mission: Mission = Mission(name="Dummy misson", tasks=[take_image_task])
 
     assert isinstance(mission.tasks[0], TakeImage)
-    inspection = Inspection(
+    inspection = InspectionBlob(
         metadata=ARBITRARY_IMAGE_METADATA, id=mission.tasks[0].inspection_id
     )
 
@@ -57,7 +61,7 @@ def test_should_retry_failed_upload_from_queue(
     uploader_thread.start()
 
     INSPECTION_ID = "123-456"
-    inspection = Inspection(metadata=ARBITRARY_IMAGE_METADATA, id=INSPECTION_ID)
+    inspection = InspectionBlob(metadata=ARBITRARY_IMAGE_METADATA, id=INSPECTION_ID)
     mission: Mission = Mission(name="Dummy Mission")
 
     message: Tuple[Inspection, Mission] = (
