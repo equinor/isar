@@ -39,11 +39,11 @@ cffi==1.17.1
     # via cryptography
 charset-normalizer==3.4.2
     # via requests
-click==8.2.0
+click==8.2.1
     # via
     #   isar (pyproject.toml)
     #   uvicorn
-cryptography==44.0.3
+cryptography==45.0.2
     # via
     #   azure-identity
     #   azure-storage-blob
@@ -64,7 +64,7 @@ fastapi-azure-auth==5.1.1
     # via isar (pyproject.toml)
 google-api-core==2.24.2
     # via opencensus
-google-auth==2.40.1
+google-auth==2.40.2
     # via google-api-core
 googleapis-common-protos==1.70.0
     # via google-api-core
@@ -91,7 +91,7 @@ msal==1.32.3
     #   msal-extensions
 msal-extensions==1.3.1
     # via azure-identity
-numpy==2.2.5
+numpy==2.2.6
     # via
     #   alitra
     #   isar (pyproject.toml)
@@ -184,7 +184,7 @@ typing-extensions==4.13.2
     #   pydantic
     #   pydantic-core
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via
     #   pydantic
     #   pydantic-settings
