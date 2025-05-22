@@ -115,6 +115,7 @@ class ReturningHome(State):
             if self.state_machine.current_task is None:
                 if status != TaskStatus.Successful:
                     self.state_machine.return_home_failed()  # type: ignore
+                    return True
                 self.state_machine.returned_home()  # type: ignore
                 return True
 
