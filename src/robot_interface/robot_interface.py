@@ -6,7 +6,7 @@ from typing import Callable, List, Optional
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
-from robot_interface.models.mission.task import InspectionTask, Task
+from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig
 
 
@@ -33,34 +33,6 @@ class RobotInterface(metaclass=ABCMeta):
         RobotException
             Will catch all RobotExceptions not previously listed and retry scheduling of
             the mission until the number of allowed retries is exceeded
-
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def initiate_task(self, task: Task) -> None:
-        """Send a task to the robot and initiate the execution of the task
-
-        Parameters
-        ----------
-        task : Task
-            The task that should be initiated on the robot.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        RobotInfeasibleTaskException
-            If the task input is infeasible and the task fails to be scheduled in
-            a way that means attempting to schedule again is not necessary
-        RobotException
-            Will catch all RobotExceptions not previously listed and retry scheduling
-            of the task until the number of allowed retries is exceeded before the task
-            will be marked as failed and the mission cancelled
-        NotImplementedError
-            If there is a mismatch between the implemented tasks and listed capabilities
 
         """
         raise NotImplementedError
