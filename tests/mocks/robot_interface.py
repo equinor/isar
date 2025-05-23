@@ -16,7 +16,7 @@ from robot_interface.models.inspection.inspection import (
 )
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
-from robot_interface.models.mission.task import InspectionTask, Task
+from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig, MediaConnectionType
 from robot_interface.robot_interface import RobotInterface
 
@@ -41,9 +41,6 @@ class MockRobot(RobotInterface):
         self.robot_status_return_value: RobotStatus = robot_status
 
     def initiate_mission(self, mission: Mission) -> None:
-        return
-
-    def initiate_task(self, task: Task) -> None:
         return
 
     def task_status(self, task_id: str) -> TaskStatus:
