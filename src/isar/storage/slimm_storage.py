@@ -102,7 +102,7 @@ class SlimmStorage(StorageInterface):
         filename: str, inspection: Inspection, mission: Mission
     ) -> MultipartEncoder:
         array_of_orientation = (
-            inspection.metadata.pose.orientation.to_quat_array().tolist()
+            inspection.metadata.robot_pose.orientation.to_quat_array().tolist()
         )
         multiform_body: MultipartEncoder = MultipartEncoder(
             fields={
@@ -118,9 +118,9 @@ class SlimmStorage(StorageInterface):
                 "Mission.MissionId": mission.id,
                 "Mission.Client": "Equinor",
                 "ImageMetadata.Timestamp": inspection.metadata.start_time.isoformat(),  # noqa: E501
-                "ImageMetadata.X": str(inspection.metadata.pose.position.x),
-                "ImageMetadata.Y": str(inspection.metadata.pose.position.y),
-                "ImageMetadata.Z": str(inspection.metadata.pose.position.z),
+                "ImageMetadata.X": str(inspection.metadata.robot_pose.position.x),
+                "ImageMetadata.Y": str(inspection.metadata.robot_pose.position.y),
+                "ImageMetadata.Z": str(inspection.metadata.robot_pose.position.z),
                 "ImageMetadata.CameraOrientation1": str(array_of_orientation[0]),
                 "ImageMetadata.CameraOrientation2": str(array_of_orientation[1]),
                 "ImageMetadata.CameraOrientation3": str(array_of_orientation[2]),
@@ -148,7 +148,7 @@ class SlimmStorage(StorageInterface):
         mission: Mission,
     ) -> MultipartEncoder:
         array_of_orientation = (
-            inspection.metadata.pose.orientation.to_quat_array().tolist()
+            inspection.metadata.robot_pose.orientation.to_quat_array().tolist()
         )
         multiform_body: MultipartEncoder = MultipartEncoder(
             fields={
@@ -166,9 +166,9 @@ class SlimmStorage(StorageInterface):
                 "VideoMetadata.Timestamp": inspection.metadata.start_time.isoformat(),  # noqa: E501
                 # Converting to int because SLIMM expects an int, while we use floats in operations.
                 "VideoMetadata.Duration": str(int(inspection.metadata.duration)),  # type: ignore
-                "VideoMetadata.X": str(inspection.metadata.pose.position.x),
-                "VideoMetadata.Y": str(inspection.metadata.pose.position.y),
-                "VideoMetadata.Z": str(inspection.metadata.pose.position.z),
+                "VideoMetadata.X": str(inspection.metadata.robot_pose.position.x),
+                "VideoMetadata.Y": str(inspection.metadata.robot_pose.position.y),
+                "VideoMetadata.Z": str(inspection.metadata.robot_pose.position.z),
                 "VideoMetadata.CameraOrientation1": str(array_of_orientation[0]),
                 "VideoMetadata.CameraOrientation2": str(array_of_orientation[1]),
                 "VideoMetadata.CameraOrientation3": str(array_of_orientation[2]),

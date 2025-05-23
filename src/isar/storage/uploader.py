@@ -213,9 +213,9 @@ class Uploader:
             inspection_description=inspection.metadata.inspection_description,
             value=inspection.value,
             unit=inspection.unit,
-            x=inspection.metadata.pose.position.x,
-            y=inspection.metadata.pose.position.y,
-            z=inspection.metadata.pose.position.z,
+            x=inspection.metadata.robot_pose.position.x,
+            y=inspection.metadata.robot_pose.position.y,
+            z=inspection.metadata.robot_pose.position.z,
             timestamp=inspection.metadata.start_time,
         )
         self.mqtt_publisher.publish(
