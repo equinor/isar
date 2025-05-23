@@ -19,11 +19,12 @@ from tests.mocks.blob_storage import StorageMock
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(
     start_time=datetime.now(),
-    pose=Pose(
+    robot_pose=Pose(
         Position(0, 0, 0, Frame("asset")),
         Orientation(x=0, y=0, z=0, w=1, frame=Frame("asset")),
         Frame("asset"),
     ),
+    target_position=Position(0, 0, 0, Frame("asset")),
     file_type="jpg",
 )
 

@@ -92,11 +92,12 @@ class MockRobot(RobotInterface):
 def mock_image_metadata() -> ImageMetadata:
     return ImageMetadata(
         start_time=datetime.now(),
-        pose=Pose(
+        robot_pose=Pose(
             Position(0, 0, 0, Frame("robot")),
             Orientation(0, 0, 0, 1, Frame("robot")),
             Frame("robot"),
         ),
+        target_position=Position(0, 0, 0, Frame("robot")),
         file_type="jpg",
     )
 

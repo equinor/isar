@@ -3,14 +3,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, Type
 
-from alitra import Pose
+from alitra import Pose, Position
 from pydantic import BaseModel, Field
 
 
 @dataclass
 class InspectionMetadata(ABC):
     start_time: datetime
-    pose: Pose
+    robot_pose: Pose
+    target_position: Position
     file_type: str
     tag_id: Optional[str] = field(default=None, init=False)
     inspection_description: Optional[str] = field(default=None, init=False)

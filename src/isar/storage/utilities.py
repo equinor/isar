@@ -41,23 +41,26 @@ def construct_metadata_file(
             "isar_id": settings.ISAR_ID,
             "robot_name": settings.ROBOT_NAME,
             "inspection_description": inspection.metadata.inspection_description,
+            "tag": inspection.metadata.tag_id,
+            "robot_pose": {
+                "position": {
+                    "x": inspection.metadata.robot_pose.position.x,
+                    "y": inspection.metadata.robot_pose.position.y,
+                    "z": inspection.metadata.robot_pose.position.z,
+                },
+                "orientation": inspection.metadata.robot_pose.orientation.to_quat_array(),
+            },
+            "target_position": {
+                "x": inspection.metadata.target_position.x,
+                "y": inspection.metadata.target_position.y,
+                "z": inspection.metadata.target_position.z,
+            },
+            "timestamp": inspection.metadata.start_time,
         },
-        "data": [
+        "data_files": [
             {
                 "folder": f"/{get_foldername(mission=mission)}",
-                "files": [
-                    {
-                        "file_name": filename,
-                        "timestamp": inspection.metadata.start_time,
-                        "x": inspection.metadata.pose.position.x,
-                        "y": inspection.metadata.pose.position.y,
-                        "z": inspection.metadata.pose.position.z,
-                        "tag": inspection.metadata.tag_id,
-                        "additional_media_metadata": {
-                            "orientation": inspection.metadata.pose.orientation.to_quat_array()  # noqa: E501
-                        },
-                    }
-                ],
+                "file_name": filename,
             }
         ],
     }
