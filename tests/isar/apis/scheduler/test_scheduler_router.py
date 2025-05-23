@@ -179,7 +179,7 @@ class TestStartMission:
         assert re.match(
             "Bad Request - Robot is not capable of performing mission.", response_detail
         )
-        assert re.search("return_to_home", response_detail)
+        assert re.search("take_thermal_image", response_detail)
         assert re.search("take_image", response_detail)
 
 
