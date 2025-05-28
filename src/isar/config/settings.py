@@ -284,6 +284,7 @@ class Settings(BaseSettings):
         "TOPIC_ISAR_ROBOT_INFO",
         "TOPIC_ISAR_ROBOT_HEARTBEAT",
         "TOPIC_ISAR_INSPECTION_RESULT",
+        "TOPIC_ISAR_INSPECTION_VALUE",
     )
     @classmethod
     def prefix_isar_topics(cls, v: Any, info: ValidationInfo):
