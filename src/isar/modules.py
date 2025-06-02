@@ -14,13 +14,11 @@ from isar.mission_planner.sequential_task_selector import SequentialTaskSelector
 from isar.mission_planner.task_selector_interface import TaskSelectorInterface
 from isar.models.communication.queues.events import Events, SharedState
 from isar.robot.robot import Robot
-from isar.services.service_connections.request_handler import RequestHandler
 from isar.services.utilities.robot_utilities import RobotUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.storage.blob_storage import BlobStorage
 from isar.storage.local_storage import LocalStorage
-from isar.storage.slimm_storage import SlimmStorage
 from isar.storage.uploader import Uploader
 from robot_interface.telemetry.mqtt_client import MqttPublisher
 
@@ -77,11 +75,6 @@ class ApplicationContainer(containers.DeclarativeContainer):
     if settings.STORAGE_BLOB_ENABLED:
         blob_storage = providers.Singleton(BlobStorage, keyvault=keyvault)
         storage_handlers_temp.append(blob_storage)
-    if settings.STORAGE_SLIMM_ENABLED:
-        slimm_storage = providers.Singleton(
-            SlimmStorage, request_handler=providers.Singleton(RequestHandler)
-        )
-        storage_handlers_temp.append(slimm_storage)
     storage_handlers = providers.List(*storage_handlers_temp)
 
     # Mqtt client
