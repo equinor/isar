@@ -98,7 +98,6 @@ class Settings(BaseSettings):
     # Selecting a different storage module than local may require certain access rights
     STORAGE_LOCAL_ENABLED: bool = Field(default=True)
     STORAGE_BLOB_ENABLED: bool = Field(default=False)
-    STORAGE_SLIMM_ENABLED: bool = Field(default=False)
 
     # Determines whether the MQTT publishing module should be enabled or not
     # The publishing module will attempt to connect to the MQTT broker configured in
@@ -152,21 +151,6 @@ class Settings(BaseSettings):
 
     # Name of blob container in Azure Blob Storage [slimm test]
     BLOB_CONTAINER: str = Field(default="test")
-
-    # Client ID for SLIMM App Registration
-    SLIMM_CLIENT_ID: str = Field(default="c630ca4d-d8d6-45ab-8cc6-68a363d0de9e")
-
-    # Scope for access to SLIMM Ingestion API
-    SLIMM_APP_SCOPE: str = Field(default=".default")
-
-    # URL for SLIMM endpoint
-    SLIMM_API_URL: str = Field(
-        default="https://scinspectioningestapitest.azurewebsites.net/Ingest"
-    )
-
-    # Whether the results should be copied directly into the SLIMM datalake or only the
-    # metadata
-    COPY_FILES_TO_SLIMM_DATALAKE: bool = Field(default=False)
 
     # The configuration of this section is tightly coupled with the metadata that is
     # submitted with the results once they have been uploaded.

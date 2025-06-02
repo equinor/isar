@@ -233,10 +233,10 @@ overriding the configuration through an environment variable. It accepts a json 
 in the list to retrieve the corresponding handler. The current options are
 
 ```
-ISAR_STORAGE = '["local", "blob", "slimm"]'
+ISAR_STORAGE = '["local", "blob"]'
 ```
 
-Note that the `blob` and `slimm` options require special configuration to authenticate to these endpoints.
+Note that the `blob` option requires special configuration to authenticate to these endpoints.
 
 ### Implement your own storage module
 
