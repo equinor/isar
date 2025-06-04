@@ -35,7 +35,7 @@ def container():
     container.storage_handlers.override(
         providers.List(providers.Singleton(StorageMock))
     )
-    container.mqtt_client.override(providers.Singleton(MqttClientMock))
+    container.mqtt_client = providers.Singleton(MqttClientMock)
     container.robot_interface.override(providers.Singleton(MockRobot))
     container.uploader.override(
         providers.Singleton(
