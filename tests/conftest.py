@@ -6,7 +6,6 @@ from dependency_injector.wiring import providers
 from fastapi.testclient import TestClient
 
 from isar.apis.security.authentication import Authenticator
-from isar.config.settings import settings
 from isar.modules import ApplicationContainer
 from isar.robot.robot import Robot
 from isar.state_machine.state_machine import StateMachine
@@ -21,11 +20,6 @@ from tests.isar.state_machine.test_state_machine import (
 from tests.mocks.blob_storage import StorageMock
 from tests.mocks.mqtt_client import MqttClientMock
 from tests.mocks.robot_interface import MockRobot
-
-# Speed up tests
-settings.FSM_SLEEP_TIME = 0.001
-settings.ROBOT_API_STATUS_POLL_INTERVAL = 0
-settings.UPLOAD_FAILURE_MAX_WAIT = 3
 
 
 @pytest.fixture()

@@ -94,7 +94,7 @@ ISAR_DEFAULT_MAP = turtleworld
 To run ISAR:
 
 ```bash
-python main.py
+isar-start
 ```
 
 Note, running the full system requires that an implementation of a robot has been installed. See
@@ -138,6 +138,20 @@ There are two methods of specifying configuration.
 
    By adding environment variables with the prefix `ISAR_` to the [settings.env](./src/isar/config/settings.env) file
    the configuration variables will be overwritten by the values in this file.
+
+### Setup for testing
+To be able to execute the tests you need to set the `ISAR_ENV` environment variable beforehand. Depending on your operating system and the command line you are using you can use one of the following commands:
+
+**Bash/Zsh**
+```bash
+export ISAR_ENV=test
+```
+**Windows Command prompt**
+```cmd
+set ISAR_ENV=test
+```
+
+Remember to set `ISAR_ENV` back to `None` when you want to run `isar-start` afterwards.
 
 ### Running tests
 
