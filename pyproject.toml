@@ -65,7 +65,6 @@ dev = [
     "mypy",
     "pip-tools",
     "pre-commit",
-    "pytest-dotenv",
     "pytest-mock",
     "pytest-xdist",
     "pytest",

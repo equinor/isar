@@ -354,6 +354,12 @@ def test_state_machine_idle_to_blocked_protective_stop_to_idle(
     robot_service_thread: RobotServiceThreadMock,
     mocker,
 ) -> None:
+    # Robot status check happens every 5 seconds by default, so we mock the behavior
+    # to poll for status imediately
+    mocker.patch.object(
+        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
+    )
+
     robot_service_thread.robot_service.robot = (
         MockRobotBlockedProtectiveStopToRobotStandingStillTest(
             robot_service_thread.robot_service.shared_state.state

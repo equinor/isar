@@ -282,7 +282,12 @@ class Settings(BaseSettings):
     )
 
 
-load_dotenv()
+env = os.environ.get("ISAR_ENV")
+
+if env == "test":
+    load_dotenv(".env.test")
+else:
+    load_dotenv()
 settings = Settings()
 
 
