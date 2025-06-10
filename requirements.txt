@@ -148,7 +148,7 @@ python-dotenv==1.1.0
     #   pydantic-settings
 pyyaml==6.0.2
     # via isar (pyproject.toml)
-requests==2.32.3
+requests==2.32.4
     # via
     #   azure-core
     #   google-api-core
