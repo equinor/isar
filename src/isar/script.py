@@ -8,7 +8,7 @@ from typing import Any, List, Tuple
 import isar
 from isar.apis.api import API
 from isar.config.log import setup_loggers
-from isar.config.settings import robot_settings, settings
+from isar.config.settings import settings
 from isar.models.communication.queues.events import Events
 from isar.modules import ApplicationContainer, get_injector
 from isar.robot.robot import Robot
@@ -73,7 +73,7 @@ def print_startup_info():
     print_setting("Plant name", settings.PLANT_NAME)
     print_setting("Plant shortname", settings.PLANT_SHORT_NAME)
     print_setting(fillchar="-")
-    print_setting("Robot capabilities", robot_settings.CAPABILITIES)
+    print_setting("Robot capabilities", settings.CAPABILITIES)
     print_setting(fillchar="*")
     print()
 

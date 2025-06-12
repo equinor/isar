@@ -4,7 +4,7 @@ from dependency_injector.wiring import inject
 from fastapi import HTTPException
 
 from isar.apis.models.models import RobotInfoResponse
-from isar.config.settings import robot_settings, settings
+from isar.config.settings import settings
 from isar.services.utilities.robot_utilities import RobotUtilities
 from robot_interface.models.robots.media import MediaConfig
 
@@ -32,7 +32,7 @@ class RobotController:
             robot_package=settings.ROBOT_PACKAGE,
             isar_id=settings.ISAR_ID,
             robot_name=settings.ROBOT_NAME,
-            robot_capabilities=robot_settings.CAPABILITIES,
+            robot_capabilities=settings.CAPABILITIES,
             robot_map_name=settings.DEFAULT_MAP,
             plant_short_name=settings.PLANT_SHORT_NAME,
         )

@@ -87,7 +87,7 @@ class TestStartMissionByID:
         SchedulingUtilities, "get_state", mock_return_robot_standing_still
     )
     @mock.patch.object(SchedulingUtilities, "get_mission", mock_get_mission)
-    @mock.patch("isar.config.settings.robot_settings.CAPABILITIES", [])
+    @mock.patch("isar.config.settings.settings.CAPABILITIES", [])
     @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
     def test_robot_not_capable(self, client: TestClient):
         response = client.post(url=f"{self.schedule_start_mission_path}/1")
@@ -170,7 +170,7 @@ class TestStartMission:
     @mock.patch.object(
         SchedulingUtilities, "get_state", mock_return_robot_standing_still
     )
-    @mock.patch("isar.config.settings.robot_settings.CAPABILITIES", [])
+    @mock.patch("isar.config.settings.settings.CAPABILITIES", [])
     @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
     def test_robot_not_capable(self, client: TestClient):
         response = client.post(url=f"{self.schedule_start_mission_path}/1")

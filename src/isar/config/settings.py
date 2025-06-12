@@ -21,9 +21,41 @@ class Settings(BaseSettings):
             env_file = None
         super().__init__(_env_file=env_file)
 
+        robot_model = None
+        try:
+            from isar.config.settings import robot_settings
+
+            robot_model = getattr(robot_settings, "ROBOT_MODEL", None)
+        except Exception:
+            pass
+
+        if robot_model == RobotModel.AnymalD:
+            self.CAPABILITIES = ["take_image", "take_thermal_image"]
+        elif robot_model == RobotModel.TaurobInspector:
+            self.CAPABILITIES = [
+                "take_image",
+                "take_thermal_image",
+                "take_video",
+                "take_thermal_video",
+                "record_audio",
+            ]
+        elif robot_model == RobotModel.Robot:
+            self.CAPABILITIES = [
+                "take_thermal_image",
+                "take_image",
+                "take_video",
+                "take_thermal_video",
+                "record_audio",
+                "take_co2_measurement",
+            ]
+
     # Determines which robot package ISAR will attempt to import
     # Name must match with an installed python package in the local environment
     ROBOT_PACKAGE: str = Field(default="isar_robot")
+
+    # ISAR steps the robot is capable of performing
+    # This should be set in isar settings.env file
+    CAPABILITIES: List[str] = Field(default=["take_image"])
 
     # Determines the local path in which results from missions are stored
     LOCAL_STORAGE_PATH: str = Field(default="./results")
@@ -283,9 +315,8 @@ class Settings(BaseSettings):
 
 
 env = os.environ.get("ISAR_ENV")
-
 if env == "test":
-    load_dotenv(".env.test")
+    load_dotenv(".env.test", override=True)
 else:
     load_dotenv()
 settings = Settings()
@@ -304,10 +335,6 @@ class RobotSettings(BaseSettings):
         except ModuleNotFoundError:
             env_file = None
         super().__init__(_env_file=env_file)
-
-    # ISAR steps the robot is capable of performing
-    # This should be set in the robot package settings.env file
-    CAPABILITIES: List[str] = Field(default=["take_image"])
 
     # Model of the robot which ISAR is connected to
     # This should be set in the robot package settings.env file

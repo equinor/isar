@@ -24,7 +24,7 @@ class RobotInfoPublisher:
                 documentation=settings.DOCUMENTATION,
                 host=settings.API_HOST_VIEWED_EXTERNALLY,
                 port=settings.API_PORT,
-                capabilities=robot_settings.CAPABILITIES,
+                capabilities=settings.CAPABILITIES,
                 timestamp=datetime.now(timezone.utc),
             )
 
