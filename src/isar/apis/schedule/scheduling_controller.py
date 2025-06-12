@@ -48,7 +48,7 @@ class SchedulingController:
         mission: Mission = self.scheduling_utilities.get_mission(mission_id)
 
         self.scheduling_utilities.verify_robot_capable_of_mission(
-            mission=mission, robot_capabilities=robot_settings.CAPABILITIES
+            mission=mission, robot_capabilities=settings.CAPABILITIES
         )
 
         self.logger.info("Starting mission with ISAR Mission ID: '%s'", mission.id)
@@ -107,7 +107,7 @@ class SchedulingController:
                 )
 
             self.scheduling_utilities.verify_robot_capable_of_mission(
-                mission=mission, robot_capabilities=robot_settings.CAPABILITIES
+                mission=mission, robot_capabilities=settings.CAPABILITIES
             )
 
             self.logger.info("Starting mission: %s", mission.id)
