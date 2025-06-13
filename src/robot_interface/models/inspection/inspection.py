@@ -1,5 +1,3 @@
-from abc import ABC
-from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, Type
 
@@ -7,42 +5,35 @@ from alitra import Pose, Position
 from pydantic import BaseModel, Field
 
 
-@dataclass
-class InspectionMetadata(ABC):
+class InspectionMetadata(BaseModel):
     start_time: datetime
     robot_pose: Pose
     target_position: Position
     file_type: str
-    tag_id: Optional[str] = field(default=None, init=False)
-    inspection_description: Optional[str] = field(default=None, init=False)
+    tag_id: Optional[str] = None
+    inspection_description: Optional[str] = None
 
 
-@dataclass
 class ImageMetadata(InspectionMetadata):
     pass
 
 
-@dataclass
 class ThermalImageMetadata(InspectionMetadata):
     pass
 
 
-@dataclass
 class VideoMetadata(InspectionMetadata):
-    duration: Optional[float] = field(default=None)
+    duration: float
 
 
-@dataclass
 class ThermalVideoMetadata(InspectionMetadata):
-    duration: Optional[float] = field(default=None)
+    duration: float
 
 
-@dataclass
 class AudioMetadata(InspectionMetadata):
-    duration: Optional[float] = field(default=None)
+    duration: float
 
 
-@dataclass
 class GasMeasurementMetadata(InspectionMetadata):
     pass
 
