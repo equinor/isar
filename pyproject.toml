@@ -36,9 +36,6 @@ dependencies = [
     "fastapi",
     "dependency-injector",
     "numpy",
-    "opencensus-ext-azure",
-    "opencensus-ext-logging",
-    "opencensus-ext-requests",
     "paho-mqtt",
     "pydantic_settings",
     "pydantic",
@@ -49,6 +46,12 @@ dependencies = [
     "requests",
     "transitions",
     "uvicorn",
+    "opentelemetry-api",
+    "opentelemetry-sdk",
+    "opentelemetry-exporter-otlp",
+    "opentelemetry-instrumentation-fastapi",
+    "azure-monitor-opentelemetry",
+    "azure-monitor-opentelemetry-exporter>=1.0.0b38",
 ]
 dynamic = ["version"]
 
