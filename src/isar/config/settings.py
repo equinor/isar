@@ -12,15 +12,6 @@ from robot_interface.telemetry.payloads import DocumentInfo
 
 
 class Settings(BaseSettings):
-    def __init__(self) -> None:
-        try:
-            source = files("isar").joinpath("config").joinpath("settings.env")
-            with as_file(source) as eml:
-                env_file = eml
-        except ModuleNotFoundError:
-            env_file = None
-        super().__init__(_env_file=env_file)
-
     # Determines which robot package ISAR will attempt to import
     # Name must match with an installed python package in the local environment
     ROBOT_PACKAGE: str = Field(default="isar_robot")
