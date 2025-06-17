@@ -12,6 +12,12 @@ from robot_interface.telemetry.payloads import DocumentInfo
 
 
 class Settings(BaseSettings):
+    # Name of the OpenTelemetry service
+    OPEN_TELEMETRY_SERVICE_NAME: str = Field(default="isar")
+    # Connection string for Azure Application Insights
+    # This is optional and it will use managed identity if not set
+    APPLICATIONINSIGHTS_CONNECTION_STRING: str = Field(default="")
+
     # Determines which robot package ISAR will attempt to import
     # Name must match with an installed python package in the local environment
     ROBOT_PACKAGE: str = Field(default="isar_robot")

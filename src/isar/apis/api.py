@@ -8,30 +8,20 @@ from typing import List, Union
 
 import click
 import uvicorn
-from fastapi import FastAPI, Request, Security
+from fastapi import FastAPI, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRouter
-from opencensus.ext.azure.trace_exporter import AzureExporter
-from opencensus.trace.attributes_helper import COMMON_ATTRIBUTES
-from opencensus.trace.samplers import ProbabilitySampler
-from opencensus.trace.span import SpanKind
-from opencensus.trace.tracer import Tracer
 from pydantic import AnyHttpUrl
 
 from isar.apis.models.models import ControlMissionResponse, StartMissionResponse
 from isar.apis.robot_control.robot_controller import RobotController
 from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
-from isar.config.configuration_error import ConfigurationError
-from isar.config.keyvault.keyvault_error import KeyvaultError
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import StartUpMessagePayload
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
-
-HTTP_URL = COMMON_ATTRIBUTES["HTTP_URL"]
-HTTP_STATUS_CODE = COMMON_ATTRIBUTES["HTTP_STATUS_CODE"]
 
 
 class API:
@@ -43,7 +33,6 @@ class API:
         keyvault: Keyvault,
         mqtt_publisher: MqttClientInterface,
         port: int = settings.API_PORT,
-        azure_ai_logging_enabled: bool = settings.LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED,
     ) -> None:
         self.authenticator: Authenticator = authenticator
         self.scheduling_controller: SchedulingController = scheduling_controller
@@ -51,7 +40,6 @@ class API:
         self.keyvault: Keyvault = keyvault
         self.host: str = "0.0.0.0"  # Locking uvicorn to use 0.0.0.0
         self.port: int = port
-        self.azure_ai_logging_enabled: bool = azure_ai_logging_enabled
         self.mqtt_publisher: MqttClientInterface = mqtt_publisher
 
         self.logger: Logger = logging.getLogger("api")
@@ -110,9 +98,6 @@ class API:
                 allow_methods=["*"],
                 allow_headers=["*"],
             )
-
-        if self.azure_ai_logging_enabled:
-            self._add_request_logging_middleware(app)
 
         app.include_router(router=self._create_scheduler_router())
 
@@ -339,39 +324,6 @@ class API:
             self.port,
             extra={"color_message": color_message},
         )
-
-    def _add_request_logging_middleware(self, app: FastAPI) -> None:
-        connection_string: str
-        try:
-            connection_string = self.keyvault.get_secret(
-                "application-insights-connection-string"
-            ).value
-        except KeyvaultError:
-            message: str = (
-                "Missing connection string for Application Insights in key vault. "
-            )
-            self.logger.critical(message)
-            raise ConfigurationError(message)
-
-        @app.middleware("http")
-        async def middlewareOpencensus(request: Request, call_next):
-            tracer = Tracer(
-                exporter=AzureExporter(connection_string=connection_string),
-                sampler=ProbabilitySampler(1.0),
-            )
-            with tracer.span("main") as span:
-                span.span_kind = SpanKind.SERVER
-
-                response = await call_next(request)
-
-                tracer.add_attribute_to_current_span(
-                    attribute_key=HTTP_STATUS_CODE, attribute_value=response.status_code
-                )
-                tracer.add_attribute_to_current_span(
-                    attribute_key=HTTP_URL, attribute_value=str(request.url)
-                )
-
-            return response
 
     def _publish_startup_message(self) -> None:
         if not self.mqtt_publisher:
