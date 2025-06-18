@@ -44,6 +44,7 @@ jobs:
           pytest
         env:
           ENVIRONMENT: local
+          ISAR_ENV: test
 
       - name: Run black
         run: |
