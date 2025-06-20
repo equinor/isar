@@ -48,7 +48,7 @@ class RobotStartMissionThread(Thread):
                     )
 
                     if retries >= settings.INITIATE_FAILURE_COUNTER_LIMIT:
-                        error_description = (
+                        self.logger.error(
                             f"Mission will be cancelled after failing to initiate "
                             f"{settings.INITIATE_FAILURE_COUNTER_LIMIT} times because: "
                             f"{e.error_description}"
@@ -58,7 +58,7 @@ class RobotStartMissionThread(Thread):
                             self.robot_service_events.mission_failed,
                             ErrorMessage(
                                 error_reason=e.error_reason,
-                                error_description=error_description,
+                                error_description=e.error_description,
                             ),
                         )
                         break
