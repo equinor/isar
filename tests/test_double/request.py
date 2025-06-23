@@ -1,4 +1,4 @@
-class MockRequests:
+class StubRequests:
     def __init__(self, json_data=None):
         self.json_data = json_data
 

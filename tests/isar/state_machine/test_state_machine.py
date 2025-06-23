@@ -21,15 +21,15 @@ from robot_interface.models.exceptions.robot_exceptions import (
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
 from robot_interface.models.mission.task import TakeImage, Task
-from tests.mocks.pose import MockPose
-from tests.mocks.robot_interface import (
-    MockRobot,
-    MockRobotBlockedProtectiveStopToRobotStandingStillTest,
-    MockRobotHomeToRobotStandingStillTest,
-    MockRobotOfflineToHomeTest,
-    MockRobotOfflineToRobotStandingStillTest,
+from tests.test_double.pose import DummyPose
+from tests.test_double.robot_interface import (
+    StubRobot,
+    StubRobotBlockedProtectiveStopToRobotStandingStillTest,
+    StubRobotHomeToRobotStandingStillTest,
+    StubRobotOfflineToHomeTest,
+    StubRobotOfflineToRobotStandingStillTest,
 )
-from tests.mocks.task import MockTask
+from tests.test_double.task import StubTask
 
 
 class StateMachineThreadMock(object):
@@ -90,13 +90,13 @@ def test_state_machine_transitions_when_running_full_mission(
 ) -> None:
     state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
     state_machine_thread.start()
-    mocker.patch.object(MockRobot, "robot_status", return_value=RobotStatus.Home)
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     robot_service_thread.start()
     task_1: Task = TakeImage(
-        target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
     task_2: Task = TakeImage(
-        target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
@@ -125,17 +125,17 @@ def test_state_machine_failed_dependency(
 
     state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
 
-    mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.Failed)
+    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.Failed)
 
     task_1: Task = TakeImage(
-        target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
     task_2: Task = TakeImage(
-        target=MockPose.default_pose().position, robot_pose=MockPose.default_pose()
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
-    mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.Failed)
+    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.Failed)
 
     state_machine_thread.start()
     robot_service_thread.start()
@@ -163,7 +163,7 @@ def test_state_machine_with_successful_collection(
     uploader_thread: UploaderThreadMock,
     mocker,
 ) -> None:
-    mocker.patch.object(MockRobot, "robot_status", return_value=RobotStatus.Home)
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
 
     storage_mock: StorageInterface = container.storage_handlers(List[StorageInterface])[
         0
@@ -173,7 +173,7 @@ def test_state_machine_with_successful_collection(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
 
-    mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
+    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
 
     state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
@@ -206,13 +206,13 @@ def test_state_machine_with_unsuccessful_collection(
     robot_service_thread: RobotServiceThreadMock,
     uploader_thread: UploaderThreadMock,
 ) -> None:
-    mocker.patch.object(MockRobot, "robot_status", return_value=RobotStatus.Home)
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
 
     storage_mock: StorageInterface = container.storage_handlers(List[StorageInterface])[
         0
     ]
 
-    mocker.patch.object(MockRobot, "get_inspection", return_value=None)
+    mocker.patch.object(StubRobot, "get_inspection", return_value=None)
 
     mocker.patch.object(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
@@ -223,7 +223,7 @@ def test_state_machine_with_unsuccessful_collection(
     robot_service_thread.start()
     uploader_thread.start()
 
-    mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
+    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
     time.sleep(3)  # Allow enough time to run mission and return home
@@ -251,8 +251,8 @@ def test_state_machine_with_successful_mission_stop(
     mocker,
 ) -> None:
 
-    mocker.patch.object(MockRobot, "robot_status", return_value=RobotStatus.Home)
-    mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.InProgress)
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
+    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
 
     mocker.patch.object(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
@@ -262,7 +262,7 @@ def test_state_machine_with_successful_mission_stop(
     state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 100
 
     mission: Mission = Mission(
-        name="Dummy misson", tasks=[MockTask.take_image() for _ in range(0, 20)]
+        name="Dummy misson", tasks=[StubTask.take_image() for _ in range(0, 20)]
     )
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
@@ -293,12 +293,12 @@ def test_state_machine_with_unsuccessful_mission_stop(
     caplog: pytest.LogCaptureFixture,
     robot_service_thread: RobotServiceThreadMock,
 ) -> None:
-    mission: Mission = Mission(name="Dummy misson", tasks=[MockTask.take_image()])
+    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    mocker.patch.object(MockRobot, "task_status", return_value=TaskStatus.InProgress)
+    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
     mocker.patch.object(
-        MockRobot, "stop", side_effect=_mock_robot_exception_with_message
+        StubRobot, "stop", side_effect=_mock_robot_exception_with_message
     )
 
     state_machine_thread.state_machine.sleep_time = 0
@@ -337,7 +337,7 @@ def test_state_machine_offline_to_robot_standing_still(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
 
-    robot_service_thread.robot_service.robot = MockRobotOfflineToRobotStandingStillTest(
+    robot_service_thread.robot_service.robot = StubRobotOfflineToRobotStandingStillTest(
         robot_service_thread.robot_service.shared_state.state
     )
     state_machine_thread.start()
@@ -361,7 +361,7 @@ def test_state_machine_idle_to_blocked_protective_stop_to_idle(
     )
 
     robot_service_thread.robot_service.robot = (
-        MockRobotBlockedProtectiveStopToRobotStandingStillTest(
+        StubRobotBlockedProtectiveStopToRobotStandingStillTest(
             robot_service_thread.robot_service.shared_state.state
         )
     )
@@ -383,7 +383,7 @@ def test_state_machine_home_to_robot_standing_still(
     mocker.patch.object(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
-    robot_service_thread.robot_service.robot = MockRobotHomeToRobotStandingStillTest(
+    robot_service_thread.robot_service.robot = StubRobotHomeToRobotStandingStillTest(
         robot_service_thread.robot_service.shared_state.state
     )
 
@@ -404,7 +404,7 @@ def test_state_machine_offline_to_home(
     mocker.patch.object(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
-    robot_service_thread.robot_service.robot = MockRobotOfflineToHomeTest(
+    robot_service_thread.robot_service.robot = StubRobotOfflineToHomeTest(
         robot_service_thread.robot_service.shared_state.state
     )
 

@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-def mock_access_token():
+def stub_access_token():
     token = jwt.encode(payload={}, key="some_key")
 
     return token
@@ -21,7 +21,7 @@ class TestAuthentication:
         client_auth: TestClient,
         query_string: str,
     ):
-        token = mock_access_token()
+        token = stub_access_token()
         expected_status_code = HTTPStatus.UNAUTHORIZED
 
         response = client_auth.post(

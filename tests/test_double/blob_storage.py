@@ -5,7 +5,7 @@ from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 
 
-class StorageMock(StorageInterface):
+class StorageFake(StorageInterface):
     will_fail: bool = False
 
     def __init__(self) -> None:
@@ -13,7 +13,7 @@ class StorageMock(StorageInterface):
 
     def store(self, inspection: Inspection, mission: Mission):
         if self.will_fail:
-            raise StorageException("Mock failed on purpose")
+            raise StorageException("Fake failed on purpose")
         self.stored_inspections.append(inspection)
 
     def blob_exists(self, inspection: Inspection) -> bool:

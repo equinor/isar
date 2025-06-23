@@ -13,9 +13,9 @@ from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
-from tests.mocks.mission_definition import MockMissionDefinition
+from tests.test_double.mission_definition import DummyMissionDefinition
 
-mock_mission = MockMissionDefinition.default_mission
+dummy_mission = DummyMissionDefinition.default_mission
 
 mock_return_unknown_status = mock.Mock(return_value=States.UnknownStatus)
 mock_return_robot_standing_still = mock.Mock(return_value=States.RobotStandingStill)
@@ -26,16 +26,16 @@ mock_return_monitor = mock.Mock(return_value=States.Monitor)
 mock_return_paused = mock.Mock(return_value=States.Paused)
 mock_void = mock.Mock()
 
-mock_task = mock_mission.tasks[0]
-mock_start_mission_response = MockMissionDefinition.mock_start_mission_response
-mock_control_mission_response = ControlMissionResponse(
-    mission_id=mock_mission.id,
-    mission_status=mock_mission.status,
-    task_id=mock_task.id,
-    task_status=mock_task.status,
+dummy_task = dummy_mission.tasks[0]
+dummy_start_mission_response = DummyMissionDefinition.dummy_start_mission_response
+dummy_control_mission_response = ControlMissionResponse(
+    mission_id=dummy_mission.id,
+    mission_status=dummy_mission.status,
+    task_id=dummy_task.id,
+    task_status=dummy_task.status,
 )
 mock_return_control_mission_response = mock.Mock(
-    return_value=mock_control_mission_response
+    return_value=dummy_control_mission_response
 )
 mock_queue_timeout_error = mock.Mock(side_effect=QueueTimeoutError)
 mock_mission_planner_error = mock.Mock(side_effect=MissionPlannerError)
@@ -43,7 +43,7 @@ mock_mission_planner_error = mock.Mock(side_effect=MissionPlannerError)
 
 class TestStartMissionByID:
     schedule_start_mission_path = "/schedule/start-mission"
-    mock_get_mission = mock.Mock(return_value=mock_mission)
+    mock_get_mission = mock.Mock(return_value=dummy_mission)
 
     @mock.patch.object(
         SchedulingUtilities, "get_state", mock_return_robot_standing_still
@@ -53,7 +53,7 @@ class TestStartMissionByID:
     def test_start_mission_by_id(self, client: TestClient):
         response = client.post(url=f"{self.schedule_start_mission_path}/1")
         assert response.status_code == HTTPStatus.OK
-        assert response.json() == jsonable_encoder(mock_start_mission_response)
+        assert response.json() == jsonable_encoder(dummy_start_mission_response)
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_monitor)
     @mock.patch.object(SchedulingUtilities, "get_mission", mock_get_mission)
@@ -111,8 +111,10 @@ class TestStartMissionByID:
 
 class TestStartMission:
     schedule_start_mission_path = "/schedule/start-mission"
-    mock_start_mission_definition = MockMissionDefinition.mock_start_mission_definition
-    mock_start_mission_content = {"mission_definition": mock_start_mission_definition}
+    dummy_start_mission_definition = (
+        DummyMissionDefinition.dummy_start_mission_definition
+    )
+    dummy_start_mission_content = {"mission_definition": dummy_start_mission_definition}
 
     @mock.patch.object(
         SchedulingUtilities, "get_state", mock_return_robot_standing_still
@@ -121,7 +123,7 @@ class TestStartMission:
     def test_start_mission(self, client: TestClient):
         response = client.post(
             url=self.schedule_start_mission_path,
-            json=jsonable_encoder(self.mock_start_mission_content),
+            json=jsonable_encoder(self.dummy_start_mission_content),
         )
         assert response.status_code == HTTPStatus.OK
 
@@ -132,11 +134,11 @@ class TestStartMission:
     def test_start_multiple_mission_at_once(self, client: TestClient):
         response1 = client.post(
             url=self.schedule_start_mission_path,
-            json=jsonable_encoder(self.mock_start_mission_content),
+            json=jsonable_encoder(self.dummy_start_mission_content),
         )
         response2 = client.post(
             url=self.schedule_start_mission_path,
-            json=jsonable_encoder(self.mock_start_mission_content),
+            json=jsonable_encoder(self.dummy_start_mission_content),
         )
         assert response1.status_code == HTTPStatus.OK
         assert response2.status_code == HTTPStatus.CONFLICT
@@ -149,7 +151,7 @@ class TestStartMission:
     def test_state_machine_in_conflicting_state(self, client: TestClient):
         response = client.post(
             url=self.schedule_start_mission_path,
-            json=jsonable_encoder(self.mock_start_mission_content),
+            json=jsonable_encoder(self.dummy_start_mission_content),
         )
         assert response.status_code == HTTPStatus.CONFLICT
 
@@ -160,7 +162,7 @@ class TestStartMission:
     def test_start_mission_timeout(self, client: TestClient):
         response = client.post(
             url=self.schedule_start_mission_path,
-            json=jsonable_encoder(self.mock_start_mission_content),
+            json=jsonable_encoder(self.dummy_start_mission_content),
         )
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert response.json() == {
@@ -193,7 +195,7 @@ class TestPauseMission:
     def test_pause_mission(self, client: TestClient):
         response = client.post(url=self.schedule_pause_mission_path)
         assert response.status_code == HTTPStatus.OK
-        assert response.json() == jsonable_encoder(mock_control_mission_response)
+        assert response.json() == jsonable_encoder(dummy_control_mission_response)
 
     @mock.patch.object(
         SchedulingUtilities, "get_state", mock_return_robot_standing_still
@@ -222,7 +224,7 @@ class TestResumeMission:
     def test_resume_mission(self, client: TestClient):
         response = client.post(url=self.schedule_resume_mission_path)
         assert response.status_code == HTTPStatus.OK
-        assert response.json() == jsonable_encoder(mock_control_mission_response)
+        assert response.json() == jsonable_encoder(dummy_control_mission_response)
 
     @mock.patch.object(
         SchedulingUtilities, "get_state", mock_return_robot_standing_still
@@ -261,11 +263,11 @@ class TestStopMission:
         mocker.patch.object(SchedulingUtilities, "get_state", return_value=state)
         response = client.post(url=self.schedule_stop_mission_path)
         assert response.status_code == HTTPStatus.OK
-        assert response.json() == jsonable_encoder(mock_control_mission_response)
+        assert response.json() == jsonable_encoder(dummy_control_mission_response)
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_unknown_status)
     @mock.patch.object(
-        SchedulingUtilities, "stop_mission", mock_control_mission_response
+        SchedulingUtilities, "stop_mission", dummy_control_mission_response
     )
     def test_can_not_stop_mission_in_unknown_status(self, client: TestClient):
         response = client.post(url=self.schedule_stop_mission_path)

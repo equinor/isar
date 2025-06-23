@@ -21,7 +21,7 @@ from robot_interface.models.robots.media import MediaConfig, MediaConnectionType
 from robot_interface.robot_interface import RobotInterface
 
 
-class MockRobot(RobotInterface):
+class StubRobot(RobotInterface):
     def __init__(
         self,
         mission_status: MissionStatus = MissionStatus.Successful,
@@ -57,15 +57,15 @@ class MockRobot(RobotInterface):
 
     def get_inspection(self, task: InspectionTask) -> Inspection:
         return Image(
-            metadata=mock_image_metadata(),
+            metadata=stub_image_metadata(),
             id=task.inspection_id,
             data=b"Some binary image data",
         )
 
     def generate_media_config(self) -> MediaConfig:
         return MediaConfig(
-            url="mockURL",
-            token="mockToken",
+            url="stubURL",
+            token="stubToken",
             media_connection_type=MediaConnectionType.LiveKit,
         )
 
@@ -86,7 +86,7 @@ class MockRobot(RobotInterface):
         return self.robot_status_return_value
 
 
-def mock_image_metadata() -> ImageMetadata:
+def stub_image_metadata() -> ImageMetadata:
     return ImageMetadata(
         start_time=datetime.now(),
         robot_pose=Pose(
@@ -99,7 +99,7 @@ def mock_image_metadata() -> ImageMetadata:
     )
 
 
-class MockRobotOfflineToRobotStandingStillTest(MockRobot):
+class StubRobotOfflineToRobotStandingStillTest(StubRobot):
     def __init__(self, current_state: StatusQueue):
         self.entered_offline = False
         self.current_state = current_state
@@ -119,7 +119,7 @@ class MockRobotOfflineToRobotStandingStillTest(MockRobot):
             raise RobotCommunicationException("Could not read state machine state")
 
 
-class MockRobotBlockedProtectiveStopToRobotStandingStillTest(MockRobot):
+class StubRobotBlockedProtectiveStopToRobotStandingStillTest(StubRobot):
     def __init__(self, current_state: StatusQueue):
         self.entered_blocked_p_stop = False
         self.current_state = current_state
@@ -136,7 +136,7 @@ class MockRobotBlockedProtectiveStopToRobotStandingStillTest(MockRobot):
             raise RobotCommunicationException("Could not read state machine state")
 
 
-class MockRobotHomeToRobotStandingStillTest(MockRobot):
+class StubRobotHomeToRobotStandingStillTest(StubRobot):
     def __init__(self, current_state: StatusQueue):
         self.entered_home = False
         self.current_state = current_state
@@ -153,7 +153,7 @@ class MockRobotHomeToRobotStandingStillTest(MockRobot):
             raise RobotCommunicationException("Could not read state machine state")
 
 
-class MockRobotOfflineToHomeTest(MockRobot):
+class StubRobotOfflineToHomeTest(StubRobot):
     def __init__(self, current_state: StatusQueue):
         self.entered_offline = False
         self.current_state = current_state
