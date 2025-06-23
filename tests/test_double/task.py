@@ -3,7 +3,7 @@ from alitra import Frame, Orientation, Pose, Position
 from robot_interface.models.mission.task import TakeImage
 
 
-class MockTask:
+class StubTask:
     @staticmethod
     def take_image() -> TakeImage:
         target_pose = Position(x=1, y=1, z=1, frame=Frame("robot"))

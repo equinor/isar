@@ -1,7 +1,7 @@
 from alitra import Frame, Orientation, Pose, Position
 
 
-class MockPose:
+class DummyPose:
     @staticmethod
     def default_pose():
         return Pose(

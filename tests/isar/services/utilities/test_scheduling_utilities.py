@@ -9,7 +9,7 @@ from isar.models.communication.queues.queue_timeout_error import QueueTimeoutErr
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
-from tests.mocks.mission_definition import MockMissionDefinition
+from tests.test_double.mission_definition import DummyMissionDefinition
 
 
 def test_timeout_send_command(
@@ -24,7 +24,7 @@ def test_timeout_send_command(
 
 def test_robot_capable_of_mission(scheduling_utilities: SchedulingUtilities):
     assert scheduling_utilities.verify_robot_capable_of_mission(
-        mission=MockMissionDefinition.default_mission,
+        mission=DummyMissionDefinition.default_mission,
         robot_capabilities=["return_to_home", "take_image"],
     )
 
@@ -32,7 +32,7 @@ def test_robot_capable_of_mission(scheduling_utilities: SchedulingUtilities):
 def test_robot_not_capable_of_mission(scheduling_utilities: SchedulingUtilities):
     with pytest.raises(HTTPException) as err:
         scheduling_utilities.verify_robot_capable_of_mission(
-            mission=MockMissionDefinition.default_mission,
+            mission=DummyMissionDefinition.default_mission,
             robot_capabilities=["return_to_home"],
         )
     assert err.value.status_code == HTTPStatus.BAD_REQUEST

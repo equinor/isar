@@ -14,7 +14,7 @@ from robot_interface.models.inspection.inspection import (
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TakeImage
 from tests.isar.state_machine.test_state_machine import UploaderThreadMock
-from tests.mocks.blob_storage import StorageMock
+from tests.test_double.blob_storage import StorageFake
 
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(
@@ -52,7 +52,7 @@ def test_should_upload_from_queue(
     uploader.upload_queue.put(message)
     time.sleep(0.01)
 
-    storage_handler: StorageMock = uploader.storage_handlers[0]  # type: ignore
+    storage_handler: StorageFake = uploader.storage_handlers[0]  # type: ignore
     assert inspection in storage_handler.stored_inspections
 
 
@@ -71,7 +71,7 @@ def test_should_retry_failed_upload_from_queue(
     )
 
     uploader: Uploader = container.uploader()
-    storage_handler: StorageMock = uploader.storage_handlers[0]  # type: ignore
+    storage_handler: StorageFake = uploader.storage_handlers[0]  # type: ignore
 
     # Need it to fail so that it retries
     storage_handler.will_fail = True

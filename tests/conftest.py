@@ -17,9 +17,9 @@ from tests.isar.state_machine.test_state_machine import (
     StateMachineThreadMock,
     UploaderThreadMock,
 )
-from tests.mocks.blob_storage import StorageMock
-from tests.mocks.mqtt_client import MqttClientMock
-from tests.mocks.robot_interface import MockRobot
+from tests.test_double.blob_storage import StorageFake
+from tests.test_double.mqtt_client import MqttClientDummy
+from tests.test_double.robot_interface import StubRobot
 
 
 @pytest.fixture()
@@ -27,10 +27,10 @@ def container():
     """Fixture to provide the dependency-injector container without auth."""
     container = ApplicationContainer()
     container.storage_handlers.override(
-        providers.List(providers.Singleton(StorageMock))
+        providers.List(providers.Singleton(StorageFake))
     )
-    container.mqtt_client.override(providers.Singleton(MqttClientMock))
-    container.robot_interface.override(providers.Singleton(MockRobot))
+    container.mqtt_client.override(providers.Singleton(MqttClientDummy))
+    container.robot_interface.override(providers.Singleton(StubRobot))
     container.uploader.override(
         providers.Singleton(
             Uploader,
@@ -131,7 +131,7 @@ def local_planner(container: ApplicationContainer):
 @pytest.fixture()
 def robot():
     """Fixture to provide a mock robot instance."""
-    return MockRobot()
+    return StubRobot()
 
 
 @pytest.fixture()
