@@ -48,6 +48,9 @@ class RobotInterface(metaclass=ABCMeta):
 
         Raises
         ------
+        RobotCommunicationTimeoutException or RobotCommunicationException
+            If the robot package is unable to communicate with the robot API the fetching
+            of task status will be attempted again until a certain number of retries
         RobotException
             If the task status could not be retrieved.
 
@@ -56,7 +59,7 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def stop(self) -> None:
-        """Stops the execution of the current task and stops the movement of the robot.
+        """Stops the execution of the current task and corresponding mission.
 
         Returns
         -------
@@ -121,8 +124,8 @@ class RobotInterface(metaclass=ABCMeta):
 
         Returns
         -------
-        Sequence[Inspection]
-            List containing all the inspection connected to the given task.
+        Inspection
+            The inspection connected to the given task.
             get_inspection has responsibility to assign the inspection_id of the task
             to the inspection that it returns.
 
@@ -188,6 +191,7 @@ class RobotInterface(metaclass=ABCMeta):
         -------
         MediaConfig
             An object containing the connection information for a media stream connection
+
         """
         raise NotImplementedError
 
@@ -210,6 +214,7 @@ class RobotInterface(metaclass=ABCMeta):
         -------
         List[Thread]
             List containing all threads that will be started to publish telemetry.
+
         """
         raise NotImplementedError
 
@@ -229,13 +234,16 @@ class RobotInterface(metaclass=ABCMeta):
         Raises
         -------
         RobotCommunicationException
-            Raised if the robot package is unable to communicate with the robot API
+            Raised if the robot package is unable to communicate with the robot API.
+            The fetching of robot status will be attempted again until success
         RobotAPIException
             Raised if the robot package is able to communicate with the API but an error
-            occurred while interpreting the response
+            occurred while interpreting the response. The fetching of robot status will
+            be attempted again until success
         RobotException
             Catches other RobotExceptions that may have occurred while retrieving the
-            robot status
-            At this point ISAR will attempt to request the robot status again
+            robot status. The fetching of robot status will be attempted again until
+            success
+
         """
         raise NotImplementedError
