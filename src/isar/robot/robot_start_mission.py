@@ -40,6 +40,18 @@ class RobotStartMissionThread(Thread):
                     return
                 try:
                     self.robot.initiate_mission(self.mission)
+                except RobotInfeasibleMissionException as e:
+                    self.logger.error(
+                        f"Mission is infeasible and cannot be scheduled because: {e.error_description}"
+                    )
+                    trigger_event(
+                        self.robot_service_events.mission_failed,
+                        ErrorMessage(
+                            error_reason=e.error_reason,
+                            error_description=e.error_description,
+                        ),
+                    )
+                    break
                 except RobotException as e:
                     retries += 1
                     self.logger.warning(
