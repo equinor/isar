@@ -3,7 +3,10 @@ import logging.config
 from importlib.resources import as_file, files
 
 import yaml
-from opencensus.ext.azure.log_exporter import AzureLogHandler
+from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter
+from opentelemetry.sdk._logs import LoggingHandler, LoggerProvider
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+from opentelemetry._logs import set_logger_provider
 from uvicorn.logging import ColourizedFormatter
 
 from isar.config.configuration_error import ConfigurationError
@@ -62,6 +65,14 @@ def configure_azure_handler(log_config: dict, keyvault: Keyvault) -> logging.Han
         print(f"\n{message} \n")
         raise ConfigurationError(message)
 
-    handler = AzureLogHandler(connection_string=connection_string)
-    handler.setLevel(log_config["root"]["level"])
+    provider = LoggerProvider()
+    set_logger_provider(provider)
+    exporter = AzureMonitorLogExporter(connection_string=connection_string)
+    processor = BatchLogRecordProcessor(exporter)
+    provider.add_log_record_processor(processor)
+
+    # Create a standard logging handler that sends logs to OpenTelemetry
+    handler = LoggingHandler(
+        level=log_config["root"]["level"], logger_provider=provider
+    )
     return handler

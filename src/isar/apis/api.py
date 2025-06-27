@@ -9,11 +9,13 @@ from dependency_injector.wiring import inject
 from fastapi import FastAPI, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRouter
-from opencensus.ext.azure.trace_exporter import AzureExporter
-from opencensus.trace.attributes_helper import COMMON_ATTRIBUTES
-from opencensus.trace.samplers import ProbabilitySampler
-from opencensus.trace.span import SpanKind
-from opencensus.trace.tracer import Tracer
+
+from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
+from opentelemetry import trace
+from opentelemetry.trace import SpanKind
+from opentelemetry.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import AnyHttpUrl
 
 from isar.apis.models.models import ControlMissionResponse, StartMissionResponse
@@ -24,9 +26,6 @@ from isar.config.configuration_error import ConfigurationError
 from isar.config.keyvault.keyvault_error import KeyvaultError
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
-
-HTTP_URL = COMMON_ATTRIBUTES["HTTP_URL"]
-HTTP_STATUS_CODE = COMMON_ATTRIBUTES["HTTP_STATUS_CODE"]
 
 
 class API:
@@ -330,22 +329,21 @@ class API:
             self.logger.critical(message)
             raise ConfigurationError(message)
 
+        # Set up OpenTelemetry tracer provider and Azure exporter
+        tracer_provider = TracerProvider()
+        exporter = AzureMonitorTraceExporter(connection_string=connection_string)
+        span_processor = BatchSpanProcessor(exporter)
+        tracer_provider.add_span_processor(span_processor)
+        trace.set_tracer_provider(tracer_provider)
+        tracer = trace.get_tracer(__name__)
+
+        # Instrument FastAPI automatically
+        FastAPIInstrumentor.instrument_app(app, tracer_provider=tracer_provider)
+
         @app.middleware("http")
-        async def middlewareOpencensus(request: Request, call_next):
-            tracer = Tracer(
-                exporter=AzureExporter(connection_string=connection_string),
-                sampler=ProbabilitySampler(1.0),
-            )
-            with tracer.span("main") as span:
-                span.span_kind = SpanKind.SERVER
-
+        async def middleware_opentelemetry(request: Request, call_next):
+            with tracer.start_as_current_span("main", kind=SpanKind.SERVER) as span:
                 response = await call_next(request)
-
-                tracer.add_attribute_to_current_span(
-                    attribute_key=HTTP_STATUS_CODE, attribute_value=response.status_code
-                )
-                tracer.add_attribute_to_current_span(
-                    attribute_key=HTTP_URL, attribute_value=str(request.url)
-                )
-
-            return response
+                span.set_attribute("http.status_code", response.status_code)
+                span.set_attribute("http.url", str(request.url))
+                return response
