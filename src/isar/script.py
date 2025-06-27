@@ -8,6 +8,7 @@ from typing import Any, List, Tuple
 import isar
 from isar.apis.api import API
 from isar.config.log import setup_loggers
+from isar.config.open_telemetry import setup_open_telemetry
 from isar.config.settings import robot_settings, settings
 from isar.models.communication.queues.events import Events
 from isar.modules import ApplicationContainer, get_injector
@@ -79,10 +80,12 @@ def print_startup_info():
 
 
 def start() -> None:
+    print("------------------------------------------------")
     injector: ApplicationContainer = get_injector()
 
     keyvault = injector.keyvault()
     setup_loggers(keyvault=keyvault)
+    setup_open_telemetry(injector.api().app)
     logger: Logger = logging.getLogger("main")
 
     print_startup_info()
