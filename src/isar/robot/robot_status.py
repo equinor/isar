@@ -40,14 +40,16 @@ class RobotStatusThread(Thread):
         if self.signal_thread_quitting.is_set():
             return
 
-        while not self.signal_thread_quitting.wait(0.001):
+        thread_check_interval = settings.THREAD_CHECK_INTERVAL
+
+        while not self.signal_thread_quitting.wait(thread_check_interval):
             if not self._is_ready_to_poll_for_status():
                 continue
             try:
-                robot_status = self.robot.robot_status()
-
-                update_shared_state(self.shared_state.robot_status, robot_status)
                 self.last_robot_status_poll_time = time.time()
+
+                robot_status = self.robot.robot_status()
+                update_shared_state(self.shared_state.robot_status, robot_status)
             except RobotException as e:
                 self.logger.error(f"Failed to retrieve robot status: {e}")
                 continue
