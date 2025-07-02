@@ -4,6 +4,7 @@ from enum import Enum
 from queue import Queue
 from typing import TYPE_CHECKING, Optional
 
+from isar.config.settings import settings
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queue_io import QueueIO
 from isar.models.communication.queues.queue_utils import (
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
 
 
 class IdleStates(str, Enum):
+    AwaitNextMission = "awaitNextMission"
     Home = "home"
     RobotStandingStill = "robotStandingStill"
 
@@ -39,8 +41,13 @@ class Idle:
         self.signal_state_machine_to_stop = state_machine.signal_state_machine_to_stop
         self.state: IdleStates = state
 
+        # Only used for await_next_mission state
+        self.entered_time: float = time.time()
+        self.return_home_delay: float = settings.RETURN_HOME_DELAY
+
     def start(self) -> None:
         self.state_machine.update_state()
+        self.entered_time = time.time()
         self._run()
 
     def stop(self) -> None:
@@ -84,6 +91,10 @@ class Idle:
             return True
         return False
 
+    def _should_return_home(self) -> bool:
+        time_since_entered = time.time() - self.entered_time
+        return time_since_entered > self.return_home_delay
+
     def _run(self) -> None:
         while True:
             if self.signal_state_machine_to_stop.is_set():
@@ -92,11 +103,8 @@ class Idle:
                 )
                 break
 
-            if (
-                self.state == IdleStates.RobotStandingStill
-                and self._check_and_handle_stop_mission_event(
-                    self.events.api_requests.stop_mission.input
-                )
+            if self._check_and_handle_stop_mission_event(
+                self.events.api_requests.stop_mission.input
             ):
                 break
 
@@ -110,9 +118,16 @@ class Idle:
             ):
                 break
 
-            if self._check_and_handle_robot_status_event(
-                self.shared_state.robot_status
+            if (
+                self.state != IdleStates.AwaitNextMission
+                and self._check_and_handle_robot_status_event(
+                    self.shared_state.robot_status
+                )
             ):
+                break
+
+            if self.state == IdleStates.AwaitNextMission and self._should_return_home():
+                self.state_machine.request_return_home()  # type: ignore
                 break
 
             time.sleep(self.state_machine.sleep_time)
