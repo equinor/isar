@@ -52,6 +52,12 @@ class Settings(BaseSettings):
     # issues
     REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY: float = Field(default=10)
 
+    # Number of attempts for state transitions resume and pause if failed
+    STATE_TRANSITION_NUM_RETIRES: int = Field(default=10)
+
+    # Interval between attempt of state transition
+    STATE_TRANSITION_RETRY_INTERVAL_SEC: float = Field(default=1)
+
     # Number of attempts to stop the robot before giving up
     STOP_ROBOT_ATTEMPTS_LIMIT: int = Field(default=3)
 
