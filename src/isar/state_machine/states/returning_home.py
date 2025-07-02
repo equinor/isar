@@ -114,17 +114,11 @@ class ReturningHome(State):
             self._report_task_status(self.state_machine.current_task)
             self.state_machine.publish_task_status(task=self.state_machine.current_task)
 
-            self.state_machine.iterate_current_task()
-            if self.state_machine.current_task is None:
-                if status != TaskStatus.Successful:
-                    self.state_machine.return_home_failed()  # type: ignore
-                    return True
-                self.state_machine.returned_home()  # type: ignore
+            if status != TaskStatus.Successful:
+                self.state_machine.return_home_failed()  # type: ignore
                 return True
-
-            # Report and update next task
-            self.state_machine.current_task.update_task_status()
-            self.state_machine.publish_task_status(task=self.state_machine.current_task)
+            self.state_machine.returned_home()  # type: ignore
+            return True
         return False
 
     def _check_and_handle_start_mission_event(
