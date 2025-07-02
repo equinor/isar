@@ -31,7 +31,7 @@ class Paused(State):
                 )
                 break
 
-            if check_for_event(self.events.api_requests.pause_mission.input):
+            if check_for_event(self.events.api_requests.stop_mission.input):
                 transition = self.state_machine.stop  # type: ignore
                 break
 
