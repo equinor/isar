@@ -168,6 +168,9 @@ class StateMachine(object):
         self.signal_state_machine_to_stop.set()
 
     def iterate_current_task(self):
+        if self.current_task is None:
+            raise ValueError("No current task is set")
+
         if self.current_task.is_finished():
             try:
                 self.current_task = self.task_selector.next_task()
@@ -313,6 +316,12 @@ class StateMachine(object):
         self.logger.info("Mission overview:\n%s", log_statement)
 
     def _make_control_mission_response(self) -> ControlMissionResponse:
+        if self.current_mission is None:
+            raise ValueError("No current mission is set")
+
+        if self.current_task is None:
+            raise ValueError("No current task is set")
+
         return ControlMissionResponse(
             mission_id=self.current_mission.id,
             mission_status=self.current_mission.status,
