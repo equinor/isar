@@ -95,3 +95,11 @@ use_parentheses = true
 
 [tool.black]
 line_length = 88
+
+[dependency-groups]
+local = [
+    "isar-robot"
+]
+
+[tool.uv.sources]
+isar-robot = { path = "../isar-robot", editable = true }

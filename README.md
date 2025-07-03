@@ -17,6 +17,7 @@ Steps:
 - Run the ISAR server
 - Run a robot mission
 
+
 ### Install
 
 For local development, please fork the repository. Then, clone and install in the repository root folder:
@@ -24,6 +25,36 @@ For local development, please fork the repository. Then, clone and install in th
 ```
 git clone https://github.com/<path_to_parent>/isar
 cd isar
+```
+
+## uv method
+
+Assuming isar-robot is cloned at ../isar-robot relative to isar
+
+```
+uv run --group local --env-file envs/local.vars main.py
+```
+
+```
+python -m venv venv
+source venv/bin/activate
+cd ../isar-robot
+pip install -e ".[dev]"
+cd ../isar
+pip install -e ".[dev]"
+EXPORT ISAR_MQTT_ENABLED=True
+python main.py
+```
+
+
+##
+```
+
+```
+
+
+
+```
 pip install -e .[dev]
 ```
 
