@@ -18,7 +18,7 @@ def put_start_mission_on_queue(state_machine: "StateMachine") -> bool:
 
 def initiate_mission(state_machine: "StateMachine") -> bool:
     state_machine.logger.info(
-        "Initialization successful. Starting new mission:\n"
+        "Initiating mission:\n"
         f"  Mission ID: {state_machine.current_mission.id}\n"
         f"  Mission Name: {state_machine.current_mission.name}\n"
         f"  Number of Tasks: {len(state_machine.current_mission.tasks)}"
