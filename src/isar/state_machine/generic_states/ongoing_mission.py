@@ -54,7 +54,7 @@ class OngoingMission:
         self._run()
 
     def stop(self) -> None:
-        self.state_machine.mission_ongoing = False
+        return
 
     def _check_and_handle_stop_mission_event(self, event: Queue) -> bool:
         if check_for_event(event):
