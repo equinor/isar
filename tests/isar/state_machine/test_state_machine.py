@@ -1,11 +1,16 @@
 import time
 from collections import deque
+from http import HTTPStatus
 from threading import Thread
 from typing import List
 
 import pytest
+from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
+from isar.models.communication.queues.queue_utils import (
+    check_for_event_without_consumption,
+)
 from isar.modules import ApplicationContainer
 from isar.robot.robot import Robot
 from isar.robot.robot_status import RobotStatusThread
@@ -122,7 +127,6 @@ def test_state_machine_failed_dependency(
     robot_service_thread: RobotServiceThreadMock,
     mocker,
 ) -> None:
-
     state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
 
     mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.Failed)
@@ -250,7 +254,6 @@ def test_state_machine_with_successful_mission_stop(
     uploader_thread: UploaderThreadMock,
     mocker,
 ) -> None:
-
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
 
@@ -303,19 +306,19 @@ def test_state_machine_with_unsuccessful_mission_stop(
 
     state_machine_thread.state_machine.sleep_time = 0
 
-    state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 10  # Return home delay is set to 10 seconds to avoid the state machine triggering return home within the test duration
     state_machine_thread.start()
     robot_service_thread.start()
 
     scheduling_utilities.start_mission(mission=mission)
     time.sleep(1)
-    scheduling_utilities.stop_mission()
-    time.sleep(3)
+    with pytest.raises(HTTPException) as exception_details:
+        scheduling_utilities.stop_mission()
 
     expected_log = (
         "Be aware that the robot may still be "
         "moving even though a stop has been attempted"
     )
+    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
     assert expected_log in caplog.text
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
@@ -323,8 +326,111 @@ def test_state_machine_with_unsuccessful_mission_stop(
             States.RobotStandingStill,
             States.Monitor,
             States.Stopping,
-            States.AwaitNextMission,
+            States.Monitor,
         ]
+    )
+
+
+def test_state_machine_with_unsuccessful_return_home_stop(
+    container: ApplicationContainer,
+    mocker: MockerFixture,
+    state_machine_thread: StateMachineThreadMock,
+    caplog: pytest.LogCaptureFixture,
+    robot_service_thread: RobotServiceThreadMock,
+) -> None:
+    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
+    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
+    mocker.patch.object(
+        StubRobot, "stop", side_effect=_mock_robot_exception_with_message
+    )
+
+    state_machine_thread.state_machine.sleep_time = 0
+
+    state_machine_thread.start()
+    robot_service_thread.start()
+
+    scheduling_utilities.return_home()
+    time.sleep(1)
+    with pytest.raises(HTTPException) as exception_details:
+        scheduling_utilities.stop_mission()
+
+    expected_log = (
+        "Be aware that the robot may still be "
+        "moving even though a stop has been attempted"
+    )
+    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
+    assert expected_log in caplog.text
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [
+            States.UnknownStatus,
+            States.RobotStandingStill,
+            States.ReturningHome,
+            States.Stopping,
+            States.ReturningHome,
+        ]
+    )
+
+
+def test_state_machine_with_successful_return_home_stop(
+    container: ApplicationContainer,
+    mocker: MockerFixture,
+    state_machine_thread: StateMachineThreadMock,
+    robot_service_thread: RobotServiceThreadMock,
+) -> None:
+    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
+    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
+
+    state_machine_thread.state_machine.sleep_time = 0
+
+    state_machine_thread.start()
+    robot_service_thread.start()
+
+    scheduling_utilities.return_home()
+    time.sleep(1)
+    scheduling_utilities.stop_mission()
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [
+            States.UnknownStatus,
+            States.RobotStandingStill,
+            States.ReturningHome,
+            States.Stopping,
+            States.RobotStandingStill,
+        ]
+    )
+
+
+def test_state_machine_with_mission_start_during_return_home_without_queueing_stop_response(
+    container: ApplicationContainer,
+    mocker: MockerFixture,
+    state_machine_thread: StateMachineThreadMock,
+    robot_service_thread: RobotServiceThreadMock,
+) -> None:
+    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
+    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
+
+    state_machine_thread.state_machine.sleep_time = 0
+
+    state_machine_thread.start()
+    robot_service_thread.start()
+
+    scheduling_utilities.return_home()
+    time.sleep(1)
+    scheduling_utilities.start_mission(mission=mission)
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [
+            States.UnknownStatus,
+            States.RobotStandingStill,
+            States.ReturningHome,
+            States.Stopping,
+            States.RobotStandingStill,
+            States.Monitor,
+        ]
+    )
+    assert not check_for_event_without_consumption(
+        state_machine_thread.state_machine.events.api_requests.start_mission.input
     )
 
 

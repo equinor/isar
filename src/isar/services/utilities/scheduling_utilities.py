@@ -22,6 +22,7 @@ from isar.models.communication.queues.queue_timeout_error import QueueTimeoutErr
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.status import MissionStatus
 
 
 class SchedulingUtilities:
@@ -253,13 +254,21 @@ class SchedulingUtilities:
 
         Raises
         ------
-        HTTTPException 408 Request timeout
+        HTTPException 503 Service Unavailable
+            The request was understood, but attempting to stop the mission failed
+        HTTPException 408 Request timeout
             If there is a timeout while communicating with the state machine
         """
         try:
             stop_mission_response: ControlMissionResponse = self._send_command(
                 True, self.api_events.stop_mission
             )
+            if stop_mission_response.mission_status != MissionStatus.Cancelled.value:
+                error_message = "Failed to stop mission"
+                self.logger.error(error_message)
+                raise HTTPException(
+                    status_code=HTTPStatus.SERVICE_UNAVAILABLE, detail=error_message
+                )
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to stop mission"
             self.logger.error(error_message)

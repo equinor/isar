@@ -16,6 +16,7 @@ from isar.state_machine.states_enum import States
 from tests.test_double.mission_definition import DummyMissionDefinition
 
 dummy_mission = DummyMissionDefinition.default_mission
+dummy_mission_stopped = DummyMissionDefinition.stopped_mission
 
 mock_return_unknown_status = mock.Mock(return_value=States.UnknownStatus)
 mock_return_robot_standing_still = mock.Mock(return_value=States.RobotStandingStill)
@@ -34,8 +35,17 @@ dummy_control_mission_response = ControlMissionResponse(
     task_id=dummy_task.id,
     task_status=dummy_task.status,
 )
+dummy_stopped_control_mission_response = ControlMissionResponse(
+    mission_id=dummy_mission_stopped.id,
+    mission_status=dummy_mission_stopped.status,
+    task_id=dummy_mission_stopped.tasks[0].id,
+    task_status=dummy_mission_stopped.tasks[0].status,
+)
 mock_return_control_mission_response = mock.Mock(
     return_value=dummy_control_mission_response
+)
+mock_return_stopped_control_mission_response = mock.Mock(
+    return_value=dummy_stopped_control_mission_response
 )
 mock_queue_timeout_error = mock.Mock(side_effect=QueueTimeoutError)
 mock_mission_planner_error = mock.Mock(side_effect=MissionPlannerError)
@@ -255,7 +265,9 @@ class TestStopMission:
 
     @pytest.mark.parametrize("state", valid_states)
     @mock.patch.object(
-        SchedulingUtilities, "_send_command", mock_return_control_mission_response
+        SchedulingUtilities,
+        "_send_command",
+        mock_return_stopped_control_mission_response,
     )
     def test_stop_mission(
         self, client: TestClient, state: States, mocker: MockerFixture
@@ -263,7 +275,9 @@ class TestStopMission:
         mocker.patch.object(SchedulingUtilities, "get_state", return_value=state)
         response = client.post(url=self.schedule_stop_mission_path)
         assert response.status_code == HTTPStatus.OK
-        assert response.json() == jsonable_encoder(dummy_control_mission_response)
+        assert response.json() == jsonable_encoder(
+            dummy_stopped_control_mission_response
+        )
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_unknown_status)
     @mock.patch.object(

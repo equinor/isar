@@ -12,6 +12,7 @@ from isar.apis.models.start_mission_definition import (
     StartMissionTaskDefinition,
 )
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from tests.test_double.task import StubTask
 
 
@@ -31,6 +32,15 @@ class DummyMissionDefinition:
         tasks=[
             dummy_task_take_image,
         ],
+    )
+    dummy_task_take_image_cancelled = StubTask.take_image(status=TaskStatus.Cancelled)
+    stopped_mission = Mission(
+        id="default_mission",
+        name="Dummy misson",
+        tasks=[
+            dummy_task_take_image_cancelled,
+        ],
+        status=MissionStatus.Cancelled,
     )
     dummy_start_mission_inspection_definition = StartMissionInspectionDefinition(
         type=InspectionTypes.image,
