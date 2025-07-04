@@ -19,10 +19,10 @@ class StartMissionResponse(BaseModel):
 
 
 class ControlMissionResponse(BaseModel):
-    mission_id: str
-    mission_status: str
-    task_id: str
-    task_status: str
+    mission_id: Optional[str]
+    mission_status: Optional[str]
+    task_id: Optional[str]
+    task_status: Optional[str]
 
 
 class RobotInfoResponse(BaseModel):

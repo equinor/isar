@@ -194,6 +194,7 @@ class StateMachine(object):
         self.current_task = None
         self.send_task_status()
         self.current_mission = None
+        self.mission_ongoing = False
 
     def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
@@ -316,17 +317,13 @@ class StateMachine(object):
         self.logger.info("Mission overview:\n%s", log_statement)
 
     def _make_control_mission_response(self) -> ControlMissionResponse:
-        if self.current_mission is None:
-            raise ValueError("No current mission is set")
-
-        if self.current_task is None:
-            raise ValueError("No current task is set")
-
         return ControlMissionResponse(
-            mission_id=self.current_mission.id,
-            mission_status=self.current_mission.status,
-            task_id=self.current_task.id,
-            task_status=self.current_task.status,
+            mission_id=self.current_mission.id if self.current_mission else None,
+            mission_status=(
+                self.current_mission.status if self.current_mission else None
+            ),
+            task_id=self.current_task.id if self.current_task else None,
+            task_status=self.current_task.status if self.current_task else None,
         )
 
     def _queue_empty_response(self) -> None:

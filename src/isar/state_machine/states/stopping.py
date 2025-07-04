@@ -39,9 +39,9 @@ class Stopping(State):
         if error_message is not None:
             self.logger.warning(error_message.error_description)
             if self.stopping_return_home_mission:
-                self.state_machine.return_home_mission_stopped()  # type: ignore
+                self.state_machine.return_home_mission_stopping_failed()  # type: ignore
             else:
-                self.state_machine.mission_stopped()  # type: ignore
+                self.state_machine.mission_stopping_failed()  # type: ignore
             return True
         return False
 
