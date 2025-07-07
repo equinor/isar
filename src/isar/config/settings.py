@@ -211,6 +211,7 @@ class Settings(BaseSettings):
     TOPIC_ISAR_ROBOT_HEARTBEAT: str = Field(
         default="robot_heartbeat", validate_default=True
     )
+    TOPIC_ISAR_STARTUP: str = Field(default="startup", validate_default=True)
 
     # Logging
 
@@ -261,6 +262,7 @@ class Settings(BaseSettings):
         "TOPIC_ISAR_ROBOT_HEARTBEAT",
         "TOPIC_ISAR_INSPECTION_RESULT",
         "TOPIC_ISAR_INSPECTION_VALUE",
+        "TOPIC_ISAR_STARTUP",
     )
     @classmethod
     def prefix_isar_topics(cls, v: Any, info: ValidationInfo):
