@@ -45,6 +45,16 @@ class ApplicationContainer(containers.DeclarativeContainer):
     )
     robot_utilities = providers.Singleton(RobotUtilities, robot=robot_interface)
 
+    # Mqtt client
+    mqtt_client = (
+        providers.Singleton(
+            MqttPublisher,
+            mqtt_queue=providers.Callable(events.provided.mqtt_queue),
+        )
+        if settings.MQTT_ENABLED
+        else None
+    )
+
     # API and controllers
     authenticator = providers.Singleton(Authenticator)
     scheduling_utilities = providers.Singleton(
@@ -65,6 +75,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         scheduling_controller=scheduling_controller,
         robot_controller=robot_controller,
         keyvault=keyvault,
+        mqtt_publisher=mqtt_client,
     )
 
     # Storage
@@ -76,16 +87,6 @@ class ApplicationContainer(containers.DeclarativeContainer):
         blob_storage = providers.Singleton(BlobStorage, keyvault=keyvault)
         storage_handlers_temp.append(blob_storage)
     storage_handlers = providers.List(*storage_handlers_temp)
-
-    # Mqtt client
-    mqtt_client = (
-        providers.Singleton(
-            MqttPublisher,
-            mqtt_queue=providers.Callable(events.provided.mqtt_queue),
-        )
-        if settings.MQTT_ENABLED
-        else None
-    )
 
     # State machine
     task_selector = providers.Singleton(

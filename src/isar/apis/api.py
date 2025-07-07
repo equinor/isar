@@ -1,4 +1,6 @@
+import json
 import logging
+from datetime import datetime, timezone
 from http import HTTPStatus
 from logging import Logger
 from typing import List, Union
@@ -24,6 +26,9 @@ from isar.config.configuration_error import ConfigurationError
 from isar.config.keyvault.keyvault_error import KeyvaultError
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
+from robot_interface.telemetry.mqtt_client import MqttClientInterface
+from robot_interface.telemetry.payloads import StartUpMessagePayload
+from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 HTTP_URL = COMMON_ATTRIBUTES["HTTP_URL"]
 HTTP_STATUS_CODE = COMMON_ATTRIBUTES["HTTP_STATUS_CODE"]
@@ -37,6 +42,7 @@ class API:
         scheduling_controller: SchedulingController,
         robot_controller: RobotController,
         keyvault: Keyvault,
+        mqtt_publisher: MqttClientInterface,
         port: int = settings.API_PORT,
         azure_ai_logging_enabled: bool = settings.LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED,
     ) -> None:
@@ -47,6 +53,7 @@ class API:
         self.host: str = "0.0.0.0"  # Locking uvicorn to use 0.0.0.0
         self.port: int = port
         self.azure_ai_logging_enabled: bool = azure_ai_logging_enabled
+        self.mqtt_publisher: MqttClientInterface = mqtt_publisher
 
         self.logger: Logger = logging.getLogger("api")
 
@@ -73,7 +80,11 @@ class API:
         ]
         app = FastAPI(
             openapi_tags=tags_metadata,
-            on_startup=[self.authenticator.load_config, self._log_startup_message],
+            on_startup=[
+                self.authenticator.load_config,
+                self._log_startup_message,
+                self._publish_startup_message,
+            ],
             swagger_ui_oauth2_redirect_url="/oauth2-redirect",
             swagger_ui_init_oauth={
                 "usePkceWithAuthorizationCodeGrant": True,
@@ -349,3 +360,21 @@ class API:
                 )
 
             return response
+
+    def _publish_startup_message(self) -> None:
+        if not self.mqtt_publisher:
+            return
+
+        payload: StartUpMessagePayload = StartUpMessagePayload(
+            isar_id=settings.ISAR_ID,
+            timestamp=datetime.now(timezone.utc),
+        )
+
+        self.logger.info("Publishing startup message to MQTT broker")
+
+        self.mqtt_publisher.publish(
+            topic=settings.TOPIC_ISAR_STARTUP,
+            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+            qos=1,
+            retain=True,
+        )

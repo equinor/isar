@@ -132,3 +132,9 @@ class InspectionValuePayload:
     y: float
     z: float
     timestamp: datetime
+
+
+@dataclass
+class StartUpMessagePayload:
+    isar_id: str
+    timestamp: datetime
