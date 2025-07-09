@@ -53,6 +53,7 @@ class StartMissionTaskDefinition(BaseModel):
 
 
 class StartMissionDefinition(BaseModel):
+    id: Optional[str] = None
     tasks: List[StartMissionTaskDefinition]
     name: Optional[str] = None
     start_pose: Optional[InputPose] = None
@@ -84,7 +85,10 @@ def to_isar_mission(
     if start_mission_definition.start_pose:
         start_pose = start_mission_definition.start_pose.to_alitra_pose()
 
+    id = start_mission_definition.id if start_mission_definition.id else uuid4_string()
+
     return Mission(
+        id=id,
         tasks=isar_tasks,
         name=isar_mission_name,
         start_pose=start_pose,
