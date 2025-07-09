@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from datetime import datetime, timezone
 from http import HTTPStatus
 from logging import Logger
@@ -58,18 +59,26 @@ class API:
         self.logger: Logger = logging.getLogger("api")
 
         self.app: FastAPI = self._create_app()
+        self.server = self._setup_server()
 
     def get_app(self) -> FastAPI:
         return self.app
 
-    def run_app(self) -> None:
-        uvicorn.run(
+    def _setup_server(self) -> uvicorn.Server:
+        config = uvicorn.Config(
             self.app,
             port=self.port,
             host=self.host,
             reload=False,
             log_config=None,
         )
+        return uvicorn.Server(config)
+
+    def wait_for_api_server_ready(self) -> None:
+        while not self.server.started:
+            time.sleep(0.01)
+        self.logger.info("Uvicorn server has been started")
+        self._publish_startup_message()
 
     def _create_app(self) -> FastAPI:
         tags_metadata = [
@@ -83,7 +92,6 @@ class API:
             on_startup=[
                 self.authenticator.load_config,
                 self._log_startup_message,
-                self._publish_startup_message,
             ],
             swagger_ui_oauth2_redirect_url="/oauth2-redirect",
             swagger_ui_init_oauth={

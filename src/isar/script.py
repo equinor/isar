@@ -160,12 +160,14 @@ def start() -> None:
             threads.extend(publishers)
 
     api: API = injector.api()
-    api_thread: Thread = Thread(target=api.run_app, name="ISAR API", daemon=True)
+    api_thread: Thread = Thread(target=api.server.run, name="ISAR API", daemon=True)
     threads.append(api_thread)
 
     for thread in threads:
         thread.start()
         logger.info("Started thread: %s", thread.name)
+
+    api.wait_for_api_server_ready()
 
     while True:
         for thread in threads:
