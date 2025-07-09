@@ -137,3 +137,6 @@ dmypy.json
 # Temporary result folders
 results
 temp_results
+
+# MacOs file system
+.DS_Store
