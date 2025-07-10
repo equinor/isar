@@ -160,7 +160,6 @@ class OngoingMission:
                 return True
 
             # Report and update next task
-            self.state_machine.current_task.update_task_status()
             self.state_machine.publish_task_status(task=self.state_machine.current_task)
         return False
 

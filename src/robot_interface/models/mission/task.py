@@ -50,9 +50,6 @@ class Task(BaseModel):
             return True
         return False
 
-    def update_task_status(self) -> TaskStatus:
-        return self.status
-
 
 class InspectionTask(Task):
     """
