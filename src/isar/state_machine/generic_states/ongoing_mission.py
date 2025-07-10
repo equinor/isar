@@ -159,8 +159,6 @@ class OngoingMission:
                 self.state_machine.mission_finished()  # type: ignore
                 return True
 
-            # Report and update next task
-            self.state_machine.publish_task_status(task=self.state_machine.current_task)
         return False
 
     def _check_and_handle_start_mission_event(
