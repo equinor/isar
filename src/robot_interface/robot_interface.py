@@ -221,10 +221,7 @@ class RobotInterface(metaclass=ABCMeta):
     @abstractmethod
     def robot_status(self) -> RobotStatus:
         """
-        Method which returns an enum indicating if the robot package is able to reach
-        the interface which is used to communicate with the robot. This is further used
-        by ISAR to indicate whether the ISAR instance is fully functional and may be
-        used by other systems.
+        Method which returns an enum indicating the status of the robot.
 
         Returns
         -------
