@@ -8,7 +8,6 @@ from typing import List, Union
 
 import click
 import uvicorn
-from dependency_injector.wiring import inject
 from fastapi import FastAPI, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRouter
@@ -36,7 +35,6 @@ HTTP_STATUS_CODE = COMMON_ATTRIBUTES["HTTP_STATUS_CODE"]
 
 
 class API:
-    @inject
     def __init__(
         self,
         authenticator: Authenticator,

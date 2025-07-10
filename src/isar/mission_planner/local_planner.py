@@ -2,8 +2,6 @@ import json
 import logging
 from pathlib import Path
 
-from dependency_injector.wiring import inject
-
 from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import (
     MissionNotFoundError,
@@ -16,7 +14,6 @@ logger = logging.getLogger("api")
 
 
 class LocalPlanner(MissionPlannerInterface):
-    @inject
     def __init__(self):
         self.predefined_mission_folder = Path(settings.PREDEFINED_MISSIONS_FOLDER)
 

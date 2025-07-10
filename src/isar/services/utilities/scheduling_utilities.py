@@ -4,7 +4,6 @@ from http import HTTPStatus
 from queue import Empty
 from typing import Any, List
 
-from dependency_injector.wiring import inject
 from fastapi import HTTPException
 from requests import HTTPError
 
@@ -31,7 +30,6 @@ class SchedulingUtilities:
     required thread communication through queues to the state machine.
     """
 
-    @inject
     def __init__(
         self,
         events: Events,

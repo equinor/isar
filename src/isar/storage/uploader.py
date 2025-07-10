@@ -6,8 +6,6 @@ from queue import Empty, Queue
 from threading import Event
 from typing import List, Union
 
-from dependency_injector.wiring import inject
-
 from isar.config.settings import settings
 from isar.models.communication.queues.events import Events
 from isar.storage.storage_interface import StorageException, StorageInterface
@@ -63,7 +61,6 @@ class BlobItem(UploaderQueueItem):
 
 
 class Uploader:
-    @inject
     def __init__(
         self,
         events: Events,

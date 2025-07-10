@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 from threading import Event
 from typing import Deque, List, Optional
 
-from dependency_injector.wiring import inject
 from transitions import Machine
 from transitions.core import State
 
@@ -48,7 +47,6 @@ from robot_interface.utilities.json_service import EnhancedJSONEncoder
 class StateMachine(object):
     """Handles state transitions for supervisory robot control."""
 
-    @inject
     def __init__(
         self,
         events: Events,

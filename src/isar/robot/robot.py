@@ -3,8 +3,6 @@ from queue import Queue
 from threading import Event
 from typing import Optional
 
-from dependency_injector.wiring import inject
-
 from isar.models.communication.queues.events import (
     Events,
     RobotServiceEvents,
@@ -21,7 +19,6 @@ from robot_interface.robot_interface import RobotInterface
 
 
 class Robot(object):
-    @inject
     def __init__(
         self, events: Events, robot: RobotInterface, shared_state: SharedState
     ) -> None:

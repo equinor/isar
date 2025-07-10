@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from dependency_injector.wiring import inject
 from transitions import State
 
 from isar.state_machine.generic_states.ongoing_mission import (
@@ -13,7 +12,6 @@ if TYPE_CHECKING:
 
 
 class Monitor(State, OngoingMission):
-    @inject
     def __init__(self, state_machine: "StateMachine") -> None:
         State.__init__(self, name="monitor", on_enter=self.start, on_exit=self.stop)
 

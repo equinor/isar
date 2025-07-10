@@ -2,7 +2,6 @@ import logging
 from http import HTTPStatus
 from threading import Lock
 
-from dependency_injector.wiring import inject
 from fastapi import Body, HTTPException, Path
 
 from isar.apis.models.models import (
@@ -23,7 +22,6 @@ from robot_interface.models.mission.task import TASKS, InspectionTask, MoveArm
 
 
 class SchedulingController:
-    @inject
     def __init__(
         self,
         scheduling_utilities: SchedulingUtilities,
