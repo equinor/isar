@@ -1,6 +1,5 @@
 import logging
 
-from dependency_injector.wiring import inject
 from fastapi import HTTPException
 
 from isar.apis.models.models import RobotInfoResponse
@@ -10,7 +9,6 @@ from robot_interface.models.robots.media import MediaConfig
 
 
 class RobotController:
-    @inject
     def __init__(
         self,
         robot_utilities: RobotUtilities,

@@ -4,7 +4,6 @@ from typing import Union
 
 from azure.core.exceptions import ResourceExistsError
 from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
-from dependency_injector.wiring import inject
 
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
@@ -15,7 +14,6 @@ from robot_interface.models.mission.mission import Mission
 
 
 class BlobStorage(StorageInterface):
-    @inject
     def __init__(
         self, keyvault: Keyvault, container_name: str = settings.BLOB_CONTAINER
     ) -> None:
