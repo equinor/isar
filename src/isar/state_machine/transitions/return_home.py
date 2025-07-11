@@ -63,7 +63,7 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "return_home_failed",
             "source": state_machine.returning_home_state,
             "dest": state_machine.robot_standing_still_state,
-            "before": def_transition(state_machine, return_home_finished),
+            "before": def_transition(state_machine, report_failed_mission_and_finalize),
         },
     ]
     return return_home_transitions

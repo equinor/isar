@@ -16,6 +16,7 @@ from isar.models.communication.queues.queue_utils import (
 from isar.services.utilities.threaded_request import ThreadedRequest
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
+    ErrorReason,
     RobotException,
     RobotRetrieveInspectionException,
 )
@@ -139,6 +140,10 @@ class OngoingMission:
 
             if self.state == OngoingMissionStates.ReturningHome:
                 if status != TaskStatus.Successful:
+                    self.state_machine.current_mission.error_message = ErrorMessage(
+                        error_reason=ErrorReason.RobotActionException,
+                        error_description="Return home failed.",
+                    )
                     self.state_machine.return_home_failed()  # type: ignore
                     return True
                 self.state_machine.returned_home()  # type: ignore
