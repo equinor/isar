@@ -56,6 +56,12 @@ class OngoingMission:
     def stop(self) -> None:
         return
 
+    def _check_and_handle_already_home_event(self, event: Queue) -> bool:
+        if check_for_event(event):
+            self.state_machine.returned_home()  # type: ignore
+            return True
+        return False
+
     def _check_and_handle_stop_mission_event(self, event: Queue) -> bool:
         if check_for_event(event):
             self.state_machine.stop()  # type: ignore
@@ -180,6 +186,14 @@ class OngoingMission:
                 self.logger.info(
                     "Stopping state machine from %s state", self.state.name
                 )
+                break
+
+            if (
+                self.state == OngoingMissionStates.ReturningHome
+                and self._check_and_handle_already_home_event(
+                    self.events.robot_service_events.already_returned_home
+                )
+            ):
                 break
 
             if self._check_and_handle_stop_mission_event(
