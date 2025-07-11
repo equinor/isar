@@ -23,6 +23,7 @@ class ErrorReason(str, Enum):
     RobotTransformException = "robot_transform_exception"
     RobotUnknownErrorException = "robot_unknown_error_exception"
     RobotDisconnectedException = "robot_disconnected_exception"
+    RobotAlreadyHomeException = "robot_already_home_exception"
 
 
 @dataclass
@@ -267,6 +268,18 @@ class RobotDisconnectedException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
             error_reason=ErrorReason.RobotDisconnectedException,
+            error_description=error_description,
+        )
+
+    pass
+
+
+# An exception which should be thrown by the robot package if the robot receives a command
+# to go home and decide to ignore this request as it is already at home.
+class RobotAlreadyHomeException(RobotException):
+    def __init__(self, error_description: str) -> None:
+        super().__init__(
+            error_reason=ErrorReason.RobotAlreadyHomeException,
             error_description=error_description,
         )
 

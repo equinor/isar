@@ -49,6 +49,7 @@ class RobotServiceEvents:
         self.robot_status_changed: Queue[bool] = Queue(maxsize=1)
         self.mission_failed_to_stop: Queue[ErrorMessage] = Queue(maxsize=1)
         self.mission_successfully_stopped: Queue[bool] = Queue(maxsize=1)
+        self.already_returned_home: Queue[bool] = Queue(maxsize=1)
 
 
 class SharedState:
