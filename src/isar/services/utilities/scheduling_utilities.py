@@ -218,15 +218,15 @@ class SchedulingUtilities:
             If there is a timeout while communicating with the state machine
         """
         try:
-            return self._send_command(True, self.api_events.pause_mission)
+            response = self._send_command(True, self.api_events.pause_mission)
+            self.logger.info("OK - Mission successfully paused")
+            return response
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to pause mission"
             self.logger.error(error_message)
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
-        finally:
-            self.logger.info("OK - Mission successfully paused")
 
     def resume_mission(self) -> ControlMissionResponse:
         """Resume mission
@@ -237,15 +237,15 @@ class SchedulingUtilities:
             If there is a timeout while communicating with the state machine
         """
         try:
-            return self._send_command(True, self.api_events.resume_mission)
+            response = self._send_command(True, self.api_events.resume_mission)
+            self.logger.info("OK - Mission successfully resumed")
+            return response
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to resume mission"
             self.logger.error(error_message)
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
-        finally:
-            self.logger.info("OK - Mission successfully resumed")
 
     def stop_mission(self) -> ControlMissionResponse:
         """Stop mission
