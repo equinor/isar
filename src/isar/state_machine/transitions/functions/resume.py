@@ -16,19 +16,6 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 def resume_mission(state_machine: "StateMachine") -> bool:
     state_machine.logger.info("Resuming mission: %s", state_machine.current_mission.id)
-    state_machine.current_mission.status = MissionStatus.InProgress
-    state_machine.current_mission.error_message = None
-    state_machine.current_task.status = TaskStatus.InProgress
-
-    state_machine.mission_ongoing = True
-
-    state_machine.publish_mission_status()
-    state_machine.publish_task_status(task=state_machine.current_task)
-
-    resume_mission_response: ControlMissionResponse = (
-        state_machine._make_control_mission_response()
-    )
-    state_machine.events.api_requests.resume_mission.output.put(resume_mission_response)
 
     max_retries = settings.STATE_TRANSITION_NUM_RETIRES
     retry_interval = settings.STATE_TRANSITION_RETRY_INTERVAL_SEC
@@ -36,6 +23,22 @@ def resume_mission(state_machine: "StateMachine") -> bool:
     for attempt in range(max_retries):
         try:
             state_machine.robot.resume()
+            state_machine.current_mission.status = MissionStatus.InProgress
+            state_machine.current_mission.error_message = None
+            state_machine.current_task.status = TaskStatus.InProgress
+
+            state_machine.mission_ongoing = True
+
+            state_machine.publish_mission_status()
+            state_machine.publish_task_status(task=state_machine.current_task)
+
+            resume_mission_response: ControlMissionResponse = (
+                state_machine._make_control_mission_response()
+            )
+            state_machine.events.api_requests.resume_mission.output.put(
+                resume_mission_response
+            )
+
             state_machine.logger.info("Mission resumed successfully.")
             return True
         except RobotActionException as e:
