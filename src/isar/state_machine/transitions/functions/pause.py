@@ -16,16 +16,6 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 def pause_mission(state_machine: "StateMachine") -> bool:
     state_machine.logger.info("Pausing mission: %s", state_machine.current_mission.id)
-    state_machine.current_mission.status = MissionStatus.Paused
-    state_machine.current_task.status = TaskStatus.Paused
-
-    paused_mission_response: ControlMissionResponse = (
-        state_machine._make_control_mission_response()
-    )
-    state_machine.events.api_requests.pause_mission.output.put(paused_mission_response)
-
-    state_machine.publish_mission_status()
-    state_machine.publish_task_status(task=state_machine.current_task)
 
     max_retries = settings.STATE_TRANSITION_NUM_RETIRES
     retry_interval = settings.STATE_TRANSITION_RETRY_INTERVAL_SEC
@@ -33,6 +23,19 @@ def pause_mission(state_machine: "StateMachine") -> bool:
     for attempt in range(max_retries):
         try:
             state_machine.robot.pause()
+            state_machine.current_mission.status = MissionStatus.Paused
+            state_machine.current_task.status = TaskStatus.Paused
+
+            paused_mission_response: ControlMissionResponse = (
+                state_machine._make_control_mission_response()
+            )
+            state_machine.events.api_requests.pause_mission.output.put(
+                paused_mission_response
+            )
+
+            state_machine.publish_mission_status()
+            state_machine.publish_task_status(task=state_machine.current_task)
+
             state_machine.logger.info("Mission paused successfully.")
             return True
         except RobotActionException as e:

@@ -32,7 +32,12 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "pause",
             "source": state_machine.monitor_state,
             "dest": state_machine.paused_state,
-            "before": def_transition(state_machine, pause_mission),
+            "conditions": def_transition(state_machine, pause_mission),
+        },
+        {
+            "trigger": "pause",
+            "source": state_machine.monitor_state,
+            "dest": state_machine.monitor_state,
         },
         {
             "trigger": "resume",
