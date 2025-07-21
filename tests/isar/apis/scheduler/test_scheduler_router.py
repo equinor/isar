@@ -1,6 +1,7 @@
 import re
 from http import HTTPStatus
 from unittest import mock
+from uuid import uuid4
 
 import pytest
 from fastapi.encoders import jsonable_encoder
@@ -8,6 +9,7 @@ from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
 from isar.apis.models.models import ControlMissionResponse
+from isar.apis.models.start_mission_definition import StopMissionDefinition
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
@@ -49,6 +51,17 @@ mock_return_stopped_control_mission_response = mock.Mock(
 )
 mock_queue_timeout_error = mock.Mock(side_effect=QueueTimeoutError)
 mock_mission_planner_error = mock.Mock(side_effect=MissionPlannerError)
+
+dummy_stopped_with_mission_id_control_mission_response = ControlMissionResponse(
+    mission_id=dummy_mission_stopped.id,
+    mission_status=dummy_mission_stopped.status,
+    mission_not_found=True,
+    task_id=dummy_mission_stopped.tasks[0].id,
+    task_status=dummy_mission_stopped.tasks[0].status,
+)
+mock_return_control_mission_stop_wrong_id_response = mock.Mock(
+    return_value=dummy_stopped_with_mission_id_control_mission_response
+)
 
 
 class TestStartMissionByID:
@@ -273,7 +286,10 @@ class TestStopMission:
         self, client: TestClient, state: States, mocker: MockerFixture
     ):
         mocker.patch.object(SchedulingUtilities, "get_state", return_value=state)
-        response = client.post(url=self.schedule_stop_mission_path)
+        response = client.post(
+            url=self.schedule_stop_mission_path,
+            json=jsonable_encoder({"mission_id": StopMissionDefinition(mission_id="")}),
+        )
         assert response.status_code == HTTPStatus.OK
         assert response.json() == jsonable_encoder(
             dummy_stopped_control_mission_response
@@ -290,8 +306,26 @@ class TestStopMission:
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_monitor)
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
     def test_stop_mission_timeout(self, client: TestClient):
-        response = client.post(url=self.schedule_stop_mission_path)
+        response = client.post(
+            url=self.schedule_stop_mission_path,
+            json=jsonable_encoder({"mission_id": StopMissionDefinition(mission_id="")}),
+        )
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+
+    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_monitor)
+    @mock.patch.object(
+        SchedulingUtilities,
+        "_send_command",
+        mock_return_control_mission_stop_wrong_id_response,
+    )
+    def test_stop_mission_with_mission_id(self, client: TestClient):
+        response = client.post(
+            url=self.schedule_stop_mission_path,
+            json=jsonable_encoder(
+                {"mission_id": StopMissionDefinition(mission_id=str(uuid4()))}
+            ),
+        )
+        assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 class TestInfoRobotSettings:

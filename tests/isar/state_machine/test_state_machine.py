@@ -3,6 +3,7 @@ from collections import deque
 from http import HTTPStatus
 from threading import Thread
 from typing import List
+from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
@@ -275,7 +276,7 @@ def test_state_machine_with_successful_mission_stop(
     uploader_thread.start()
 
     scheduling_utilities.start_mission(mission=mission)
-    scheduling_utilities.stop_mission()
+    scheduling_utilities.stop_mission(mission_id="")
     time.sleep(1)  # Allow enough time to stop the mission
 
     assert state_machine_thread.state_machine.transitions_list == deque(
@@ -285,6 +286,41 @@ def test_state_machine_with_successful_mission_stop(
             States.Monitor,
             States.Stopping,
             States.AwaitNextMission,
+        ]
+    )
+
+
+def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
+    container: ApplicationContainer,
+    mocker: MockerFixture,
+    state_machine_thread: StateMachineThreadMock,
+    caplog: pytest.LogCaptureFixture,
+    robot_service_thread: RobotServiceThreadMock,
+) -> None:
+    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+
+    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
+    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
+    mocker.patch.object(
+        StubRobot, "stop", side_effect=_mock_robot_exception_with_message
+    )
+
+    state_machine_thread.state_machine.sleep_time = 0
+
+    state_machine_thread.start()
+    robot_service_thread.start()
+
+    scheduling_utilities.start_mission(mission=mission)
+    time.sleep(1)
+    with pytest.raises(HTTPException) as exception_details:
+        scheduling_utilities.stop_mission(str(uuid4()))
+
+    assert exception_details.value.status_code == HTTPStatus.NOT_FOUND.value
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [
+            States.UnknownStatus,
+            States.RobotStandingStill,
+            States.Monitor,
         ]
     )
 
@@ -318,7 +354,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
         "Be aware that the robot may still be "
         "moving even though a stop has been attempted"
     )
-    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
+    assert exception_details.value.status_code == HTTPStatus.CONFLICT.value
     assert expected_log in caplog.text
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
@@ -358,7 +394,7 @@ def test_state_machine_with_unsuccessful_return_home_stop(
         "Be aware that the robot may still be "
         "moving even though a stop has been attempted"
     )
-    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
+    assert exception_details.value.status_code == HTTPStatus.CONFLICT.value
     assert expected_log in caplog.text
     assert state_machine_thread.state_machine.transitions_list == deque(
         [

@@ -21,6 +21,7 @@ class StartMissionResponse(BaseModel):
 class ControlMissionResponse(BaseModel):
     mission_id: Optional[str]
     mission_status: Optional[str]
+    mission_not_found: Optional[bool] = False
     task_id: Optional[str]
     task_status: Optional[str]
 

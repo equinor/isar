@@ -6,6 +6,7 @@ from queue import Queue
 from threading import Event
 from typing import TYPE_CHECKING, Optional, Tuple
 
+from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.queue_utils import (
@@ -58,9 +59,21 @@ class OngoingMission:
         return
 
     def _check_and_handle_stop_mission_event(self, event: Queue) -> bool:
-        if check_for_event(event):
-            self.state_machine.stop()  # type: ignore
-            return True
+        mission_id: str = check_for_event(event)
+        if mission_id is not None:
+            if self.state_machine.current_mission.id == mission_id or mission_id == "":
+                self.state_machine.stop()  # type: ignore
+                return True
+            else:
+                self.events.api_requests.stop_mission.output.put(
+                    ControlMissionResponse(
+                        mission_id=mission_id,
+                        mission_status=self.state_machine.current_mission.status,
+                        mission_not_found=True,
+                        task_id=self.state_machine.current_task.id,
+                        task_status=self.state_machine.current_task.status,
+                    )
+                )
         return False
 
     def _check_and_handle_pause_mission_event(self, event: Queue) -> bool:

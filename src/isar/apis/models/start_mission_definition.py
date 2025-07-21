@@ -58,6 +58,10 @@ class StartMissionDefinition(BaseModel):
     start_pose: Optional[InputPose] = None
 
 
+class StopMissionDefinition(BaseModel):
+    mission_id: Optional[str] = None
+
+
 def to_isar_mission(
     start_mission_definition: StartMissionDefinition,
 ) -> Mission:

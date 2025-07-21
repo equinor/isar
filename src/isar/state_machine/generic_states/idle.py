@@ -86,7 +86,7 @@ class Idle:
         return False
 
     def _check_and_handle_stop_mission_event(self, event: Queue) -> bool:
-        if check_for_event(event):
+        if check_for_event(event) is not None:
             self.state_machine.stop()  # type: ignore
             return True
         return False

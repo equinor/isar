@@ -11,6 +11,7 @@ from isar.apis.models.models import (
 )
 from isar.apis.models.start_mission_definition import (
     StartMissionDefinition,
+    StopMissionDefinition,
     to_isar_mission,
 )
 from isar.config.settings import robot_settings, settings
@@ -177,7 +178,16 @@ class SchedulingController:
         )
         return resume_mission_response
 
-    def stop_mission(self) -> ControlMissionResponse:
+    def stop_mission(
+        self,
+        mission_id: StopMissionDefinition = Body(
+            default=None,
+            embed=True,
+            title="Mission ID to stop",
+            description="The mission ID of the mission being stopped, in json format",
+        ),
+    ) -> ControlMissionResponse:
+
         self.logger.info("Received request to stop current mission")
 
         state: States = self.scheduling_utilities.get_state()
@@ -196,7 +206,7 @@ class SchedulingController:
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
         stop_mission_response: ControlMissionResponse = (
-            self.scheduling_utilities.stop_mission()
+            self.scheduling_utilities.stop_mission(mission_id.mission_id)
         )
         return stop_mission_response
 
