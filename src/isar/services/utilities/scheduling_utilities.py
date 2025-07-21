@@ -247,11 +247,13 @@ class SchedulingUtilities:
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
 
-    def stop_mission(self) -> ControlMissionResponse:
+    def stop_mission(self, mission_id: str = "") -> ControlMissionResponse:
         """Stop mission
 
         Raises
         ------
+        HTTPException 404 Not Found
+            If the mission_id was not known to Isar
         HTTPException 503 Service Unavailable
             The request was understood, but attempting to stop the mission failed
         HTTPException 408 Request timeout
@@ -259,13 +261,21 @@ class SchedulingUtilities:
         """
         try:
             stop_mission_response: ControlMissionResponse = self._send_command(
-                True, self.api_events.stop_mission
+                mission_id, self.api_events.stop_mission
             )
+
+            if stop_mission_response.mission_not_found:
+                error_message = f"Mission ID {stop_mission_response.mission_id} is not currently running"
+                self.logger.error(error_message)
+                raise HTTPException(
+                    status_code=HTTPStatus.NOT_FOUND, detail=error_message
+                )
+
             if stop_mission_response.mission_status != MissionStatus.Cancelled.value:
                 error_message = "Failed to stop mission"
                 self.logger.error(error_message)
                 raise HTTPException(
-                    status_code=HTTPStatus.SERVICE_UNAVAILABLE, detail=error_message
+                    status_code=HTTPStatus.CONFLICT, detail=error_message
                 )
         except QueueTimeoutError:
             error_message = "Internal Server Error - Failed to stop mission"

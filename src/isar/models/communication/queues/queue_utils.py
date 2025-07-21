@@ -1,12 +1,12 @@
 from queue import Empty, Queue
-from typing import Optional, TypeVar
+from typing import Any, Optional, TypeVar
 
 from isar.models.communication.queues.status_queue import StatusQueue
 
 T = TypeVar("T")
 
 
-def trigger_event_without_data(queue: Queue[bool]) -> None:
+def trigger_event_without_data(queue: Queue[Any]) -> None:
     queue.put(True)
 
 

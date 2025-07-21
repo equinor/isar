@@ -35,7 +35,7 @@ class APIRequests:
 class StateMachineEvents:
     def __init__(self) -> None:
         self.start_mission: Queue[Mission] = Queue(maxsize=1)
-        self.stop_mission: Queue[bool] = Queue(maxsize=1)
+        self.stop_mission: Queue[str] = Queue(maxsize=1)
         self.pause_mission: Queue[bool] = Queue(maxsize=1)
         self.task_status_request: Queue[str] = Queue(maxsize=1)
 

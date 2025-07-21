@@ -208,8 +208,14 @@ class API:
                     "description": "Mission succesfully stopped",
                     "model": ControlMissionResponse,
                 },
+                HTTPStatus.UNPROCESSABLE_ENTITY.value: {
+                    "description": "Invalid body - The JSON is incorrect",
+                },
                 HTTPStatus.CONFLICT.value: {
                     "description": "Conflict - Invalid command in the current state",
+                },
+                HTTPStatus.BAD_REQUEST.value: {
+                    "description": "Bad request - Robot does not have the capabilities to perform the mission",
                 },
                 HTTPStatus.INTERNAL_SERVER_ERROR.value: {
                     "description": "Internal Server Error - Current state of state machine unknown",
