@@ -1,46 +1,42 @@
-import logging
-import time
-from queue import Queue
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, List, Optional
 
-from transitions import State
-
+from isar.apis.models.models import ControlMissionResponse
+from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.models.communication.queues.events import Event
 from isar.models.communication.queues.queue_utils import (
     check_for_event,
     check_shared_state,
 )
-from isar.models.communication.queues.status_queue import StatusQueue
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class UnknownStatus(State):
-    def __init__(self, state_machine: "StateMachine") -> None:
-        super().__init__(name="unknown_status", on_enter=self.start, on_exit=self.stop)
-        self.state_machine: "StateMachine" = state_machine
-        self.logger = logging.getLogger("state_machine")
-        self.events = self.state_machine.events
-        self.shared_state = self.state_machine.shared_state
-        self.signal_state_machine_to_stop = state_machine.signal_state_machine_to_stop
+def UnknownStatus(state_machine: "StateMachine"):
+    events = state_machine.events
+    shared_state = state_machine.shared_state
 
-    def start(self) -> None:
-        self.state_machine.update_state()
-        self._run()
-
-    def stop(self) -> None:
-        return
-
-    def _check_and_handle_stop_mission_event(self, event: Queue) -> bool:
-        if check_for_event(event) is not None:
-            self.state_machine.stop()  # type: ignore
-            return True
-        return False
+    def _check_and_handle_stop_mission_event(event: Event[str]) -> Optional[Callable]:
+        mission_id: str = check_for_event(event)
+        if mission_id is not None:
+            if state_machine.current_mission.id == mission_id or mission_id == "":
+                return state_machine.stop  # type: ignore
+            else:
+                events.api_requests.stop_mission.output.put(
+                    ControlMissionResponse(
+                        mission_id=mission_id,
+                        mission_status=state_machine.current_mission.status,
+                        mission_not_found=True,
+                        task_id=state_machine.current_task.id,
+                        task_status=state_machine.current_task.status,
+                    )
+                )
+        return None
 
     def _check_and_handle_robot_status_event(
-        self, event: StatusQueue[RobotStatus]
-    ) -> bool:
+        event: Event[RobotStatus],
+    ) -> Optional[Callable]:
         robot_status: RobotStatus = check_shared_state(event)
         if (
             robot_status == RobotStatus.Home
@@ -48,27 +44,23 @@ class UnknownStatus(State):
             or robot_status == RobotStatus.BlockedProtectiveStop
             or robot_status == RobotStatus.Available
         ):
-            self.state_machine.robot_status_changed()  # type: ignore
-            return True
+            return state_machine.robot_status_changed  # type: ignore
+        return None
 
-        return False
-
-    def _run(self) -> None:
-        while True:
-            if self.signal_state_machine_to_stop.is_set():
-                self.logger.info(
-                    "Stopping state machine from %s state", self.__class__.__name__
-                )
-                break
-
-            if self._check_and_handle_stop_mission_event(
-                self.events.api_requests.stop_mission.input
-            ):
-                break
-
-            if self._check_and_handle_robot_status_event(
-                self.shared_state.robot_status
-            ):
-                break
-
-            time.sleep(self.state_machine.sleep_time)
+    event_handlers: List[EventHandlerMapping] = [
+        EventHandlerMapping(
+            name="stop_mission_event",
+            eventQueue=events.api_requests.stop_mission.input,
+            handler=_check_and_handle_stop_mission_event,
+        ),
+        EventHandlerMapping(
+            name="robot_status_event",
+            eventQueue=shared_state.robot_status,
+            handler=_check_and_handle_robot_status_event,
+        ),
+    ]
+    return EventHandlerBase(
+        state_name="unknown_status",
+        state_machine=state_machine,
+        event_handler_mappings=event_handlers,
+    )

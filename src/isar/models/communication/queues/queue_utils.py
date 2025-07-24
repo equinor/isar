@@ -1,7 +1,7 @@
 from queue import Empty, Queue
 from typing import Any, Optional, TypeVar
 
-from isar.models.communication.queues.status_queue import StatusQueue
+from isar.models.communication.queues.events import Event
 
 T = TypeVar("T")
 
@@ -14,14 +14,14 @@ def trigger_event(queue: Queue[T], data: T) -> None:
     queue.put(data)
 
 
-def check_shared_state(queue: StatusQueue[T]) -> Optional[T]:
+def check_shared_state(queue: Event[T]) -> Optional[T]:
     try:
         return queue.check()
     except Empty:
         return None
 
 
-def update_shared_state(queue: StatusQueue[T], data: T) -> None:
+def update_shared_state(queue: Event[T], data: T) -> None:
     queue.update(data)
 
 
