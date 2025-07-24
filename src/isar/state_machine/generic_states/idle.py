@@ -6,12 +6,11 @@ from typing import TYPE_CHECKING, Optional
 
 from isar.config.settings import settings
 from isar.models.communication.message import StartMissionMessage
-from isar.models.communication.queues.queue_io import QueueIO
+from isar.models.communication.queues.events import Event, QueueIO
 from isar.models.communication.queues.queue_utils import (
     check_for_event,
     check_shared_state,
 )
-from isar.models.communication.queues.status_queue import StatusQueue
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
@@ -70,9 +69,7 @@ class Idle:
             return True
         return False
 
-    def _check_and_handle_robot_status_event(
-        self, event: StatusQueue[RobotStatus]
-    ) -> bool:
+    def _check_and_handle_robot_status_event(self, event: Event[RobotStatus]) -> bool:
         robot_status: RobotStatus = check_shared_state(event)
 
         expected_robot_status = (

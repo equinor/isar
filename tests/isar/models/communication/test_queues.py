@@ -2,7 +2,7 @@ from queue import Empty
 
 import pytest
 
-from isar.models.communication.queues.events import Events, StatusQueue
+from isar.models.communication.queues.events import Event, Events
 
 
 class TestQueues:
@@ -29,20 +29,20 @@ class TestQueues:
 
 
 def test_staus_queue_empty() -> None:
-    status_queue: StatusQueue = StatusQueue()
+    status_queue: Event = Event()
     with pytest.raises(Empty):
         status_queue.check()
 
 
 def test_status_queue_check() -> None:
-    status_queue: StatusQueue = StatusQueue()
+    status_queue: Event = Event()
     status_queue.update("Test")
     assert status_queue.check() == "Test"
     assert status_queue._qsize() == 1
 
 
 def test_status_queue_update() -> None:
-    status_queue: StatusQueue = StatusQueue()
+    status_queue: Event = Event()
     status_queue.update("Test")
     status_queue.update("New Test")
     assert status_queue._qsize() == 1

@@ -16,7 +16,7 @@ def test_timeout_send_command(
     mocker: MockerFixture, scheduling_utilities: SchedulingUtilities
 ):
     mocker.patch.object(QueueUtilities, "check_queue", side_effect=QueueTimeoutError)
-    q: QueueIO = QueueIO(input_size=1, output_size=1)
+    q: QueueIO = QueueIO()
     with pytest.raises(QueueTimeoutError):
         scheduling_utilities._send_command(True, q)
     assert q.input.empty()

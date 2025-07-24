@@ -1,14 +1,33 @@
-from queue import Queue
+from collections import deque
+from queue import Empty, Queue
+from typing import TypeVar
 
 from transitions import State
 
 from isar.config.settings import settings
-from isar.models.communication.queues.queue_io import QueueIO
-from isar.models.communication.queues.status_queue import StatusQueue
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
 from robot_interface.models.mission.task import TASKS
+
+T = TypeVar("T")
+
+
+class Event(Queue[T]):
+    def __init__(self) -> None:
+        super().__init__(maxsize=1)
+
+    def check(self) -> T:
+        if not self._qsize():
+            raise Empty
+        with self.mutex:
+            queueList = list(self.queue)
+            return queueList.pop()
+
+    def update(self, item: T):
+        with self.mutex:
+            self.queue: deque[T] = deque()
+            self.queue.append(item)
 
 
 class Events:
@@ -23,36 +42,47 @@ class Events:
             self.mqtt_queue: Queue = Queue()
 
 
+class QueueIO:
+    """
+    Creates input and output queue. The queues are defined such that the input is from
+    api to state machine while the output is from state machine to api.
+    """
+
+    def __init__(self):
+        self.input: Event = Event()
+        self.output: Event = Event()
+
+
 class APIRequests:
     def __init__(self) -> None:
-        self.start_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.stop_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.pause_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.resume_mission: QueueIO = QueueIO(input_size=1, output_size=1)
-        self.return_home: QueueIO = QueueIO(input_size=1, output_size=1)
+        self.start_mission: QueueIO = QueueIO()
+        self.stop_mission: QueueIO = QueueIO()
+        self.pause_mission: QueueIO = QueueIO()
+        self.resume_mission: QueueIO = QueueIO()
+        self.return_home: QueueIO = QueueIO()
 
 
 class StateMachineEvents:
     def __init__(self) -> None:
-        self.start_mission: Queue[Mission] = Queue(maxsize=1)
-        self.stop_mission: Queue[str] = Queue(maxsize=1)
-        self.pause_mission: Queue[bool] = Queue(maxsize=1)
-        self.task_status_request: Queue[str] = Queue(maxsize=1)
+        self.start_mission: Event[Mission] = Event()
+        self.stop_mission: Event[str] = Event()
+        self.pause_mission: Event[bool] = Event()
+        self.task_status_request: Event[str] = Event()
 
 
 class RobotServiceEvents:
     def __init__(self) -> None:
-        self.task_status_updated: Queue[TaskStatus] = Queue(maxsize=1)
-        self.task_status_failed: Queue[ErrorMessage] = Queue(maxsize=1)
-        self.mission_started: Queue[bool] = Queue(maxsize=1)
-        self.mission_failed: Queue[ErrorMessage] = Queue(maxsize=1)
-        self.robot_status_changed: Queue[bool] = Queue(maxsize=1)
-        self.mission_failed_to_stop: Queue[ErrorMessage] = Queue(maxsize=1)
-        self.mission_successfully_stopped: Queue[bool] = Queue(maxsize=1)
+        self.task_status_updated: Event[TaskStatus] = Event()
+        self.task_status_failed: Event[ErrorMessage] = Event()
+        self.mission_started: Event[bool] = Event()
+        self.mission_failed: Event[ErrorMessage] = Event()
+        self.robot_status_changed: Event[bool] = Event()
+        self.mission_failed_to_stop: Event[ErrorMessage] = Event()
+        self.mission_successfully_stopped: Event[bool] = Event()
 
 
 class SharedState:
     def __init__(self) -> None:
-        self.state: StatusQueue[State] = StatusQueue()
-        self.robot_status: StatusQueue[RobotStatus] = StatusQueue()
-        self.state_machine_current_task: StatusQueue[TASKS] = StatusQueue()
+        self.state: Event[State] = Event()
+        self.robot_status: Event[RobotStatus] = Event()
+        self.state_machine_current_task: Event[TASKS] = Event()
