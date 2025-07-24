@@ -1,22 +1,34 @@
-from typing import TYPE_CHECKING
+from enum import Enum
+from typing import TYPE_CHECKING, List
 
-from transitions import State
+from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.models.communication.queues.events import Event
+from isar.models.communication.queues.queue_utils import check_shared_state
+from robot_interface.models.mission.status import RobotStatus
 
-from isar.state_machine.generic_states.robot_unavailable import (
-    RobotUnavailable,
-    RobotUnavailableStates,
-)
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class Offline(State, RobotUnavailable):
-    def __init__(self, state_machine: "StateMachine") -> None:
-        State.__init__(self, name="offline", on_enter=self.start, on_exit=self.stop)
+def Offline(state_machine: "StateMachine"):
+    shared_state = state_machine.shared_state
 
-        RobotUnavailable.__init__(
-            self,
-            state_machine=state_machine,
-            state=RobotUnavailableStates.Offline,
-        )
+    def _check_and_handle_robot_status_update(event: Event[RobotStatus]):
+        robot_status: RobotStatus = check_shared_state(event)
+        if robot_status != RobotStatus.Offline:
+            return state_machine.robot_status_changed  # type: ignore
+        return None
+
+    event_handlers: List[EventHandlerMapping] = [
+        EventHandlerMapping(
+            name="robot_status_event",
+            eventQueue=shared_state.robot_status,
+            handler=_check_and_handle_robot_status_update,
+        ),
+    ]
+    return EventHandlerBase(
+        state_name="offline",
+        state_machine=state_machine,
+        event_handler_mappings=event_handlers,
+    )
