@@ -1,10 +1,10 @@
 import logging
 from copy import deepcopy
-from queue import Queue
 from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.models.communication.queues.events import Event
 from isar.models.communication.queues.queue_utils import check_for_event, trigger_event
 from isar.services.utilities.threaded_request import ThreadedRequest
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
@@ -29,7 +29,7 @@ def Monitor(
         elif task.status == TaskStatus.Successful:
             logger.info(f"{type(task).__name__} task: {str(task.id)[:8]} completed")
 
-    def _check_and_handle_stop_mission_event(event: Queue) -> Callable | None:
+    def _check_and_handle_stop_mission_event(event: Event[str]) -> Optional[Callable]:
         mission_id: str = check_for_event(event)
         if mission_id is not None:
             if state_machine.current_mission.id == mission_id or mission_id == "":
@@ -46,17 +46,21 @@ def Monitor(
                 )
         return None
 
-    def _check_and_handle_pause_mission_event(event: Queue) -> Callable | None:
+    def _check_and_handle_pause_mission_event(event: Event[bool]) -> Optional[Callable]:
         if check_for_event(event):
             return state_machine.pause  # type: ignore
         return None
 
-    def _check_and_handle_mission_started_event(event: Queue) -> Callable | None:
+    def _check_and_handle_mission_started_event(
+        event: Event[bool],
+    ) -> Optional[Callable]:
         if check_for_event(event):
             state_machine.mission_ongoing = True
         return None
 
-    def _check_and_handle_mission_failed_event(event: Queue) -> Callable | None:
+    def _check_and_handle_mission_failed_event(
+        event: Event[Optional[ErrorMessage]],
+    ) -> Optional[Callable]:
         mission_failed: Optional[ErrorMessage] = check_for_event(event)
         if mission_failed is not None:
             state_machine.logger.warning(
@@ -71,7 +75,9 @@ def Monitor(
             return state_machine.mission_failed_to_start  # type: ignore
         return None
 
-    def _check_and_handle_task_status_failed_event(event: Queue) -> Callable | None:
+    def _check_and_handle_task_status_failed_event(
+        event: Event[Optional[ErrorMessage]],
+    ) -> Optional[Callable]:
         if not state_machine.mission_ongoing:
             return None
 
@@ -96,7 +102,9 @@ def Monitor(
             state_machine.awaiting_task_status = True
         return None
 
-    def _check_and_handle_task_status_event(event: Queue) -> Optional[Callable]:
+    def _check_and_handle_task_status_event(
+        event: Event[Optional[TaskStatus]],
+    ) -> Optional[Callable]:
         if not state_machine.mission_ongoing:
             return None
 
@@ -116,7 +124,7 @@ def Monitor(
             state_machine.awaiting_task_status = True
         return None
 
-    def _handle_new_task_status(status: TaskStatus) -> Callable | None:
+    def _handle_new_task_status(status: TaskStatus) -> Optional[Callable]:
         if state_machine.current_task is None:
             state_machine.iterate_current_task()
 

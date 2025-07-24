@@ -14,7 +14,7 @@ def Stopping(state_machine: "StateMachine"):
     logger = logging.getLogger("state_machine")
     events = state_machine.events
 
-    def _check_and_handle_failed_stop(event: Queue[ErrorMessage]) -> Callable | None:
+    def _check_and_handle_failed_stop(event: Queue[ErrorMessage]) -> Optional[Callable]:
         error_message: Optional[ErrorMessage] = check_for_event(event)
         if error_message is not None:
             logger.warning(error_message.error_description)
@@ -27,7 +27,7 @@ def Stopping(state_machine: "StateMachine"):
                 return state_machine.mission_stopping_failed  # type: ignore
         return None
 
-    def _check_and_handle_successful_stop(event: Queue[bool]) -> Callable | None:
+    def _check_and_handle_successful_stop(event: Queue[bool]) -> Optional[Callable]:
         if check_for_event(event):
             if (
                 state_machine.current_mission is not None

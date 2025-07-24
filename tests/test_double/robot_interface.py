@@ -5,7 +5,7 @@ from typing import Callable, List
 
 from alitra import Frame, Orientation, Pose, Position
 
-from isar.models.communication.queues.status_queue import StatusQueue
+from isar.models.communication.queues.events import Event
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotCommunicationException,
 )
@@ -100,7 +100,7 @@ def stub_image_metadata() -> ImageMetadata:
 
 
 class StubRobotOfflineToRobotStandingStillTest(StubRobot):
-    def __init__(self, current_state: StatusQueue):
+    def __init__(self, current_state: Event):
         self.entered_offline = False
         self.current_state = current_state
 
@@ -120,7 +120,7 @@ class StubRobotOfflineToRobotStandingStillTest(StubRobot):
 
 
 class StubRobotBlockedProtectiveStopToRobotStandingStillTest(StubRobot):
-    def __init__(self, current_state: StatusQueue):
+    def __init__(self, current_state: Event):
         self.entered_blocked_p_stop = False
         self.current_state = current_state
 
@@ -137,7 +137,7 @@ class StubRobotBlockedProtectiveStopToRobotStandingStillTest(StubRobot):
 
 
 class StubRobotHomeToRobotStandingStillTest(StubRobot):
-    def __init__(self, current_state: StatusQueue):
+    def __init__(self, current_state: Event):
         self.entered_home = False
         self.current_state = current_state
 
@@ -154,7 +154,7 @@ class StubRobotHomeToRobotStandingStillTest(StubRobot):
 
 
 class StubRobotOfflineToHomeTest(StubRobot):
-    def __init__(self, current_state: StatusQueue):
+    def __init__(self, current_state: Event):
         self.entered_offline = False
         self.current_state = current_state
 

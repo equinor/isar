@@ -1,20 +1,20 @@
 import logging
 import time
 from dataclasses import dataclass
-from queue import Queue
-from threading import Event
-from typing import TYPE_CHECKING, Callable, List
+from threading import Event as ThreadEvent
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from transitions import State
 
 from isar.config.settings import settings
+from isar.models.communication.queues.events import Event
 
 
 @dataclass
 class EventHandlerMapping:
     name: str
-    eventQueue: Queue
-    handler: Callable[[Queue], Callable | None]
+    eventQueue: Event
+    handler: Callable[[Event], Optional[Callable]]
 
 
 if TYPE_CHECKING:
@@ -32,7 +32,7 @@ class EventHandlerBase(State):
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
         self.events = state_machine.events
-        self.signal_state_machine_to_stop: Event = (
+        self.signal_state_machine_to_stop: ThreadEvent = (
             state_machine.signal_state_machine_to_stop
         )
         self.event_handler_mappings = event_handler_mappings
