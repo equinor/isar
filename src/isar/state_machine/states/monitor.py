@@ -7,11 +7,11 @@ from isar.models.communication.queues.events import Event
 from isar.models.communication.queues.queue_utils import check_for_event
 from isar.services.utilities.threaded_request import ThreadedRequest
 from isar.state_machine.utils.generic_event_handlers import (
-    check_and_handle_mission_failed_event,
-    check_and_handle_mission_started_event,
-    check_and_handle_stop_mission_event,
-    check_and_handle_task_status_event,
-    check_and_handle_task_status_failed_event,
+    mission_failed_event_handler,
+    mission_started_event_handler,
+    stop_mission_event_handler,
+    task_status_event_handler,
+    task_status_failed_event_handler,
 )
 from robot_interface.models.mission.status import TaskStatus
 
@@ -25,7 +25,7 @@ def Monitor(
     logger = logging.getLogger("state_machine")
     events = state_machine.events
 
-    def _check_and_handle_pause_mission_event(event: Event[bool]) -> Optional[Callable]:
+    def _pause_mission_event_handler(event: Event[bool]) -> Optional[Callable]:
         if check_for_event(event):
             return state_machine.pause  # type: ignore
         return None
@@ -51,40 +51,34 @@ def Monitor(
         EventHandlerMapping(
             name="stop_mission_event",
             eventQueue=events.api_requests.stop_mission.input,
-            handler=lambda event: check_and_handle_stop_mission_event(
-                state_machine, event
-            ),
+            handler=lambda event: stop_mission_event_handler(state_machine, event),
         ),
         EventHandlerMapping(
             name="pause_mission_event",
             eventQueue=events.api_requests.pause_mission.input,
-            handler=_check_and_handle_pause_mission_event,
+            handler=_pause_mission_event_handler,
         ),
         EventHandlerMapping(
             name="mission_started_event",
             eventQueue=events.robot_service_events.mission_started,
-            handler=lambda event: check_and_handle_mission_started_event(
-                state_machine, event
-            ),
+            handler=lambda event: mission_started_event_handler(state_machine, event),
         ),
         EventHandlerMapping(
             name="mission_failed_event",
             eventQueue=events.robot_service_events.mission_failed,
-            handler=lambda event: check_and_handle_mission_failed_event(
-                state_machine, event
-            ),
+            handler=lambda event: mission_failed_event_handler(state_machine, event),
         ),
         EventHandlerMapping(
             name="task_status_failed_event",
             eventQueue=events.robot_service_events.task_status_failed,
-            handler=lambda event: check_and_handle_task_status_failed_event(
+            handler=lambda event: task_status_failed_event_handler(
                 state_machine, _handle_task_completed, event
             ),
         ),
         EventHandlerMapping(
             name="task_status_event",
             eventQueue=events.robot_service_events.task_status_updated,
-            handler=lambda event: check_and_handle_task_status_event(
+            handler=lambda event: task_status_event_handler(
                 state_machine, _handle_task_completed, event
             ),
         ),
