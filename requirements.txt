@@ -60,7 +60,7 @@ fastapi==0.116.1
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
-fastapi-azure-auth==5.1.1
+fastapi-azure-auth==5.2.0
     # via isar (pyproject.toml)
 google-api-core==2.25.1
     # via opencensus
