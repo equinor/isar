@@ -14,7 +14,7 @@ def Stopping(state_machine: "StateMachine"):
     logger = logging.getLogger("state_machine")
     events = state_machine.events
 
-    def _check_and_handle_failed_stop(event: Queue[ErrorMessage]) -> Optional[Callable]:
+    def _failed_stop_event_handler(event: Queue[ErrorMessage]) -> Optional[Callable]:
         error_message: Optional[ErrorMessage] = check_for_event(event)
         if error_message is not None:
             logger.warning(error_message.error_description)
@@ -27,7 +27,7 @@ def Stopping(state_machine: "StateMachine"):
                 return state_machine.mission_stopping_failed  # type: ignore
         return None
 
-    def _check_and_handle_successful_stop(event: Queue[bool]) -> Optional[Callable]:
+    def _successful_stop_event_handler(event: Queue[bool]) -> Optional[Callable]:
         if check_for_event(event):
             if (
                 state_machine.current_mission is not None
@@ -42,12 +42,12 @@ def Stopping(state_machine: "StateMachine"):
         EventHandlerMapping(
             name="failed_stop_event",
             eventQueue=events.robot_service_events.mission_failed_to_stop,
-            handler=_check_and_handle_failed_stop,
+            handler=_failed_stop_event_handler,
         ),
         EventHandlerMapping(
             name="successful_stop_event",
             eventQueue=events.robot_service_events.mission_successfully_stopped,
-            handler=_check_and_handle_successful_stop,
+            handler=_successful_stop_event_handler,
         ),
     ]
     return EventHandlerBase(

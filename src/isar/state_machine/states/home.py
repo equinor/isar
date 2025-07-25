@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, List
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.state_machine.utils.generic_event_handlers import (
-    check_and_handle_return_home_event,
-    check_and_handle_robot_status_event,
-    check_and_handle_start_mission_event,
-    check_and_handle_stop_mission_event,
+    return_home_event_handler,
+    robot_status_event_handler,
+    start_mission_event_handler,
+    stop_mission_event_handler,
 )
 from robot_interface.models.mission.status import RobotStatus
 
@@ -21,28 +21,22 @@ def Home(state_machine: "StateMachine"):
         EventHandlerMapping(
             name="start_mission_event",
             eventQueue=events.api_requests.start_mission.input,
-            handler=lambda event: check_and_handle_start_mission_event(
-                state_machine, event
-            ),
+            handler=lambda event: start_mission_event_handler(state_machine, event),
         ),
         EventHandlerMapping(
             name="return_home_event",
             eventQueue=events.api_requests.return_home.input,
-            handler=lambda event: check_and_handle_return_home_event(
-                state_machine, event
-            ),
+            handler=lambda event: return_home_event_handler(state_machine, event),
         ),
         EventHandlerMapping(
             name="stop_mission_event",
             eventQueue=events.api_requests.return_home.input,
-            handler=lambda event: check_and_handle_stop_mission_event(
-                state_machine, event
-            ),
+            handler=lambda event: stop_mission_event_handler(state_machine, event),
         ),
         EventHandlerMapping(
             name="robot_status_event",
             eventQueue=shared_state.robot_status,
-            handler=lambda event: check_and_handle_robot_status_event(
+            handler=lambda event: robot_status_event_handler(
                 state_machine, RobotStatus.Home, event
             ),
         ),

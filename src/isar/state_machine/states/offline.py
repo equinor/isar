@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 def Offline(state_machine: "StateMachine"):
     shared_state = state_machine.shared_state
 
-    def _check_and_handle_robot_status_event(event: Event[RobotStatus]):
+    def _robot_status_event_handler(event: Event[RobotStatus]):
         robot_status: RobotStatus = check_shared_state(event)
         if robot_status != RobotStatus.Offline:
             return state_machine.robot_status_changed  # type: ignore
@@ -22,7 +22,7 @@ def Offline(state_machine: "StateMachine"):
         EventHandlerMapping(
             name="robot_status_event",
             eventQueue=shared_state.robot_status,
-            handler=_check_and_handle_robot_status_event,
+            handler=_robot_status_event_handler,
         ),
     ]
     return EventHandlerBase(

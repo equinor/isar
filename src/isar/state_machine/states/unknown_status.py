@@ -3,9 +3,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.communication.queues.events import Event
 from isar.models.communication.queues.queue_utils import check_shared_state
-from isar.state_machine.utils.generic_event_handlers import (
-    check_and_handle_stop_mission_event,
-)
+from isar.state_machine.utils.generic_event_handlers import stop_mission_event_handler
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
@@ -16,7 +14,7 @@ def UnknownStatus(state_machine: "StateMachine"):
     events = state_machine.events
     shared_state = state_machine.shared_state
 
-    def _check_and_handle_robot_status_event(
+    def _robot_status_event_handler(
         event: Event[RobotStatus],
     ) -> Optional[Callable]:
         robot_status: RobotStatus = check_shared_state(event)
@@ -33,14 +31,12 @@ def UnknownStatus(state_machine: "StateMachine"):
         EventHandlerMapping(
             name="stop_mission_event",
             eventQueue=events.api_requests.stop_mission.input,
-            handler=lambda event: check_and_handle_stop_mission_event(
-                state_machine, event
-            ),
+            handler=lambda event: stop_mission_event_handler(state_machine, event),
         ),
         EventHandlerMapping(
             name="robot_status_event",
             eventQueue=shared_state.robot_status,
-            handler=_check_and_handle_robot_status_event,
+            handler=_robot_status_event_handler,
         ),
     ]
     return EventHandlerBase(
