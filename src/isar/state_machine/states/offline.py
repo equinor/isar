@@ -1,11 +1,9 @@
-from enum import Enum
 from typing import TYPE_CHECKING, List
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.communication.queues.events import Event
 from isar.models.communication.queues.queue_utils import check_shared_state
 from robot_interface.models.mission.status import RobotStatus
-
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine

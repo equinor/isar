@@ -1,19 +1,54 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
-from transitions import State
+from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.state_machine.utils.generic_event_handlers import (
+    check_and_handle_return_home_event,
+    check_and_handle_robot_status_event,
+    check_and_handle_start_mission_event,
+    check_and_handle_stop_mission_event,
+)
+from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
-from isar.state_machine.generic_states.idle import Idle, IdleStates
 
+def Home(state_machine: "StateMachine"):
+    events = state_machine.events
+    shared_state = state_machine.shared_state
 
-class Home(State, Idle):
-    def __init__(self, state_machine: "StateMachine") -> None:
-        State.__init__(self, name="home", on_enter=self.start, on_exit=self.stop)
-
-        Idle.__init__(
-            self,
-            state_machine=state_machine,
-            state=IdleStates.Home,
-        )
+    event_handlers: List[EventHandlerMapping] = [
+        EventHandlerMapping(
+            name="start_mission_event",
+            eventQueue=events.api_requests.start_mission.input,
+            handler=lambda event: check_and_handle_start_mission_event(
+                state_machine, event
+            ),
+        ),
+        EventHandlerMapping(
+            name="return_home_event",
+            eventQueue=events.api_requests.return_home.input,
+            handler=lambda event: check_and_handle_return_home_event(
+                state_machine, event
+            ),
+        ),
+        EventHandlerMapping(
+            name="stop_mission_event",
+            eventQueue=events.api_requests.return_home.input,
+            handler=lambda event: check_and_handle_stop_mission_event(
+                state_machine, event
+            ),
+        ),
+        EventHandlerMapping(
+            name="robot_status_event",
+            eventQueue=shared_state.robot_status,
+            handler=lambda event: check_and_handle_robot_status_event(
+                state_machine, RobotStatus.Home, event
+            ),
+        ),
+    ]
+    return EventHandlerBase(
+        state_name="home",
+        state_machine=state_machine,
+        event_handler_mappings=event_handlers,
+    )

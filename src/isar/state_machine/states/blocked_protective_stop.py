@@ -20,7 +20,7 @@ def BlockedProtectiveStop(state_machine: "StateMachine"):
 
     event_handlers: List[EventHandlerMapping] = [
         EventHandlerMapping(
-            name="robot_status_changed_event",
+            name="robot_status_event",
             eventQueue=shared_state.robot_status,
             handler=_check_and_handle_robot_status_update,
         ),
