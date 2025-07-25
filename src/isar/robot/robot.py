@@ -1,9 +1,9 @@
 import logging
-from queue import Queue
-from threading import Event
+from threading import Event as ThreadEvent
 from typing import Optional
 
 from isar.models.communication.queues.events import (
+    Event,
     Events,
     RobotServiceEvents,
     SharedState,
@@ -15,6 +15,7 @@ from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import RobotStopMissionThread
 from isar.robot.robot_task_status import RobotTaskStatusThread
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
+from robot_interface.models.mission.mission import Mission
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -31,7 +32,7 @@ class Robot(object):
         self.robot_status_thread: Optional[RobotStatusThread] = None
         self.robot_task_status_thread: Optional[RobotTaskStatusThread] = None
         self.stop_mission_thread: Optional[RobotStopMissionThread] = None
-        self.signal_thread_quitting: Event = Event()
+        self.signal_thread_quitting: ThreadEvent = ThreadEvent()
 
     def stop(self) -> None:
         self.signal_thread_quitting.set()
@@ -53,7 +54,7 @@ class Robot(object):
         self.robot_task_status_thread = None
         self.start_mission_thread = None
 
-    def _check_and_handle_start_mission(self, event: Queue) -> None:
+    def _start_mission_event_handler(self, event: Event[Mission]) -> None:
         start_mission = check_for_event(event)
         if start_mission is not None:
             if (
@@ -72,7 +73,7 @@ class Robot(object):
             )
             self.start_mission_thread.start()
 
-    def _check_and_handle_task_status_request(self, event: Queue[str]) -> None:
+    def _task_status_request_handler(self, event: Event[str]) -> None:
         task_id: str = check_for_event(event)
         if task_id:
             self.robot_task_status_thread = RobotTaskStatusThread(
@@ -83,7 +84,7 @@ class Robot(object):
             )
             self.robot_task_status_thread.start()
 
-    def _check_and_handle_stop_mission(self, event: Queue) -> None:
+    def _stop_mission_request_handler(self, event: Event[str]) -> None:
         if check_for_event(event):
             if (
                 self.stop_mission_thread is not None
@@ -118,14 +119,12 @@ class Robot(object):
         self.robot_status_thread.start()
 
         while not self.signal_thread_quitting.wait(0):
-            self._check_and_handle_start_mission(
-                self.state_machine_events.start_mission
-            )
+            self._start_mission_event_handler(self.state_machine_events.start_mission)
 
-            self._check_and_handle_task_status_request(
+            self._task_status_request_handler(
                 self.state_machine_events.task_status_request
             )
 
-            self._check_and_handle_stop_mission(self.state_machine_events.stop_mission)
+            self._stop_mission_request_handler(self.state_machine_events.stop_mission)
 
         self.logger.info("Exiting robot service main thread")
