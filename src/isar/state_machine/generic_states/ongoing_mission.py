@@ -58,6 +58,23 @@ class OngoingMission:
     def stop(self) -> None:
         return
 
+    def _check_and_handle_already_home_event(self, event: Queue) -> bool:
+        if check_for_event(event):
+            if self.state == OngoingMissionStates.ReturningHome:
+                self.state_machine.returned_home()  # type: ignore
+                return True
+            else:
+                message = "Received robot already home event in a state that is not returning home. Mission will be set to failed."
+                self.logger.error(message)
+                trigger_event(
+                    self.events.robot_service_events.mission_failed,
+                    ErrorMessage(
+                        error_reason=ErrorReason.RobotAlreadyHomeException,
+                        error_description=message,
+                    ),
+                )
+        return False
+
     def _check_and_handle_stop_mission_event(self, event: Queue) -> bool:
         mission_id: str = check_for_event(event)
         if mission_id is not None:
@@ -195,6 +212,11 @@ class OngoingMission:
                 self.logger.info(
                     "Stopping state machine from %s state", self.state.name
                 )
+                break
+
+            if self._check_and_handle_already_home_event(
+                self.events.robot_service_events.already_returned_home
+            ):
                 break
 
             if self._check_and_handle_stop_mission_event(

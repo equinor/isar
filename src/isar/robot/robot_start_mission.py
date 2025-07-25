@@ -9,6 +9,7 @@ from isar.models.communication.queues.queue_utils import (
 )
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
+    RobotAlreadyHomeException,
     RobotException,
     RobotInfeasibleMissionException,
 )
@@ -40,6 +41,14 @@ class RobotStartMissionThread(Thread):
                     return
                 try:
                     self.robot.initiate_mission(self.mission)
+                except RobotAlreadyHomeException:
+                    self.logger.info(
+                        "Robot disregarded return to home mission as its already at home. Return home mission will be assumed successful without running."
+                    )
+                    trigger_event_without_data(
+                        self.robot_service_events.already_returned_home
+                    )
+                    break
                 except RobotInfeasibleMissionException as e:
                     self.logger.error(
                         f"Mission is infeasible and cannot be scheduled because: {e.error_description}"
