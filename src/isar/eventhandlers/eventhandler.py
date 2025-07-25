@@ -1,5 +1,6 @@
 import logging
 import time
+from copy import deepcopy
 from dataclasses import dataclass
 from threading import Event as ThreadEvent
 from typing import TYPE_CHECKING, Callable, List, Optional
@@ -17,6 +18,13 @@ class EventHandlerMapping:
     handler: Callable[[Event], Optional[Callable]]
 
 
+@dataclass
+class TimeoutHandlerMapping:
+    name: str
+    timeout_in_seconds: float
+    handler: Callable[[], Optional[Callable]]
+
+
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
@@ -27,6 +35,7 @@ class EventHandlerBase(State):
         state_machine: "StateMachine",
         state_name: str,
         event_handler_mappings: List[EventHandlerMapping],
+        timers: List[TimeoutHandlerMapping] = [],
     ) -> None:
         super().__init__(name=state_name, on_enter=self.start)
         self.state_machine: "StateMachine" = state_machine
@@ -37,6 +46,7 @@ class EventHandlerBase(State):
         )
         self.event_handler_mappings = event_handler_mappings
         self.state_name: str = state_name
+        self.timers = timers
 
     def start(self) -> None:
         self.state_machine.update_state()
@@ -46,7 +56,9 @@ class EventHandlerBase(State):
         return
 
     def _run(self) -> None:
-        should_transition: bool = False
+        should_exit_state: bool = False
+        timers = deepcopy(self.timers)
+        entered_time = time.time()
         while True:
             if self.signal_state_machine_to_stop.is_set():
                 self.logger.info(
@@ -54,12 +66,25 @@ class EventHandlerBase(State):
                 )
                 break
 
+            for timer in timers:
+                if time.time() - entered_time > timer.timeout_in_seconds:
+                    transition_func = timer.handler()
+                    timers.remove(timer)
+                    if transition_func is not None:
+                        transition_func()
+                        should_exit_state = True
+                        break
+
+            if should_exit_state:
+                break
+
             for handler_mapping in self.event_handler_mappings:
                 transition_func = handler_mapping.handler(handler_mapping.eventQueue)
                 if transition_func is not None:
                     transition_func()
-                    should_transition = True
+                    should_exit_state = True
                     break
-            if should_transition:
+
+            if should_exit_state:
                 break
             time.sleep(settings.FSM_SLEEP_TIME)
