@@ -7,11 +7,11 @@ from isar.models.communication.queues.queue_utils import (
     check_for_event_without_consumption,
 )
 from isar.state_machine.utils.generic_event_handlers import (
-    check_and_handle_mission_failed_event,
-    check_and_handle_mission_started_event,
-    check_and_handle_stop_mission_event,
-    check_and_handle_task_status_event,
-    check_and_handle_task_status_failed_event,
+    mission_failed_event_handler,
+    mission_started_event_handler,
+    stop_mission_event_handler,
+    task_status_event_handler,
+    task_status_failed_event_handler,
 )
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.status import TaskStatus
@@ -34,7 +34,7 @@ def ReturningHome(
             return state_machine.return_home_failed  # type: ignore
         return state_machine.returned_home  # type: ignore
 
-    def _check_and_handle_start_mission_event(
+    def _start_mission_event_handler(
         event: Event[StartMissionMessage],
     ) -> Optional[Callable]:
         if check_for_event_without_consumption(event):
@@ -47,42 +47,36 @@ def ReturningHome(
             eventQueue=events.api_requests.stop_mission.input,
             # TODO: this will bring us to an inconsistent state. We don't yet have a frozen state.
             #       Ideally we should not allow stopping of a return home mission.
-            handler=lambda event: check_and_handle_stop_mission_event(
-                state_machine, event
-            ),
+            handler=lambda event: stop_mission_event_handler(state_machine, event),
         ),
         EventHandlerMapping(
             name="mission_started_event",
             eventQueue=events.robot_service_events.mission_started,
-            handler=lambda event: check_and_handle_mission_started_event(
-                state_machine, event
-            ),
+            handler=lambda event: mission_started_event_handler(state_machine, event),
         ),
         EventHandlerMapping(
             name="mission_failed_event",
             eventQueue=events.robot_service_events.mission_failed,
             # TODO: this should lead us to retry going home, and if it keeps failing
             #       it should go to an error state
-            handler=lambda event: check_and_handle_mission_failed_event(
-                state_machine, event
-            ),
+            handler=lambda event: mission_failed_event_handler(state_machine, event),
         ),
         EventHandlerMapping(
             name="start_mission_event",
             eventQueue=events.api_requests.start_mission.input,
-            handler=_check_and_handle_start_mission_event,
+            handler=_start_mission_event_handler,
         ),
         EventHandlerMapping(
             name="task_status_failed_event",
             eventQueue=events.robot_service_events.task_status_failed,
-            handler=lambda event: check_and_handle_task_status_failed_event(
+            handler=lambda event: task_status_failed_event_handler(
                 state_machine, _handle_task_completed, event
             ),
         ),
         EventHandlerMapping(
             name="task_status_event",
             eventQueue=events.robot_service_events.task_status_updated,
-            handler=lambda event: check_and_handle_task_status_event(
+            handler=lambda event: task_status_event_handler(
                 state_machine, _handle_task_completed, event
             ),
         ),

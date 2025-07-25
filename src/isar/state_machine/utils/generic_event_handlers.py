@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-def check_and_handle_start_mission_event(
+def start_mission_event_handler(
     state_machine: "StateMachine", event: Event[StartMissionMessage]
 ) -> Optional[Callable]:
     start_mission: Optional[StartMissionMessage] = check_for_event(event)
@@ -25,7 +25,7 @@ def check_and_handle_start_mission_event(
     return None
 
 
-def check_and_handle_return_home_event(
+def return_home_event_handler(
     state_machine: "StateMachine", event: Event[bool]
 ) -> Optional[Callable]:
     if check_for_event(event):
@@ -34,7 +34,7 @@ def check_and_handle_return_home_event(
     return None
 
 
-def check_and_handle_robot_status_event(
+def robot_status_event_handler(
     state_machine: "StateMachine",
     expected_status: RobotStatus,
     event: Event[RobotStatus],
@@ -45,7 +45,7 @@ def check_and_handle_robot_status_event(
     return None
 
 
-def check_and_handle_stop_mission_event(
+def stop_mission_event_handler(
     state_machine: "StateMachine", event: Event[str]
 ) -> Optional[Callable]:
     mission_id: str = check_for_event(event)
@@ -65,7 +65,7 @@ def check_and_handle_stop_mission_event(
     return None
 
 
-def check_and_handle_mission_started_event(
+def mission_started_event_handler(
     state_machine: "StateMachine",
     event: Event[bool],
 ) -> Optional[Callable]:
@@ -74,7 +74,7 @@ def check_and_handle_mission_started_event(
     return None
 
 
-def check_and_handle_mission_failed_event(
+def mission_failed_event_handler(
     state_machine: "StateMachine",
     event: Event[Optional[ErrorMessage]],
 ) -> Optional[Callable]:
@@ -93,7 +93,7 @@ def check_and_handle_mission_failed_event(
     return None
 
 
-def check_and_handle_task_status_failed_event(
+def task_status_failed_event_handler(
     state_machine: "StateMachine",
     handle_task_completed: Callable[[TaskStatus], Callable],
     event: Event[Optional[ErrorMessage]],
@@ -130,7 +130,7 @@ def check_and_handle_task_status_failed_event(
     return None
 
 
-def check_and_handle_task_status_event(
+def task_status_event_handler(
     state_machine: "StateMachine",
     handle_task_completed: Callable[[TaskStatus], Callable],
     event: Event[Optional[TaskStatus]],
