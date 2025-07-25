@@ -1,23 +1,18 @@
-from enum import Enum
-from queue import Queue
 from typing import TYPE_CHECKING, Callable, Optional
 
+from isar.apis.models.models import ControlMissionResponse
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.events import Event
 from isar.models.communication.queues.queue_utils import (
     check_for_event,
     check_shared_state,
+    trigger_event,
 )
-from robot_interface.models.mission.status import RobotStatus
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+from robot_interface.models.mission.status import RobotStatus, TaskStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
-
-
-class IdleStates(str, Enum):
-    AwaitNextMission = "awaitNextMission"
-    Home = "home"
-    RobotStandingStill = "robotStandingStill"
 
 
 def check_and_handle_start_mission_event(
@@ -51,8 +46,128 @@ def check_and_handle_robot_status_event(
 
 
 def check_and_handle_stop_mission_event(
-    state_machine: "StateMachine", event: Queue
+    state_machine: "StateMachine", event: Event[str]
 ) -> Optional[Callable]:
-    if check_for_event(event) is not None:
-        return state_machine.stop  # type: ignore
+    mission_id: str = check_for_event(event)
+    if mission_id is not None:
+        if state_machine.current_mission.id == mission_id or mission_id == "":
+            return state_machine.stop  # type: ignore
+        else:
+            state_machine.events.api_requests.stop_mission.output.put(
+                ControlMissionResponse(
+                    mission_id=mission_id,
+                    mission_status=state_machine.current_mission.status,
+                    mission_not_found=True,
+                    task_id=state_machine.current_task.id,
+                    task_status=state_machine.current_task.status,
+                )
+            )
+    return None
+
+
+def check_and_handle_mission_started_event(
+    state_machine: "StateMachine",
+    event: Event[bool],
+) -> Optional[Callable]:
+    if check_for_event(event):
+        state_machine.mission_ongoing = True
+    return None
+
+
+def check_and_handle_mission_failed_event(
+    state_machine: "StateMachine",
+    event: Event[Optional[ErrorMessage]],
+) -> Optional[Callable]:
+    mission_failed: Optional[ErrorMessage] = check_for_event(event)
+    if mission_failed is not None:
+        state_machine.logger.warning(
+            f"Failed to initiate mission "
+            f"{str(state_machine.current_mission.id)[:8]} because: "
+            f"{mission_failed.error_description}"
+        )
+        state_machine.current_mission.error_message = ErrorMessage(
+            error_reason=mission_failed.error_reason,
+            error_description=mission_failed.error_description,
+        )
+        return state_machine.mission_failed_to_start  # type: ignore
+    return None
+
+
+def check_and_handle_task_status_failed_event(
+    state_machine: "StateMachine",
+    handle_task_completed: Callable[[TaskStatus], Callable],
+    event: Event[Optional[ErrorMessage]],
+) -> Optional[Callable]:
+    if not state_machine.mission_ongoing:
+        return None
+
+    task_failure: Optional[ErrorMessage] = check_for_event(event)
+    if task_failure is not None:
+        if state_machine.current_task is None:
+            state_machine.logger.warning(
+                "Received task status failed event when no task was running"
+            )
+            return None
+        state_machine.awaiting_task_status = False
+        state_machine.current_task.error_message = task_failure
+        state_machine.logger.error(
+            f"Monitoring task {state_machine.current_task.id[:8]} failed "
+            f"because: {task_failure.error_description}"
+        )
+        return _handle_new_task_status(
+            state_machine, handle_task_completed, TaskStatus.Failed
+        )
+
+    elif (
+        not state_machine.awaiting_task_status
+        and state_machine.current_task is not None
+    ):
+        trigger_event(
+            state_machine.events.state_machine_events.task_status_request,
+            state_machine.current_task.id,
+        )
+        state_machine.awaiting_task_status = True
+    return None
+
+
+def check_and_handle_task_status_event(
+    state_machine: "StateMachine",
+    handle_task_completed: Callable[[TaskStatus], Callable],
+    event: Event[Optional[TaskStatus]],
+) -> Optional[Callable]:
+    if not state_machine.mission_ongoing:
+        return None
+
+    status: Optional[TaskStatus] = check_for_event(event)
+    if status is not None:
+        state_machine.awaiting_task_status = False
+        return _handle_new_task_status(state_machine, handle_task_completed, status)
+
+    elif (
+        not state_machine.awaiting_task_status
+        and state_machine.current_task is not None
+    ):
+        trigger_event(
+            state_machine.events.state_machine_events.task_status_request,
+            state_machine.current_task.id,
+        )
+        state_machine.awaiting_task_status = True
+    return None
+
+
+def _handle_new_task_status(
+    state_machine: "StateMachine",
+    handle_task_completed: Callable[[TaskStatus], Callable],
+    status: TaskStatus,
+) -> Optional[Callable]:
+    if state_machine.current_task is None:
+        state_machine.iterate_current_task()
+
+    state_machine.current_task.status = status
+
+    if state_machine.current_task.is_finished():
+        state_machine.report_task_status(state_machine.current_task)
+        state_machine.publish_task_status(task=state_machine.current_task)
+
+        return handle_task_completed(status)
     return None
