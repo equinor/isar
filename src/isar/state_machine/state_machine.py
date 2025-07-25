@@ -38,7 +38,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
-from robot_interface.models.mission.task import TASKS, InspectionTask
+from robot_interface.models.mission.task import TASKS, InspectionTask, Task
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
@@ -211,6 +211,20 @@ class StateMachine(object):
         update_shared_state(
             self.shared_state.state_machine_current_task, self.current_task
         )
+
+    def report_task_status(self, task: Task) -> None:
+        if task.status == TaskStatus.Failed:
+            self.logger.warning(
+                f"Task: {str(task.id)[:8]} was reported as failed by the robot"
+            )
+        elif task.status == TaskStatus.Successful:
+            self.logger.info(
+                f"{type(task).__name__} task: {str(task.id)[:8]} completed"
+            )
+        else:
+            self.logger.info(
+                f"Task: {str(task.id)[:8]} was reported as task.status by the robot"
+            )
 
     def publish_mission_status(self) -> None:
         if not self.mqtt_publisher:
