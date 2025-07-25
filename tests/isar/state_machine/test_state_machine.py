@@ -94,7 +94,9 @@ def test_state_machine_transitions_when_running_full_mission(
     robot_service_thread: RobotServiceThreadMock,
     mocker,
 ) -> None:
-    state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
+    state_machine_thread.state_machine.await_next_mission_state.timers[
+        0
+    ].timeout_in_seconds = 0.01
     state_machine_thread.start()
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     robot_service_thread.start()
@@ -128,7 +130,9 @@ def test_state_machine_failed_dependency(
     robot_service_thread: RobotServiceThreadMock,
     mocker,
 ) -> None:
-    state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
+    state_machine_thread.state_machine.await_next_mission_state.timers[
+        0
+    ].timeout_in_seconds = 0.01
 
     mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.Failed)
 
@@ -181,7 +185,9 @@ def test_state_machine_with_successful_collection(
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
 
-    state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
+    state_machine_thread.state_machine.await_next_mission_state.timers[
+        0
+    ].timeout_in_seconds = 0.01
     state_machine_thread.start()
     uploader_thread.start()
 
@@ -223,7 +229,9 @@ def test_state_machine_with_unsuccessful_collection(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
 
-    state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 0.1
+    state_machine_thread.state_machine.await_next_mission_state.timers[
+        0
+    ].timeout_in_seconds = 0.01
     state_machine_thread.start()
     robot_service_thread.start()
     uploader_thread.start()
@@ -263,7 +271,9 @@ def test_state_machine_with_successful_mission_stop(
     )
 
     # Set the return home delay to a higher value than the test needs to run
-    state_machine_thread.state_machine.await_next_mission_state.return_home_delay = 100
+    state_machine_thread.state_machine.await_next_mission_state.timers[
+        0
+    ].timeout_in_seconds = 100
 
     mission: Mission = Mission(
         name="Dummy misson", tasks=[StubTask.take_image() for _ in range(0, 20)]
@@ -442,6 +452,7 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
 ) -> None:
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Available)
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
