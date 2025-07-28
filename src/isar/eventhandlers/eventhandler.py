@@ -3,19 +3,21 @@ import time
 from copy import deepcopy
 from dataclasses import dataclass
 from threading import Event as ThreadEvent
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING, Callable, Generic, List, Optional, TypeVar
 
 from transitions import State
 
 from isar.config.settings import settings
 from isar.models.communication.queues.events import Event
 
+T = TypeVar("T")
+
 
 @dataclass
-class EventHandlerMapping:
+class EventHandlerMapping(Generic[T]):
     name: str
-    eventQueue: Event
-    handler: Callable[[Event], Optional[Callable]]
+    eventQueue: Event[T]
+    handler: Callable[[Event[T]], Optional[Callable]]
 
 
 @dataclass
