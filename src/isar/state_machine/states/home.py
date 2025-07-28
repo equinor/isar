@@ -13,36 +13,38 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-def Home(state_machine: "StateMachine"):
-    events = state_machine.events
-    shared_state = state_machine.shared_state
+class Home(EventHandlerBase):
 
-    event_handlers: List[EventHandlerMapping] = [
-        EventHandlerMapping(
-            name="start_mission_event",
-            eventQueue=events.api_requests.start_mission.input,
-            handler=lambda event: start_mission_event_handler(state_machine, event),
-        ),
-        EventHandlerMapping(
-            name="return_home_event",
-            eventQueue=events.api_requests.return_home.input,
-            handler=lambda event: return_home_event_handler(state_machine, event),
-        ),
-        EventHandlerMapping(
-            name="stop_mission_event",
-            eventQueue=events.api_requests.return_home.input,
-            handler=lambda event: stop_mission_event_handler(state_machine, event),
-        ),
-        EventHandlerMapping(
-            name="robot_status_event",
-            eventQueue=shared_state.robot_status,
-            handler=lambda event: robot_status_event_handler(
-                state_machine, RobotStatus.Home, event
+    def __init__(self, state_machine: "StateMachine"):
+        events = state_machine.events
+        shared_state = state_machine.shared_state
+
+        event_handlers: List[EventHandlerMapping] = [
+            EventHandlerMapping(
+                name="start_mission_event",
+                eventQueue=events.api_requests.start_mission.input,
+                handler=lambda event: start_mission_event_handler(state_machine, event),
             ),
-        ),
-    ]
-    return EventHandlerBase(
-        state_name="home",
-        state_machine=state_machine,
-        event_handler_mappings=event_handlers,
-    )
+            EventHandlerMapping(
+                name="return_home_event",
+                eventQueue=events.api_requests.return_home.input,
+                handler=lambda event: return_home_event_handler(state_machine, event),
+            ),
+            EventHandlerMapping(
+                name="stop_mission_event",
+                eventQueue=events.api_requests.return_home.input,
+                handler=lambda event: stop_mission_event_handler(state_machine, event),
+            ),
+            EventHandlerMapping(
+                name="robot_status_event",
+                eventQueue=shared_state.robot_status,
+                handler=lambda event: robot_status_event_handler(
+                    state_machine, RobotStatus.Home, event
+                ),
+            ),
+        ]
+        super().__init__(
+            state_name="home",
+            state_machine=state_machine,
+            event_handler_mappings=event_handlers,
+        )

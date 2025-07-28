@@ -10,37 +10,39 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-def UnknownStatus(state_machine: "StateMachine"):
-    events = state_machine.events
-    shared_state = state_machine.shared_state
+class UnknownStatus(EventHandlerBase):
 
-    def _robot_status_event_handler(
-        event: Event[RobotStatus],
-    ) -> Optional[Callable]:
-        robot_status: RobotStatus = check_shared_state(event)
-        if (
-            robot_status == RobotStatus.Home
-            or robot_status == RobotStatus.Offline
-            or robot_status == RobotStatus.BlockedProtectiveStop
-            or robot_status == RobotStatus.Available
-        ):
-            return state_machine.robot_status_changed  # type: ignore
-        return None
+    def __init__(self, state_machine: "StateMachine"):
+        events = state_machine.events
+        shared_state = state_machine.shared_state
 
-    event_handlers: List[EventHandlerMapping] = [
-        EventHandlerMapping(
-            name="stop_mission_event",
-            eventQueue=events.api_requests.stop_mission.input,
-            handler=lambda event: stop_mission_event_handler(state_machine, event),
-        ),
-        EventHandlerMapping(
-            name="robot_status_event",
-            eventQueue=shared_state.robot_status,
-            handler=_robot_status_event_handler,
-        ),
-    ]
-    return EventHandlerBase(
-        state_name="unknown_status",
-        state_machine=state_machine,
-        event_handler_mappings=event_handlers,
-    )
+        def _robot_status_event_handler(
+            event: Event[RobotStatus],
+        ) -> Optional[Callable]:
+            robot_status: RobotStatus = check_shared_state(event)
+            if (
+                robot_status == RobotStatus.Home
+                or robot_status == RobotStatus.Offline
+                or robot_status == RobotStatus.BlockedProtectiveStop
+                or robot_status == RobotStatus.Available
+            ):
+                return state_machine.robot_status_changed  # type: ignore
+            return None
+
+        event_handlers: List[EventHandlerMapping] = [
+            EventHandlerMapping(
+                name="stop_mission_event",
+                eventQueue=events.api_requests.stop_mission.input,
+                handler=lambda event: stop_mission_event_handler(state_machine, event),
+            ),
+            EventHandlerMapping(
+                name="robot_status_event",
+                eventQueue=shared_state.robot_status,
+                handler=_robot_status_event_handler,
+            ),
+        ]
+        super().__init__(
+            state_name="unknown_status",
+            state_machine=state_machine,
+            event_handler_mappings=event_handlers,
+        )

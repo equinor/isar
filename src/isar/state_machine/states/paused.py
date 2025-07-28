@@ -7,23 +7,25 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-def Paused(state_machine: "StateMachine"):
-    events = state_machine.events
+class Paused(EventHandlerBase):
 
-    event_handlers: List[EventHandlerMapping] = [
-        EventHandlerMapping(
-            name="stop_mission_event",
-            eventQueue=events.api_requests.stop_mission.input,
-            handler=lambda event: state_machine.stop if check_for_event(event) else None,  # type: ignore
-        ),
-        EventHandlerMapping(
-            name="resume_mission_event",
-            eventQueue=events.api_requests.resume_mission.input,
-            handler=lambda event: state_machine.resume if check_for_event(event) else None,  # type: ignore
-        ),
-    ]
-    return EventHandlerBase(
-        state_name="paused",
-        state_machine=state_machine,
-        event_handler_mappings=event_handlers,
-    )
+    def __init__(self, state_machine: "StateMachine"):
+        events = state_machine.events
+
+        event_handlers: List[EventHandlerMapping] = [
+            EventHandlerMapping(
+                name="stop_mission_event",
+                eventQueue=events.api_requests.stop_mission.input,
+                handler=lambda event: state_machine.stop if check_for_event(event) else None,  # type: ignore
+            ),
+            EventHandlerMapping(
+                name="resume_mission_event",
+                eventQueue=events.api_requests.resume_mission.input,
+                handler=lambda event: state_machine.resume if check_for_event(event) else None,  # type: ignore
+            ),
+        ]
+        super().__init__(
+            state_name="paused",
+            state_machine=state_machine,
+            event_handler_mappings=event_handlers,
+        )
