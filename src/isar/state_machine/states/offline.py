@@ -9,24 +9,27 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-def Offline(state_machine: "StateMachine"):
-    shared_state = state_machine.shared_state
+class Offline(EventHandlerBase):
 
-    def _robot_status_event_handler(event: Event[RobotStatus]):
-        robot_status: RobotStatus = check_shared_state(event)
-        if robot_status != RobotStatus.Offline:
-            return state_machine.robot_status_changed  # type: ignore
-        return None
+    def __init__(self, state_machine: "StateMachine"):
 
-    event_handlers: List[EventHandlerMapping] = [
-        EventHandlerMapping(
-            name="robot_status_event",
-            eventQueue=shared_state.robot_status,
-            handler=_robot_status_event_handler,
-        ),
-    ]
-    return EventHandlerBase(
-        state_name="offline",
-        state_machine=state_machine,
-        event_handler_mappings=event_handlers,
-    )
+        shared_state = state_machine.shared_state
+
+        def _robot_status_event_handler(event: Event[RobotStatus]):
+            robot_status: RobotStatus = check_shared_state(event)
+            if robot_status != RobotStatus.Offline:
+                return state_machine.robot_status_changed  # type: ignore
+            return None
+
+        event_handlers: List[EventHandlerMapping] = [
+            EventHandlerMapping(
+                name="robot_status_event",
+                eventQueue=shared_state.robot_status,
+                handler=_robot_status_event_handler,
+            ),
+        ]
+        super().__init__(
+            state_name="offline",
+            state_machine=state_machine,
+            event_handler_mappings=event_handlers,
+        )

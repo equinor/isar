@@ -39,6 +39,7 @@ class EventHandlerBase(State):
         event_handler_mappings: List[EventHandlerMapping],
         timers: List[TimeoutHandlerMapping] = [],
     ) -> None:
+
         super().__init__(name=state_name, on_enter=self.start)
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
