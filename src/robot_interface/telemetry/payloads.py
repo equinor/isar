@@ -109,7 +109,7 @@ class InspectionResultPayload:
     isar_id: str
     robot_name: str
     inspection_id: str
-    inspection_path: Union[str, dict]
+    inspection_path: Union[dict]
     installation_code: str
     tag_id: Optional[str]
     inspection_type: Optional[str]
