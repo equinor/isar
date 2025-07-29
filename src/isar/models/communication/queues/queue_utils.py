@@ -1,4 +1,4 @@
-from queue import Empty, Queue
+from queue import Empty
 from typing import Any, Optional, TypeVar
 
 from isar.models.communication.queues.events import Event
@@ -6,33 +6,33 @@ from isar.models.communication.queues.events import Event
 T = TypeVar("T")
 
 
-def trigger_event_without_data(queue: Queue[Any]) -> None:
-    queue.put(True)
+def trigger_event_without_data(event: Event[Any]) -> None:
+    event.put(True)
 
 
-def trigger_event(queue: Queue[T], data: T) -> None:
-    queue.put(data)
+def trigger_event(event: Event[T], data: T) -> None:
+    event.put(data)
 
 
-def check_shared_state(queue: Event[T]) -> Optional[T]:
+def check_shared_state(event: Event[T]) -> Optional[T]:
     try:
-        return queue.check()
+        return event.check()
     except Empty:
         return None
 
 
-def update_shared_state(queue: Event[T], data: T) -> None:
-    queue.update(data)
+def update_shared_state(event: Event[T], data: T) -> None:
+    event.update(data)
 
 
-def check_for_event(queue: Queue[T]) -> Optional[T]:
+def check_for_event(event: Event[T]) -> Optional[T]:
     try:
-        return queue.get(block=False)
+        return event.get(block=False)
     except Empty:
         return None
 
 
-def check_for_event_without_consumption(queue: Queue[T]) -> bool:
+def check_for_event_without_consumption(event: Event[T]) -> bool:
     return (
-        queue.qsize() != 0
+        event.qsize() != 0
     )  # Queue size is not reliable, but should be sufficient for this case

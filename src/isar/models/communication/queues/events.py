@@ -42,9 +42,9 @@ class Events:
             self.mqtt_queue: Queue = Queue()
 
 
-class QueueIO:
+class APIEvent:
     """
-    Creates input and output queue. The queues are defined such that the input is from
+    Creates input and output event. The events are defined such that the input is from
     api to state machine while the output is from state machine to api.
     """
 
@@ -55,11 +55,11 @@ class QueueIO:
 
 class APIRequests:
     def __init__(self) -> None:
-        self.start_mission: QueueIO = QueueIO()
-        self.stop_mission: QueueIO = QueueIO()
-        self.pause_mission: QueueIO = QueueIO()
-        self.resume_mission: QueueIO = QueueIO()
-        self.return_home: QueueIO = QueueIO()
+        self.start_mission: APIEvent = APIEvent()
+        self.stop_mission: APIEvent = APIEvent()
+        self.pause_mission: APIEvent = APIEvent()
+        self.resume_mission: APIEvent = APIEvent()
+        self.return_home: APIEvent = APIEvent()
 
 
 class StateMachineEvents:

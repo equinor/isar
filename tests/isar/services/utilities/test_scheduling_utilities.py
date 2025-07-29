@@ -4,7 +4,7 @@ import pytest
 from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
-from isar.models.communication.queues.events import QueueIO
+from isar.models.communication.queues.events import APIEvent
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
 from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -16,7 +16,7 @@ def test_timeout_send_command(
     mocker: MockerFixture, scheduling_utilities: SchedulingUtilities
 ):
     mocker.patch.object(QueueUtilities, "check_queue", side_effect=QueueTimeoutError)
-    q: QueueIO = QueueIO()
+    q: APIEvent = APIEvent()
     with pytest.raises(QueueTimeoutError):
         scheduling_utilities._send_command(True, q)
     assert q.input.empty()

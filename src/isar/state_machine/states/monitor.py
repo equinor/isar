@@ -50,38 +50,38 @@ class Monitor(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="stop_mission_event",
-                eventQueue=events.api_requests.stop_mission.input,
+                event=events.api_requests.stop_mission.input,
                 handler=lambda event: stop_mission_event_handler(state_machine, event),
             ),
             EventHandlerMapping(
                 name="pause_mission_event",
-                eventQueue=events.api_requests.pause_mission.input,
+                event=events.api_requests.pause_mission.input,
                 handler=_pause_mission_event_handler,
             ),
             EventHandlerMapping(
                 name="mission_started_event",
-                eventQueue=events.robot_service_events.mission_started,
+                event=events.robot_service_events.mission_started,
                 handler=lambda event: mission_started_event_handler(
                     state_machine, event
                 ),
             ),
             EventHandlerMapping(
                 name="mission_failed_event",
-                eventQueue=events.robot_service_events.mission_failed,
+                event=events.robot_service_events.mission_failed,
                 handler=lambda event: mission_failed_event_handler(
                     state_machine, event
                 ),
             ),
             EventHandlerMapping(
                 name="task_status_failed_event",
-                eventQueue=events.robot_service_events.task_status_failed,
+                event=events.robot_service_events.task_status_failed,
                 handler=lambda event: task_status_failed_event_handler(
                     state_machine, _handle_task_completed, event
                 ),
             ),
             EventHandlerMapping(
                 name="task_status_event",
-                eventQueue=events.robot_service_events.task_status_updated,
+                event=events.robot_service_events.task_status_updated,
                 handler=lambda event: task_status_event_handler(
                     state_machine, _handle_task_completed, event
                 ),

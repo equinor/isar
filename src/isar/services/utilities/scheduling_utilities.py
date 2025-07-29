@@ -16,9 +16,9 @@ from isar.mission_planner.mission_planner_interface import (
 )
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.events import (
+    APIEvent,
     APIRequests,
     Events,
-    QueueIO,
     SharedState,
 )
 from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
@@ -290,14 +290,14 @@ class SchedulingUtilities:
         self.logger.info("OK - Mission successfully stopped")
         return stop_mission_response
 
-    def _send_command(self, input: Any, queueio: QueueIO) -> Any:
-        queueio.input.put(input)
+    def _send_command(self, input: Any, api_event: APIEvent) -> Any:
+        api_event.input.put(input)
         try:
             return QueueUtilities.check_queue(
-                queueio.output,
+                api_event.output,
                 self.queue_timeout,
             )
         except QueueTimeoutError as e:
-            QueueUtilities.clear_queue(queueio.input)
+            QueueUtilities.clear_queue(api_event.input)
             self.logger.error("No output received for command to state machine")
             raise e
