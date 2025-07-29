@@ -16,7 +16,7 @@ T = TypeVar("T")
 @dataclass
 class EventHandlerMapping(Generic[T]):
     name: str
-    eventQueue: Event[T]
+    event: Event[T]
     handler: Callable[[Event[T]], Optional[Callable]]
 
 
@@ -82,7 +82,7 @@ class EventHandlerBase(State):
                 break
 
             for handler_mapping in self.event_handler_mappings:
-                transition_func = handler_mapping.handler(handler_mapping.eventQueue)
+                transition_func = handler_mapping.handler(handler_mapping.event)
                 if transition_func is not None:
                     transition_func()
                     should_exit_state = True

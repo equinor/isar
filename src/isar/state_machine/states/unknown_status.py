@@ -32,12 +32,12 @@ class UnknownStatus(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="stop_mission_event",
-                eventQueue=events.api_requests.stop_mission.input,
+                event=events.api_requests.stop_mission.input,
                 handler=lambda event: stop_mission_event_handler(state_machine, event),
             ),
             EventHandlerMapping(
                 name="robot_status_event",
-                eventQueue=shared_state.robot_status,
+                event=shared_state.robot_status,
                 handler=_robot_status_event_handler,
             ),
         ]

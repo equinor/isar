@@ -1,8 +1,8 @@
 import logging
-from queue import Queue
 from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.models.communication.queues.events import Event
 from isar.models.communication.queues.queue_utils import check_for_event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -17,7 +17,7 @@ class Stopping(EventHandlerBase):
         events = state_machine.events
 
         def _failed_stop_event_handler(
-            event: Queue[ErrorMessage],
+            event: Event[ErrorMessage],
         ) -> Optional[Callable]:
             error_message: Optional[ErrorMessage] = check_for_event(event)
             if error_message is not None:
@@ -31,7 +31,7 @@ class Stopping(EventHandlerBase):
                     return state_machine.mission_stopping_failed  # type: ignore
             return None
 
-        def _successful_stop_event_handler(event: Queue[bool]) -> Optional[Callable]:
+        def _successful_stop_event_handler(event: Event[bool]) -> Optional[Callable]:
             if check_for_event(event):
                 if (
                     state_machine.current_mission is not None
@@ -45,12 +45,12 @@ class Stopping(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="failed_stop_event",
-                eventQueue=events.robot_service_events.mission_failed_to_stop,
+                event=events.robot_service_events.mission_failed_to_stop,
                 handler=_failed_stop_event_handler,
             ),
             EventHandlerMapping(
                 name="successful_stop_event",
-                eventQueue=events.robot_service_events.mission_successfully_stopped,
+                event=events.robot_service_events.mission_successfully_stopped,
                 handler=_successful_stop_event_handler,
             ),
         ]
