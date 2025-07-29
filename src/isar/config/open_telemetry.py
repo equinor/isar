@@ -1,6 +1,5 @@
 import logging
 
-from azure.identity import ManagedIdentityCredential
 from azure.monitor.opentelemetry.exporter import (
     AzureMonitorLogExporter,
     AzureMonitorTraceExporter,
@@ -57,12 +56,7 @@ def get_azure_monitor_exporters() -> (
     Else use Azure Managed Identity to create Azure Monitor Exporters.
     """
     connection_string = settings.APPLICATIONINSIGHTS_CONNECTION_STRING
-    if connection_string:
-        trace_exporter = AzureMonitorTraceExporter(connection_string=connection_string)
-        log_exporter = AzureMonitorLogExporter(connection_string=connection_string)
-    else:
-        credential = ManagedIdentityCredential()
-        trace_exporter = AzureMonitorTraceExporter(credential=credential)
-        log_exporter = AzureMonitorLogExporter(credential=credential)
+    trace_exporter = AzureMonitorTraceExporter(connection_string=connection_string)
+    log_exporter = AzureMonitorLogExporter(connection_string=connection_string)
 
     return trace_exporter, log_exporter
