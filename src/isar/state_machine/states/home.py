@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, List
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
-from isar.state_machine.utils.generic_event_handlers import (
+from isar.state_machine.utils.common_event_handlers import (
     return_home_event_handler,
     robot_status_event_handler,
     start_mission_event_handler,
