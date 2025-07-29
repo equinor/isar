@@ -6,7 +6,7 @@ from isar.models.communication.queues.events import Event
 from isar.models.communication.queues.queue_utils import (
     check_for_event_without_consumption,
 )
-from isar.state_machine.utils.generic_event_handlers import (
+from isar.state_machine.utils.common_event_handlers import (
     mission_failed_event_handler,
     mission_started_event_handler,
     stop_mission_event_handler,

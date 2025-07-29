@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.communication.queues.events import Event
 from isar.models.communication.queues.queue_utils import check_shared_state
-from isar.state_machine.utils.generic_event_handlers import stop_mission_event_handler
+from isar.state_machine.utils.common_event_handlers import stop_mission_event_handler
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:

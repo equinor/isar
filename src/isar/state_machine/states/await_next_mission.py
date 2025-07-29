@@ -6,7 +6,7 @@ from isar.eventhandlers.eventhandler import (
     EventHandlerMapping,
     TimeoutHandlerMapping,
 )
-from isar.state_machine.utils.generic_event_handlers import (
+from isar.state_machine.utils.common_event_handlers import (
     return_home_event_handler,
     start_mission_event_handler,
     stop_mission_event_handler,
