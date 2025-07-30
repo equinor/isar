@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.communication.queues.events import Event
-from isar.models.communication.queues.queue_utils import check_for_event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
 if TYPE_CHECKING:
@@ -19,7 +18,7 @@ class Stopping(EventHandlerBase):
         def _failed_stop_event_handler(
             event: Event[ErrorMessage],
         ) -> Optional[Callable]:
-            error_message: Optional[ErrorMessage] = check_for_event(event)
+            error_message: Optional[ErrorMessage] = event.consume_event()
             if error_message is not None:
                 logger.warning(error_message.error_description)
                 if (
@@ -32,7 +31,7 @@ class Stopping(EventHandlerBase):
             return None
 
         def _successful_stop_event_handler(event: Event[bool]) -> Optional[Callable]:
-            if check_for_event(event):
+            if event.consume_event():
                 if (
                     state_machine.current_mission is not None
                     and state_machine.current_mission._is_return_to_home_mission()

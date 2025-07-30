@@ -1,10 +1,5 @@
 from typing import TYPE_CHECKING
 
-from isar.models.communication.queues.queue_utils import (
-    check_for_event_without_consumption,
-    trigger_event_without_data,
-)
-
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
@@ -13,7 +8,7 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
 def trigger_stop_mission_event(state_machine: "StateMachine") -> bool:
-    trigger_event_without_data(state_machine.events.state_machine_events.stop_mission)
+    state_machine.events.state_machine_events.stop_mission.trigger_event(True)
     return True
 
 
@@ -56,9 +51,7 @@ def stop_return_home_mission_cleanup(state_machine: "StateMachine") -> bool:
         state_machine.reset_state_machine()
         return True
 
-    if not check_for_event_without_consumption(
-        state_machine.events.api_requests.start_mission.input
-    ):
+    if not state_machine.events.api_requests.start_mission.input.has_event():
         state_machine.current_mission.status = MissionStatus.Cancelled
 
         for task in state_machine.current_mission.tasks:
@@ -81,9 +74,7 @@ def stop_return_home_mission_cleanup(state_machine: "StateMachine") -> bool:
 
 
 def stop_return_home_mission_failed(state_machine: "StateMachine") -> bool:
-    if check_for_event_without_consumption(
-        state_machine.events.api_requests.start_mission.input
-    ):
+    if state_machine.events.api_requests.start_mission.input.has_event():
         return True
     stopped_mission_response: ControlMissionResponse = (
         state_machine._make_control_mission_response()

@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.communication.queues.events import Event
-from isar.models.communication.queues.queue_utils import check_shared_state
 from isar.state_machine.utils.common_event_handlers import stop_mission_event_handler
 from robot_interface.models.mission.status import RobotStatus
 
@@ -19,7 +18,7 @@ class UnknownStatus(EventHandlerBase):
         def _robot_status_event_handler(
             event: Event[RobotStatus],
         ) -> Optional[Callable]:
-            robot_status: RobotStatus = check_shared_state(event)
+            robot_status: RobotStatus = event.check()
             if (
                 robot_status == RobotStatus.Home
                 or robot_status == RobotStatus.Offline

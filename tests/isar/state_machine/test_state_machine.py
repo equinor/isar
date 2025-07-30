@@ -9,9 +9,6 @@ import pytest
 from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
-from isar.models.communication.queues.queue_utils import (
-    check_for_event_without_consumption,
-)
 from isar.modules import ApplicationContainer
 from isar.robot.robot import Robot
 from isar.robot.robot_status import RobotStatusThread
@@ -476,8 +473,8 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
             States.Monitor,
         ]
     )
-    assert not check_for_event_without_consumption(
-        state_machine_thread.state_machine.events.api_requests.start_mission.input
+    assert (
+        not state_machine_thread.state_machine.events.api_requests.start_mission.input.has_event()
     )
 
 

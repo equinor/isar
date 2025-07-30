@@ -3,11 +3,6 @@ from typing import TYPE_CHECKING, Callable, Optional
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.events import Event
-from isar.models.communication.queues.queue_utils import (
-    check_for_event,
-    check_shared_state,
-    trigger_event,
-)
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
 
@@ -18,7 +13,7 @@ if TYPE_CHECKING:
 def start_mission_event_handler(
     state_machine: "StateMachine", event: Event[StartMissionMessage]
 ) -> Optional[Callable]:
-    start_mission: Optional[StartMissionMessage] = check_for_event(event)
+    start_mission: Optional[StartMissionMessage] = event.consume_event()
     if start_mission:
         state_machine.start_mission(mission=start_mission.mission)
         return state_machine.request_mission_start  # type: ignore
@@ -28,7 +23,7 @@ def start_mission_event_handler(
 def return_home_event_handler(
     state_machine: "StateMachine", event: Event[bool]
 ) -> Optional[Callable]:
-    if check_for_event(event):
+    if event.consume_event():
         state_machine.events.api_requests.return_home.output.put(True)
         return state_machine.request_return_home  # type: ignore
     return None
@@ -39,7 +34,7 @@ def robot_status_event_handler(
     expected_status: RobotStatus,
     event: Event[RobotStatus],
 ) -> Optional[Callable]:
-    robot_status: RobotStatus = check_shared_state(event)
+    robot_status: RobotStatus = event.check()
     if robot_status != expected_status:
         return state_machine.robot_status_changed  # type: ignore
     return None
@@ -48,7 +43,7 @@ def robot_status_event_handler(
 def stop_mission_event_handler(
     state_machine: "StateMachine", event: Event[str]
 ) -> Optional[Callable]:
-    mission_id: str = check_for_event(event)
+    mission_id: str = event.consume_event()
     if mission_id is not None:
         if state_machine.current_mission.id == mission_id or mission_id == "":
             return state_machine.stop  # type: ignore
@@ -69,7 +64,7 @@ def mission_started_event_handler(
     state_machine: "StateMachine",
     event: Event[bool],
 ) -> Optional[Callable]:
-    if check_for_event(event):
+    if event.consume_event():
         state_machine.mission_ongoing = True
     return None
 
@@ -78,7 +73,7 @@ def mission_failed_event_handler(
     state_machine: "StateMachine",
     event: Event[Optional[ErrorMessage]],
 ) -> Optional[Callable]:
-    mission_failed: Optional[ErrorMessage] = check_for_event(event)
+    mission_failed: Optional[ErrorMessage] = event.consume_event()
     if mission_failed is not None:
         state_machine.logger.warning(
             f"Failed to initiate mission "
@@ -101,7 +96,7 @@ def task_status_failed_event_handler(
     if not state_machine.mission_ongoing:
         return None
 
-    task_failure: Optional[ErrorMessage] = check_for_event(event)
+    task_failure: Optional[ErrorMessage] = event.consume_event()
     if task_failure is not None:
         if state_machine.current_task is None:
             state_machine.logger.warning(
@@ -122,8 +117,7 @@ def task_status_failed_event_handler(
         not state_machine.awaiting_task_status
         and state_machine.current_task is not None
     ):
-        trigger_event(
-            state_machine.events.state_machine_events.task_status_request,
+        state_machine.events.state_machine_events.task_status_request.trigger_event(
             state_machine.current_task.id,
         )
         state_machine.awaiting_task_status = True
@@ -138,7 +132,7 @@ def task_status_event_handler(
     if not state_machine.mission_ongoing:
         return None
 
-    status: Optional[TaskStatus] = check_for_event(event)
+    status: Optional[TaskStatus] = event.consume_event()
     if status is not None:
         state_machine.awaiting_task_status = False
         return _handle_new_task_status(state_machine, handle_task_completed, status)
@@ -147,8 +141,7 @@ def task_status_event_handler(
         not state_machine.awaiting_task_status
         and state_machine.current_task is not None
     ):
-        trigger_event(
-            state_machine.events.state_machine_events.task_status_request,
+        state_machine.events.state_machine_events.task_status_request.trigger_event(
             state_machine.current_task.id,
         )
         state_machine.awaiting_task_status = True

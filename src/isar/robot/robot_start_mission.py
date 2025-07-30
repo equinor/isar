@@ -3,10 +3,6 @@ from threading import Event, Thread
 
 from isar.config.settings import settings
 from isar.models.communication.queues.events import RobotServiceEvents
-from isar.models.communication.queues.queue_utils import (
-    trigger_event,
-    trigger_event_without_data,
-)
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotException,
@@ -44,13 +40,13 @@ class RobotStartMissionThread(Thread):
                     self.logger.error(
                         f"Mission is infeasible and cannot be scheduled because: {e.error_description}"
                     )
-                    trigger_event(
-                        self.robot_service_events.mission_failed,
+                    self.robot_service_events.mission_failed.trigger_event(
                         ErrorMessage(
                             error_reason=e.error_reason,
                             error_description=e.error_description,
-                        ),
+                        )
                     )
+
                     break
                 except RobotException as e:
                     retries += 1
@@ -66,12 +62,11 @@ class RobotStartMissionThread(Thread):
                             f"{e.error_description}"
                         )
 
-                        trigger_event(
-                            self.robot_service_events.mission_failed,
+                        self.robot_service_events.mission_failed.trigger_event(
                             ErrorMessage(
                                 error_reason=e.error_reason,
                                 error_description=e.error_description,
-                            ),
+                            )
                         )
                         break
 
@@ -79,12 +74,11 @@ class RobotStartMissionThread(Thread):
 
                 started_mission = True
         except RobotInfeasibleMissionException as e:
-            trigger_event(
-                self.robot_service_events.mission_failed,
+            self.robot_service_events.mission_failed.trigger_event(
                 ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 ),
             )
 
         if started_mission:
-            trigger_event_without_data(self.robot_service_events.mission_started)
+            self.robot_service_events.mission_started.trigger_event(True)

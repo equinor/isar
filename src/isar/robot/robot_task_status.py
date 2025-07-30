@@ -5,7 +5,6 @@ from typing import Optional
 
 from isar.config.settings import settings
 from isar.models.communication.queues.events import RobotServiceEvents
-from isar.models.communication.queues.queue_utils import trigger_event
 from isar.services.utilities.threaded_request import ThreadedRequest
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -82,10 +81,7 @@ class RobotTaskStatusThread(Thread):
                 )
                 break
 
-            trigger_event(self.robot_service_events.task_status_updated, task_status)
+            self.robot_service_events.task_status_updated.trigger_event(task_status)
             return
 
-        trigger_event(
-            self.robot_service_events.task_status_failed,
-            failed_task_error,
-        )
+        self.robot_service_events.task_status_failed.trigger_event(failed_task_error)

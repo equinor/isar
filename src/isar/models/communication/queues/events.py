@@ -1,6 +1,6 @@
 from collections import deque
 from queue import Empty, Queue
-from typing import TypeVar
+from typing import Optional, TypeVar
 
 from transitions import State
 
@@ -17,9 +17,23 @@ class Event(Queue[T]):
     def __init__(self) -> None:
         super().__init__(maxsize=1)
 
-    def check(self) -> T:
+    def trigger_event(self, data: T) -> None:
+        self.put(data)
+
+    def consume_event(self) -> Optional[T]:
+        try:
+            return self.get(block=False)
+        except Empty:
+            return None
+
+    def has_event(self) -> bool:
+        return (
+            self.qsize() != 0
+        )  # Queue size is not reliable, but should be sufficient for this case
+
+    def check(self) -> Optional[T]:
         if not self._qsize():
-            raise Empty
+            return None
         with self.mutex:
             queueList = list(self.queue)
             return queueList.pop()
@@ -65,7 +79,7 @@ class APIRequests:
 class StateMachineEvents:
     def __init__(self) -> None:
         self.start_mission: Event[Mission] = Event()
-        self.stop_mission: Event[str] = Event()
+        self.stop_mission: Event[bool] = Event()
         self.pause_mission: Event[bool] = Event()
         self.task_status_request: Event[str] = Event()
 
