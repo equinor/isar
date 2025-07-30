@@ -1,7 +1,3 @@
-from queue import Empty
-
-import pytest
-
 from isar.models.communication.queues.events import Event, Events
 
 
@@ -30,8 +26,7 @@ class TestEvents:
 
 def test_staus_queue_empty() -> None:
     status_event: Event = Event()
-    with pytest.raises(Empty):
-        status_event.check()
+    assert status_event.check() is None
 
 
 def test_status_event_check() -> None:

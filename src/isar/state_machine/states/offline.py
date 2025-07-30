@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING, List
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.communication.queues.events import Event
-from isar.models.communication.queues.queue_utils import check_shared_state
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
@@ -16,7 +15,7 @@ class Offline(EventHandlerBase):
         shared_state = state_machine.shared_state
 
         def _robot_status_event_handler(event: Event[RobotStatus]):
-            robot_status: RobotStatus = check_shared_state(event)
+            robot_status: RobotStatus = event.check()
             if robot_status != RobotStatus.Offline:
                 return state_machine.robot_status_changed  # type: ignore
             return None

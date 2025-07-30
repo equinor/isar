@@ -1,7 +1,6 @@
 import logging
 from copy import deepcopy
 from http import HTTPStatus
-from queue import Empty
 from typing import Any, List
 
 from fastapi import HTTPException
@@ -55,9 +54,8 @@ class SchedulingUtilities:
         HTTPException 500 Internal Server Error
             If the current state is not available on the queue
         """
-        try:
-            return self.shared_state.state.check()
-        except Empty:
+        current_state = self.shared_state.state.check()
+        if current_state is None:
             error_message: str = (
                 "Internal Server Error - Current state of the state machine is unknown"
             )
@@ -65,6 +63,7 @@ class SchedulingUtilities:
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
+        return current_state
 
     def get_mission(self, mission_id: str) -> Mission:
         """Get the mission with mission_id from the current mission planner

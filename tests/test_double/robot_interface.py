@@ -1,5 +1,5 @@
 from datetime import datetime
-from queue import Empty, Queue
+from queue import Queue
 from threading import Thread
 from typing import Callable, List
 
@@ -105,18 +105,17 @@ class StubRobotOfflineToRobotStandingStillTest(StubRobot):
         self.current_state = current_state
 
     def robot_status(self) -> RobotStatus:
-        try:
-            new_state = self.current_state.check()
-            if new_state == "offline":
-                self.entered_offline = True
-                return RobotStatus.Available
-
-            if not self.entered_offline:
-                return RobotStatus.Offline
-
-            return RobotStatus.Available
-        except Empty:
+        new_state = self.current_state.check()
+        if new_state is None:
             raise RobotCommunicationException("Could not read state machine state")
+        if new_state == "offline":
+            self.entered_offline = True
+            return RobotStatus.Available
+
+        if not self.entered_offline:
+            return RobotStatus.Offline
+
+        return RobotStatus.Available
 
 
 class StubRobotBlockedProtectiveStopToRobotStandingStillTest(StubRobot):
@@ -125,15 +124,15 @@ class StubRobotBlockedProtectiveStopToRobotStandingStillTest(StubRobot):
         self.current_state = current_state
 
     def robot_status(self) -> RobotStatus:
-        try:
-            if self.current_state.check() == "blocked_protective_stop":
-                self.entered_blocked_p_stop = True
-                return RobotStatus.Available
-            if not self.entered_blocked_p_stop:
-                return RobotStatus.BlockedProtectiveStop
-            return RobotStatus.Available
-        except Empty:
+        current_state = self.current_state.check()
+        if current_state is None:
             raise RobotCommunicationException("Could not read state machine state")
+        if current_state == "blocked_protective_stop":
+            self.entered_blocked_p_stop = True
+            return RobotStatus.Available
+        if not self.entered_blocked_p_stop:
+            return RobotStatus.BlockedProtectiveStop
+        return RobotStatus.Available
 
 
 class StubRobotHomeToRobotStandingStillTest(StubRobot):
@@ -142,15 +141,15 @@ class StubRobotHomeToRobotStandingStillTest(StubRobot):
         self.current_state = current_state
 
     def robot_status(self) -> RobotStatus:
-        try:
-            if self.current_state.check() == "home":
-                self.entered_home = True
-                return RobotStatus.Available
-            if not self.entered_home:
-                return RobotStatus.Home
-            return RobotStatus.Available
-        except Empty:
+        current_state = self.current_state.check()
+        if current_state is None:
             raise RobotCommunicationException("Could not read state machine state")
+        if current_state == "home":
+            self.entered_home = True
+            return RobotStatus.Available
+        if not self.entered_home:
+            return RobotStatus.Home
+        return RobotStatus.Available
 
 
 class StubRobotOfflineToHomeTest(StubRobot):
@@ -159,12 +158,12 @@ class StubRobotOfflineToHomeTest(StubRobot):
         self.current_state = current_state
 
     def robot_status(self) -> RobotStatus:
-        try:
-            if self.current_state.check() == "offline":
-                self.entered_offline = True
-                return RobotStatus.Home
-            if not self.entered_offline:
-                return RobotStatus.Offline
-            return RobotStatus.Home
-        except Empty:
+        current_state = self.current_state.check()
+        if current_state is None:
             raise RobotCommunicationException("Could not read state machine state")
+        if current_state == "offline":
+            self.entered_offline = True
+            return RobotStatus.Home
+        if not self.entered_offline:
+            return RobotStatus.Offline
+        return RobotStatus.Home

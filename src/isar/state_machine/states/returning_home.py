@@ -3,9 +3,6 @@ from typing import TYPE_CHECKING, Callable, List, Optional
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.communication.message import StartMissionMessage
 from isar.models.communication.queues.events import Event
-from isar.models.communication.queues.queue_utils import (
-    check_for_event_without_consumption,
-)
 from isar.state_machine.utils.common_event_handlers import (
     mission_failed_event_handler,
     mission_started_event_handler,
@@ -37,7 +34,7 @@ class ReturningHome(EventHandlerBase):
         def _start_mission_event_handler(
             event: Event[StartMissionMessage],
         ) -> Optional[Callable]:
-            if check_for_event_without_consumption(event):
+            if event.has_event():
                 return state_machine.stop  # type: ignore
             return None
 

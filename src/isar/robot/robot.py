@@ -9,7 +9,6 @@ from isar.models.communication.queues.events import (
     SharedState,
     StateMachineEvents,
 )
-from isar.models.communication.queues.queue_utils import check_for_event, trigger_event
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import RobotStopMissionThread
@@ -55,7 +54,7 @@ class Robot(object):
         self.start_mission_thread = None
 
     def _start_mission_event_handler(self, event: Event[Mission]) -> None:
-        start_mission = check_for_event(event)
+        start_mission = event.consume_event()
         if start_mission is not None:
             if (
                 self.start_mission_thread is not None
@@ -74,7 +73,7 @@ class Robot(object):
             self.start_mission_thread.start()
 
     def _task_status_request_handler(self, event: Event[str]) -> None:
-        task_id: str = check_for_event(event)
+        task_id: str = event.consume_event()
         if task_id:
             self.robot_task_status_thread = RobotTaskStatusThread(
                 self.robot_service_events,
@@ -84,8 +83,8 @@ class Robot(object):
             )
             self.robot_task_status_thread.start()
 
-    def _stop_mission_request_handler(self, event: Event[str]) -> None:
-        if check_for_event(event):
+    def _stop_mission_request_handler(self, event: Event[bool]) -> None:
+        if event.consume_event():
             if (
                 self.stop_mission_thread is not None
                 and self.stop_mission_thread.is_alive()
@@ -103,8 +102,8 @@ class Robot(object):
                     error_reason=ErrorReason.RobotStillStartingMissionException,
                     error_description=error_description,
                 )
-                trigger_event(
-                    self.robot_service_events.mission_failed_to_stop, error_message
+                self.robot_service_events.mission_failed_to_stop.trigger_event(
+                    error_message
                 )
                 return
             self.stop_mission_thread = RobotStopMissionThread(

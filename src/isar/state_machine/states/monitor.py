@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.communication.queues.events import Event
-from isar.models.communication.queues.queue_utils import check_for_event
 from isar.services.utilities.threaded_request import ThreadedRequest
 from isar.state_machine.utils.common_event_handlers import (
     mission_failed_event_handler,
@@ -26,7 +25,7 @@ class Monitor(EventHandlerBase):
         events = state_machine.events
 
         def _pause_mission_event_handler(event: Event[bool]) -> Optional[Callable]:
-            if check_for_event(event):
+            if event.consume_event():
                 return state_machine.pause  # type: ignore
             return None
 

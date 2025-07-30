@@ -5,10 +5,6 @@ from typing import Optional
 
 from isar.config.settings import settings
 from isar.models.communication.queues.events import RobotServiceEvents
-from isar.models.communication.queues.queue_utils import (
-    trigger_event,
-    trigger_event_without_data,
-)
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotActionException,
@@ -51,9 +47,7 @@ class RobotStopMissionThread(Thread):
                 time.sleep(settings.FSM_SLEEP_TIME)
                 continue
 
-            trigger_event_without_data(
-                self.robot_service_events.mission_successfully_stopped
-            )
+            self.robot_service_events.mission_successfully_stopped.trigger_event(True)
             return
 
         error_description = (
@@ -68,4 +62,4 @@ class RobotStopMissionThread(Thread):
             error_description=error_description,
         )
 
-        trigger_event(self.robot_service_events.mission_failed_to_stop, error_message)
+        self.robot_service_events.mission_failed_to_stop.trigger_event(error_message)

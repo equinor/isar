@@ -15,7 +15,6 @@ from isar.mission_planner.task_selector_interface import (
     TaskSelectorStop,
 )
 from isar.models.communication.queues.events import Events, SharedState
-from isar.models.communication.queues.queue_utils import update_shared_state
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.home import Home
@@ -189,7 +188,7 @@ class StateMachine(object):
     def update_state(self):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)  # type: ignore
-        update_shared_state(self.shared_state.state, self.current_state)
+        self.shared_state.state.update(self.current_state)
         self._log_state_transition(self.current_state)
         self.logger.info("State: %s", self.current_state)
         self.publish_status()
@@ -208,9 +207,7 @@ class StateMachine(object):
         self.task_selector.initialize(tasks=self.current_mission.tasks)
 
     def send_task_status(self):
-        update_shared_state(
-            self.shared_state.state_machine_current_task, self.current_task
-        )
+        self.shared_state.state_machine_current_task.update(self.current_task)
 
     def report_task_status(self, task: Task) -> None:
         if task.status == TaskStatus.Failed:
