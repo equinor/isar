@@ -18,10 +18,9 @@ from isar.models.communication.queues.events import (
     APIEvent,
     APIRequests,
     Events,
+    EventTimeoutError,
     SharedState,
 )
-from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
-from isar.services.utilities.queue_utilities import QueueUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
@@ -179,7 +178,7 @@ class SchedulingUtilities:
                 StartMissionMessage(mission=deepcopy(mission)),
                 self.api_events.start_mission,
             )
-        except QueueTimeoutError:
+        except EventTimeoutError:
             error_message = "Internal Server Error - Failed to start mission in ISAR"
             self.logger.error(error_message)
             raise HTTPException(
@@ -202,7 +201,7 @@ class SchedulingUtilities:
                 True,
                 self.api_events.return_home,
             )
-        except QueueTimeoutError:
+        except EventTimeoutError:
             error_message = (
                 "Internal Server Error - Failed to start return home mission in ISAR"
             )
@@ -224,7 +223,7 @@ class SchedulingUtilities:
             response = self._send_command(True, self.api_events.pause_mission)
             self.logger.info("OK - Mission successfully paused")
             return response
-        except QueueTimeoutError:
+        except EventTimeoutError:
             error_message = "Internal Server Error - Failed to pause mission"
             self.logger.error(error_message)
             raise HTTPException(
@@ -243,7 +242,7 @@ class SchedulingUtilities:
             response = self._send_command(True, self.api_events.resume_mission)
             self.logger.info("OK - Mission successfully resumed")
             return response
-        except QueueTimeoutError:
+        except EventTimeoutError:
             error_message = "Internal Server Error - Failed to resume mission"
             self.logger.error(error_message)
             raise HTTPException(
@@ -280,7 +279,7 @@ class SchedulingUtilities:
                 raise HTTPException(
                     status_code=HTTPStatus.CONFLICT, detail=error_message
                 )
-        except QueueTimeoutError:
+        except EventTimeoutError:
             error_message = "Internal Server Error - Failed to stop mission"
             self.logger.error(error_message)
             raise HTTPException(
@@ -290,13 +289,11 @@ class SchedulingUtilities:
         return stop_mission_response
 
     def _send_command(self, input: Any, api_event: APIEvent) -> Any:
-        api_event.input.put(input)
+        api_event.input.trigger_event(input)
         try:
-            return QueueUtilities.check_queue(
-                api_event.output,
-                self.queue_timeout,
-            )
-        except QueueTimeoutError as e:
-            QueueUtilities.clear_queue(api_event.input)
+            return api_event.output.consume_event(timeout=self.queue_timeout)
+        except EventTimeoutError as e:
+            self.logger.error("Queue timed out")
+            api_event.input.clear_event()
             self.logger.error("No output received for command to state machine")
             raise e
