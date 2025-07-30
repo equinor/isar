@@ -20,11 +20,20 @@ class Event(Queue[T]):
     def trigger_event(self, data: T) -> None:
         self.put(data)
 
-    def consume_event(self) -> Optional[T]:
+    def consume_event(self, timeout: int = None) -> Optional[T]:
         try:
-            return self.get(block=False)
+            return self.get(block=timeout is not None, timeout=timeout)
         except Empty:
+            if timeout is not None:
+                raise EventTimeoutError
             return None
+
+    def clear_event(self) -> None:
+        while True:
+            try:
+                self.get(block=False)
+            except Empty:
+                break
 
     def has_event(self) -> bool:
         return (
@@ -100,3 +109,7 @@ class SharedState:
         self.state: Event[State] = Event()
         self.robot_status: Event[RobotStatus] = Event()
         self.state_machine_current_task: Event[TASKS] = Event()
+
+
+class EventTimeoutError(Exception):
+    pass

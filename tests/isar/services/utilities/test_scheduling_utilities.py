@@ -4,9 +4,7 @@ import pytest
 from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
-from isar.models.communication.queues.events import APIEvent
-from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
-from isar.services.utilities.queue_utilities import QueueUtilities
+from isar.models.communication.queues.events import APIEvent, Event, EventTimeoutError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from tests.test_double.mission_definition import DummyMissionDefinition
@@ -15,9 +13,9 @@ from tests.test_double.mission_definition import DummyMissionDefinition
 def test_timeout_send_command(
     mocker: MockerFixture, scheduling_utilities: SchedulingUtilities
 ):
-    mocker.patch.object(QueueUtilities, "check_queue", side_effect=QueueTimeoutError)
+    mocker.patch.object(Event, "consume_event", side_effect=EventTimeoutError)
     q: APIEvent = APIEvent()
-    with pytest.raises(QueueTimeoutError):
+    with pytest.raises(EventTimeoutError):
         scheduling_utilities._send_command(True, q)
     assert q.input.empty()
 

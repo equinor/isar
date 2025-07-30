@@ -12,7 +12,7 @@ from isar.apis.models.models import ControlMissionResponse
 from isar.apis.models.start_mission_definition import StopMissionDefinition
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
-from isar.models.communication.queues.queue_timeout_error import QueueTimeoutError
+from isar.models.communication.queues.events import EventTimeoutError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from tests.test_double.mission_definition import DummyMissionDefinition
@@ -49,7 +49,7 @@ mock_return_control_mission_response = mock.Mock(
 mock_return_stopped_control_mission_response = mock.Mock(
     return_value=dummy_stopped_control_mission_response
 )
-mock_queue_timeout_error = mock.Mock(side_effect=QueueTimeoutError)
+mock_queue_timeout_error = mock.Mock(side_effect=EventTimeoutError)
 mock_mission_planner_error = mock.Mock(side_effect=MissionPlannerError)
 
 dummy_stopped_with_mission_id_control_mission_response = ControlMissionResponse(
