@@ -6,7 +6,6 @@ from transitions import State
 
 from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
-from isar.models.communication.message import StartMissionMessage
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
@@ -82,7 +81,7 @@ class APIEvent(Generic[T1, T2]):
 
 class APIRequests:
     def __init__(self) -> None:
-        self.start_mission: APIEvent[StartMissionMessage, bool] = APIEvent()
+        self.start_mission: APIEvent[Mission, bool] = APIEvent()
         self.stop_mission: APIEvent[str, ControlMissionResponse] = APIEvent()
         self.pause_mission: APIEvent[bool, ControlMissionResponse] = APIEvent()
         self.resume_mission: APIEvent[bool, ControlMissionResponse] = APIEvent()

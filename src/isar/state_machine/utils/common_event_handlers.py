@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Callable, Optional
 
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.communication.message import StartMissionMessage
 from isar.models.events import Event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
 
 if TYPE_CHECKING:
@@ -11,11 +11,11 @@ if TYPE_CHECKING:
 
 
 def start_mission_event_handler(
-    state_machine: "StateMachine", event: Event[StartMissionMessage]
+    state_machine: "StateMachine", event: Event[Mission]
 ) -> Optional[Callable]:
-    start_mission: Optional[StartMissionMessage] = event.consume_event()
-    if start_mission:
-        state_machine.start_mission(mission=start_mission.mission)
+    mission: Optional[Mission] = event.consume_event()
+    if mission:
+        state_machine.start_mission(mission=mission)
         return state_machine.request_mission_start  # type: ignore
     return None
 
