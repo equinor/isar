@@ -13,7 +13,6 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerError,
     MissionPlannerInterface,
 )
-from isar.models.communication.message import StartMissionMessage
 from isar.models.events import (
     APIEvent,
     APIRequests,
@@ -178,7 +177,7 @@ class SchedulingUtilities:
         """
         try:
             self._send_command(
-                StartMissionMessage(mission=deepcopy(mission)),
+                deepcopy(mission),
                 self.api_events.start_mission,
             )
         except EventTimeoutError:

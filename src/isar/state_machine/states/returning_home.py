@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
-from isar.models.communication.message import StartMissionMessage
 from isar.models.events import Event
 from isar.state_machine.utils.common_event_handlers import (
     mission_failed_event_handler,
@@ -11,6 +10,7 @@ from isar.state_machine.utils.common_event_handlers import (
     task_status_failed_event_handler,
 )
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
+from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import TaskStatus
 
 if TYPE_CHECKING:
@@ -32,7 +32,7 @@ class ReturningHome(EventHandlerBase):
             return state_machine.returned_home  # type: ignore
 
         def _start_mission_event_handler(
-            event: Event[StartMissionMessage],
+            event: Event[Mission],
         ) -> Optional[Callable]:
             if event.has_event():
                 return state_machine.stop  # type: ignore
