@@ -1,7 +1,7 @@
 import logging
 from copy import deepcopy
 from http import HTTPStatus
-from typing import Any, List
+from typing import List, TypeVar
 
 from fastapi import HTTPException
 from requests import HTTPError
@@ -24,6 +24,9 @@ from isar.models.events import (
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
+
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
 class SchedulingUtilities:
@@ -288,7 +291,7 @@ class SchedulingUtilities:
         self.logger.info("OK - Mission successfully stopped")
         return stop_mission_response
 
-    def _send_command(self, input: Any, api_event: APIEvent) -> Any:
+    def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
         api_event.input.trigger_event(input)
         try:
             return api_event.output.consume_event(timeout=self.queue_timeout)

@@ -1,16 +1,20 @@
 from collections import deque
 from queue import Empty, Queue
-from typing import Optional, TypeVar
+from typing import Generic, Optional, TypeVar
 
 from transitions import State
 
+from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
+from isar.models.communication.message import StartMissionMessage
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
 from robot_interface.models.mission.task import TASKS
 
 T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
 class Event(Queue[T]):
@@ -65,24 +69,24 @@ class Events:
             self.mqtt_queue: Queue = Queue()
 
 
-class APIEvent:
+class APIEvent(Generic[T1, T2]):
     """
     Creates input and output event. The events are defined such that the input is from
     api to state machine while the output is from state machine to api.
     """
 
     def __init__(self):
-        self.input: Event = Event()
-        self.output: Event = Event()
+        self.input: Event[T1] = Event()
+        self.output: Event[T2] = Event()
 
 
 class APIRequests:
     def __init__(self) -> None:
-        self.start_mission: APIEvent = APIEvent()
-        self.stop_mission: APIEvent = APIEvent()
-        self.pause_mission: APIEvent = APIEvent()
-        self.resume_mission: APIEvent = APIEvent()
-        self.return_home: APIEvent = APIEvent()
+        self.start_mission: APIEvent[StartMissionMessage, bool] = APIEvent()
+        self.stop_mission: APIEvent[str, ControlMissionResponse] = APIEvent()
+        self.pause_mission: APIEvent[bool, ControlMissionResponse] = APIEvent()
+        self.resume_mission: APIEvent[bool, ControlMissionResponse] = APIEvent()
+        self.return_home: APIEvent[bool, bool] = APIEvent()
 
 
 class StateMachineEvents:
