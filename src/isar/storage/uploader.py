@@ -7,7 +7,7 @@ from threading import Event
 from typing import List, Union
 
 from isar.config.settings import settings
-from isar.models.communication.queues.events import Events
+from isar.models.events import Events
 from isar.storage.storage_interface import StorageException, StorageInterface
 from robot_interface.models.inspection.inspection import (
     Inspection,

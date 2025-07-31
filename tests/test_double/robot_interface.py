@@ -5,7 +5,7 @@ from typing import Callable, List
 
 from alitra import Frame, Orientation, Pose, Position
 
-from isar.models.communication.queues.events import Event
+from isar.models.events import Event
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotCommunicationException,
 )

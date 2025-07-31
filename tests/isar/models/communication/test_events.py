@@ -1,4 +1,4 @@
-from isar.models.communication.queues.events import Event, Events
+from isar.models.events import Event, Events
 
 
 class TestEvents:

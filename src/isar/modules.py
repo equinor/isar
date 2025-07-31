@@ -12,7 +12,7 @@ from isar.config.settings import settings
 from isar.mission_planner.local_planner import LocalPlanner
 from isar.mission_planner.sequential_task_selector import SequentialTaskSelector
 from isar.mission_planner.task_selector_interface import TaskSelectorInterface
-from isar.models.communication.queues.events import Events, SharedState
+from isar.models.events import Events, SharedState
 from isar.robot.robot import Robot
 from isar.services.utilities.robot_utilities import RobotUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Callable, Optional
 
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.communication.message import StartMissionMessage
-from isar.models.communication.queues.events import Event
+from isar.models.events import Event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
 

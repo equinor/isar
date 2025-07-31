@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
-from isar.models.communication.queues.events import Event
+from isar.models.events import Event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
 if TYPE_CHECKING:
