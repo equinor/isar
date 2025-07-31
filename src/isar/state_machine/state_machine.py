@@ -14,7 +14,7 @@ from isar.mission_planner.task_selector_interface import (
     TaskSelectorInterface,
     TaskSelectorStop,
 )
-from isar.models.communication.queues.events import Events, SharedState
+from isar.models.events import Events, SharedState
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.home import Home

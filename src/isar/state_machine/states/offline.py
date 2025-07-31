@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, List
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
-from isar.models.communication.queues.events import Event
+from isar.models.events import Event
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:

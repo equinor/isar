@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Callable, Generic, List, Optional, TypeVar
 from transitions import State
 
 from isar.config.settings import settings
-from isar.models.communication.queues.events import Event
+from isar.models.events import Event
 
 T = TypeVar("T")
 

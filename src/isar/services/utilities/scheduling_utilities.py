@@ -14,7 +14,7 @@ from isar.mission_planner.mission_planner_interface import (
     MissionPlannerInterface,
 )
 from isar.models.communication.message import StartMissionMessage
-from isar.models.communication.queues.events import (
+from isar.models.events import (
     APIEvent,
     APIRequests,
     Events,

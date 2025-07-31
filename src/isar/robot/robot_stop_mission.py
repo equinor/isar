@@ -4,7 +4,7 @@ from threading import Event, Thread
 from typing import Optional
 
 from isar.config.settings import settings
-from isar.models.communication.queues.events import RobotServiceEvents
+from isar.models.events import RobotServiceEvents
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotActionException,

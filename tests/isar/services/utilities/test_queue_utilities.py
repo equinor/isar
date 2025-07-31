@@ -1,6 +1,6 @@
 import pytest
 
-from isar.models.communication.queues.events import Event, EventTimeoutError
+from isar.models.events import Event, EventTimeoutError
 
 
 class TestQueueUtilities:

@@ -2,7 +2,7 @@ import logging
 from threading import Event as ThreadEvent
 from typing import Optional
 
-from isar.models.communication.queues.events import (
+from isar.models.events import (
     Event,
     Events,
     RobotServiceEvents,

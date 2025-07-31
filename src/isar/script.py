@@ -10,7 +10,7 @@ from isar.apis.api import API
 from isar.config.log import setup_loggers
 from isar.config.open_telemetry import setup_open_telemetry
 from isar.config.settings import robot_settings, settings
-from isar.models.communication.queues.events import Events
+from isar.models.events import Events
 from isar.modules import ApplicationContainer, get_injector
 from isar.robot.robot import Robot
 from isar.services.service_connections.mqtt.mqtt_client import MqttClient

@@ -3,7 +3,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
-from isar.models.communication.queues.events import Event
+from isar.models.events import Event
 from isar.services.utilities.threaded_request import ThreadedRequest
 from isar.state_machine.utils.common_event_handlers import (
     mission_failed_event_handler,
