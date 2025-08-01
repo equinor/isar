@@ -157,7 +157,7 @@ def test_state_machine_failed_dependency(
             States.Monitor,
             States.AwaitNextMission,
             States.ReturningHome,
-            States.RobotStandingStill,
+            States.InterventionNeeded,
         ]
     )
 
