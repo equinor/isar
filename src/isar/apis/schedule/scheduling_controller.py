@@ -256,6 +256,22 @@ class SchedulingController:
         self.scheduling_utilities.start_mission(mission=mission)
         return self._api_response(mission)
 
+    def release_intervention_needed(self) -> None:
+        self.logger.info("Received request to release intervention needed state")
+
+        state: States = self.scheduling_utilities.get_state()
+
+        if state != States.InterventionNeeded:
+            error_message = f"Conflict - Release intervention needed command received in invalid state - State: {state}"
+            self.logger.warning(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.CONFLICT,
+                detail=error_message,
+            )
+
+        self.scheduling_utilities.release_intervention_needed()
+        self.logger.info("Released intervention needed state successfully")
+
     def _api_response(self, mission: Mission) -> StartMissionResponse:
         return StartMissionResponse(
             id=mission.id,
