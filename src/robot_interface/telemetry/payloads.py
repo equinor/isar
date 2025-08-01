@@ -138,3 +138,11 @@ class InspectionValuePayload:
 class StartUpMessagePayload:
     isar_id: str
     timestamp: datetime
+
+
+@dataclass
+class InterventionNeededPayload:
+    isar_id: str
+    robot_name: str
+    reason: str
+    timestamp: datetime

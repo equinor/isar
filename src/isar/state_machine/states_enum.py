@@ -12,6 +12,7 @@ class States(str, Enum):
     Offline = "offline"
     BlockedProtectiveStop = "blocked_protective_stop"
     UnknownStatus = "unknown_status"
+    InterventionNeeded = "intervention_needed"
 
     def __repr__(self):
         return self.value

@@ -290,6 +290,26 @@ class SchedulingUtilities:
         self.logger.info("OK - Mission successfully stopped")
         return stop_mission_response
 
+    def release_intervention_needed(self) -> None:
+        """Release intervention needed state
+
+        Raises
+        ------
+        HTTPException 500 Internal Server Error
+            If the intervention needed state could not be released
+        """
+        try:
+            self._send_command(True, self.api_events.release_intervention_needed)
+            self.logger.info("OK - Intervention needed state released")
+        except EventTimeoutError:
+            error_message = (
+                "Internal Server Error - Failed to release intervention needed state"
+            )
+            self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
+
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
         api_event.input.trigger_event(input)
         try:

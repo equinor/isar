@@ -29,3 +29,4 @@ class RobotStatus(Enum):
     Blocked = "blocked"
     BlockedProtectiveStop = "blockedprotectivestop"
     ReturningHome = "returninghome"
+    InterventionNeeded = "interventionneeded"

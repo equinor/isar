@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, List
 
 from isar.state_machine.transitions.functions.fail_mission import (
     report_failed_mission_and_finalize,
+    report_failed_return_home_and_intervention_needed,
 )
 from isar.state_machine.transitions.functions.return_home import (
     return_home_finished,
@@ -26,6 +27,7 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.await_next_mission_state,
                 state_machine.home_state,
                 state_machine.robot_standing_still_state,
+                state_machine.intervention_needed_state,
             ],
             "dest": state_machine.returning_home_state,
             "conditions": [
@@ -62,8 +64,18 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
         {
             "trigger": "return_home_failed",
             "source": state_machine.returning_home_state,
-            "dest": state_machine.robot_standing_still_state,
-            "before": def_transition(state_machine, report_failed_mission_and_finalize),
+            "dest": state_machine.intervention_needed_state,
+            "before": [
+                def_transition(
+                    state_machine, report_failed_return_home_and_intervention_needed
+                ),
+                def_transition(state_machine, report_failed_mission_and_finalize),
+            ],
+        },
+        {
+            "trigger": "release_intervention_needed",
+            "source": state_machine.intervention_needed_state,
+            "dest": state_machine.unknown_status_state,
         },
     ]
     return return_home_transitions

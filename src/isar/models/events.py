@@ -86,6 +86,7 @@ class APIRequests:
         self.pause_mission: APIEvent[bool, ControlMissionResponse] = APIEvent()
         self.resume_mission: APIEvent[bool, ControlMissionResponse] = APIEvent()
         self.return_home: APIEvent[bool, bool] = APIEvent()
+        self.release_intervention_needed: APIEvent[bool, bool] = APIEvent()
 
 
 class StateMachineEvents:
