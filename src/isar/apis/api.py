@@ -246,6 +246,24 @@ class API:
             },
         )
         router.add_api_route(
+            path="/schedule/release-intervention-needed",
+            endpoint=self.scheduling_controller.release_intervention_needed,
+            methods=["POST"],
+            dependencies=[authentication_dependency],
+            summary="Release the intervention needed state",
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Robot released from intervention needed state"
+                },
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Invalid command in the current state"
+                },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error - Current state of state machine unknown"
+                },
+            },
+        )
+        router.add_api_route(
             path="/schedule/move_arm/{arm_pose_literal}",
             endpoint=self.scheduling_controller.start_move_arm_mission,
             methods=["POST"],

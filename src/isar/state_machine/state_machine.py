@@ -18,6 +18,7 @@ from isar.models.events import Events, SharedState
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.home import Home
+from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.offline import Offline
 from isar.state_machine.states.paused import Paused
@@ -41,6 +42,7 @@ from robot_interface.models.mission.task import TASKS, InspectionTask, Task
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
+    InterventionNeededPayload,
     MissionPayload,
     RobotStatusPayload,
     TaskPayload,
@@ -101,6 +103,7 @@ class StateMachine(object):
         self.await_next_mission_state: State = AwaitNextMission(self)
         self.home_state: State = Home(self)
         self.robot_standing_still_state: State = RobotStandingStill(self)
+        self.intervention_needed_state: State = InterventionNeeded(self)
 
         # Status states
         self.offline_state: State = Offline(self)
@@ -120,6 +123,7 @@ class StateMachine(object):
             self.offline_state,
             self.blocked_protective_stopping_state,
             self.unknown_status_state,
+            self.intervention_needed_state,
         ]
 
         self.machine = Machine(
@@ -282,6 +286,25 @@ class StateMachine(object):
             retain=True,
         )
 
+    def publish_intervention_needed(self, error_message: str) -> None:
+        """Publishes the intervention needed message to the MQTT Broker"""
+        if not self.mqtt_publisher:
+            return
+
+        payload: InterventionNeededPayload = InterventionNeededPayload(
+            isar_id=settings.ISAR_ID,
+            robot_name=settings.ROBOT_NAME,
+            reason=error_message,
+            timestamp=datetime.now(timezone.utc),
+        )
+
+        self.mqtt_publisher.publish(
+            topic=settings.TOPIC_ISAR_INTERVENTION_NEEDED,
+            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+            qos=1,
+            retain=True,
+        )
+
     def publish_status(self) -> None:
         if not self.mqtt_publisher:
             return
@@ -314,6 +337,8 @@ class StateMachine(object):
             return RobotStatus.Offline
         elif self.current_state == States.BlockedProtectiveStop:
             return RobotStatus.BlockedProtectiveStop
+        elif self.current_state == States.InterventionNeeded:
+            return RobotStatus.InterventionNeeded
         else:
             return RobotStatus.Busy
 
