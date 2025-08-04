@@ -36,7 +36,8 @@ def print_setting(
 
 
 def print_startup_info():
-    print(
+    logger: Logger = logging.getLogger("main")
+    logger.info(
         """
          __   ________   ___        ________
         / /  / ______/  /   |      / ____  /
@@ -48,21 +49,15 @@ def print_startup_info():
 """
     )
 
-    WIDTH = 48
-
     def print_setting(setting: str = "", value: Any = "", fillchar: str = " "):
         separator = ": " if value != "" else ""
-        text = setting.ljust(22, fillchar) + separator + str(value)
-        print("*", text.ljust(WIDTH - 4, fillchar), "*")
+        logger.info(setting + separator + str(value))
 
-    print("Integration and Supervisory control".center(WIDTH, " "))
-    print("of Autonomous Robots".center(WIDTH, " "))
-    print()
-    print(f"Version: {isar.__version__}\n".center(WIDTH, " "))
+    logger.info(
+        f"Integration and Supervisory control of Autonomous Robots - Version: {isar.__version__}\n"
+    )
 
-    print_setting(fillchar="*")
     print_setting("ISAR settings")
-    print_setting(fillchar="-")
     print_setting("Robot package", settings.ROBOT_PACKAGE)
     print_setting("Robot name", settings.ROBOT_NAME)
     print_setting("Running on port", settings.API_PORT)
@@ -74,10 +69,7 @@ def print_startup_info():
     print_setting("Plant code", settings.PLANT_CODE)
     print_setting("Plant name", settings.PLANT_NAME)
     print_setting("Plant shortname", settings.PLANT_SHORT_NAME)
-    print_setting(fillchar="-")
     print_setting("Robot capabilities", robot_settings.CAPABILITIES)
-    print_setting(fillchar="*")
-    print()
 
 
 def start() -> None:
