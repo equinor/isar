@@ -128,6 +128,12 @@ class RobotServiceEvents:
         self.mission_successfully_stopped: Event[bool] = Event(
             "mission_successfully_stopped"
         )
+        self.mission_failed_to_pause: Event[ErrorMessage] = Event(
+            "mission_failed_to_pause"
+        )
+        self.mission_successfully_paused: Event[bool] = Event(
+            "mission_successfully_paused"
+        )
 
 
 class SharedState:

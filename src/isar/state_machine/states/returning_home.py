@@ -25,7 +25,7 @@ class ReturningHome(EventHandlerBase):
 
         def _pause_mission_event_handler(event: Event[bool]) -> Optional[Callable]:
             if event.consume_event():
-                return state_machine.pause  # type: ignore
+                return state_machine.pause_return_home  # type: ignore
             return None
 
         def _handle_task_completed(status: TaskStatus):
