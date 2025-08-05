@@ -5,8 +5,8 @@ from isar.state_machine.transitions.functions.fail_mission import (
 )
 from isar.state_machine.transitions.functions.finish_mission import finish_mission
 from isar.state_machine.transitions.functions.pause import (
-    pause_mission,
-    pause_return_home_mission,
+    pause_mission_failed,
+    trigger_pause_mission_event,
 )
 from isar.state_machine.transitions.functions.resume import resume_mission
 from isar.state_machine.transitions.functions.return_home import (
@@ -36,24 +36,39 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
         {
             "trigger": "pause",
             "source": state_machine.monitor_state,
+            "dest": state_machine.pausing_state,
+            "conditions": def_transition(state_machine, trigger_pause_mission_event),
+        },
+        {
+            "trigger": "mission_paused",
+            "source": state_machine.pausing_state,
             "dest": state_machine.paused_state,
-            "conditions": def_transition(state_machine, pause_mission),
         },
         {
-            "trigger": "pause",
-            "source": state_machine.monitor_state,
+            "trigger": "mission_pausing_failed",
+            "source": state_machine.pausing_state,
             "dest": state_machine.monitor_state,
+            "before": def_transition(state_machine, pause_mission_failed),
         },
         {
-            "trigger": "pause",
+            "trigger": "pause_return_home",
             "source": state_machine.returning_home_state,
-            "dest": state_machine.return_home_paused_state,
-            "conditions": def_transition(state_machine, pause_return_home_mission),
+            "dest": state_machine.pausing_return_home_state,
+            "before": [
+                def_transition(state_machine, trigger_pause_mission_event),
+                def_transition(state_machine, reset_return_home_failure_counter),
+            ],
         },
         {
-            "trigger": "pause",
-            "source": state_machine.returning_home_state,
+            "trigger": "return_home_mission_pausing_failed",
+            "source": state_machine.pausing_return_home_state,
             "dest": state_machine.returning_home_state,
+            "before": def_transition(state_machine, stop_return_home_mission_failed),
+        },
+        {
+            "trigger": "return_home_mission_paused",
+            "source": state_machine.pausing_return_home_state,
+            "dest": state_machine.return_home_paused_state,
         },
         {
             "trigger": "resume",
