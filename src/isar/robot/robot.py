@@ -9,6 +9,7 @@ from isar.models.events import (
     SharedState,
     StateMachineEvents,
 )
+from isar.robot.robot_pause_mission import RobotPauseMissionThread
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import RobotStopMissionThread
@@ -31,6 +32,7 @@ class Robot(object):
         self.robot_status_thread: Optional[RobotStatusThread] = None
         self.robot_task_status_thread: Optional[RobotTaskStatusThread] = None
         self.stop_mission_thread: Optional[RobotStopMissionThread] = None
+        self.pause_mission_thread: Optional[RobotPauseMissionThread] = None
         self.signal_thread_quitting: ThreadEvent = ThreadEvent()
 
     def stop(self) -> None:
@@ -111,6 +113,34 @@ class Robot(object):
             )
             self.stop_mission_thread.start()
 
+    def _pause_mission_request_handler(self, event: Event[bool]) -> None:
+        if event.consume_event():
+            if (
+                self.pause_mission_thread is not None
+                and self.pause_mission_thread.is_alive()
+            ):
+                self.logger.warning(
+                    "Received pause mission event while trying to pause a mission. Aborting pause attempt."
+                )
+                return
+            if (
+                self.start_mission_thread is not None
+                and self.start_mission_thread.is_alive()
+            ):
+                error_description = "Received pause mission event while trying to start a mission. Aborting pause attempt."
+                error_message = ErrorMessage(
+                    error_reason=ErrorReason.RobotStillStartingMissionException,
+                    error_description=error_description,
+                )
+                self.robot_service_events.mission_failed_to_stop.trigger_event(
+                    error_message
+                )
+                return
+            self.pause_mission_thread = RobotPauseMissionThread(
+                self.robot_service_events, self.robot, self.signal_thread_quitting
+            )
+            self.pause_mission_thread.start()
+
     def run(self) -> None:
         self.robot_status_thread = RobotStatusThread(
             self.robot, self.signal_thread_quitting, self.shared_state
@@ -123,6 +153,8 @@ class Robot(object):
             self._task_status_request_handler(
                 self.state_machine_events.task_status_request
             )
+
+            self._pause_mission_request_handler(self.state_machine_events.pause_mission)
 
             self._stop_mission_request_handler(self.state_machine_events.stop_mission)
 

@@ -4,7 +4,7 @@ from isar.state_machine.transitions.functions.fail_mission import (
     report_failed_mission_and_finalize,
 )
 from isar.state_machine.transitions.functions.finish_mission import finish_mission
-from isar.state_machine.transitions.functions.pause import pause_mission
+from isar.state_machine.transitions.functions.pause import trigger_pause_mission_event
 from isar.state_machine.transitions.functions.resume import resume_mission
 from isar.state_machine.transitions.functions.start_mission import (
     initialize_robot,
@@ -32,7 +32,7 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "pause",
             "source": state_machine.monitor_state,
             "dest": state_machine.paused_state,
-            "conditions": def_transition(state_machine, pause_mission),
+            "conditions": def_transition(state_machine, trigger_pause_mission_event),
         },
         {
             "trigger": "pause",

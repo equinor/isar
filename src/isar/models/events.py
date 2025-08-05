@@ -105,6 +105,8 @@ class RobotServiceEvents:
         self.robot_status_changed: Event[bool] = Event()
         self.mission_failed_to_stop: Event[ErrorMessage] = Event()
         self.mission_successfully_stopped: Event[bool] = Event()
+        self.mission_failed_to_pause: Event[ErrorMessage] = Event()
+        self.mission_successfully_paused: Event[bool] = Event()
 
 
 class SharedState:
