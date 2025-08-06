@@ -7,9 +7,9 @@ from isar.state_machine.transitions.functions.finish_mission import finish_missi
 from isar.state_machine.transitions.functions.pause import pause_mission
 from isar.state_machine.transitions.functions.resume import resume_mission
 from isar.state_machine.transitions.functions.start_mission import (
+    acknowledge_mission,
     initialize_robot,
     initiate_mission,
-    put_start_mission_on_queue,
     set_mission_to_in_progress,
     trigger_start_mission_event,
 )
@@ -94,7 +94,7 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.robot_standing_still_state,
             ],
             "dest": state_machine.monitor_state,
-            "prepare": def_transition(state_machine, put_start_mission_on_queue),
+            "prepare": def_transition(state_machine, acknowledge_mission),
             "conditions": [
                 def_transition(state_machine, initiate_mission),
                 def_transition(state_machine, initialize_robot),
