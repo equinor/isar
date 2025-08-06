@@ -16,7 +16,7 @@ def acknowledge_mission(state_machine: "StateMachine") -> bool:
     return True
 
 
-def initiate_mission(state_machine: "StateMachine") -> bool:
+def prepare_state_machine_before_mission(state_machine: "StateMachine") -> bool:
     state_machine.logger.info(
         "Initiating mission:\n"
         f"  Mission ID: {state_machine.current_mission.id}\n"
