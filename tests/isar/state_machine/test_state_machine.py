@@ -474,7 +474,7 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
         ]
     )
     assert (
-        not state_machine_thread.state_machine.events.api_requests.start_mission.input.has_event()
+        not state_machine_thread.state_machine.events.api_requests.start_mission.request.has_event()
     )
 
 

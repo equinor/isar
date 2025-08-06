@@ -22,17 +22,17 @@ class Home(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="start_mission_event",
-                event=events.api_requests.start_mission.input,
+                event=events.api_requests.start_mission.request,
                 handler=lambda event: start_mission_event_handler(state_machine, event),
             ),
             EventHandlerMapping(
                 name="return_home_event",
-                event=events.api_requests.return_home.input,
+                event=events.api_requests.return_home.request,
                 handler=lambda event: return_home_event_handler(state_machine, event),
             ),
             EventHandlerMapping(
                 name="stop_mission_event",
-                event=events.api_requests.return_home.input,
+                event=events.api_requests.return_home.request,
                 handler=lambda event: stop_mission_event_handler(state_machine, event),
             ),
             EventHandlerMapping(

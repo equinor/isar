@@ -291,11 +291,11 @@ class SchedulingUtilities:
         return stop_mission_response
 
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
-        api_event.input.trigger_event(input)
+        api_event.request.trigger_event(input)
         try:
-            return api_event.output.consume_event(timeout=self.queue_timeout)
+            return api_event.response.consume_event(timeout=self.queue_timeout)
         except EventTimeoutError as e:
             self.logger.error("Queue timed out")
-            api_event.input.clear_event()
+            api_event.request.clear_event()
             self.logger.error("No output received for command to state machine")
             raise e

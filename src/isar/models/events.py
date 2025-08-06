@@ -70,13 +70,13 @@ class Events:
 
 class APIEvent(Generic[T1, T2]):
     """
-    Creates input and output event. The events are defined such that the input is from
-    api to state machine while the output is from state machine to api.
+    Creates request and response event. The events are defined such that the request is from
+    api to state machine while the response is from state machine to api.
     """
 
     def __init__(self):
-        self.input: Event[T1] = Event()
-        self.output: Event[T2] = Event()
+        self.request: Event[T1] = Event()
+        self.response: Event[T2] = Event()
 
 
 class APIRequests:
