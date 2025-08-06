@@ -11,7 +11,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
-def put_start_mission_on_queue(state_machine: "StateMachine") -> bool:
+def acknowledge_mission(state_machine: "StateMachine") -> bool:
     state_machine.events.api_requests.start_mission.output.put(True)
     return True
 
