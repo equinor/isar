@@ -14,12 +14,12 @@ class Paused(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="stop_mission_event",
-                event=events.api_requests.stop_mission.input,
+                event=events.api_requests.stop_mission.request,
                 handler=lambda event: state_machine.stop if event.consume_event() else None,  # type: ignore
             ),
             EventHandlerMapping(
                 name="resume_mission_event",
-                event=events.api_requests.resume_mission.input,
+                event=events.api_requests.resume_mission.request,
                 handler=lambda event: state_machine.resume if event.consume_event() else None,  # type: ignore
             ),
         ]

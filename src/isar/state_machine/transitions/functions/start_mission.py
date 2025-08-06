@@ -12,7 +12,7 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
 def acknowledge_mission(state_machine: "StateMachine") -> bool:
-    state_machine.events.api_requests.start_mission.output.put(True)
+    state_machine.events.api_requests.start_mission.response.put(True)
     return True
 
 
@@ -70,5 +70,5 @@ def trigger_start_mission_event(state_machine: "StateMachine") -> bool:
 
 
 def _initialization_failed(state_machine: "StateMachine") -> None:
-    state_machine.events.api_requests.start_mission.output.put(False)
+    state_machine.events.api_requests.start_mission.response.put(False)
     state_machine._finalize()

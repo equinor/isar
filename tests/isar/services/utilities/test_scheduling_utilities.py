@@ -17,7 +17,7 @@ def test_timeout_send_command(
     q: APIEvent = APIEvent()
     with pytest.raises(EventTimeoutError):
         scheduling_utilities._send_command(True, q)
-    assert q.input.empty()
+    assert q.request.empty()
 
 
 def test_robot_capable_of_mission(scheduling_utilities: SchedulingUtilities):
