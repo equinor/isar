@@ -5,11 +5,10 @@ from importlib.resources import as_file, files
 import yaml
 from uvicorn.logging import ColourizedFormatter
 
-from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 
 
-def setup_loggers(keyvault: Keyvault) -> None:
+def setup_loggers() -> None:
     log_levels: dict = settings.LOG_LEVELS
     log_config = load_log_config()
 

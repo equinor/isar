@@ -75,8 +75,7 @@ def print_startup_info():
 def start() -> None:
     injector: ApplicationContainer = get_injector()
 
-    keyvault = injector.keyvault()
-    setup_loggers(keyvault=keyvault)
+    setup_loggers()
     setup_open_telemetry(app=injector.api().app)
     logger: Logger = logging.getLogger("main")
 
