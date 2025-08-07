@@ -6,21 +6,21 @@ class TestEvents:
         events: Events = Events()
         assert events.api_requests.start_mission is not None
         assert (
-            events.api_requests.start_mission.input is not None
-            and events.api_requests.start_mission.input.maxsize == 1
+            events.api_requests.start_mission.request is not None
+            and events.api_requests.start_mission.request.maxsize == 1
         )
         assert (
-            events.api_requests.start_mission.output is not None
-            and events.api_requests.start_mission.output.maxsize == 1
+            events.api_requests.start_mission.response is not None
+            and events.api_requests.start_mission.response.maxsize == 1
         )
         assert events.api_requests.stop_mission is not None
         assert (
-            events.api_requests.stop_mission.input is not None
-            and events.api_requests.stop_mission.input.maxsize == 1
+            events.api_requests.stop_mission.request is not None
+            and events.api_requests.stop_mission.request.maxsize == 1
         )
         assert (
-            events.api_requests.stop_mission.output is not None
-            and events.api_requests.stop_mission.output.maxsize == 1
+            events.api_requests.stop_mission.response is not None
+            and events.api_requests.stop_mission.response.maxsize == 1
         )
 
 

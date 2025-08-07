@@ -24,7 +24,7 @@ def return_home_event_handler(
     state_machine: "StateMachine", event: Event[bool]
 ) -> Optional[Callable]:
     if event.consume_event():
-        state_machine.events.api_requests.return_home.output.put(True)
+        state_machine.events.api_requests.return_home.response.put(True)
         return state_machine.request_return_home  # type: ignore
     return None
 
@@ -48,7 +48,7 @@ def stop_mission_event_handler(
         if state_machine.current_mission.id == mission_id or mission_id == "":
             return state_machine.stop  # type: ignore
         else:
-            state_machine.events.api_requests.stop_mission.output.put(
+            state_machine.events.api_requests.stop_mission.response.put(
                 ControlMissionResponse(
                     mission_id=mission_id,
                     mission_status=state_machine.current_mission.status,
