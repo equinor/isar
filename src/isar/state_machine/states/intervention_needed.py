@@ -18,7 +18,7 @@ class InterventionNeeded(EventHandlerBase):
             event: Event[bool],
         ) -> Optional[Callable]:
             if event.consume_event():
-                state_machine.events.api_requests.release_intervention_needed.output.trigger_event(
+                state_machine.events.api_requests.release_intervention_needed.response.trigger_event(
                     True
                 )
                 return state_machine.release_intervention_needed  # type: ignore
@@ -27,12 +27,12 @@ class InterventionNeeded(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="return_home_event",
-                event=events.api_requests.return_home.input,
+                event=events.api_requests.return_home.request,
                 handler=lambda event: return_home_event_handler(state_machine, event),
             ),
             EventHandlerMapping(
                 name="release_intervention_needed_event",
-                event=events.api_requests.release_intervention_needed.input,
+                event=events.api_requests.release_intervention_needed.request,
                 handler=release_intervention_needed_handler,
             ),
         ]
