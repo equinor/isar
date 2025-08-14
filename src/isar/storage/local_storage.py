@@ -4,7 +4,7 @@ from pathlib import Path
 from isar.config.settings import settings
 from isar.storage.storage_interface import StorageException, StorageInterface
 from isar.storage.utilities import construct_metadata_file, construct_paths
-from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.inspection.inspection import InspectionBlob
 from robot_interface.models.mission.mission import Mission
 
 
@@ -13,7 +13,10 @@ class LocalStorage(StorageInterface):
         self.root_folder: Path = Path(settings.LOCAL_STORAGE_PATH)
         self.logger = logging.getLogger("uploader")
 
-    def store(self, inspection: Inspection, mission: Mission) -> str:
+    def store(self, inspection: InspectionBlob, mission: Mission) -> str:
+        if inspection.data is None:
+            raise StorageException("Nothing to store. The inspection data is empty")
+
         local_path, local_metadata_path = construct_paths(
             inspection=inspection, mission=mission
         )

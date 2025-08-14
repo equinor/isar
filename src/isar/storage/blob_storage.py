@@ -3,34 +3,49 @@ from pathlib import Path
 from typing import Union
 
 from azure.core.exceptions import ResourceExistsError
-from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
+from azure.storage.blob import BlobServiceClient
 
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 from isar.storage.storage_interface import StorageException, StorageInterface
 from isar.storage.utilities import construct_metadata_file, construct_paths
-from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.inspection.inspection import InspectionBlob
 from robot_interface.models.mission.mission import Mission
 
 
 class BlobStorage(StorageInterface):
-    def __init__(
-        self, keyvault: Keyvault, container_name: str = settings.BLOB_CONTAINER
-    ) -> None:
-        self.keyvault = keyvault
-        self.storage_connection_string = self.keyvault.get_secret(
-            "AZURE-STORAGE-CONNECTION-STRING"
-        ).value
-        self.container_name = container_name
-
-        self.blob_service_client = self._get_blob_service_client()
-        self.container_client = self._get_container_client(
-            blob_service_client=self.blob_service_client
-        )
-
+    def __init__(self, keyvault: Keyvault) -> None:
         self.logger = logging.getLogger("uploader")
 
-    def store(self, inspection: Inspection, mission: Mission) -> Union[str, dict]:
+        storage_connection_string = keyvault.get_secret(
+            "AZURE-STORAGE-CONNECTION-STRING"
+        ).value
+
+        if storage_connection_string is None:
+            raise RuntimeError("AZURE-STORAGE-CONNECTION-STRING from keyvault is None")
+
+        try:
+            blob_service_client = BlobServiceClient.from_connection_string(
+                storage_connection_string
+            )
+        except Exception as e:
+            self.logger.error("Unable to retrieve blob service client. Error: %s", e)
+            raise e
+
+        self.container_client = blob_service_client.get_container_client(
+            settings.BLOB_CONTAINER
+        )
+
+        if not self.container_client.exists():
+            raise RuntimeError(
+                "The configured blob container %s does not exist",
+                settings.BLOB_CONTAINER,
+            )
+
+    def store(self, inspection: InspectionBlob, mission: Mission) -> Union[str, dict]:
+        if inspection.data is None:
+            raise StorageException("Nothing to store. The inspection data is empty")
+
         data_path, metadata_path = construct_paths(
             inspection=inspection, mission=mission
         )
@@ -43,7 +58,7 @@ class BlobStorage(StorageInterface):
         return self._upload_file(path=data_path, data=inspection.data)
 
     def _upload_file(self, path: Path, data: bytes) -> Union[str, dict]:
-        blob_client = self._get_blob_client(path)
+        blob_client = self.container_client.get_blob_client(path.as_posix())
         try:
             blob_client.upload_blob(data=data)
         except ResourceExistsError as e:
@@ -62,20 +77,3 @@ class BlobStorage(StorageInterface):
             "blob_name": blob_client.blob_name,
         }
         return absolute_inspection_path
-
-    def _get_blob_service_client(self) -> BlobServiceClient:
-        try:
-            return BlobServiceClient.from_connection_string(
-                self.storage_connection_string
-            )
-        except Exception as e:
-            self.logger.error("Unable to retrieve blob service client. Error: %s", e)
-            raise e
-
-    def _get_container_client(
-        self, blob_service_client: BlobServiceClient
-    ) -> ContainerClient:
-        return blob_service_client.get_container_client(self.container_name)
-
-    def _get_blob_client(self, path_to_blob: Path) -> BlobClient:
-        return self.container_client.get_blob_client(path_to_blob.as_posix())
