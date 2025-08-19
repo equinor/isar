@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 class ReturningHome(EventHandlerBase):
 
     def __init__(self, state_machine: "StateMachine"):
+        self.failed_return_home_attemps: int = 0
         events = state_machine.events
 
         def _handle_task_completed(status: TaskStatus):
@@ -28,7 +29,9 @@ class ReturningHome(EventHandlerBase):
                     error_reason=ErrorReason.RobotActionException,
                     error_description="Return home failed.",
                 )
+                self.failed_return_home_attemps += 1
                 return state_machine.return_home_failed  # type: ignore
+
             return state_machine.returned_home  # type: ignore
 
         def _start_mission_event_handler(

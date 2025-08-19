@@ -5,8 +5,10 @@ from isar.state_machine.transitions.functions.fail_mission import (
     report_failed_return_home_and_intervention_needed,
 )
 from isar.state_machine.transitions.functions.return_home import (
+    reset_return_home_failure_counter,
     return_home_finished,
     set_return_home_status,
+    should_retry_return_home,
     start_return_home_mission,
 )
 from isar.state_machine.transitions.functions.start_mission import (
@@ -34,6 +36,7 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 def_transition(state_machine, start_return_home_mission),
                 def_transition(state_machine, set_return_home_status),
                 def_transition(state_machine, initialize_robot),
+                def_transition(state_machine, initialize_robot),
             ],
             "before": def_transition(state_machine, trigger_start_mission_event),
         },
@@ -59,7 +62,25 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "returned_home",
             "source": state_machine.returning_home_state,
             "dest": state_machine.home_state,
-            "before": def_transition(state_machine, return_home_finished),
+            "before": [
+                def_transition(state_machine, reset_return_home_failure_counter),
+                def_transition(state_machine, return_home_finished),
+            ],
+        },
+        {
+            "trigger": "return_home_failed",
+            "source": state_machine.returning_home_state,
+            "dest": state_machine.returning_home_state,
+            "conditions": [
+                def_transition(state_machine, should_retry_return_home),
+            ],
+            "before": [
+                def_transition(state_machine, report_failed_mission_and_finalize),
+                def_transition(state_machine, start_return_home_mission),
+                def_transition(state_machine, set_return_home_status),
+                def_transition(state_machine, initialize_robot),
+                def_transition(state_machine, trigger_start_mission_event),
+            ],
         },
         {
             "trigger": "return_home_failed",
@@ -69,6 +90,7 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 def_transition(
                     state_machine, report_failed_return_home_and_intervention_needed
                 ),
+                def_transition(state_machine, reset_return_home_failure_counter),
                 def_transition(state_machine, report_failed_mission_and_finalize),
             ],
         },

@@ -89,6 +89,9 @@ class Settings(BaseSettings):
     # Determines how long delay time should be allowed before returning home
     RETURN_HOME_DELAY: int = Field(default=10)
 
+    # Sets how many times the robot should try to return home if a return home fails
+    RETURN_HOME_RETRY_LIMIT: int = Field(default=5)
+
     # Determines which mission planner module is used by ISAR
     MISSION_PLANNER: str = Field(default="local")
 

@@ -157,6 +157,10 @@ def test_state_machine_failed_dependency(
             States.Monitor,
             States.AwaitNextMission,
             States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
             States.InterventionNeeded,
         ]
     )
@@ -475,6 +479,81 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
     )
     assert (
         not state_machine_thread.state_machine.events.api_requests.start_mission.request.has_event()
+    )
+
+
+def test_state_machine_with_return_home_failure_successful_retries(
+    container: ApplicationContainer,
+    mocker: MockerFixture,
+    state_machine_thread: StateMachineThreadMock,
+    robot_service_thread: RobotServiceThreadMock,
+) -> None:
+    state_machine_thread.state_machine.await_next_mission_state.timers[
+        0
+    ].timeout_in_seconds = 0.01
+    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
+    state_machine_thread.start()
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Available)
+    mocker.patch.object(
+        StubRobot, "task_status", side_effect=[TaskStatus.Failed, TaskStatus.Successful]
+    )
+    robot_service_thread.start()
+
+    scheduling_utilities.return_home()
+    time.sleep(3)  # Allow enough time to run mission and return home
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [
+            States.UnknownStatus,
+            States.RobotStandingStill,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.Home,
+            States.RobotStandingStill,
+        ]
+    )
+
+
+def test_state_machine_with_return_home_failure_unsuccessful_retries_twice(
+    container: ApplicationContainer,
+    mocker: MockerFixture,
+    state_machine_thread: StateMachineThreadMock,
+    robot_service_thread: RobotServiceThreadMock,
+) -> None:
+    state_machine_thread.state_machine.await_next_mission_state.timers[
+        0
+    ].timeout_in_seconds = 0.01
+    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
+    state_machine_thread.start()
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Available)
+    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.Failed)
+    robot_service_thread.start()
+
+    scheduling_utilities.return_home()
+    time.sleep(3)  # Allow enough time to run mission and return home
+    scheduling_utilities.release_intervention_needed()
+    scheduling_utilities.return_home()
+    time.sleep(3)  # Allow enough time to run mission and return home
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [
+            States.UnknownStatus,
+            States.RobotStandingStill,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.InterventionNeeded,
+            States.UnknownStatus,
+            States.RobotStandingStill,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.InterventionNeeded,
+        ]
     )
 
 
