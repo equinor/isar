@@ -58,6 +58,28 @@ class EventHandlerBase(State):
     def stop(self) -> None:
         return
 
+    def get_event_handler_by_name(
+        self, event_handler_name: str
+    ) -> Optional[EventHandlerMapping]:
+        filtered_handlers = list(
+            filter(
+                lambda mapping: mapping.name == event_handler_name,
+                self.event_handler_mappings,
+            )
+        )
+        return filtered_handlers[0] if len(filtered_handlers) > 0 else None
+
+    def get_event_timer_by_name(
+        self, event_timer_name: str
+    ) -> Optional[TimeoutHandlerMapping]:
+        filtered_timers = list(
+            filter(
+                lambda mapping: mapping.name == event_timer_name,
+                self.timers,
+            )
+        )
+        return filtered_timers[0] if len(filtered_timers) > 0 else None
+
     def _run(self) -> None:
         should_exit_state: bool = False
         timers = deepcopy(self.timers)

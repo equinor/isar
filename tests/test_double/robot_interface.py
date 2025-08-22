@@ -85,6 +85,9 @@ class StubRobot(RobotInterface):
     def robot_status(self) -> RobotStatus:
         return self.robot_status_return_value
 
+    def get_battery_level(self):
+        return 80.0
+
 
 def stub_image_metadata() -> ImageMetadata:
     return ImageMetadata(

@@ -81,6 +81,9 @@ class Settings(BaseSettings):
     ROBOT_API_STATUS_POLL_INTERVAL: float = Field(default=5)
     THREAD_CHECK_INTERVAL: float = Field(default=0.01)
 
+    # Determines the minimum battery level the robot must have to start a mission
+    ROBOT_MISSION_BATTERY_START_THRESHOLD: float = Field(default=25.0)
+
     # FastAPI host
     API_HOST_VIEWED_EXTERNALLY: str = Field(default="0.0.0.0")
 

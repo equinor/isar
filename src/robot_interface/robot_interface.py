@@ -244,3 +244,30 @@ class RobotInterface(metaclass=ABCMeta):
 
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def get_battery_level(self) -> float:
+        """
+        Method which returns the percent charge remaining in the robot battery.
+
+        Returns
+        -------
+        float
+            The battery percentage on the robot
+
+        Raises
+        -------
+        RobotCommunicationException
+            Raised if the robot package is unable to communicate with the robot API.
+            The fetching of robot battery level will be attempted again until success
+        RobotAPIException
+            Raised if the robot package is able to communicate with the API but an error
+            occurred while interpreting the response. The fetching of robot battery level
+            will be attempted again until success
+        RobotException
+            Catches other RobotExceptions that may have occurred while retrieving the
+            robot battery level. The fetching of robot battery level will
+            be attempted again until success
+
+        """
+        raise NotImplementedError

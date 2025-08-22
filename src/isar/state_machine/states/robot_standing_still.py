@@ -23,7 +23,9 @@ class RobotStandingStill(EventHandlerBase):
             EventHandlerMapping(
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,
-                handler=lambda event: start_mission_event_handler(state_machine, event),
+                handler=lambda event: start_mission_event_handler(
+                    state_machine, event, events.api_requests.start_mission.response
+                ),
             ),
             EventHandlerMapping(
                 name="return_home_event",

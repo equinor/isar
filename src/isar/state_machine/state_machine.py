@@ -189,6 +189,12 @@ class StateMachine(object):
                 self.current_task = None
             self.send_task_status()
 
+    def battery_level_is_above_mission_start_threshold(self):
+        return (
+            not self.shared_state.robot_battery_level.check()
+            < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
+        )
+
     def update_state(self):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)  # type: ignore

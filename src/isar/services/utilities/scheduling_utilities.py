@@ -16,6 +16,7 @@ from isar.mission_planner.mission_planner_interface import (
 from isar.models.events import (
     APIEvent,
     APIRequests,
+    EventConflictError,
     Events,
     EventTimeoutError,
     SharedState,
@@ -176,10 +177,22 @@ class SchedulingUtilities:
             If there is a timeout while communicating with the state machine
         """
         try:
-            self._send_command(
+            mission_start_response = self._send_command(
                 deepcopy(mission),
                 self.api_events.start_mission,
             )
+            if not mission_start_response.mission_started:
+                self.logger.warning(
+                    f"Mission failed to start - {mission_start_response.mission_not_started_reason}"
+                )
+                raise HTTPException(
+                    status_code=HTTPStatus.CONFLICT,
+                    detail=mission_start_response.mission_not_started_reason,
+                )
+        except EventConflictError:
+            error_message = "Previous mission request is still being processed"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
             error_message = "Internal Server Error - Failed to start mission in ISAR"
             self.logger.error(error_message)
@@ -203,6 +216,10 @@ class SchedulingUtilities:
                 True,
                 self.api_events.return_home,
             )
+        except EventConflictError:
+            error_message = "Previous return home request is still being processed"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
             error_message = (
                 "Internal Server Error - Failed to start return home mission in ISAR"
@@ -225,6 +242,10 @@ class SchedulingUtilities:
             response = self._send_command(True, self.api_events.pause_mission)
             self.logger.info("OK - Mission successfully paused")
             return response
+        except EventConflictError:
+            error_message = "Previous pause mission request is still being processed"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
             error_message = "Internal Server Error - Failed to pause mission"
             self.logger.error(error_message)
@@ -244,6 +265,10 @@ class SchedulingUtilities:
             response = self._send_command(True, self.api_events.resume_mission)
             self.logger.info("OK - Mission successfully resumed")
             return response
+        except EventConflictError:
+            error_message = "Previous resume mission request is still being processed"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
             error_message = "Internal Server Error - Failed to resume mission"
             self.logger.error(error_message)
@@ -281,6 +306,10 @@ class SchedulingUtilities:
                 raise HTTPException(
                     status_code=HTTPStatus.CONFLICT, detail=error_message
                 )
+        except EventConflictError:
+            error_message = "Previous stop mission request is still being processed"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
             error_message = "Internal Server Error - Failed to stop mission"
             self.logger.error(error_message)
@@ -311,8 +340,11 @@ class SchedulingUtilities:
             )
 
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
-        api_event.request.trigger_event(input)
+        if api_event.request.has_event() or api_event.response.has_event():
+            raise EventConflictError("API event has already been sent")
+
         try:
+            api_event.request.trigger_event(input, timeout=1)
             return api_event.response.consume_event(timeout=self.queue_timeout)
         except EventTimeoutError as e:
             self.logger.error("Queue timed out")
