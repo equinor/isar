@@ -176,10 +176,18 @@ class SchedulingUtilities:
             If there is a timeout while communicating with the state machine
         """
         try:
-            self._send_command(
+            mission_start_response = self._send_command(
                 deepcopy(mission),
                 self.api_events.start_mission,
             )
+            if not mission_start_response.mission_started:
+                self.logger.warning(
+                    f"Mission failed to start - {mission_start_response.mission_not_started_reason}"
+                )
+                raise HTTPException(
+                    status_code=HTTPStatus.CONFLICT,
+                    detail=mission_start_response.mission_not_started_reason,
+                )
         except EventTimeoutError:
             error_message = "Internal Server Error - Failed to start mission in ISAR"
             self.logger.error(error_message)

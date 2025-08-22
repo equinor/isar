@@ -48,7 +48,10 @@ class RobotStatusThread(Thread):
                 self.last_robot_status_poll_time = time.time()
 
                 robot_status = self.robot.robot_status()
+                robot_battery_level = self.robot.get_battery_level()
+
                 self.shared_state.robot_status.update(robot_status)
+                self.shared_state.robot_battery_level.update(robot_battery_level)
             except RobotException as e:
                 self.logger.error(f"Failed to retrieve robot status: {e}")
                 continue
