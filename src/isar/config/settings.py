@@ -14,6 +14,10 @@ from robot_interface.telemetry.payloads import DocumentInfo
 class Settings(BaseSettings):
     # Name of the OpenTelemetry service
     OPEN_TELEMETRY_SERVICE_NAME: str = Field(default="isar")
+
+    # Endpoint open telemetry will export telemetry in the otlp protocol to
+    OPEN_TELEMETRY_OTLP_EXPORTER_ENDPOINT: str = Field(default="http://localhost:4318")
+
     # Connection string for Azure Application Insights
     # This is optional and it will use managed identity if not set
     APPLICATIONINSIGHTS_CONNECTION_STRING: str = Field(default="")
