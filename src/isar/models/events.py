@@ -4,7 +4,7 @@ from typing import Generic, Optional, TypeVar
 
 from transitions import State
 
-from isar.apis.models.models import ControlMissionResponse
+from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
 from isar.config.settings import settings
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
@@ -20,8 +20,13 @@ class Event(Queue[T]):
     def __init__(self) -> None:
         super().__init__(maxsize=1)
 
-    def trigger_event(self, data: T) -> None:
-        self.put(data)
+    def trigger_event(self, data: T, timeout: int = None) -> None:
+        try:
+            self.put(data, timeout=timeout)
+        except Exception:
+            if timeout is not None:
+                raise EventTimeoutError
+            return None
 
     def consume_event(self, timeout: int = None) -> Optional[T]:
         try:
@@ -81,7 +86,7 @@ class APIEvent(Generic[T1, T2]):
 
 class APIRequests:
     def __init__(self) -> None:
-        self.start_mission: APIEvent[Mission, bool] = APIEvent()
+        self.start_mission: APIEvent[Mission, MissionStartResponse] = APIEvent()
         self.stop_mission: APIEvent[str, ControlMissionResponse] = APIEvent()
         self.pause_mission: APIEvent[bool, ControlMissionResponse] = APIEvent()
         self.resume_mission: APIEvent[bool, ControlMissionResponse] = APIEvent()
@@ -113,7 +118,12 @@ class SharedState:
         self.state: Event[State] = Event()
         self.robot_status: Event[RobotStatus] = Event()
         self.state_machine_current_task: Event[TASKS] = Event()
+        self.robot_battery_level: Event[float] = Event()
 
 
 class EventTimeoutError(Exception):
+    pass
+
+
+class EventConflictError(Exception):
     pass

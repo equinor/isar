@@ -2,13 +2,18 @@ import time
 from collections import deque
 from http import HTTPStatus
 from threading import Thread
-from typing import List
+from typing import List, Optional, cast
 from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
+from isar.eventhandlers.eventhandler import (
+    EventHandlerBase,
+    EventHandlerMapping,
+    TimeoutHandlerMapping,
+)
 from isar.modules import ApplicationContainer
 from isar.robot.robot import Robot
 from isar.robot.robot_status import RobotStatusThread
@@ -119,6 +124,87 @@ def test_state_machine_transitions_when_running_full_mission(
             States.Home,
         ]
     )
+
+
+def test_state_machine_battery_too_low_to_start_mission(
+    container: ApplicationContainer,
+    state_machine_thread: StateMachineThreadMock,
+    robot_service_thread: RobotServiceThreadMock,
+    mocker,
+) -> None:
+    state_machine_thread.state_machine.await_next_mission_state.timers[
+        0
+    ].timeout_in_seconds = 0.01
+    state_machine_thread.start()
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
+    mocker.patch.object(StubRobot, "get_battery_level", return_value=10.0)
+    robot_service_thread.start()
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    task_2: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
+
+    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
+
+    with pytest.raises(HTTPException) as exception_details:
+        scheduling_utilities.start_mission(mission=mission)
+        assert exception_details.value.status_code == 408
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [
+            States.UnknownStatus,
+            States.Home,
+        ]
+    )
+
+
+def test_return_home_not_cancelled_when_battery_is_low(
+    container: ApplicationContainer,
+) -> None:
+    state_machine: StateMachine = container.state_machine()
+    state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+
+    events = state_machine.events
+
+    returning_home_state: EventHandlerBase = cast(
+        EventHandlerBase, state_machine.returning_home_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("start_mission_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is None
+    assert events.api_requests.start_mission.response.has_event()
+    start_mission_event_response = events.api_requests.start_mission.response.check()
+    assert not start_mission_event_response.mission_started
+
+
+def test_return_home_starts_when_battery_is_low(
+    container: ApplicationContainer,
+) -> None:
+    state_machine: StateMachine = container.state_machine()
+    state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+
+    await_next_mission_state: EventHandlerBase = cast(
+        EventHandlerBase, state_machine.await_next_mission_state
+    )
+    timer: Optional[TimeoutHandlerMapping] = (
+        await_next_mission_state.get_event_timer_by_name("should_return_home_timer")
+    )
+
+    assert timer is not None
+
+    transition = timer.handler()
+
+    assert transition is state_machine.request_return_home  # type: ignore
 
 
 def test_state_machine_failed_dependency(
