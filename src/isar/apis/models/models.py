@@ -26,6 +26,12 @@ class ControlMissionResponse(BaseModel):
     task_status: Optional[str]
 
 
+class MissionStartResponse(BaseModel):
+    mission_id: Optional[str] = None
+    mission_started: bool
+    mission_not_started_reason: Optional[str] = None
+
+
 class RobotInfoResponse(BaseModel):
     robot_package: str
     isar_id: str

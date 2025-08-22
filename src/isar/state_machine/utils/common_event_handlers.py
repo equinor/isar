@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Callable, Optional
 
-from isar.apis.models.models import ControlMissionResponse
+from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
+from isar.config.settings import settings
 from isar.models.events import Event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
@@ -11,10 +12,24 @@ if TYPE_CHECKING:
 
 
 def start_mission_event_handler(
-    state_machine: "StateMachine", event: Event[Mission]
+    state_machine: "StateMachine",
+    event: Event[Mission],
+    response: Event[MissionStartResponse],
 ) -> Optional[Callable]:
     mission: Optional[Mission] = event.consume_event()
     if mission:
+        if (
+            state_machine.shared_state.robot_battery_level.check()
+            < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
+        ):
+            response.trigger_event(
+                MissionStartResponse(
+                    mission_id=mission.id,
+                    mission_started=False,
+                    mission_not_started_reason="Robot battery too low",
+                )
+            )
+            return None
         state_machine.start_mission(mission=mission)
         return state_machine.request_mission_start  # type: ignore
     return None

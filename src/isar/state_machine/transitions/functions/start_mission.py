@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
+from isar.apis.models.models import MissionStartResponse
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotException,
@@ -12,7 +13,9 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
 def acknowledge_mission(state_machine: "StateMachine") -> bool:
-    state_machine.events.api_requests.start_mission.response.put(True)
+    state_machine.events.api_requests.start_mission.response.put(
+        MissionStartResponse(mission_started=True)
+    )
     return True
 
 
@@ -70,5 +73,10 @@ def trigger_start_mission_event(state_machine: "StateMachine") -> bool:
 
 
 def _initialization_failed(state_machine: "StateMachine") -> None:
-    state_machine.events.api_requests.start_mission.response.put(False)
+    state_machine.events.api_requests.start_mission.response.put(
+        MissionStartResponse(
+            mission_started=False,
+            mission_not_started_reason="Failed to initialize robot",
+        )
+    )
     state_machine._finalize()
