@@ -27,7 +27,7 @@ from isar.config.settings import settings
 
 def setup_open_telemetry(app: FastAPI) -> None:
 
-    service_name = settings.OPEN_TELEMETRY_SERVICE_NAME
+    service_name = settings.ROBOT_NAME
     resource = Resource.create({SERVICE_NAME: service_name})
 
     tracer_provider = TracerProvider(resource=resource)
