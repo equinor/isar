@@ -25,12 +25,12 @@ def draw_diagram(states: List[State], transitions: List[dict], name: str):
     if os.path.isfile(state_machine_diagram_file):
         os.remove(state_machine_diagram_file)
 
-    gp.draw(state_machine_diagram_file, prog="dot")
+    gp.draw(str(state_machine_diagram_file), prog="dot", format="png")
 
 
 if __name__ == "__main__":
     injector: Injector = get_injector()
-    state_machine: StateMachine = injector.get(StateMachine)
+    state_machine: StateMachine = injector.state_machine()
 
     mission_extended_transitions: List[dict] = []
     for transition in get_mission_transitions(state_machine):
