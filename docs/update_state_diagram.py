@@ -13,16 +13,16 @@ from isar.state_machine.transitions.return_home import get_return_home_transitio
 from isar.state_machine.transitions.robot_status import get_robot_status_transitions
 
 
-def extract_condition_name_from_lambda(cond):
-
+def extract_function_name_from_callable(func):
     try:
-        closure = cond.__closure__
+        closure = getattr(func, "__closure__", None)
         if closure:
             for cell in closure:
                 obj = cell.cell_contents
-                if callable(obj) and hasattr(obj, "__name__"):
-                    return obj.__name__
-        return "lambda"
+                if callable(obj):
+                    return getattr(obj, "__name__", str(obj))
+
+        return getattr(func, "__name__", str(func))
     except Exception:
         return "unknown"
 
@@ -39,11 +39,21 @@ def embed_conditions_in_trigger(transitions: List[dict]) -> List[dict]:
         condition_names = []
 
         for cond in conditions:
-            name = extract_condition_name_from_lambda(cond)
+            name = extract_function_name_from_callable(cond)
             condition_names.append(name)
 
-        condition_str = ", ".join(condition_names)
-        new_trigger = f"{trigger} [{condition_str}]" if condition_names else trigger
+        befores = t.get("before", [])
+        if not isinstance(befores, list):
+            befores = [befores]
+        before_names = [extract_function_name_from_callable(b) for b in befores]
+
+        label_parts = [trigger]
+        if condition_names:
+            label_parts.append(f"[{'; '.join(condition_names)}]")
+        if before_names:
+            label_parts.append(f"/ {'; '.join(before_names)}")
+
+        new_trigger = " ".join(label_parts)
 
         t_copy = t.copy()
         t_copy["trigger"] = new_trigger
