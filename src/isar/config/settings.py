@@ -82,7 +82,13 @@ class Settings(BaseSettings):
     THREAD_CHECK_INTERVAL: float = Field(default=0.01)
 
     # Determines the minimum battery level the robot must have to start a mission
+    # If it drops below this level it will recharge to the value set by
+    # ROBOT_BATTERY_RECHARGE_THRESHOLD before starting new missions
     ROBOT_MISSION_BATTERY_START_THRESHOLD: float = Field(default=25.0)
+
+    # Determines the minimum battery threshold to consider the robot recharged
+    # and ready for more missions, after having run low on charge
+    ROBOT_BATTERY_RECHARGE_THRESHOLD: float = Field(default=80.0)
 
     # FastAPI host
     API_HOST_VIEWED_EXTERNALLY: str = Field(default="0.0.0.0")
