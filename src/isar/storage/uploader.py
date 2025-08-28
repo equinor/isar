@@ -182,9 +182,10 @@ class Uploader:
                 self._internal_upload_queue.remove(item)
             elif isinstance(item, BlobItem):
                 inspection_path = self._upload(item)
-                self._publish_inspection_result(
-                    inspection=item.inspection, inspection_path=inspection_path
-                )
+                if isinstance(inspection_path, dict):
+                    self._publish_inspection_result(
+                        inspection=item.inspection, inspection_path=inspection_path
+                    )
             else:
                 self.logger.warning(
                     f"Unable to process upload item as its type {type(item).__name__} is not supported"
@@ -223,7 +224,7 @@ class Uploader:
         )
 
     def _publish_inspection_result(
-        self, inspection: InspectionBlob, inspection_path: Union[str, dict]
+        self, inspection: InspectionBlob, inspection_path: Union[dict]
     ) -> None:
         """Publishes the reference of the inspection result to the MQTT Broker
         along with the analysis type
