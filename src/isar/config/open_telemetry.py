@@ -24,6 +24,8 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from isar.config.log import load_log_config
 from isar.config.settings import settings
 
+logging.getLogger("opentelemetry.sdk").setLevel(logging.CRITICAL)
+
 
 def setup_open_telemetry(app: FastAPI) -> None:
 
