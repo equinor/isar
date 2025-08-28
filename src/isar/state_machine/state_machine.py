@@ -22,6 +22,7 @@ from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.offline import Offline
 from isar.state_machine.states.paused import Paused
+from isar.state_machine.states.recharging import Recharging
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.robot_standing_still import RobotStandingStill
 from isar.state_machine.states.stopping import Stopping
@@ -108,6 +109,7 @@ class StateMachine(object):
         # Status states
         self.offline_state: State = Offline(self)
         self.blocked_protective_stopping_state: State = BlockedProtectiveStop(self)
+        self.recharging_state: State = Recharging(self)
 
         # Error and special status states
         self.unknown_status_state: State = UnknownStatus(self)
@@ -124,6 +126,7 @@ class StateMachine(object):
             self.blocked_protective_stopping_state,
             self.unknown_status_state,
             self.intervention_needed_state,
+            self.recharging_state,
         ]
 
         self.machine = Machine(
@@ -345,6 +348,8 @@ class StateMachine(object):
             return RobotStatus.BlockedProtectiveStop
         elif self.current_state == States.InterventionNeeded:
             return RobotStatus.InterventionNeeded
+        elif self.current_state == States.Recharging:
+            return RobotStatus.Recharging
         else:
             return RobotStatus.Busy
 

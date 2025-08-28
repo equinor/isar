@@ -33,7 +33,10 @@ class ReturningHome(EventHandlerBase):
                 self.failed_return_home_attemps += 1
                 return state_machine.return_home_failed  # type: ignore
 
-            return state_machine.returned_home  # type: ignore
+            if not state_machine.battery_level_is_above_mission_start_threshold():
+                return state_machine.starting_recharging  # type: ignore
+            else:
+                return state_machine.returned_home  # type: ignore
 
         def _start_mission_event_handler(
             event: Event[Mission],
