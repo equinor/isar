@@ -15,6 +15,7 @@ from isar.mission_planner.task_selector_interface import (
     TaskSelectorStop,
 )
 from isar.models.events import Events, SharedState
+from isar.services.service_connections.mqtt.mqtt_client import props_expiry
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.home import Home
@@ -285,10 +286,11 @@ class StateMachine(object):
         )
 
         self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_MISSION,
+            topic=settings.TOPIC_ISAR_MISSION + f"/{self.current_mission.id}",
             payload=json.dumps(payload, cls=EnhancedJSONEncoder),
             qos=1,
             retain=True,
+            properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
         )
 
     def publish_task_status(self, task: TASKS) -> None:
@@ -316,10 +318,11 @@ class StateMachine(object):
         )
 
         self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_TASK,
+            topic=settings.TOPIC_ISAR_TASK + f"/{task.id}",
             payload=json.dumps(payload, cls=EnhancedJSONEncoder),
             qos=1,
             retain=True,
+            properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
         )
 
     def publish_intervention_needed(self, error_message: str) -> None:

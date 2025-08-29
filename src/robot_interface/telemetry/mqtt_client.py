@@ -5,6 +5,10 @@ from datetime import datetime, timezone
 from queue import Queue
 from typing import Callable, Tuple
 
+from paho.mqtt.packettypes import PacketTypes
+from paho.mqtt.properties import Properties
+
+from isar.config.settings import settings
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotTelemetryException,
     RobotTelemetryNoUpdateException,
@@ -14,10 +18,21 @@ from robot_interface.telemetry.payloads import CloudHealthPayload
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
+def props_expiry(seconds: int) -> Properties:
+    p = Properties(PacketTypes.PUBLISH)
+    p.MessageExpiryInterval = seconds
+    return p
+
+
 class MqttClientInterface(metaclass=ABCMeta):
     @abstractmethod
     def publish(
-        self, topic: str, payload: str, qos: int = 0, retain: bool = False
+        self,
+        topic: str,
+        payload: str,
+        qos: int = 0,
+        retain: bool = False,
+        properties: Properties = None,
     ) -> None:
         """
         Parameters
@@ -42,9 +57,20 @@ class MqttPublisher(MqttClientInterface):
         self.mqtt_queue: Queue = mqtt_queue
 
     def publish(
-        self, topic: str, payload: str, qos: int = 0, retain: bool = False
+        self,
+        topic: str,
+        payload: str,
+        qos: int = 0,
+        retain: bool = False,
+        properties: Properties = None,
     ) -> None:
-        queue_message: Tuple[str, str, int, bool] = (topic, payload, qos, retain)
+        queue_message: Tuple[str, str, int, bool, Properties] = (
+            topic,
+            payload,
+            qos,
+            retain,
+            properties,
+        )
         self.mqtt_queue.put(queue_message)
 
 
@@ -57,6 +83,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
         interval: float,
         qos: int = 0,
         retain: bool = False,
+        properties: Properties = None,
     ) -> None:
         self.mqtt_queue: Queue = mqtt_queue
         self.telemetry_method: Callable = telemetry_method
@@ -64,9 +91,13 @@ class MqttTelemetryPublisher(MqttClientInterface):
         self.interval: float = interval
         self.qos: int = qos
         self.retain: bool = retain
+        self.properties: Properties = properties
 
     def run(self, isar_id: str, robot_name: str) -> None:
         self.cloud_health_topic: str = f"isar/{isar_id}/cloud_health"
+        self.battery_topic: str = f"isar/{isar_id}/battery"
+        self.pose_topic: str = f"isar/{isar_id}/pose"
+        self.pressure_topic: str = f"isar/{isar_id}/pressure"
         topic: str
         payload: str
 
@@ -84,12 +115,37 @@ class MqttTelemetryPublisher(MqttClientInterface):
                 )
                 topic = self.cloud_health_topic
 
-            self.publish(topic=topic, payload=payload, qos=self.qos, retain=self.retain)
+            publish_properties = self.properties
 
+            if topic in (
+                self.battery_topic,
+                self.pose_topic,
+                self.pressure_topic,
+            ):
+                publish_properties = props_expiry(settings.MQTT_TELEMETRY_EXPIRY)
+
+            self.publish(
+                topic=topic,
+                payload=payload,
+                qos=self.qos,
+                retain=self.retain,
+                properties=publish_properties,
+            )
             time.sleep(self.interval)
 
     def publish(
-        self, topic: str, payload: str, qos: int = 0, retain: bool = False
+        self,
+        topic: str,
+        payload: str,
+        qos: int = 0,
+        retain: bool = False,
+        properties: Properties = None,
     ) -> None:
-        queue_message: Tuple[str, str, int, bool] = (topic, payload, qos, retain)
+        queue_message: Tuple[str, str, int, bool, Properties] = (
+            topic,
+            payload,
+            qos,
+            retain,
+            properties,
+        )
         self.mqtt_queue.put(queue_message)

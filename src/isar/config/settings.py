@@ -244,6 +244,11 @@ class Settings(BaseSettings):
         default="intervention_needed", validate_default=True
     )
 
+    # List of MQTT Topics Expiry
+    MQTT_ROBOT_HEARTBEAT_EXPIRY: int = Field(default=5)
+    MQTT_TELEMETRY_EXPIRY: int = Field(default=10)
+    MQTT_MISSION_AND_TASK_EXPIRY: int = Field(default=86400)
+
     # Logging
 
     #   Log handlers

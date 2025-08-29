@@ -1,13 +1,22 @@
 import logging
 import os
+import time
 from queue import Empty, Queue
 
 import backoff
 from paho.mqtt import client as mqtt
 from paho.mqtt.client import Client
+from paho.mqtt.packettypes import PacketTypes
+from paho.mqtt.properties import Properties
 
 from isar.config.settings import settings
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
+
+
+def props_expiry(seconds: int) -> Properties:
+    p = Properties(PacketTypes.PUBLISH)
+    p.MessageExpiryInterval = seconds
+    return p
 
 
 def _on_success(data: dict) -> None:
@@ -53,7 +62,9 @@ class MqttClient(MqttClientInterface):
 
         self.port: int = settings.MQTT_PORT
 
-        self.client: Client = Client(mqtt.CallbackAPIVersion.VERSION1)
+        self.client: Client = Client(
+            protocol=mqtt.MQTTv5, callback_api_version=mqtt.CallbackAPIVersion.VERSION2
+        )
 
         self.client.enable_logger(logger=self.logger)
 
@@ -74,20 +85,36 @@ class MqttClient(MqttClientInterface):
 
         while True:
             if not self.client.is_connected():
+                time.sleep(0)  # avoid CPU spin
                 continue
             try:
-                topic, payload, qos, retain = self.mqtt_queue.get(timeout=1)
+                item = self.mqtt_queue.get(timeout=1)
+                if len(item) == 4:
+                    topic, payload, qos, retain = item
+                    properties = None
+                else:
+                    topic, payload, qos, retain, properties = item
             except Empty:
                 continue
 
-            self.publish(topic=topic, payload=payload, qos=qos, retain=retain)
+            self.publish(
+                topic=topic,
+                payload=payload,
+                qos=qos,
+                retain=retain,
+                properties=properties,
+            )
 
-    def on_connect(self, client, userdata, flags, rc):
-        self.logger.info("Connection returned result: " + mqtt.connack_string(rc))
+    def on_connect(self, client, userdata, flags, reason_code, properties):
+        self.logger.info(
+            "Connection returned result: " + mqtt.connack_string(reason_code)
+        )
 
-    def on_disconnect(self, client, userdata, rc):
-        if rc != 0:
-            self.logger.warning("Unexpected disconnection from MQTT Broker")
+    def on_disconnect(self, client, userdata, reason_code, properties):
+        if reason_code != 0:
+            self.logger.warning(
+                f"Unexpected disconnection from MQTT Broker, {reason_code}"
+            )
 
     @backoff.on_exception(
         backoff.expo,
@@ -102,6 +129,15 @@ class MqttClient(MqttClientInterface):
         self.logger.info("Host: %s, Port: %s", host, port)
         self.client.connect(host=host, port=port)
 
-    def publish(self, topic: str, payload: str, qos: int = 0, retain: bool = False):
+    def publish(
+        self,
+        topic: str,
+        payload: str,
+        qos: int = 0,
+        retain: bool = False,
+        properties=None,
+    ):
         self.logger.debug("Publishing message to topic: %s", topic)
-        self.client.publish(topic=topic, payload=payload, qos=qos, retain=retain)
+        self.client.publish(
+            topic=topic, payload=payload, qos=qos, retain=retain, properties=properties
+        )
