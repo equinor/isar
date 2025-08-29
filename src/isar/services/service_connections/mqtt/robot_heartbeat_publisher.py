@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from queue import Queue
 
 from isar.config.settings import settings
+from isar.services.service_connections.mqtt.mqtt_client import props_expiry
 from robot_interface.telemetry.mqtt_client import MqttPublisher
 from robot_interface.telemetry.payloads import RobotHeartbeatPayload
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
@@ -24,6 +25,8 @@ class RobotHeartbeatPublisher:
             self.mqtt_publisher.publish(
                 topic=settings.TOPIC_ISAR_ROBOT_HEARTBEAT,
                 payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+                retain=True,
+                properties=props_expiry(settings.MQTT_ROBOT_HEARTBEAT_EXPIRY),
             )
 
             time.sleep(settings.ROBOT_HEARTBEAT_PUBLISH_INTERVAL)
