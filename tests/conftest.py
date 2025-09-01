@@ -18,7 +18,6 @@ from tests.isar.state_machine.test_state_machine import (
     UploaderThreadMock,
 )
 from tests.test_double.blob_storage import StorageFake
-from tests.test_double.mqtt_client import MqttClientDummy
 from tests.test_double.robot_interface import StubRobot
 
 
@@ -29,7 +28,6 @@ def container():
     container.storage_handlers.override(
         providers.List(providers.Singleton(StorageFake))
     )
-    container.mqtt_client.override(providers.Singleton(MqttClientDummy))
     container.robot_interface.override(providers.Singleton(StubRobot))
     container.uploader.override(
         providers.Singleton(
