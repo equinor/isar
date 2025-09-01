@@ -194,11 +194,11 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
-            error_message = "Internal Server Error - Failed to start mission in ISAR"
-            self.logger.error(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            error_message = (
+                "State machine has entered a state which cannot start a mission"
             )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         self.logger.info("OK - Mission started in ISAR")
 
     def return_home(
@@ -221,13 +221,9 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
-            error_message = (
-                "Internal Server Error - Failed to start return home mission in ISAR"
-            )
-            self.logger.error(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
+            error_message = "State machine has entered a state which cannot start a return home mission"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         self.logger.info("OK - Return home mission started in ISAR")
 
     def pause_mission(self) -> ControlMissionResponse:
@@ -247,11 +243,11 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
-            error_message = "Internal Server Error - Failed to pause mission"
-            self.logger.error(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            error_message = (
+                "State machine has entered a state which cannot pause a mission"
             )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
     def resume_mission(self) -> ControlMissionResponse:
         """Resume mission
@@ -311,11 +307,11 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
-            error_message = "Internal Server Error - Failed to stop mission"
-            self.logger.error(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            error_message = (
+                "State machine has entered a state which cannot stop a mission"
             )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         self.logger.info("OK - Mission successfully stopped")
         return stop_mission_response
 
