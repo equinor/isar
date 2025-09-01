@@ -9,6 +9,7 @@ import pytest
 from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
+from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import (
     EventHandlerBase,
     EventHandlerMapping,
@@ -205,6 +206,107 @@ def test_return_home_starts_when_battery_is_low(
     transition = timer.handler()
 
     assert transition is state_machine.request_return_home  # type: ignore
+
+
+def test_monitor_goes_to_return_home_when_battery_low(
+    container: ApplicationContainer,
+) -> None:
+    state_machine: StateMachine = container.state_machine()
+
+    state_machine.mission_ongoing = True
+
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    state_machine.current_task = task_1
+
+    monitor_state: EventHandlerBase = cast(
+        EventHandlerBase, state_machine.monitor_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        monitor_state.get_event_handler_by_name("robot_battery_update_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(10.0, timeout=1)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is state_machine.request_return_home  # type: ignore
+    assert not state_machine.events.mqtt_queue.empty()
+
+    mqtt_message = state_machine.events.mqtt_queue.get(block=False)
+    assert mqtt_message is not None
+    mqtt_payload_topic = mqtt_message[0]
+    assert mqtt_payload_topic is settings.TOPIC_ISAR_MISSION_ABORTED
+    assert state_machine.events.mqtt_queue.get()[0]
+
+
+def test_return_home_goes_to_recharging_when_battery_low(
+    container: ApplicationContainer,
+) -> None:
+    state_machine: StateMachine = container.state_machine()
+    state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+
+    state_machine.mission_ongoing = True
+    state_machine.current_task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+
+    returning_home_state: EventHandlerBase = cast(
+        EventHandlerBase, state_machine.returning_home_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("task_status_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(TaskStatus.Successful)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is state_machine.starting_recharging  # type: ignore
+
+
+def test_recharging_goes_to_home_when_battery_high(
+    container: ApplicationContainer,
+) -> None:
+    state_machine: StateMachine = container.state_machine()
+
+    recharging_state: EventHandlerBase = cast(
+        EventHandlerBase, state_machine.recharging_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        recharging_state.get_event_handler_by_name("robot_battery_update_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(99.9)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is state_machine.robot_recharged  # type: ignore
+
+
+def test_recharging_continues_when_battery_low(
+    container: ApplicationContainer,
+) -> None:
+    state_machine: StateMachine = container.state_machine()
+
+    recharging_state: EventHandlerBase = cast(
+        EventHandlerBase, state_machine.recharging_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        recharging_state.get_event_handler_by_name("robot_battery_update_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(10.0)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is None
 
 
 def test_state_machine_failed_dependency(
