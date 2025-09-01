@@ -4,11 +4,17 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from queue import Empty, Queue
 from threading import Event
-from typing import List, Union
+from typing import List
 
 from isar.config.settings import settings
 from isar.models.events import Events
-from isar.storage.storage_interface import StorageException, StorageInterface
+from isar.storage.storage_interface import (
+    BlobStoragePath,
+    LocalStoragePath,
+    StorageException,
+    StorageInterface,
+    StoragePaths,
+)
 from robot_interface.models.inspection.inspection import (
     Inspection,
     InspectionBlob,
@@ -133,10 +139,10 @@ class Uploader:
             except Empty:
                 continue
 
-    def _upload(self, item: BlobItem) -> Union[str, dict]:
-        inspection_path: Union[str, dict] = ""
+    def _upload(self, item: BlobItem) -> StoragePaths:
+        inspection_paths: StoragePaths
         try:
-            inspection_path = item.storage_handler.store(
+            inspection_paths = item.storage_handler.store(
                 inspection=item.inspection, mission=item.mission
             )
             self.logger.info(
@@ -144,7 +150,7 @@ class Uploader:
                 f"uploaded inspection {str(item.inspection.id)[:8]}"
             )
             self._internal_upload_queue.remove(item)
-        except StorageException:
+        except StorageException as e:
             if item.get_retry_count() < self.max_retry_attempts:
                 item.increment_retry(self.max_wait_time)
                 self.logger.warning(
@@ -160,7 +166,8 @@ class Uploader:
                     f"{str(item.inspection.id)[:8]}. Aborting upload."
                 )
                 self._internal_upload_queue.remove(item)
-        return inspection_path
+            raise e
+        return inspection_paths
 
     def _process_upload_queue(self) -> None:
         def should_upload(_item):
@@ -181,10 +188,17 @@ class Uploader:
                 )
                 self._internal_upload_queue.remove(item)
             elif isinstance(item, BlobItem):
-                inspection_path = self._upload(item)
-                self._publish_inspection_result(
-                    inspection=item.inspection, inspection_path=inspection_path
-                )
+                try:
+                    inspection_paths = self._upload(item)
+                    if isinstance(inspection_paths.data_path, LocalStoragePath):
+                        self.logger.info("Skipping publishing when using local storage")
+                    else:
+                        self._publish_inspection_result(
+                            inspection=item.inspection,
+                            inspection_paths=inspection_paths,
+                        )
+                except StorageException:
+                    pass
             else:
                 self.logger.warning(
                     f"Unable to process upload item as its type {type(item).__name__} is not supported"
@@ -223,7 +237,9 @@ class Uploader:
         )
 
     def _publish_inspection_result(
-        self, inspection: InspectionBlob, inspection_path: Union[str, dict]
+        self,
+        inspection: InspectionBlob,
+        inspection_paths: StoragePaths[BlobStoragePath],
     ) -> None:
         """Publishes the reference of the inspection result to the MQTT Broker
         along with the analysis type
@@ -235,7 +251,8 @@ class Uploader:
             isar_id=settings.ISAR_ID,
             robot_name=settings.ROBOT_NAME,
             inspection_id=inspection.id,
-            inspection_path=inspection_path,
+            blob_storage_data_path=inspection_paths.data_path,
+            blob_storage_metadata_path=inspection_paths.metadata_path,
             installation_code=settings.PLANT_SHORT_NAME,
             tag_id=inspection.metadata.tag_id,
             inspection_type=type(inspection).__name__,
