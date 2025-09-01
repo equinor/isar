@@ -225,6 +225,9 @@ class Settings(BaseSettings):
     # List of MQTT Topics
     TOPIC_ISAR_STATUS: str = Field(default="status", validate_default=True)
     TOPIC_ISAR_MISSION: str = Field(default="mission", validate_default=True)
+    TOPIC_ISAR_MISSION_ABORTED: str = Field(
+        default="aborted_mission", validate_default=True
+    )
     TOPIC_ISAR_TASK: str = Field(default="task", validate_default=True)
     TOPIC_ISAR_INSPECTION_RESULT: str = Field(
         default="inspection_result", validate_default=True
@@ -292,6 +295,7 @@ class Settings(BaseSettings):
         "TOPIC_ISAR_INSPECTION_VALUE",
         "TOPIC_ISAR_STARTUP",
         "TOPIC_ISAR_INTERVENTION_NEEDED",
+        "TOPIC_ISAR_MISSION_ABORTED",
     )
     @classmethod
     def prefix_isar_topics(cls, v: Any, info: ValidationInfo):

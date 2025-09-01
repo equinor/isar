@@ -92,6 +92,16 @@ class MissionPayload:
 
 
 @dataclass
+class MissionAbortedPayload:
+    isar_id: str
+    robot_name: str
+    mission_id: str
+    can_be_continued: bool
+    timestamp: datetime
+    reason: Optional[str]
+
+
+@dataclass
 class TaskPayload:
     isar_id: str
     robot_name: str
