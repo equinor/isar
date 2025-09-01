@@ -101,9 +101,9 @@ class TestStartMissionByID:
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
     def test_start_mission_timeout(self, client: TestClient):
         response = client.post(url=f"{self.schedule_start_mission_path}/1")
-        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+        assert response.status_code == HTTPStatus.CONFLICT
         assert response.json() == {
-            "detail": "Internal Server Error - Failed to start mission in ISAR"
+            "detail": "State machine has entered a state which cannot start a mission"
         }
 
     @mock.patch.object(
@@ -187,9 +187,9 @@ class TestStartMission:
             url=self.schedule_start_mission_path,
             json=jsonable_encoder(self.dummy_start_mission_content),
         )
-        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+        assert response.status_code == HTTPStatus.CONFLICT
         assert response.json() == {
-            "detail": "Internal Server Error - Failed to start mission in ISAR"
+            "detail": "State machine has entered a state which cannot start a mission"
         }
 
     @mock.patch.object(
@@ -231,9 +231,9 @@ class TestPauseMission:
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
     def test_pause_mission_timeout(self, client: TestClient):
         response = client.post(url=self.schedule_pause_mission_path)
-        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+        assert response.status_code == HTTPStatus.CONFLICT
         assert response.json() == {
-            "detail": "Internal Server Error - Failed to pause mission"
+            "detail": "State machine has entered a state which cannot pause a mission"
         }
 
 
@@ -310,7 +310,7 @@ class TestStopMission:
             url=self.schedule_stop_mission_path,
             json=jsonable_encoder({"mission_id": StopMissionDefinition(mission_id="")}),
         )
-        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+        assert response.status_code == HTTPStatus.CONFLICT
 
     @mock.patch.object(SchedulingUtilities, "get_state", mock_return_monitor)
     @mock.patch.object(
