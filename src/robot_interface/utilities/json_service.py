@@ -7,6 +7,7 @@ from uuid import UUID
 
 import numpy as np
 from alitra import Orientation
+from pydantic import BaseModel
 
 
 class EnhancedJSONEncoder(json.JSONEncoder):
@@ -15,6 +16,11 @@ class EnhancedJSONEncoder(json.JSONEncoder):
     """
 
     def default(self, o):
+        if isinstance(o, BaseModel):
+            dump = getattr(o, "model_dump", None)
+            if callable(dump):
+                return dump()
+            return o.__dict__
         if is_dataclass(o):
             return asdict(o)  # type: ignore
         if isinstance(o, UUID):
