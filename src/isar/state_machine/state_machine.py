@@ -44,6 +44,7 @@ from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
     InterventionNeededPayload,
+    MissionAbortedPayload,
     MissionPayload,
     RobotStatusPayload,
     TaskPayload,
@@ -235,6 +236,32 @@ class StateMachine(object):
             self.logger.info(
                 f"Task: {str(task.id)[:8]} was reported as task.status by the robot"
             )
+
+    def publish_mission_aborted(self, reason: str, can_be_continued: bool) -> None:
+        if not self.mqtt_publisher:
+            return
+
+        if self.current_mission is None:
+            self.logger.warning(
+                "Could not publish mission aborted message. No ongoing mission."
+            )
+            return
+
+        payload: MissionAbortedPayload = MissionAbortedPayload(
+            isar_id=settings.ISAR_ID,
+            robot_name=settings.ROBOT_NAME,
+            mission_id=self.current_mission.id,
+            reason=reason,
+            can_be_continued=can_be_continued,
+            timestamp=datetime.now(timezone.utc),
+        )
+
+        self.mqtt_publisher.publish(
+            topic=settings.TOPIC_ISAR_MISSION_ABORTED,
+            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+            qos=1,
+            retain=True,
+        )
 
     def publish_mission_status(self) -> None:
         if not self.mqtt_publisher:

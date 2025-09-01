@@ -30,6 +30,7 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.home_state,
                 state_machine.robot_standing_still_state,
                 state_machine.intervention_needed_state,
+                state_machine.monitor_state,
             ],
             "dest": state_machine.returning_home_state,
             "conditions": [
