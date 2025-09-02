@@ -9,7 +9,6 @@ from isar.config.settings import settings
 
 
 def setup_loggers() -> None:
-    log_levels: dict = settings.LOG_LEVELS
     log_config = load_log_config()
 
     logging.config.dictConfig(log_config)
@@ -19,10 +18,15 @@ def setup_loggers() -> None:
         handlers.append(configure_console_handler(log_config=log_config))
 
     for log_handler in handlers:
-        for loggers in log_config["loggers"].keys():
-            logging.getLogger(loggers).addHandler(log_handler)
-            logging.getLogger(loggers).setLevel(log_levels[loggers])
-        logging.getLogger().addHandler(log_handler)
+        for logger_name, logger_config in log_config["loggers"].items():
+            logger = logging.getLogger(logger_name)
+            logger.addHandler(log_handler)
+            if "level" in logger_config:
+                logger.setLevel(logger_config["level"])
+        root_logger = logging.getLogger()
+        root_logger.addHandler(log_handler)
+        if "level" in log_config.get("root", {}):
+            root_logger.setLevel(log_config["root"]["level"])
 
 
 def load_log_config():
