@@ -253,40 +253,14 @@ class Settings(BaseSettings):
     # Each handler will be called when logging
     # Selecting a different log handler than local may require certain access rights:
     #    - The Azure AI logger requires the 'APPLICATIONINSIGHTS_CONNECTION_STRING' to be set as an environment variable.
+    # In general logging is configured in logging.conf
     LOG_HANDLER_LOCAL_ENABLED: bool = Field(default=True)
     LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED: bool = Field(default=False)
-
-    #   Log levels
-    API_LOG_LEVEL: str = Field(default="INFO")
-    MAIN_LOG_LEVEL: str = Field(default="INFO")
-    MQTT_LOG_LEVEL: str = Field(default="INFO")
-    STATE_MACHINE_LOG_LEVEL: str = Field(default="INFO")
-    UPLOADER_LOG_LEVEL: str = Field(default="INFO")
-    CONSOLE_LOG_LEVEL: str = Field(default="INFO")
-    URLLIB3_LOG_LEVEL: str = Field(default="WARNING")
-    UVICORN_LOG_LEVEL: str = Field(default="WARNING")
-    AZURE_LOG_LEVEL: str = Field(default="WARNING")
-
-    DEBUG_LOG_FORMATTER: bool = Field(default=False)
-
-    LOG_LEVELS: dict = Field(default={})
+    # You can set logger levels from environment variables ending with _LOG_LEVEL
+    # For example, MQTT_LOG_LEVEL="DEBUG" will set the logger MQTT_LOGGER to DEBUG level
+    # Handeled in log.py and only work for loggers defined in logging.conf
 
     REQUIRED_ROLE: str = Field(default="Mission.Control")
-
-    @field_validator("LOG_LEVELS")
-    @classmethod
-    def set_log_levels(cls, v: Any, info: ValidationInfo) -> dict:
-        return {
-            "api": info.data["API_LOG_LEVEL"],
-            "main": info.data["MAIN_LOG_LEVEL"],
-            "mqtt": info.data["MQTT_LOG_LEVEL"],
-            "state_machine": info.data["STATE_MACHINE_LOG_LEVEL"],
-            "uploader": info.data["UPLOADER_LOG_LEVEL"],
-            "console": info.data["CONSOLE_LOG_LEVEL"],
-            "urllib3": info.data["URLLIB3_LOG_LEVEL"],
-            "uvicorn": info.data["UVICORN_LOG_LEVEL"],
-            "azure": info.data["AZURE_LOG_LEVEL"],
-        }
 
     @field_validator(
         "TOPIC_ISAR_STATUS",
