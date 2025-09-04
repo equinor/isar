@@ -41,9 +41,6 @@ def test_state_machine_ready_to_receive_mission(
     scheduling_utilities: SchedulingUtilities,
 ):
     assert scheduling_utilities.verify_state_machine_ready_to_receive_mission(
-        States.RobotStandingStill
-    )
-    assert scheduling_utilities.verify_state_machine_ready_to_receive_mission(
         States.Home
     )
     assert scheduling_utilities.verify_state_machine_ready_to_receive_mission(

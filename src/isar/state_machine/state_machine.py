@@ -25,7 +25,6 @@ from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.recharging import Recharging
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.returning_home import ReturningHome
-from isar.state_machine.states.robot_standing_still import RobotStandingStill
 from isar.state_machine.states.stopping import Stopping
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
@@ -106,7 +105,6 @@ class StateMachine(object):
         # States Waiting for mission
         self.await_next_mission_state: State = AwaitNextMission(self)
         self.home_state: State = Home(self)
-        self.robot_standing_still_state: State = RobotStandingStill(self)
         self.intervention_needed_state: State = InterventionNeeded(self)
 
         # Status states
@@ -125,7 +123,6 @@ class StateMachine(object):
             self.return_home_paused_state,
             self.await_next_mission_state,
             self.home_state,
-            self.robot_standing_still_state,
             self.offline_state,
             self.blocked_protective_stopping_state,
             self.unknown_status_state,
@@ -363,10 +360,7 @@ class StateMachine(object):
         )
 
     def _current_status(self) -> RobotStatus:
-        if (
-            self.current_state == States.RobotStandingStill
-            or self.current_state == States.AwaitNextMission
-        ):
+        if self.current_state == States.AwaitNextMission:
             return RobotStatus.Available
         elif self.current_state == States.Home:
             return RobotStatus.Home

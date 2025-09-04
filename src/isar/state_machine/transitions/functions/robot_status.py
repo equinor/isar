@@ -11,14 +11,9 @@ def is_offline(state_machine: "StateMachine") -> bool:
     return robot_status == RobotStatus.Offline
 
 
-def is_available(state_machine: "StateMachine") -> bool:
+def is_available_or_home(state_machine: "StateMachine") -> bool:
     robot_status = state_machine.shared_state.robot_status.check()
-    return robot_status == RobotStatus.Available
-
-
-def is_home(state_machine: "StateMachine") -> bool:
-    robot_status = state_machine.shared_state.robot_status.check()
-    return robot_status == RobotStatus.Home
+    return robot_status == RobotStatus.Available or robot_status == RobotStatus.Home
 
 
 def is_blocked_protective_stop(state_machine: "StateMachine") -> bool:

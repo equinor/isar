@@ -28,7 +28,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "source": [
                 state_machine.await_next_mission_state,
                 state_machine.home_state,
-                state_machine.robot_standing_still_state,
                 state_machine.intervention_needed_state,
                 state_machine.monitor_state,
                 state_machine.stopping_state,
@@ -51,12 +50,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "request_return_home",
             "source": state_machine.home_state,
             "dest": state_machine.home_state,
-            "before": def_transition(state_machine, report_failed_mission_and_finalize),
-        },
-        {
-            "trigger": "request_return_home",
-            "source": state_machine.robot_standing_still_state,
-            "dest": state_machine.robot_standing_still_state,
             "before": def_transition(state_machine, report_failed_mission_and_finalize),
         },
         {

@@ -18,7 +18,6 @@ from isar.state_machine.transitions.functions.start_mission import (
 )
 from isar.state_machine.transitions.functions.stop import (
     stop_mission_failed,
-    stop_return_home_mission_cleanup,
     stop_return_home_mission_failed,
     trigger_stop_mission_event,
 )
@@ -78,7 +77,6 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "stop",
             "source": [
                 state_machine.await_next_mission_state,
-                state_machine.robot_standing_still_state,
                 state_machine.monitor_state,
                 state_machine.returning_home_state,
                 state_machine.paused_state,
@@ -104,17 +102,10 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "before": def_transition(state_machine, stop_return_home_mission_failed),
         },
         {
-            "trigger": "return_home_mission_stopped",
-            "source": state_machine.stopping_state,
-            "dest": state_machine.robot_standing_still_state,
-            "before": def_transition(state_machine, stop_return_home_mission_cleanup),
-        },
-        {
             "trigger": "request_mission_start",
             "source": [
                 state_machine.await_next_mission_state,
                 state_machine.home_state,
-                state_machine.robot_standing_still_state,
             ],
             "dest": state_machine.monitor_state,
             "prepare": def_transition(state_machine, acknowledge_mission),
@@ -135,12 +126,6 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
         },
         {
             "trigger": "request_mission_start",
-            "source": state_machine.robot_standing_still_state,
-            "dest": state_machine.robot_standing_still_state,
-            "before": def_transition(state_machine, report_failed_mission_and_finalize),
-        },
-        {
-            "trigger": "request_mission_start",
             "source": state_machine.home_state,
             "dest": state_machine.home_state,
             "before": def_transition(state_machine, report_failed_mission_and_finalize),
@@ -148,7 +133,7 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
         {
             "trigger": "mission_failed_to_start",
             "source": [state_machine.monitor_state, state_machine.returning_home_state],
-            "dest": state_machine.robot_standing_still_state,
+            "dest": state_machine.await_next_mission_state,
             "before": def_transition(state_machine, report_failed_mission_and_finalize),
         },
         {

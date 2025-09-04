@@ -102,7 +102,7 @@ def stub_image_metadata() -> ImageMetadata:
     )
 
 
-class StubRobotOfflineToRobotStandingStillTest(StubRobot):
+class StubRobotOfflineToAvailableTest(StubRobot):
     def __init__(self, current_state: Event):
         self.entered_offline = False
         self.current_state = current_state
@@ -121,7 +121,7 @@ class StubRobotOfflineToRobotStandingStillTest(StubRobot):
         return RobotStatus.Available
 
 
-class StubRobotBlockedProtectiveStopToRobotStandingStillTest(StubRobot):
+class StubRobotBlockedProtectiveStopToHomeTest(StubRobot):
     def __init__(self, current_state: Event):
         self.entered_blocked_p_stop = False
         self.current_state = current_state
@@ -135,23 +135,6 @@ class StubRobotBlockedProtectiveStopToRobotStandingStillTest(StubRobot):
             return RobotStatus.Available
         if not self.entered_blocked_p_stop:
             return RobotStatus.BlockedProtectiveStop
-        return RobotStatus.Available
-
-
-class StubRobotHomeToRobotStandingStillTest(StubRobot):
-    def __init__(self, current_state: Event):
-        self.entered_home = False
-        self.current_state = current_state
-
-    def robot_status(self) -> RobotStatus:
-        current_state = self.current_state.check()
-        if current_state is None:
-            raise RobotCommunicationException("Could not read state machine state")
-        if current_state == "home":
-            self.entered_home = True
-            return RobotStatus.Available
-        if not self.entered_home:
-            return RobotStatus.Home
         return RobotStatus.Available
 
 
