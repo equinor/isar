@@ -406,7 +406,7 @@ class StateMachine(object):
         )
 
     def _queue_empty_response(self) -> None:
-        self.events.api_requests.stop_mission.response.put(
+        self.events.api_requests.stop_mission.response.trigger_event(
             ControlMissionResponse(
                 mission_id="None",
                 mission_status="None",

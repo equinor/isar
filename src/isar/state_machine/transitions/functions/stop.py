@@ -43,7 +43,7 @@ def stop_mission_failed(state_machine: "StateMachine") -> bool:
     stopped_mission_response: ControlMissionResponse = (
         state_machine._make_control_mission_response()
     )
-    state_machine.events.api_requests.stop_mission.response.put(
+    state_machine.events.api_requests.stop_mission.response.trigger_event(
         stopped_mission_response
     )
     return True
@@ -69,7 +69,7 @@ def stop_return_home_mission_cleanup(state_machine: "StateMachine") -> bool:
         stopped_mission_response: ControlMissionResponse = (
             state_machine._make_control_mission_response()
         )
-        state_machine.events.api_requests.stop_mission.response.put(
+        state_machine.events.api_requests.stop_mission.response.trigger_event(
             stopped_mission_response
         )
 
@@ -83,7 +83,7 @@ def stop_return_home_mission_failed(state_machine: "StateMachine") -> bool:
     stopped_mission_response: ControlMissionResponse = (
         state_machine._make_control_mission_response()
     )
-    state_machine.events.api_requests.stop_mission.response.put(
+    state_machine.events.api_requests.stop_mission.response.trigger_event(
         stopped_mission_response
     )
     return True
