@@ -233,7 +233,7 @@ def test_monitor_goes_to_return_home_when_battery_low(
     event_handler.event.trigger_event(10.0, timeout=1)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is state_machine.request_return_home  # type: ignore
+    assert transition is state_machine.stop  # type: ignore
     assert not state_machine.events.mqtt_queue.empty()
 
     mqtt_message = state_machine.events.mqtt_queue.get(block=False)

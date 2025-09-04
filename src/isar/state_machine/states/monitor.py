@@ -60,9 +60,7 @@ class Monitor(EventHandlerBase):
                 state_machine.logger.warning(
                     "Cancelling current mission due to low battery"
                 )
-                state_machine.current_mission = None
-                state_machine.current_task = None
-                return state_machine.request_return_home  # type: ignore
+                return state_machine.stop  # type: ignore
             return None
 
         event_handlers: List[EventHandlerMapping] = [
