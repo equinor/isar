@@ -18,7 +18,7 @@ class TestQueueUtilities:
     def test_check_queue_with_queue_size_one(
         self, message, queue_timeout, expected_message
     ) -> None:
-        test_event: Event = Event()
+        test_event: Event = Event("test")
         if message is not None:
             test_event.put(message)
             message = test_event.consume_event(timeout=queue_timeout)
@@ -28,7 +28,7 @@ class TestQueueUtilities:
                 test_event.consume_event(timeout=queue_timeout)
 
     def test_clear_queue(self) -> None:
-        test_event: Event = Event()
+        test_event: Event = Event("test")
         test_event.put(1)
         test_event.clear_event()
         assert test_event.empty()

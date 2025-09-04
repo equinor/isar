@@ -15,7 +15,7 @@ def test_timeout_send_command(
     mocker: MockerFixture, scheduling_utilities: SchedulingUtilities
 ):
     mocker.patch.object(Event, "consume_event", side_effect=EventTimeoutError)
-    q: APIEvent = APIEvent()
+    q: APIEvent = APIEvent("test")
     with pytest.raises(EventTimeoutError):
         scheduling_utilities._send_command(True, q)
     assert q.request.empty()

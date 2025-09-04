@@ -25,19 +25,19 @@ class TestEvents:
 
 
 def test_staus_queue_empty() -> None:
-    status_event: Event = Event()
+    status_event: Event = Event("test")
     assert status_event.check() is None
 
 
 def test_status_event_check() -> None:
-    status_event: Event = Event()
+    status_event: Event = Event("test")
     status_event.update("Test")
     assert status_event.check() == "Test"
     assert status_event._qsize() == 1
 
 
 def test_status_event_update() -> None:
-    status_event: Event = Event()
+    status_event: Event = Event("test")
     status_event.update("Test")
     status_event.update("New Test")
     assert status_event._qsize() == 1
