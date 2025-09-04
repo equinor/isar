@@ -17,12 +17,15 @@ T2 = TypeVar("T2")
 
 
 class Event(Queue[T]):
-    def __init__(self) -> None:
+    def __init__(self, name: str) -> None:
         super().__init__(maxsize=1)
+        self.name = name
 
     def trigger_event(self, data: T, timeout: int = None) -> None:
         try:
-            self.put(data, timeout=timeout)
+            # We always want a timeout when blocking for results, so that
+            # the thread will never get stuck waiting for a result
+            self.put(data, block=timeout is not None, timeout=timeout)
         except Exception:
             if timeout is not None:
                 raise EventTimeoutError
@@ -79,46 +82,62 @@ class APIEvent(Generic[T1, T2]):
     api to state machine while the response is from state machine to api.
     """
 
-    def __init__(self):
-        self.request: Event[T1] = Event()
-        self.response: Event[T2] = Event()
+    def __init__(self, name: str):
+        self.request: Event[T1] = Event("api-" + name + "-request")
+        self.response: Event[T2] = Event("api-" + name + "-request")
 
 
 class APIRequests:
     def __init__(self) -> None:
-        self.start_mission: APIEvent[Mission, MissionStartResponse] = APIEvent()
-        self.stop_mission: APIEvent[str, ControlMissionResponse] = APIEvent()
-        self.pause_mission: APIEvent[bool, ControlMissionResponse] = APIEvent()
-        self.resume_mission: APIEvent[bool, ControlMissionResponse] = APIEvent()
-        self.return_home: APIEvent[bool, bool] = APIEvent()
-        self.release_intervention_needed: APIEvent[bool, bool] = APIEvent()
+        self.start_mission: APIEvent[Mission, MissionStartResponse] = APIEvent(
+            "start_mission"
+        )
+        self.stop_mission: APIEvent[str, ControlMissionResponse] = APIEvent(
+            "stop_mission"
+        )
+        self.pause_mission: APIEvent[bool, ControlMissionResponse] = APIEvent(
+            "pause_mission"
+        )
+        self.resume_mission: APIEvent[bool, ControlMissionResponse] = APIEvent(
+            "resume_mission"
+        )
+        self.return_home: APIEvent[bool, bool] = APIEvent("return_home")
+        self.release_intervention_needed: APIEvent[bool, bool] = APIEvent(
+            "release_intervention_needed"
+        )
 
 
 class StateMachineEvents:
     def __init__(self) -> None:
-        self.start_mission: Event[Mission] = Event()
-        self.stop_mission: Event[bool] = Event()
-        self.pause_mission: Event[bool] = Event()
-        self.task_status_request: Event[str] = Event()
+        self.start_mission: Event[Mission] = Event("start_mission")
+        self.stop_mission: Event[bool] = Event("stop_mission")
+        self.pause_mission: Event[bool] = Event("pause_mission")
+        self.task_status_request: Event[str] = Event("task_status_request")
 
 
 class RobotServiceEvents:
     def __init__(self) -> None:
-        self.task_status_updated: Event[TaskStatus] = Event()
-        self.task_status_failed: Event[ErrorMessage] = Event()
-        self.mission_started: Event[bool] = Event()
-        self.mission_failed: Event[ErrorMessage] = Event()
-        self.robot_status_changed: Event[bool] = Event()
-        self.mission_failed_to_stop: Event[ErrorMessage] = Event()
-        self.mission_successfully_stopped: Event[bool] = Event()
+        self.task_status_updated: Event[TaskStatus] = Event("task_status_updated")
+        self.task_status_failed: Event[ErrorMessage] = Event("task_status_failed")
+        self.mission_started: Event[bool] = Event("mission_started")
+        self.mission_failed: Event[ErrorMessage] = Event("mission_failed")
+        self.robot_status_changed: Event[bool] = Event("robot_status_changed")
+        self.mission_failed_to_stop: Event[ErrorMessage] = Event(
+            "mission_failed_to_stop"
+        )
+        self.mission_successfully_stopped: Event[bool] = Event(
+            "mission_successfully_stopped"
+        )
 
 
 class SharedState:
     def __init__(self) -> None:
-        self.state: Event[State] = Event()
-        self.robot_status: Event[RobotStatus] = Event()
-        self.state_machine_current_task: Event[TASKS] = Event()
-        self.robot_battery_level: Event[float] = Event()
+        self.state: Event[State] = Event("state")
+        self.robot_status: Event[RobotStatus] = Event("robot_status")
+        self.state_machine_current_task: Event[TASKS] = Event(
+            "state_machine_current_task"
+        )
+        self.robot_battery_level: Event[float] = Event("robot_battery_level")
 
 
 class EventTimeoutError(Exception):
