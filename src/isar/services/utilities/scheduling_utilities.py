@@ -347,3 +347,6 @@ class SchedulingUtilities:
             api_event.request.clear_event()
             self.logger.error("No output received for command to state machine")
             raise e
+        finally:
+            api_event.request.clear_event()
+            api_event.response.clear_event()
