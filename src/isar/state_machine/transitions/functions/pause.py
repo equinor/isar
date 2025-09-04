@@ -29,7 +29,7 @@ def pause_mission(state_machine: "StateMachine") -> bool:
             paused_mission_response: ControlMissionResponse = (
                 state_machine._make_control_mission_response()
             )
-            state_machine.events.api_requests.pause_mission.response.put(
+            state_machine.events.api_requests.pause_mission.response.trigger_event(
                 paused_mission_response
             )
 

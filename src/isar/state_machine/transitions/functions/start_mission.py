@@ -13,7 +13,7 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
 def acknowledge_mission(state_machine: "StateMachine") -> bool:
-    state_machine.events.api_requests.start_mission.response.put(
+    state_machine.events.api_requests.start_mission.response.trigger_event(
         MissionStartResponse(mission_started=True)
     )
     return True
@@ -66,14 +66,14 @@ def set_mission_to_in_progress(state_machine: "StateMachine") -> bool:
 
 
 def trigger_start_mission_event(state_machine: "StateMachine") -> bool:
-    state_machine.events.state_machine_events.start_mission.put(
+    state_machine.events.state_machine_events.start_mission.trigger_event(
         state_machine.current_mission
     )
     return True
 
 
 def _initialization_failed(state_machine: "StateMachine") -> None:
-    state_machine.events.api_requests.start_mission.response.put(
+    state_machine.events.api_requests.start_mission.response.trigger_event(
         MissionStartResponse(
             mission_started=False,
             mission_not_started_reason="Failed to initialize robot",
