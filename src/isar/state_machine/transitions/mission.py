@@ -4,7 +4,10 @@ from isar.state_machine.transitions.functions.fail_mission import (
     report_failed_mission_and_finalize,
 )
 from isar.state_machine.transitions.functions.finish_mission import finish_mission
-from isar.state_machine.transitions.functions.pause import pause_mission
+from isar.state_machine.transitions.functions.pause import (
+    pause_mission,
+    pause_return_home_mission,
+)
 from isar.state_machine.transitions.functions.resume import resume_mission
 from isar.state_machine.transitions.functions.start_mission import (
     acknowledge_mission,
@@ -39,6 +42,17 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.monitor_state,
         },
         {
+            "trigger": "pause",
+            "source": state_machine.returning_home_state,
+            "dest": state_machine.return_home_paused_state,
+            "conditions": def_transition(state_machine, pause_return_home_mission),
+        },
+        {
+            "trigger": "pause",
+            "source": state_machine.returning_home_state,
+            "dest": state_machine.returning_home_state,
+        },
+        {
             "trigger": "resume",
             "source": state_machine.paused_state,
             "dest": state_machine.monitor_state,
@@ -48,6 +62,17 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "resume",
             "source": state_machine.paused_state,
             "dest": state_machine.paused_state,
+        },
+        {
+            "trigger": "resume",
+            "source": state_machine.return_home_paused_state,
+            "dest": state_machine.returning_home_state,
+            "conditions": def_transition(state_machine, resume_mission),
+        },
+        {
+            "trigger": "resume",
+            "source": state_machine.return_home_paused_state,
+            "dest": state_machine.return_home_paused_state,
         },
         {
             "trigger": "stop",

@@ -23,6 +23,7 @@ from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.offline import Offline
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.recharging import Recharging
+from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.robot_standing_still import RobotStandingStill
 from isar.state_machine.states.stopping import Stopping
@@ -100,6 +101,7 @@ class StateMachine(object):
         self.returning_home_state: State = ReturningHome(self)
         self.stopping_state: State = Stopping(self)
         self.paused_state: State = Paused(self)
+        self.return_home_paused_state: State = ReturnHomePaused(self)
 
         # States Waiting for mission
         self.await_next_mission_state: State = AwaitNextMission(self)
@@ -120,6 +122,7 @@ class StateMachine(object):
             self.returning_home_state,
             self.stopping_state,
             self.paused_state,
+            self.return_home_paused_state,
             self.await_next_mission_state,
             self.home_state,
             self.robot_standing_still_state,

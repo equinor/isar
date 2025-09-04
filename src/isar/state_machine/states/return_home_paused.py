@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class Paused(EventHandlerBase):
+class ReturnHomePaused(EventHandlerBase):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
@@ -19,24 +19,12 @@ class Paused(EventHandlerBase):
         ) -> Optional[Callable]:
             battery_level: float = event.check()
             if battery_level < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
-                state_machine.publish_mission_aborted(
-                    "Robot battery too low to continue mission", True
-                )
-                state_machine._finalize()
-                state_machine.logger.warning(
-                    "Cancelling current mission due to low battery"
-                )
-                return state_machine.stop  # type: ignore
+                return state_machine.resume  # type: ignore
             return None
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
-                name="stop_mission_event",
-                event=events.api_requests.stop_mission.request,
-                handler=lambda event: state_machine.stop if event.consume_event() else None,  # type: ignore
-            ),
-            EventHandlerMapping(
-                name="resume_mission_event",
+                name="resume_return_home_event",
                 event=events.api_requests.resume_mission.request,
                 handler=lambda event: state_machine.resume if event.consume_event() else None,  # type: ignore
             ),
@@ -47,7 +35,7 @@ class Paused(EventHandlerBase):
             ),
         ]
         super().__init__(
-            state_name="paused",
+            state_name="return_home_paused",
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
