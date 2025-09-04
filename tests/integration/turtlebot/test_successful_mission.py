@@ -35,7 +35,7 @@ def test_successful_mission(
     mission: Mission = deepcopy(state_machine_thread.state_machine.current_mission)
 
     start_time: datetime = datetime.now(timezone.utc)
-    while state_machine_thread.state_machine.current_state != States.RobotStandingStill:
+    while state_machine_thread.state_machine.current_state != States.Home:
         if (datetime.now(timezone.utc) - start_time) > integration_test_timeout:
             raise TimeoutError
         time.sleep(5)
