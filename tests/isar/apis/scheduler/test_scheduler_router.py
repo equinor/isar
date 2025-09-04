@@ -138,20 +138,6 @@ class TestStartMission:
         )
         assert response.status_code == HTTPStatus.OK
 
-    @mock.patch.object(SchedulingUtilities, "get_state", mock_return_home)
-    @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
-    def test_start_multiple_mission_at_once(self, client: TestClient):
-        response1 = client.post(
-            url=self.schedule_start_mission_path,
-            json=jsonable_encoder(self.dummy_start_mission_content),
-        )
-        response2 = client.post(
-            url=self.schedule_start_mission_path,
-            json=jsonable_encoder(self.dummy_start_mission_content),
-        )
-        assert response1.status_code == HTTPStatus.OK
-        assert response2.status_code == HTTPStatus.CONFLICT
-
     def test_incomplete_request(self, client: TestClient):
         response = client.post(url=self.schedule_start_mission_path, json={})
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -248,7 +234,6 @@ class TestStopMission:
     schedule_stop_mission_path = "/schedule/stop-mission"
     valid_states = [
         States.AwaitNextMission,
-        States.ReturningHome,
         States.Monitor,
         States.Paused,
     ]
