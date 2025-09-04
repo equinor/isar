@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.apis.models.models import MissionStartResponse
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
-from isar.models.events import Event, EventTimeoutError
+from isar.models.events import Event
 from isar.state_machine.utils.common_event_handlers import (
     mission_failed_event_handler,
     mission_started_event_handler,
@@ -43,17 +43,14 @@ class ReturningHome(EventHandlerBase):
         ) -> Optional[Callable]:
             if event.has_event():
                 if not state_machine.battery_level_is_above_mission_start_threshold():
-                    try:
-                        state_machine.events.api_requests.start_mission.response.trigger_event(
-                            MissionStartResponse(
-                                mission_id=None,
-                                mission_started=False,
-                                mission_not_started_reason="Robot battery too low",
-                            ),
-                            timeout=1,  # This conflict can happen if two API requests are received at the same time
-                        )
-                    except EventTimeoutError:
-                        pass
+                    response = MissionStartResponse(
+                        mission_id=None,
+                        mission_started=False,
+                        mission_not_started_reason="Robot battery too low",
+                    )
+                    state_machine.events.api_requests.start_mission.response.trigger_event(
+                        response
+                    )
                     return None
                 return state_machine.stop  # type: ignore
             return None
