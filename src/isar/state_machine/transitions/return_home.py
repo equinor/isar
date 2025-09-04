@@ -31,12 +31,12 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.robot_standing_still_state,
                 state_machine.intervention_needed_state,
                 state_machine.monitor_state,
+                state_machine.stopping_state,
             ],
             "dest": state_machine.returning_home_state,
             "conditions": [
                 def_transition(state_machine, start_return_home_mission),
                 def_transition(state_machine, set_return_home_status),
-                def_transition(state_machine, initialize_robot),
                 def_transition(state_machine, initialize_robot),
             ],
             "before": def_transition(state_machine, trigger_start_mission_event),

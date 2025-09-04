@@ -76,6 +76,7 @@ def mission_started_event_handler(
     event: Event[bool],
 ) -> Optional[Callable]:
     if event.consume_event():
+        state_machine.logger.info("Received confirmation that mission has started")
         state_machine.mission_ongoing = True
     return None
 

@@ -14,7 +14,6 @@ from isar.state_machine.transitions.functions.start_mission import (
     trigger_start_mission_event,
 )
 from isar.state_machine.transitions.functions.stop import (
-    stop_mission_cleanup,
     stop_mission_failed,
     stop_return_home_mission_cleanup,
     stop_return_home_mission_failed,
@@ -66,7 +65,6 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "mission_stopped",
             "source": state_machine.stopping_state,
             "dest": state_machine.await_next_mission_state,
-            "before": def_transition(state_machine, stop_mission_cleanup),
         },
         {
             "trigger": "mission_stopping_failed",
