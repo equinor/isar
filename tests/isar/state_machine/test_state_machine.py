@@ -21,6 +21,7 @@ from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states_enum import States
+from isar.state_machine.transitions.functions.stop import stop_mission_failed
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.exceptions.robot_exceptions import (
@@ -29,7 +30,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus, TaskStatus
-from robot_interface.models.mission.task import TakeImage, Task
+from robot_interface.models.mission.task import ReturnToHome, TakeImage, Task
 from tests.test_double.pose import DummyPose
 from tests.test_double.robot_interface import (
     StubRobot,
@@ -161,15 +162,14 @@ def test_state_machine_battery_too_low_to_start_mission(
 
 
 def test_return_home_not_cancelled_when_battery_is_low(
-    container: ApplicationContainer,
+    sync_state_machine: StateMachine,
 ) -> None:
-    state_machine: StateMachine = container.state_machine()
-    state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
 
-    events = state_machine.events
+    events = sync_state_machine.events
 
     returning_home_state: EventHandlerBase = cast(
-        EventHandlerBase, state_machine.returning_home_state
+        EventHandlerBase, sync_state_machine.returning_home_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         returning_home_state.get_event_handler_by_name("start_mission_event")
@@ -187,13 +187,12 @@ def test_return_home_not_cancelled_when_battery_is_low(
 
 
 def test_return_home_starts_when_battery_is_low(
-    container: ApplicationContainer,
+    sync_state_machine: StateMachine,
 ) -> None:
-    state_machine: StateMachine = container.state_machine()
-    state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
 
     await_next_mission_state: EventHandlerBase = cast(
-        EventHandlerBase, state_machine.await_next_mission_state
+        EventHandlerBase, sync_state_machine.await_next_mission_state
     )
     timer: Optional[TimeoutHandlerMapping] = (
         await_next_mission_state.get_event_timer_by_name("should_return_home_timer")
@@ -203,24 +202,22 @@ def test_return_home_starts_when_battery_is_low(
 
     transition = timer.handler()
 
-    assert transition is state_machine.request_return_home  # type: ignore
+    assert transition is sync_state_machine.request_return_home  # type: ignore
 
 
 def test_monitor_goes_to_return_home_when_battery_low(
-    container: ApplicationContainer,
+    sync_state_machine: StateMachine,
 ) -> None:
-    state_machine: StateMachine = container.state_machine()
-
-    state_machine.mission_ongoing = True
+    sync_state_machine.mission_ongoing = True
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
-    state_machine.current_task = task_1
+    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.current_task = task_1
 
     monitor_state: EventHandlerBase = cast(
-        EventHandlerBase, state_machine.monitor_state
+        EventHandlerBase, sync_state_machine.monitor_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         monitor_state.get_event_handler_by_name("robot_battery_update_event")
@@ -231,29 +228,28 @@ def test_monitor_goes_to_return_home_when_battery_low(
     event_handler.event.trigger_event(10.0, timeout=1)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is state_machine.stop  # type: ignore
-    assert not state_machine.events.mqtt_queue.empty()
+    assert transition is sync_state_machine.stop  # type: ignore
+    assert not sync_state_machine.events.mqtt_queue.empty()
 
-    mqtt_message = state_machine.events.mqtt_queue.get(block=False)
+    mqtt_message = sync_state_machine.events.mqtt_queue.get(block=False)
     assert mqtt_message is not None
     mqtt_payload_topic = mqtt_message[0]
     assert mqtt_payload_topic is settings.TOPIC_ISAR_MISSION_ABORTED
-    assert state_machine.events.mqtt_queue.get()[0]
+    assert sync_state_machine.events.mqtt_queue.get()[0]
 
 
 def test_return_home_goes_to_recharging_when_battery_low(
-    container: ApplicationContainer,
+    sync_state_machine: StateMachine,
 ) -> None:
-    state_machine: StateMachine = container.state_machine()
-    state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
 
-    state_machine.mission_ongoing = True
-    state_machine.current_task = TakeImage(
+    sync_state_machine.mission_ongoing = True
+    sync_state_machine.current_task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
 
     returning_home_state: EventHandlerBase = cast(
-        EventHandlerBase, state_machine.returning_home_state
+        EventHandlerBase, sync_state_machine.returning_home_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         returning_home_state.get_event_handler_by_name("task_status_event")
@@ -264,16 +260,14 @@ def test_return_home_goes_to_recharging_when_battery_low(
     event_handler.event.trigger_event(TaskStatus.Successful)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is state_machine.starting_recharging  # type: ignore
+    assert transition is sync_state_machine.starting_recharging  # type: ignore
 
 
 def test_recharging_goes_to_home_when_battery_high(
-    container: ApplicationContainer,
+    sync_state_machine: StateMachine,
 ) -> None:
-    state_machine: StateMachine = container.state_machine()
-
     recharging_state: EventHandlerBase = cast(
-        EventHandlerBase, state_machine.recharging_state
+        EventHandlerBase, sync_state_machine.recharging_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         recharging_state.get_event_handler_by_name("robot_battery_update_event")
@@ -284,16 +278,14 @@ def test_recharging_goes_to_home_when_battery_high(
     event_handler.event.trigger_event(99.9)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is state_machine.robot_recharged  # type: ignore
+    assert transition is sync_state_machine.robot_recharged  # type: ignore
 
 
 def test_recharging_continues_when_battery_low(
-    container: ApplicationContainer,
+    sync_state_machine: StateMachine,
 ) -> None:
-    state_machine: StateMachine = container.state_machine()
-
     recharging_state: EventHandlerBase = cast(
-        EventHandlerBase, state_machine.recharging_state
+        EventHandlerBase, sync_state_machine.recharging_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         recharging_state.get_event_handler_by_name("robot_battery_update_event")
@@ -526,7 +518,6 @@ def test_state_machine_with_unsuccessful_mission_stop(
     container: ApplicationContainer,
     mocker: MockerFixture,
     state_machine_thread: StateMachineThreadMock,
-    caplog: pytest.LogCaptureFixture,
     robot_service_thread: RobotServiceThreadMock,
 ) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
@@ -543,16 +534,11 @@ def test_state_machine_with_unsuccessful_mission_stop(
     robot_service_thread.start()
 
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(1)
+    time.sleep(0.5)
     with pytest.raises(HTTPException) as exception_details:
         scheduling_utilities.stop_mission()
 
-    expected_log = (
-        "Be aware that the robot may still be "
-        "moving even though a stop has been attempted"
-    )
     assert exception_details.value.status_code == HTTPStatus.CONFLICT.value
-    assert expected_log in caplog.text
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
@@ -564,44 +550,17 @@ def test_state_machine_with_unsuccessful_mission_stop(
     )
 
 
-def test_state_machine_with_unsuccessful_return_home_stop(
+def test_api_with_unsuccessful_return_home_stop(
     container: ApplicationContainer,
-    mocker: MockerFixture,
-    state_machine_thread: StateMachineThreadMock,
-    caplog: pytest.LogCaptureFixture,
-    robot_service_thread: RobotServiceThreadMock,
+    sync_state_machine: StateMachine,
 ) -> None:
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
-    mocker.patch.object(
-        StubRobot, "stop", side_effect=_mock_robot_exception_with_message
-    )
+    stop_mission_failed(sync_state_machine)
 
-    state_machine_thread.state_machine.sleep_time = 0
-
-    state_machine_thread.start()
-    robot_service_thread.start()
-
-    scheduling_utilities.return_home()
-    time.sleep(1)
     with pytest.raises(HTTPException) as exception_details:
         scheduling_utilities.stop_mission()
 
-    expected_log = (
-        "Be aware that the robot may still be "
-        "moving even though a stop has been attempted"
-    )
     assert exception_details.value.status_code == HTTPStatus.CONFLICT.value
-    assert expected_log in caplog.text
-    assert state_machine_thread.state_machine.transitions_list == deque(
-        [
-            States.UnknownStatus,
-            States.Home,
-            States.ReturningHome,
-            States.Stopping,
-            States.ReturningHome,
-        ]
-    )
 
 
 def test_state_machine_with_mission_start_during_return_home_without_queueing_stop_response(
@@ -629,13 +588,88 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
             States.UnknownStatus,
             States.Home,
             States.ReturningHome,
-            States.Stopping,
+            States.StoppingReturnHome,
             States.Monitor,
         ]
     )
     assert (
         not state_machine_thread.state_machine.events.api_requests.start_mission.request.has_event()
     )
+
+
+def test_return_home_cancelled_when_new_mission_received(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
+    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
+
+    returning_home_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.returning_home_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("start_mission_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.stop_return_home  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.stopping_return_home_state.name  # type: ignore
+
+
+def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
+    sync_state_machine.state = sync_state_machine.stopping_return_home_state.name  # type: ignore
+
+    stopping_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.stopping_return_home_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        stopping_state.get_event_handler_by_name("successful_stop_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+    transition()
+
+    assert transition is sync_state_machine.request_return_home  # type: ignore
+    assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
+
+
+def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
+    example_mission: Mission = Mission(
+        name="Dummy return home misson", tasks=[ReturnToHome()]
+    )
+    sync_state_machine.events.api_requests.start_mission.request.trigger_event(
+        example_mission
+    )
+    sync_state_machine.state = sync_state_machine.stopping_return_home_state.name  # type: ignore
+
+    stopping_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.stopping_return_home_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        stopping_state.get_event_handler_by_name("successful_stop_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+    transition()
+
+    assert transition is sync_state_machine.request_mission_start  # type: ignore
+    assert sync_state_machine.state is sync_state_machine.monitor_state.name  # type: ignore
 
 
 def test_state_machine_with_return_home_failure_successful_retries(
