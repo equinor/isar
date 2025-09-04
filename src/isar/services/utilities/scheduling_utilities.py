@@ -332,7 +332,7 @@ class SchedulingUtilities:
             )
 
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
-        if api_event.request.has_event() or api_event.response.has_event():
+        if api_event.request.has_event():
             raise EventConflictError("API event has already been sent")
 
         try:
