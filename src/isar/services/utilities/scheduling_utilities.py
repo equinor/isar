@@ -132,8 +132,7 @@ class SchedulingUtilities:
             or returning home and therefore cannot start a new mission
         """
         if (
-            state == States.RobotStandingStill
-            or state == States.Home
+            state == States.Home
             or state == States.AwaitNextMission
             or state == States.ReturningHome
         ):
@@ -154,11 +153,7 @@ class SchedulingUtilities:
             If state machine is not home, robot standing still or awaiting next mission
             and therefore cannot start a new return home mission
         """
-        if (
-            state == States.RobotStandingStill
-            or state == States.Home
-            or state == States.AwaitNextMission
-        ):
+        if state == States.Home or state == States.AwaitNextMission:
             return True
 
         error_message = f"Conflict - Robot is not home, robot standing still or awaiting next mission - State: {state}"

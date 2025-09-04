@@ -9,7 +9,6 @@ class States(str, Enum):
     ReturnHomePaused = "return_home_paused"
     AwaitNextMission = "await_next_mission"
     Home = "home"
-    RobotStandingStill = "robot_standing_still"
     Offline = "offline"
     BlockedProtectiveStop = "blocked_protective_stop"
     UnknownStatus = "unknown_status"

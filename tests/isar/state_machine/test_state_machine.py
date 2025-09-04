@@ -33,10 +33,8 @@ from robot_interface.models.mission.task import TakeImage, Task
 from tests.test_double.pose import DummyPose
 from tests.test_double.robot_interface import (
     StubRobot,
-    StubRobotBlockedProtectiveStopToRobotStandingStillTest,
-    StubRobotHomeToRobotStandingStillTest,
+    StubRobotBlockedProtectiveStopToHomeTest,
     StubRobotOfflineToHomeTest,
-    StubRobotOfflineToRobotStandingStillTest,
 )
 from tests.test_double.task import StubTask
 
@@ -341,7 +339,7 @@ def test_state_machine_failed_dependency(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
-            States.RobotStandingStill,
+            States.Home,
             States.Monitor,
             States.AwaitNextMission,
             States.ReturningHome,
@@ -518,7 +516,7 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
-            States.RobotStandingStill,
+            States.Home,
             States.Monitor,
         ]
     )
@@ -558,7 +556,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
-            States.RobotStandingStill,
+            States.Home,
             States.Monitor,
             States.Stopping,
             States.Monitor,
@@ -598,39 +596,10 @@ def test_state_machine_with_unsuccessful_return_home_stop(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
-            States.RobotStandingStill,
+            States.Home,
             States.ReturningHome,
             States.Stopping,
             States.ReturningHome,
-        ]
-    )
-
-
-def test_state_machine_with_successful_return_home_stop(
-    container: ApplicationContainer,
-    mocker: MockerFixture,
-    state_machine_thread: StateMachineThreadMock,
-    robot_service_thread: RobotServiceThreadMock,
-) -> None:
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
-
-    state_machine_thread.state_machine.sleep_time = 0
-
-    state_machine_thread.start()
-    robot_service_thread.start()
-
-    scheduling_utilities.return_home()
-    time.sleep(1)
-    scheduling_utilities.stop_mission()
-
-    assert state_machine_thread.state_machine.transitions_list == deque(
-        [
-            States.UnknownStatus,
-            States.RobotStandingStill,
-            States.ReturningHome,
-            States.Stopping,
-            States.RobotStandingStill,
         ]
     )
 
@@ -658,7 +627,7 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
-            States.RobotStandingStill,
+            States.Home,
             States.ReturningHome,
             States.Stopping,
             States.RobotStandingStill,
@@ -693,59 +662,15 @@ def test_state_machine_with_return_home_failure_successful_retries(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
-            States.RobotStandingStill,
+            States.Home,
             States.ReturningHome,
             States.ReturningHome,
             States.Home,
-            States.RobotStandingStill,
         ]
     )
 
 
-def test_state_machine_with_return_home_failure_unsuccessful_retries_twice(
-    container: ApplicationContainer,
-    mocker: MockerFixture,
-    state_machine_thread: StateMachineThreadMock,
-    robot_service_thread: RobotServiceThreadMock,
-) -> None:
-    state_machine_thread.state_machine.await_next_mission_state.timers[
-        0
-    ].timeout_in_seconds = 0.01
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    state_machine_thread.start()
-    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Available)
-    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.Failed)
-    robot_service_thread.start()
-
-    scheduling_utilities.return_home()
-    time.sleep(3)  # Allow enough time to run mission and return home
-    scheduling_utilities.release_intervention_needed()
-    scheduling_utilities.return_home()
-    time.sleep(3)  # Allow enough time to run mission and return home
-
-    assert state_machine_thread.state_machine.transitions_list == deque(
-        [
-            States.UnknownStatus,
-            States.RobotStandingStill,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.InterventionNeeded,
-            States.UnknownStatus,
-            States.RobotStandingStill,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.InterventionNeeded,
-        ]
-    )
-
-
-def test_state_machine_offline_to_robot_standing_still(
+def test_state_machine_offline_to_home(
     state_machine_thread, robot_service_thread, mocker
 ) -> None:
     # Robot status check happens every 5 seconds by default, so we mock the behavior
@@ -754,7 +679,7 @@ def test_state_machine_offline_to_robot_standing_still(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
 
-    robot_service_thread.robot_service.robot = StubRobotOfflineToRobotStandingStillTest(
+    robot_service_thread.robot_service.robot = StubRobotOfflineToHomeTest(
         robot_service_thread.robot_service.shared_state.state
     )
     state_machine_thread.start()
@@ -762,7 +687,7 @@ def test_state_machine_offline_to_robot_standing_still(
     time.sleep(1)
 
     assert state_machine_thread.state_machine.transitions_list == deque(
-        [States.UnknownStatus, States.Offline, States.RobotStandingStill]
+        [States.UnknownStatus, States.Offline, States.Home]
     )
 
 
@@ -777,30 +702,7 @@ def test_state_machine_idle_to_blocked_protective_stop_to_idle(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
 
-    robot_service_thread.robot_service.robot = (
-        StubRobotBlockedProtectiveStopToRobotStandingStillTest(
-            robot_service_thread.robot_service.shared_state.state
-        )
-    )
-
-    state_machine_thread.start()
-    robot_service_thread.start()
-    time.sleep(1)
-
-    assert state_machine_thread.state_machine.transitions_list == deque(
-        [States.UnknownStatus, States.BlockedProtectiveStop, States.RobotStandingStill]
-    )
-
-
-def test_state_machine_home_to_robot_standing_still(
-    mocker, state_machine_thread, robot_service_thread
-) -> None:
-    # Robot status check happens every 5 seconds by default, so we mock the behavior
-    # to poll for status imediately
-    mocker.patch.object(
-        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
-    )
-    robot_service_thread.robot_service.robot = StubRobotHomeToRobotStandingStillTest(
+    robot_service_thread.robot_service.robot = StubRobotBlockedProtectiveStopToHomeTest(
         robot_service_thread.robot_service.shared_state.state
     )
 
@@ -809,28 +711,7 @@ def test_state_machine_home_to_robot_standing_still(
     time.sleep(1)
 
     assert state_machine_thread.state_machine.transitions_list == deque(
-        [States.UnknownStatus, States.Home, States.RobotStandingStill]
-    )
-
-
-def test_state_machine_offline_to_home(
-    mocker, state_machine_thread, robot_service_thread
-) -> None:
-    # Robot status check happens every 5 seconds by default, so we mock the behavior
-    # to poll for status imediately
-    mocker.patch.object(
-        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
-    )
-    robot_service_thread.robot_service.robot = StubRobotOfflineToHomeTest(
-        robot_service_thread.robot_service.shared_state.state
-    )
-
-    state_machine_thread.start()
-    robot_service_thread.start()
-    time.sleep(1)
-
-    assert state_machine_thread.state_machine.transitions_list == deque(
-        [States.UnknownStatus, States.Offline, States.Home]
+        [States.UnknownStatus, States.BlockedProtectiveStop, States.Home]
     )
 
 
