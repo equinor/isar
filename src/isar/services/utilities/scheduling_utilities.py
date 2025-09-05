@@ -129,12 +129,13 @@ class SchedulingUtilities:
         ------
         HTTPException 409 Conflict
             If state machine is not home, robot standing still, awaiting next mission
-            or returning home and therefore cannot start a new mission
+            return home paused or returning home and therefore cannot start a new mission
         """
         if (
             state == States.Home
             or state == States.AwaitNextMission
             or state == States.ReturningHome
+            or state == States.ReturnHomePaused
         ):
             return True
 
