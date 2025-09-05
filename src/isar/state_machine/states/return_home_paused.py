@@ -1,8 +1,10 @@
 from typing import TYPE_CHECKING, Callable, List, Optional
 
+from isar.apis.models.models import MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
+from robot_interface.models.mission.mission import Mission
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -22,6 +24,23 @@ class ReturnHomePaused(EventHandlerBase):
                 return state_machine.resume  # type: ignore
             return None
 
+        def _start_mission_event_handler(
+            event: Event[Mission],
+        ) -> Optional[Callable]:
+            if event.has_event():
+                if not state_machine.battery_level_is_above_mission_start_threshold():
+                    response = MissionStartResponse(
+                        mission_id=None,
+                        mission_started=False,
+                        mission_not_started_reason="Robot battery too low",
+                    )
+                    state_machine.events.api_requests.start_mission.response.trigger_event(
+                        response
+                    )
+                    return None
+                return state_machine.stop  # type: ignore
+            return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="resume_return_home_event",
@@ -32,6 +51,11 @@ class ReturnHomePaused(EventHandlerBase):
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
+            ),
+            EventHandlerMapping(
+                name="start_mission_event",
+                event=events.api_requests.start_mission.request,
+                handler=_start_mission_event_handler,
             ),
         ]
         super().__init__(
