@@ -136,7 +136,7 @@ class SchedulingController:
 
         state: States = self.scheduling_utilities.get_state()
 
-        if state != States.Paused:
+        if state not in [States.Paused, States.ReturnHomePaused]:
             error_message = (
                 f"Conflict - Resume command received in invalid state - State: {state}"
             )
