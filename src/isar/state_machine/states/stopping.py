@@ -1,4 +1,3 @@
-import logging
 from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.apis.models.models import ControlMissionResponse
@@ -14,7 +13,6 @@ if TYPE_CHECKING:
 class Stopping(EventHandlerBase):
 
     def __init__(self, state_machine: "StateMachine"):
-        logger = logging.getLogger("state_machine")
         events = state_machine.events
 
         def _stop_mission_cleanup() -> None:
@@ -48,30 +46,15 @@ class Stopping(EventHandlerBase):
         ) -> Optional[Callable]:
             error_message: Optional[ErrorMessage] = event.consume_event()
             if error_message is not None:
-                logger.warning(error_message.error_description)
-                if (
-                    state_machine.current_mission is not None
-                    and state_machine.current_mission._is_return_to_home_mission()
-                ):
-                    return state_machine.return_home_mission_stopping_failed  # type: ignore
-                else:
-                    return state_machine.mission_stopping_failed  # type: ignore
+                return state_machine.mission_stopping_failed  # type: ignore
             return None
 
         def _successful_stop_event_handler(event: Event[bool]) -> Optional[Callable]:
             if event.consume_event():
-                if (
-                    state_machine.current_mission is not None
-                    and state_machine.current_mission._is_return_to_home_mission()
-                ):
-                    return state_machine.return_home_mission_stopped  # type: ignore
-                else:
-                    _stop_mission_cleanup()
-                    if (
-                        not state_machine.battery_level_is_above_mission_start_threshold()
-                    ):
-                        return state_machine.request_return_home  # type: ignore
-                    return state_machine.mission_stopped  # type: ignore
+                _stop_mission_cleanup()
+                if not state_machine.battery_level_is_above_mission_start_threshold():
+                    return state_machine.request_return_home  # type: ignore
+                return state_machine.mission_stopped  # type: ignore
             return None
 
         event_handlers: List[EventHandlerMapping] = [
