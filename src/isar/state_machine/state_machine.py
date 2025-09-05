@@ -362,6 +362,10 @@ class StateMachine(object):
     def _current_status(self) -> RobotStatus:
         if self.current_state == States.AwaitNextMission:
             return RobotStatus.Available
+        elif self.current_state == States.ReturnHomePaused:
+            return RobotStatus.ReturnHomePaused
+        elif self.current_state == States.Paused:
+            return RobotStatus.Paused
         elif self.current_state == States.Home:
             return RobotStatus.Home
         elif self.current_state == States.ReturningHome:
