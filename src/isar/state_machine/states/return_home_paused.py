@@ -29,6 +29,7 @@ class ReturnHomePaused(EventHandlerBase):
         ) -> Optional[Callable]:
             if event.has_event():
                 if not state_machine.battery_level_is_above_mission_start_threshold():
+                    state_machine.events.api_requests.start_mission.request.consume_event()
                     response = MissionStartResponse(
                         mission_id=None,
                         mission_started=False,
@@ -38,7 +39,7 @@ class ReturnHomePaused(EventHandlerBase):
                         response
                     )
                     return None
-                return state_machine.stop  # type: ignore
+                return state_machine.stop_return_home  # type: ignore
             return None
 
         event_handlers: List[EventHandlerMapping] = [

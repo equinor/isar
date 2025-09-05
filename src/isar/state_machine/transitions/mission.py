@@ -9,6 +9,10 @@ from isar.state_machine.transitions.functions.pause import (
     pause_return_home_mission,
 )
 from isar.state_machine.transitions.functions.resume import resume_mission
+from isar.state_machine.transitions.functions.return_home import (
+    reset_return_home_failure_counter,
+    return_home_finished,
+)
 from isar.state_machine.transitions.functions.start_mission import (
     acknowledge_mission,
     initialize_robot,
@@ -78,12 +82,23 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "source": [
                 state_machine.await_next_mission_state,
                 state_machine.monitor_state,
-                state_machine.returning_home_state,
                 state_machine.paused_state,
-                state_machine.return_home_paused_state,
             ],
             "dest": state_machine.stopping_state,
             "before": def_transition(state_machine, trigger_stop_mission_event),
+        },
+        {
+            "trigger": "stop_return_home",
+            "source": [
+                state_machine.returning_home_state,
+                state_machine.return_home_paused_state,
+            ],
+            "dest": state_machine.stopping_return_home_state,
+            "before": [
+                def_transition(state_machine, trigger_stop_mission_event),
+                def_transition(state_machine, reset_return_home_failure_counter),
+                def_transition(state_machine, return_home_finished),
+            ],
         },
         {
             "trigger": "mission_stopped",
@@ -98,7 +113,7 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
         },
         {
             "trigger": "return_home_mission_stopping_failed",
-            "source": state_machine.stopping_state,
+            "source": state_machine.stopping_return_home_state,
             "dest": state_machine.returning_home_state,
             "before": def_transition(state_machine, stop_return_home_mission_failed),
         },
@@ -107,6 +122,7 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "source": [
                 state_machine.await_next_mission_state,
                 state_machine.home_state,
+                state_machine.stopping_return_home_state,
             ],
             "dest": state_machine.monitor_state,
             "prepare": def_transition(state_machine, acknowledge_mission),

@@ -26,6 +26,7 @@ from isar.state_machine.states.recharging import Recharging
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping import Stopping
+from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
 from isar.state_machine.transitions.mission import get_mission_transitions
@@ -101,6 +102,7 @@ class StateMachine(object):
         self.stopping_state: State = Stopping(self)
         self.paused_state: State = Paused(self)
         self.return_home_paused_state: State = ReturnHomePaused(self)
+        self.stopping_return_home_state: State = StoppingReturnHome(self)
 
         # States Waiting for mission
         self.await_next_mission_state: State = AwaitNextMission(self)
@@ -119,6 +121,7 @@ class StateMachine(object):
             self.monitor_state,
             self.returning_home_state,
             self.stopping_state,
+            self.stopping_return_home_state,
             self.paused_state,
             self.return_home_paused_state,
             self.await_next_mission_state,
