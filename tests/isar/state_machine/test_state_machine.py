@@ -630,7 +630,6 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
             States.Home,
             States.ReturningHome,
             States.Stopping,
-            States.RobotStandingStill,
             States.Monitor,
         ]
     )
