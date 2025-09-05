@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from alitra import Pose
 
+from isar.storage.storage_interface import BlobStoragePath
 from robot_interface.models.exceptions.robot_exceptions import ErrorReason
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import TaskTypes
@@ -119,7 +120,8 @@ class InspectionResultPayload:
     isar_id: str
     robot_name: str
     inspection_id: str
-    inspection_path: Union[str, dict]
+    blob_storage_data_path: BlobStoragePath
+    blob_storage_metadata_path: BlobStoragePath
     installation_code: str
     tag_id: Optional[str]
     inspection_type: Optional[str]
