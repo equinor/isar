@@ -6,7 +6,6 @@ from isar.models.events import Event
 from isar.state_machine.utils.common_event_handlers import (
     mission_failed_event_handler,
     mission_started_event_handler,
-    stop_mission_event_handler,
     task_status_event_handler,
     task_status_failed_event_handler,
 )
@@ -23,6 +22,11 @@ class ReturningHome(EventHandlerBase):
     def __init__(self, state_machine: "StateMachine"):
         self.failed_return_home_attemps: int = 0
         events = state_machine.events
+
+        def _pause_mission_event_handler(event: Event[bool]) -> Optional[Callable]:
+            if event.consume_event():
+                return state_machine.pause  # type: ignore
+            return None
 
         def _handle_task_completed(status: TaskStatus):
             if status != TaskStatus.Successful:
@@ -43,6 +47,7 @@ class ReturningHome(EventHandlerBase):
         ) -> Optional[Callable]:
             if event.has_event():
                 if not state_machine.battery_level_is_above_mission_start_threshold():
+                    state_machine.events.api_requests.start_mission.request.consume_event()
                     response = MissionStartResponse(
                         mission_id=None,
                         mission_started=False,
@@ -52,14 +57,14 @@ class ReturningHome(EventHandlerBase):
                         response
                     )
                     return None
-                return state_machine.stop  # type: ignore
+                return state_machine.stop_return_home  # type: ignore
             return None
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
-                name="stop_mission_event",
-                event=events.api_requests.stop_mission.request,
-                handler=lambda event: stop_mission_event_handler(state_machine, event),
+                name="pause_mission_event",
+                event=events.api_requests.pause_mission.request,
+                handler=_pause_mission_event_handler,
             ),
             EventHandlerMapping(
                 name="mission_started_event",

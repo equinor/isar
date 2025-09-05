@@ -225,7 +225,7 @@ States.Paused,
 indicates that the state machine is already running. For running a mission the state machine need to be in the states
 
 ```
-States.Home, States.RobotStandingStill, States.AwaitNextMission or States.ReturningHome
+States.Home, States.AwaitNextMission or States.ReturningHome
 ```
 
 ### FastAPI

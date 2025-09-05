@@ -129,13 +129,13 @@ class SchedulingUtilities:
         ------
         HTTPException 409 Conflict
             If state machine is not home, robot standing still, awaiting next mission
-            or returning home and therefore cannot start a new mission
+            return home paused or returning home and therefore cannot start a new mission
         """
         if (
-            state == States.RobotStandingStill
-            or state == States.Home
+            state == States.Home
             or state == States.AwaitNextMission
             or state == States.ReturningHome
+            or state == States.ReturnHomePaused
         ):
             return True
 
@@ -154,11 +154,7 @@ class SchedulingUtilities:
             If state machine is not home, robot standing still or awaiting next mission
             and therefore cannot start a new return home mission
         """
-        if (
-            state == States.RobotStandingStill
-            or state == States.Home
-            or state == States.AwaitNextMission
-        ):
+        if state == States.Home or state == States.AwaitNextMission:
             return True
 
         error_message = f"Conflict - Robot is not home, robot standing still or awaiting next mission - State: {state}"
@@ -336,7 +332,7 @@ class SchedulingUtilities:
             )
 
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
-        if api_event.request.has_event() or api_event.response.has_event():
+        if api_event.request.has_event():
             raise EventConflictError("API event has already been sent")
 
         try:

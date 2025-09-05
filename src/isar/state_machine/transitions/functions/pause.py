@@ -51,3 +51,41 @@ def pause_mission(state_machine: "StateMachine") -> bool:
 
     state_machine.logger.error("Failed to pause mission after multiple attempts.")
     return False
+
+
+def pause_return_home_mission(state_machine: "StateMachine") -> bool:
+    state_machine.logger.info("Pausing return home misson")
+
+    max_retries = settings.STATE_TRANSITION_NUM_RETIRES
+    retry_interval = settings.STATE_TRANSITION_RETRY_INTERVAL_SEC
+
+    for attempt in range(max_retries):
+        try:
+            state_machine.robot.pause()
+            state_machine.current_mission.status = MissionStatus.Paused
+            state_machine.current_task.status = TaskStatus.Paused
+
+            paused_mission_response: ControlMissionResponse = (
+                state_machine._make_control_mission_response()
+            )
+            state_machine.events.api_requests.pause_mission.response.trigger_event(
+                paused_mission_response
+            )
+
+            state_machine.logger.info("Return home mission paused successfully.")
+            return True
+        except RobotActionException as e:
+            state_machine.logger.warning(
+                f"Attempt {attempt + 1} to pause return home mission failed: {e.error_description}"
+            )
+            time.sleep(retry_interval)
+        except RobotException as e:
+            state_machine.logger.warning(
+                f"Attempt {attempt + 1} to pause return home mission raised a RobotException: {e.error_description}"
+            )
+            time.sleep(retry_interval)
+
+    state_machine.logger.error(
+        "Failed to pause return home mission after multiple attempts."
+    )
+    return False

@@ -115,6 +115,7 @@ class SchedulingController:
 
         if state not in [
             States.Monitor,
+            States.ReturningHome,
         ]:
             error_message = (
                 f"Conflict - Pause command received in invalid state - State: {state}"
@@ -135,7 +136,7 @@ class SchedulingController:
 
         state: States = self.scheduling_utilities.get_state()
 
-        if state != States.Paused:
+        if state not in [States.Paused, States.ReturnHomePaused]:
             error_message = (
                 f"Conflict - Resume command received in invalid state - State: {state}"
             )
@@ -167,6 +168,7 @@ class SchedulingController:
             or state == States.BlockedProtectiveStop
             or state == States.Offline
             or state == States.Home
+            or state == States.ReturningHome
         ):
             error_message = (
                 f"Conflict - Stop command received in invalid state - State: {state}"

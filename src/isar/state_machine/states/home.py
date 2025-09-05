@@ -1,9 +1,9 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.models.events import Event
 from isar.state_machine.utils.common_event_handlers import (
     return_home_event_handler,
-    robot_status_event_handler,
     start_mission_event_handler,
     stop_mission_event_handler,
 )
@@ -18,6 +18,17 @@ class Home(EventHandlerBase):
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
+
+        def _robot_status_event_handler(
+            event: Event[RobotStatus],
+        ) -> Optional[Callable]:
+            robot_status: RobotStatus = event.check()
+            if not (
+                robot_status == RobotStatus.Available
+                or robot_status == RobotStatus.Home
+            ):
+                return state_machine.robot_status_changed  # type: ignore
+            return None
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -40,9 +51,7 @@ class Home(EventHandlerBase):
             EventHandlerMapping(
                 name="robot_status_event",
                 event=shared_state.robot_status,
-                handler=lambda event: robot_status_event_handler(
-                    state_machine, RobotStatus.Home, event
-                ),
+                handler=_robot_status_event_handler,
             ),
         ]
         super().__init__(

@@ -4,13 +4,14 @@ from pathlib import Path
 import pytest
 from dependency_injector.wiring import providers
 from fastapi.testclient import TestClient
+from pytest_mock import MockerFixture
 
 from isar.apis.security.authentication import Authenticator
+from isar.eventhandlers.eventhandler import EventHandlerBase
 from isar.modules import ApplicationContainer
 from isar.robot.robot import Robot
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.monitor import Monitor
-from isar.state_machine.states.robot_standing_still import RobotStandingStill
 from isar.storage.uploader import Uploader
 from tests.isar.state_machine.test_state_machine import (
     RobotServiceThreadMock,
@@ -103,9 +104,16 @@ def state_machine(container: ApplicationContainer, robot):
 
 
 @pytest.fixture()
-def robot_standing_still_state(state_machine):
-    """Fixture to provide the Robot Standing Still state."""
-    return RobotStandingStill(state_machine)
+def sync_state_machine(container: ApplicationContainer, robot, mocker: MockerFixture):
+    """Fixture to provide the StateMachine instance without running the state loops."""
+    mocker.patch.object(EventHandlerBase, "enter", return_value=lambda: None)
+    return StateMachine(
+        events=container.events(),
+        shared_state=container.shared_state(),
+        robot=robot,
+        mqtt_publisher=container.mqtt_client(),
+        task_selector=container.task_selector(),
+    )
 
 
 @pytest.fixture()
