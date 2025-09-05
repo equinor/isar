@@ -80,6 +80,7 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.monitor_state,
                 state_machine.returning_home_state,
                 state_machine.paused_state,
+                state_machine.return_home_paused_state,
             ],
             "dest": state_machine.stopping_state,
             "before": def_transition(state_machine, trigger_stop_mission_event),
