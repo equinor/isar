@@ -14,7 +14,8 @@ from robot_interface.models.inspection.inspection import (
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TakeImage
 from tests.isar.state_machine.test_state_machine import UploaderThreadMock
-from tests.test_double.blob_storage import StorageFake
+from tests.test_double.blob_storage import StorageEmptyBlobPathsFake, StorageFake
+from tests.test_double.mqtt_client import MqttPublisherFake
 
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(
@@ -85,3 +86,33 @@ def test_should_retry_failed_upload_from_queue(
 
     # After some time, it should have retried and now it should be successful
     assert storage_handler.blob_exists(inspection)
+
+
+def test_should_not_publish_when_blob_paths_are_empty(
+    container: ApplicationContainer, uploader_thread: UploaderThreadMock
+) -> None:
+    uploader_thread.start()
+
+    mission: Mission = Mission(name="Dummy mission")
+    inspection: Inspection = InspectionBlob(
+        metadata=ARBITRARY_IMAGE_METADATA, id="blob-empty"
+    )
+
+    uploader: Uploader = container.uploader()
+
+    storage_handler: StorageEmptyBlobPathsFake() = StorageEmptyBlobPathsFake()  # type: ignore
+    uploader.storage_handlers[0] = storage_handler
+
+    mqtt_fake = MqttPublisherFake()
+    uploader.mqtt_publisher = mqtt_fake
+
+    message: Tuple[Inspection, Mission] = (
+        inspection,
+        mission,
+    )
+    uploader.upload_queue.put(message)
+    time.sleep(1)
+
+    assert inspection in storage_handler.stored
+
+    assert len(mqtt_fake.published) == 0

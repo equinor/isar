@@ -29,6 +29,14 @@ from robot_interface.telemetry.payloads import (
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
+def has_empty_blob_storage_path(storage_paths: StoragePaths):
+    for path in (storage_paths.data_path, storage_paths.metadata_path):
+        for value in (path.storage_account, path.blob_container, path.blob_name):
+            if not (value and value.strip()):
+                return True
+    return False
+
+
 @dataclass
 class UploaderQueueItem:
     inspection: Inspection
@@ -192,6 +200,13 @@ class Uploader:
                     inspection_paths = self._upload(item)
                     if isinstance(inspection_paths.data_path, LocalStoragePath):
                         self.logger.info("Skipping publishing when using local storage")
+                    elif isinstance(
+                        inspection_paths.data_path, BlobStoragePath
+                    ) and has_empty_blob_storage_path(inspection_paths):
+                        self.logger.warning(
+                            "Skipping publishing: Blob storage paths are empty for inspection %s",
+                            str(item.inspection.id)[:8],
+                        )
                     else:
                         self._publish_inspection_result(
                             inspection=item.inspection,
