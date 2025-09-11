@@ -106,15 +106,15 @@ class MqttClient(MqttClientInterface):
             )
 
     def on_connect(self, client, userdata, flags, reason_code, properties):
-        self.logger.info(
-            "Connection returned result: " + mqtt.connack_string(reason_code)
-        )
+        self.logger.info(f"Connected: {reason_code}")
 
-    def on_disconnect(self, client, userdata, reason_code, properties):
-        if reason_code != 0:
-            self.logger.warning(
-                f"Unexpected disconnection from MQTT Broker, {reason_code}"
-            )
+    def on_disconnect(self, client, userdata, *args):
+        if not args:
+            return
+        reason_code = args[0] if len(args) < 3 else args[1]
+        rc = getattr(reason_code, "value", reason_code)
+        if rc != 0:
+            self.logger.warning(f"Unexpected disconnect: {reason_code}.")
 
     @backoff.on_exception(
         backoff.expo,
