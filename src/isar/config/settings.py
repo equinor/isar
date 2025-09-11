@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     REQUEST_TIMEOUT: int = Field(default=30)
 
     # Timeout in seconds for checking whether there is a message on a queue
-    QUEUE_TIMEOUT: int = Field(default=3)
+    QUEUE_TIMEOUT: int = Field(default=10)
 
     # Sleep time for while loops in the finite state machine in seconds
     # The sleep is used to throttle the system on every iteration in the loop
