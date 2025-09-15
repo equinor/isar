@@ -24,6 +24,7 @@ class UnknownStatus(EventHandlerBase):
                 or robot_status == RobotStatus.Offline
                 or robot_status == RobotStatus.BlockedProtectiveStop
                 or robot_status == RobotStatus.Available
+                or robot_status == RobotStatus.Busy
             ):
                 return state_machine.robot_status_changed  # type: ignore
             return None
