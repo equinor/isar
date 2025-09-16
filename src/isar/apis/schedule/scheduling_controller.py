@@ -2,6 +2,7 @@ import logging
 from http import HTTPStatus
 
 from fastapi import Body, HTTPException, Path
+from opentelemetry import trace
 
 from isar.apis.models.models import (
     ControlMissionResponse,
@@ -20,6 +21,8 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TASKS, InspectionTask, MoveArm
 
+tracer = trace.get_tracer(__name__)
+
 
 class SchedulingController:
     def __init__(
@@ -29,6 +32,7 @@ class SchedulingController:
         self.scheduling_utilities: SchedulingUtilities = scheduling_utilities
         self.logger = logging.getLogger("api")
 
+    @tracer.start_as_current_span("start_mission_by_id")
     def start_mission_by_id(
         self,
         mission_id: str = Path(
@@ -54,6 +58,7 @@ class SchedulingController:
 
         return self._api_response(mission)
 
+    @tracer.start_as_current_span("start_mission")
     def start_mission(
         self,
         mission_definition: StartMissionDefinition = Body(
@@ -98,6 +103,7 @@ class SchedulingController:
         self.scheduling_utilities.start_mission(mission=mission)
         return self._api_response(mission)
 
+    @tracer.start_as_current_span("return_home")
     def return_home(self) -> None:
         self.logger.info("Received request to return home")
 
@@ -108,6 +114,7 @@ class SchedulingController:
 
         self.scheduling_utilities.return_home()
 
+    @tracer.start_as_current_span("pause_mission")
     def pause_mission(self) -> ControlMissionResponse:
         self.logger.info("Received request to pause current mission")
 
@@ -131,6 +138,7 @@ class SchedulingController:
         )
         return pause_mission_response
 
+    @tracer.start_as_current_span("resume_mission")
     def resume_mission(self) -> ControlMissionResponse:
         self.logger.info("Received request to resume current mission")
 
@@ -148,6 +156,7 @@ class SchedulingController:
         )
         return resume_mission_response
 
+    @tracer.start_as_current_span("stop_mission")
     def stop_mission(
         self,
         mission_id: StopMissionDefinition = Body(
@@ -181,6 +190,7 @@ class SchedulingController:
         )
         return stop_mission_response
 
+    @tracer.start_as_current_span("start_move_arm_mission")
     def start_move_arm_mission(
         self,
         arm_pose_literal: str = Path(
@@ -227,6 +237,7 @@ class SchedulingController:
         self.scheduling_utilities.start_mission(mission=mission)
         return self._api_response(mission)
 
+    @tracer.start_as_current_span("release_intervention_needed")
     def release_intervention_needed(self) -> None:
         self.logger.info("Received request to release intervention needed state")
 

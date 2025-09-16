@@ -1,11 +1,14 @@
 import logging
 
 from fastapi import HTTPException
+from opentelemetry import trace
 
 from isar.apis.models.models import RobotInfoResponse
 from isar.config.settings import robot_settings, settings
 from isar.services.utilities.robot_utilities import RobotUtilities
 from robot_interface.models.robots.media import MediaConfig
+
+tracer = trace.get_tracer(__name__)
 
 
 class RobotController:
@@ -16,6 +19,7 @@ class RobotController:
         self.robot_utilities: RobotUtilities = robot_utilities
         self.logger = logging.getLogger("api")
 
+    @tracer.start_as_current_span("generate_media_config")
     def generate_media_config(self) -> MediaConfig:
         media_config: MediaConfig = self.robot_utilities.generate_media_config()
         if media_config is None:
@@ -25,6 +29,7 @@ class RobotController:
             )
         return media_config
 
+    @tracer.start_as_current_span("get_info")
     def get_info(self) -> RobotInfoResponse:
         return RobotInfoResponse(
             robot_package=settings.ROBOT_PACKAGE,
