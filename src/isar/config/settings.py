@@ -78,6 +78,7 @@ class Settings(BaseSettings):
     ROBOT_STATUS_PUBLISH_INTERVAL: float = Field(default=1)
     ROBOT_HEARTBEAT_PUBLISH_INTERVAL: float = Field(default=1)
     ROBOT_INFO_PUBLISH_INTERVAL: float = Field(default=5)
+    ROBOT_API_BATTERY_POLL_INTERVAL: float = Field(default=5)
     ROBOT_API_STATUS_POLL_INTERVAL: float = Field(default=5)
     THREAD_CHECK_INTERVAL: float = Field(default=0.01)
 
