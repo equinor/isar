@@ -246,6 +246,40 @@ class API:
             },
         )
         router.add_api_route(
+            path="/schedule/lockdown",
+            endpoint=self.scheduling_controller.lockdown,
+            methods=["POST"],
+            dependencies=[authentication_dependency],
+            summary="Send the robot to dock and ensure that it stays there",
+            responses={
+                HTTPStatus.OK.value: {"description": "Robot going to dock"},
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Invalid command in the current state"
+                },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error - Current state of state machine unknown"
+                },
+            },
+        )
+        router.add_api_route(
+            path="/schedule/release-lockdown",
+            endpoint=self.scheduling_controller.release_lockdown,
+            methods=["POST"],
+            dependencies=[authentication_dependency],
+            summary="Allow the robot to start missions again",
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Robot is able to receive missions again"
+                },
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Invalid command in the current state"
+                },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error - Current state of state machine unknown"
+                },
+            },
+        )
+        router.add_api_route(
             path="/schedule/release-intervention-needed",
             endpoint=self.scheduling_controller.release_intervention_needed,
             methods=["POST"],

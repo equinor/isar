@@ -105,6 +105,10 @@ class APIRequests:
         self.release_intervention_needed: APIEvent[bool, bool] = APIEvent(
             "release_intervention_needed"
         )
+        self.send_to_lockdown: APIEvent[bool, bool] = APIEvent("send_to_lockdown")
+        self.release_from_lockdown: APIEvent[bool, bool] = APIEvent(
+            "release_from_lockdown"
+        )
 
 
 class StateMachineEvents:

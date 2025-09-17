@@ -254,6 +254,35 @@ class SchedulingController:
         self.scheduling_utilities.release_intervention_needed()
         self.logger.info("Released intervention needed state successfully")
 
+    @tracer.start_as_current_span("lockdown")
+    def lockdown(self) -> None:
+        self.logger.info("Received request to lockdown robot")
+
+        state: States = self.scheduling_utilities.get_state()
+
+        if state == States.Lockdown:
+            return
+
+        self.scheduling_utilities.lock_down_robot()
+        self.logger.info("Lockdown started successfully")
+
+    @tracer.start_as_current_span("release_lockdown")
+    def release_lockdown(self) -> None:
+        self.logger.info("Received request to release robot lockdown")
+
+        state: States = self.scheduling_utilities.get_state()
+
+        if state != States.Lockdown:
+            error_message = f"Conflict - Release lockdown command received in invalid state - State: {state}"
+            self.logger.warning(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.CONFLICT,
+                detail=error_message,
+            )
+
+        self.scheduling_utilities.release_robot_lockdown()
+        self.logger.info("Released lockdown successfully")
+
     def _api_response(self, mission: Mission) -> StartMissionResponse:
         return StartMissionResponse(
             id=mission.id,
