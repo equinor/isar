@@ -322,10 +322,62 @@ class SchedulingUtilities:
         try:
             self._send_command(True, self.api_events.release_intervention_needed)
             self.logger.info("OK - Intervention needed state released")
+        except EventConflictError:
+            error_message = (
+                "Previous release intervention needed request is still being processed"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
             error_message = (
                 "Internal Server Error - Failed to release intervention needed state"
             )
+            self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
+
+    def lock_down_robot(self) -> None:
+        """Lock down robot
+
+        Raises
+        ------
+        HTTPException 500 Internal Server Error
+            If the robot could not be locked down
+        """
+        try:
+            self._send_command(True, self.api_events.send_to_lockdown)
+            self.logger.info("OK - Robot sent into lockdown")
+        except EventConflictError:
+            error_message = "Previous lockdown request is still being processed"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except EventTimeoutError:
+            error_message = "Internal Server Error - Failed to lockdown robot"
+            self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
+
+    def release_robot_lockdown(self) -> None:
+        """Release robot from lockdown
+
+        Raises
+        ------
+        HTTPException 500 Internal Server Error
+            If the robot could not be released from lockdown
+        """
+        try:
+            self._send_command(True, self.api_events.release_from_lockdown)
+            self.logger.info("OK - Robot released form lockdown")
+        except EventConflictError:
+            error_message = (
+                "Previous release robot from lockdown request is still being processed"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except EventTimeoutError:
+            error_message = "Internal Server Error - Failed to release robot from dock"
             self.logger.error(error_message)
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
