@@ -4,6 +4,7 @@ from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMappin
 from isar.models.events import Event
 from isar.state_machine.utils.common_event_handlers import (
     return_home_event_handler,
+    robot_status_event_handler,
     start_mission_event_handler,
     stop_mission_event_handler,
 )
@@ -51,7 +52,12 @@ class Home(EventHandlerBase):
             EventHandlerMapping(
                 name="robot_status_event",
                 event=shared_state.robot_status,
-                handler=_robot_status_event_handler,
+                handler=robot_status_event_handler(
+                    state_machine=state_machine,
+                    expected_status=RobotStatus.Home,
+                    status_changed_event=events.robot_service_events.robot_status_changed,
+                    status_event=shared_state.robot_status,
+                ),
             ),
         ]
         super().__init__(
