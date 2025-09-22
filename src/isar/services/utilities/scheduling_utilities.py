@@ -329,13 +329,9 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
-            error_message = (
-                "Internal Server Error - Failed to release intervention needed state"
-            )
-            self.logger.error(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
+            error_message = "Cannot release intervention needed as it is not in intervention needed state"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
     def lock_down_robot(self) -> None:
         """Lock down robot
@@ -353,11 +349,9 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
-            error_message = "Internal Server Error - Failed to lockdown robot"
-            self.logger.error(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
+            error_message = "Cannot send robot to lockdown as it is already in lockdown"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
     def release_robot_lockdown(self) -> None:
         """Release robot from lockdown
@@ -377,11 +371,11 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
-            error_message = "Internal Server Error - Failed to release robot from dock"
-            self.logger.error(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            error_message = (
+                "Cannot release robot from lockdown as it is not in lockdown"
             )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
         if api_event.request.has_event():

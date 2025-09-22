@@ -32,6 +32,11 @@ class MissionStartResponse(BaseModel):
     mission_not_started_reason: Optional[str] = None
 
 
+class LockdownResponse(BaseModel):
+    lockdown_started: bool
+    failure_reason: Optional[str] = None
+
+
 class RobotInfoResponse(BaseModel):
     robot_package: str
     isar_id: str

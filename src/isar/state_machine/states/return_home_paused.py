@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Callable, List, Optional
 
-from isar.apis.models.models import MissionStartResponse
+from isar.apis.models.models import LockdownResponse, MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
@@ -42,6 +42,17 @@ class ReturnHomePaused(EventHandlerBase):
                 return state_machine.stop_return_home  # type: ignore
             return None
 
+        def _send_to_lockdown_event_handler(
+            event: Event[bool],
+        ) -> Optional[Callable]:
+            should_lockdown: bool = event.consume_event()
+            if should_lockdown:
+                events.api_requests.send_to_lockdown.response.trigger_event(
+                    LockdownResponse(lockdown_started=True)
+                )
+                return state_machine.resume_lockdown  # type: ignore
+            return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="resume_return_home_event",
@@ -57,6 +68,11 @@ class ReturnHomePaused(EventHandlerBase):
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,
                 handler=_start_mission_event_handler,
+            ),
+            EventHandlerMapping(
+                name="send_to_lockdown_event",
+                event=events.api_requests.send_to_lockdown.request,
+                handler=_send_to_lockdown_event_handler,
             ),
         ]
         super().__init__(

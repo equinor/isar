@@ -1,11 +1,13 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, Callable, List, Optional
 
+from isar.apis.models.models import LockdownResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import (
     EventHandlerBase,
     EventHandlerMapping,
     TimeoutHandlerMapping,
 )
+from isar.models.events import Event
 from isar.state_machine.utils.common_event_handlers import (
     return_home_event_handler,
     start_mission_event_handler,
@@ -20,6 +22,17 @@ class AwaitNextMission(EventHandlerBase):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
+
+        def _send_to_lockdown_event_handler(
+            event: Event[bool],
+        ) -> Optional[Callable]:
+            should_lockdown: bool = event.consume_event()
+            if should_lockdown:
+                events.api_requests.send_to_lockdown.response.trigger_event(
+                    LockdownResponse(lockdown_started=True)
+                )
+                return state_machine.request_lockdown_mission  # type: ignore
+            return None
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -38,6 +51,11 @@ class AwaitNextMission(EventHandlerBase):
                 name="stop_mission_event",
                 event=events.api_requests.return_home.request,
                 handler=lambda event: stop_mission_event_handler(state_machine, event),
+            ),
+            EventHandlerMapping(
+                name="send_to_lockdown_event",
+                event=events.api_requests.send_to_lockdown.request,
+                handler=_send_to_lockdown_event_handler,
             ),
         ]
 

@@ -261,7 +261,12 @@ class SchedulingController:
         state: States = self.scheduling_utilities.get_state()
 
         if state == States.Lockdown:
-            return
+            error_message = "Conflict - Lockdown command received in lockdown state"
+            self.logger.warning(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.CONFLICT,
+                detail=error_message,
+            )
 
         self.scheduling_utilities.lock_down_robot()
         self.logger.info("Lockdown started successfully")

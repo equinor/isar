@@ -29,6 +29,18 @@ class Paused(EventHandlerBase):
                 return state_machine.stop  # type: ignore
             return None
 
+        def _send_to_lockdown_event_handler(
+            event: Event[bool],
+        ) -> Optional[Callable]:
+            should_lockdown: bool = event.consume_event()
+            if should_lockdown:
+                state_machine._finalize()
+                state_machine.logger.warning(
+                    "Cancelling current mission due to robot going to lockdown"
+                )
+                return state_machine.stop_go_to_lockdown  # type: ignore
+            return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="stop_mission_event",
@@ -44,6 +56,11 @@ class Paused(EventHandlerBase):
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
+            ),
+            EventHandlerMapping(
+                name="send_to_lockdown_event",
+                event=events.api_requests.send_to_lockdown.request,
+                handler=_send_to_lockdown_event_handler,
             ),
         ]
         super().__init__(
