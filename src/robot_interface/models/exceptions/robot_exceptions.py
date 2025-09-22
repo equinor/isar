@@ -8,6 +8,7 @@ class ErrorReason(str, Enum):
     RobotCommunicationTimeoutException = "robot_communication_timeout_exception"
     RobotInfeasibleTaskException = "robot_infeasible_task_exception"
     RobotInfeasibleMissionException = "robot_infeasible_mission_exception"
+    RobotUnreliableDockingStatusException = "robot_unreliable_docking_status_exception"
     RobotMissionStatusException = "robot_mission_status_exception"
     RobotTaskStatusException = "robot_task_status_exception"
     RobotAPIException = "robot_api_exception"
@@ -82,6 +83,16 @@ class RobotInfeasibleMissionException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
             error_reason=ErrorReason.RobotInfeasibleMissionException,
+            error_description=error_description,
+        )
+
+    pass
+
+
+class RobotUnreliableDockingStatusException(RobotException):
+    def __init__(self, error_description: str) -> None:
+        super().__init__(
+            error_reason=ErrorReason.RobotUnreliableDockingStatusException,
             error_description=error_description,
         )
 
