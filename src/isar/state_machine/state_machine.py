@@ -18,8 +18,10 @@ from isar.models.events import Events, SharedState
 from isar.services.service_connections.mqtt.mqtt_client import props_expiry
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
+from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.home import Home
 from isar.state_machine.states.intervention_needed import InterventionNeeded
+from isar.state_machine.states.lockdown import Lockdown
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.offline import Offline
 from isar.state_machine.states.paused import Paused
@@ -29,6 +31,7 @@ from isar.state_machine.states.recharging import Recharging
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping import Stopping
+from isar.state_machine.states.stopping_go_to_lockdown import StoppingGoToLockdown
 from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
@@ -108,6 +111,9 @@ class StateMachine(object):
         self.return_home_paused_state: State = ReturnHomePaused(self)
         self.stopping_return_home_state: State = StoppingReturnHome(self)
         self.pausing_return_home_state: State = PausingReturnHome(self)
+        self.stopping_go_to_lockdown_state: State = StoppingGoToLockdown(self)
+        self.going_to_lockdown_state: State = GoingToLockdown(self)
+
         # States Waiting for mission
         self.await_next_mission_state: State = AwaitNextMission(self)
         self.home_state: State = Home(self)
@@ -117,6 +123,7 @@ class StateMachine(object):
         self.offline_state: State = Offline(self)
         self.blocked_protective_stopping_state: State = BlockedProtectiveStop(self)
         self.recharging_state: State = Recharging(self)
+        self.lockdown_state: State = Lockdown(self)
 
         # Error and special status states
         self.unknown_status_state: State = UnknownStatus(self)
@@ -137,6 +144,9 @@ class StateMachine(object):
             self.unknown_status_state,
             self.intervention_needed_state,
             self.recharging_state,
+            self.stopping_go_to_lockdown_state,
+            self.going_to_lockdown_state,
+            self.lockdown_state,
         ]
 
         self.machine = Machine(
@@ -389,6 +399,8 @@ class StateMachine(object):
             return RobotStatus.InterventionNeeded
         elif self.current_state == States.Recharging:
             return RobotStatus.Recharging
+        elif self.current_state == States.Lockdown:
+            return RobotStatus.Lockdown
         else:
             return RobotStatus.Busy
 

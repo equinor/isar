@@ -93,6 +93,12 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.return_home_paused_state,
         },
         {
+            "trigger": "resume_lockdown",
+            "source": state_machine.return_home_paused_state,
+            "dest": state_machine.going_to_lockdown_state,
+            "conditions": def_transition(state_machine, resume_mission),
+        },
+        {
             "trigger": "stop",
             "source": [
                 state_machine.await_next_mission_state,
@@ -100,6 +106,14 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.paused_state,
             ],
             "dest": state_machine.stopping_state,
+            "before": def_transition(state_machine, trigger_stop_mission_event),
+        },
+        {
+            "trigger": "stop_go_to_lockdown",
+            "source": [
+                state_machine.monitor_state,
+            ],
+            "dest": state_machine.stopping_go_to_lockdown_state,
             "before": def_transition(state_machine, trigger_stop_mission_event),
         },
         {
@@ -121,10 +135,20 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.await_next_mission_state,
         },
         {
+            "trigger": "mission_stopped",
+            "source": state_machine.stopping_go_to_lockdown_state,
+            "dest": state_machine.going_to_lockdown_state,
+        },
+        {
             "trigger": "mission_stopping_failed",
             "source": state_machine.stopping_state,
             "dest": state_machine.monitor_state,
             "before": def_transition(state_machine, stop_mission_failed),
+        },
+        {
+            "trigger": "mission_stopping_failed",
+            "source": state_machine.stopping_go_to_lockdown_state,
+            "dest": state_machine.monitor_state,
         },
         {
             "trigger": "return_home_mission_stopping_failed",
@@ -172,6 +196,12 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "mission_finished",
             "source": state_machine.monitor_state,
             "dest": state_machine.await_next_mission_state,
+            "before": def_transition(state_machine, finish_mission),
+        },
+        {
+            "trigger": "lock_down_successful",
+            "source": state_machine.going_to_lockdown_state,
+            "dest": state_machine.lockdown_state,
             "before": def_transition(state_machine, finish_mission),
         },
     ]

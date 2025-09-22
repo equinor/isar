@@ -4,7 +4,11 @@ from typing import Generic, Optional, TypeVar
 
 from transitions import State
 
-from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
+from isar.apis.models.models import (
+    ControlMissionResponse,
+    LockdownResponse,
+    MissionStartResponse,
+)
 from isar.config.settings import settings
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
@@ -105,7 +109,9 @@ class APIRequests:
         self.release_intervention_needed: APIEvent[bool, bool] = APIEvent(
             "release_intervention_needed"
         )
-        self.send_to_lockdown: APIEvent[bool, bool] = APIEvent("send_to_lockdown")
+        self.send_to_lockdown: APIEvent[bool, LockdownResponse] = APIEvent(
+            "send_to_lockdown"
+        )
         self.release_from_lockdown: APIEvent[bool, bool] = APIEvent(
             "release_from_lockdown"
         )

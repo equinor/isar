@@ -17,6 +17,9 @@ class States(str, Enum):
     UnknownStatus = "unknown_status"
     InterventionNeeded = "intervention_needed"
     Recharging = "recharging"
+    StoppingGoToLockdown = "stopping_go_to_lockdown"
+    GoingToLockdown = "going_to_lockdown"
+    Lockdown = "lockdown"
 
     def __repr__(self):
         return self.value

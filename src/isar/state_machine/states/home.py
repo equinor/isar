@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Callable, List, Optional
 
+from isar.apis.models.models import LockdownResponse
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
 from isar.state_machine.utils.common_event_handlers import (
@@ -30,6 +31,15 @@ class Home(EventHandlerBase):
                 return state_machine.robot_status_changed  # type: ignore
             return None
 
+        def _send_to_lockdown_event_handler(event: Event[bool]):
+            should_send_robot_home: bool = event.consume_event()
+            if should_send_robot_home:
+                events.api_requests.send_to_lockdown.response.trigger_event(
+                    LockdownResponse(lockdown_started=True)
+                )
+                return state_machine.reached_lockdown  # type: ignore
+            return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="start_mission_event",
@@ -52,6 +62,11 @@ class Home(EventHandlerBase):
                 name="robot_status_event",
                 event=shared_state.robot_status,
                 handler=_robot_status_event_handler,
+            ),
+            EventHandlerMapping(
+                name="send_to_lockdown_event",
+                event=events.api_requests.send_to_lockdown.request,
+                handler=_send_to_lockdown_event_handler,
             ),
         ]
         super().__init__(
