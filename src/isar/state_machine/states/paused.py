@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
+from isar.state_machine.utils.common_event_handlers import stop_mission_event_handler
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -45,7 +46,7 @@ class Paused(EventHandlerBase):
             EventHandlerMapping(
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
-                handler=lambda event: state_machine.stop if event.consume_event() else None,  # type: ignore
+                handler=lambda event: stop_mission_event_handler(state_machine, event),
             ),
             EventHandlerMapping(
                 name="resume_mission_event",
