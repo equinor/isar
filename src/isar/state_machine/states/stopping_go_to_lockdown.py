@@ -32,7 +32,6 @@ class StoppingGoToLockdown(EventHandlerBase):
                     task.status = TaskStatus.Cancelled
 
             state_machine.publish_task_status(task=state_machine.current_task)
-            state_machine._finalize()
             return None
 
         def _failed_stop_event_handler(
