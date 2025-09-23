@@ -33,3 +33,4 @@ class RobotStatus(Enum):
     InterventionNeeded = "interventionneeded"
     Recharging = "recharging"
     Lockdown = "lockdown"
+    GoingToLockdown = "goingtolockdown"

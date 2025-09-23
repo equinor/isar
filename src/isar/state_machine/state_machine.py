@@ -303,13 +303,14 @@ class StateMachine(object):
             timestamp=datetime.now(timezone.utc),
         )
 
-        self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_MISSION + f"/{self.current_mission.id}",
-            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
-            qos=1,
-            retain=True,
-            properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
-        )
+        if self.current_mission:
+            self.mqtt_publisher.publish(
+                topic=settings.TOPIC_ISAR_MISSION + f"/{self.current_mission.id}",
+                payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+                qos=1,
+                retain=True,
+                properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
+            )
 
     def publish_task_status(self, task: TASKS) -> None:
         """Publishes the task status to the MQTT Broker"""
@@ -401,6 +402,8 @@ class StateMachine(object):
             return RobotStatus.Recharging
         elif self.current_state == States.Lockdown:
             return RobotStatus.Lockdown
+        elif self.current_state == States.GoingToLockdown:
+            return RobotStatus.GoingToLockdown
         else:
             return RobotStatus.Busy
 
