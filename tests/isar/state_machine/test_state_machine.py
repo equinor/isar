@@ -25,6 +25,7 @@ from isar.state_machine.transitions.functions.stop import stop_mission_failed
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.exceptions.robot_exceptions import (
+    ErrorMessage,
     ErrorReason,
     RobotException,
 )
@@ -641,6 +642,241 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
 
     assert transition is sync_state_machine.request_return_home  # type: ignore
     assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
+
+
+def test_mission_stopped_when_going_to_lockdown(
+    sync_state_machine: StateMachine, mocker: MockerFixture
+) -> None:
+    mocker.patch.object(StateMachine, "_finalize", return_value=None)
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.state = sync_state_machine.monitor_state.name  # type: ignore
+
+    monitor_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.monitor_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        monitor_state.get_event_handler_by_name("send_to_lockdown_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.stop_go_to_lockdown  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
+
+
+def test_stopping_lockdown_transitions_to_going_to_lockdown(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.state = sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
+
+    stopping_go_to_lockdown_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.stopping_go_to_lockdown_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        stopping_go_to_lockdown_state.get_event_handler_by_name("successful_stop_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.request_lockdown_mission  # type: ignore
+    assert (
+        sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
+    )
+    transition()
+    assert sync_state_machine.state is sync_state_machine.going_to_lockdown_state.name  # type: ignore
+
+
+def test_stopping_lockdown_failing(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.state = sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
+
+    stopping_go_to_lockdown_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.stopping_go_to_lockdown_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        stopping_go_to_lockdown_state.get_event_handler_by_name("failed_stop_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.mission_stopping_failed  # type: ignore
+    assert (
+        not sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
+    )
+    transition()
+    assert sync_state_machine.state is sync_state_machine.monitor_state.name  # type: ignore
+
+
+def test_return_home_transitions_to_going_to_lockdown(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
+
+    returning_home_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.returning_home_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("send_to_lockdown_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.go_to_lockdown  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.going_to_lockdown_state.name  # type: ignore
+
+
+def test_going_to_lockdown_transitions_to_lockdown(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.mission_ongoing = True
+    sync_state_machine.current_task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.state = sync_state_machine.going_to_lockdown_state.name  # type: ignore
+
+    going_to_lockdown_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.going_to_lockdown_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        going_to_lockdown_state.get_event_handler_by_name("task_status_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(TaskStatus.Successful)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.reached_lockdown  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.lockdown_state.name  # type: ignore
+
+
+def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.mission_ongoing = True
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    sync_state_machine.current_task = task_1
+    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.state = sync_state_machine.going_to_lockdown_state.name  # type: ignore
+
+    going_to_lockdown_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.going_to_lockdown_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        going_to_lockdown_state.get_event_handler_by_name("task_status_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(TaskStatus.Failed)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.lockdown_mission_failed  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore
+
+
+def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.mission_ongoing = True
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    sync_state_machine.current_task = task_1
+    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.state = sync_state_machine.going_to_lockdown_state.name  # type: ignore
+
+    going_to_lockdown_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.going_to_lockdown_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        going_to_lockdown_state.get_event_handler_by_name("mission_failed_event")
+    )
+
+    assert event_handler is not None
+
+    # The type of error reason is not important for this test
+    event_handler.event.trigger_event(
+        ErrorMessage(error_description="", error_reason=ErrorReason.RobotAPIException)
+    )
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.lockdown_mission_failed  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore
+
+
+def test_lockdown_transitions_to_home(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.state = sync_state_machine.lockdown_state.name  # type: ignore
+
+    lockdown_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.lockdown_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        lockdown_state.get_event_handler_by_name("release_from_lockdown")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.release_from_lockdown  # type: ignore
+    assert sync_state_machine.events.api_requests.release_from_lockdown.response.check()
+    transition()
+    assert sync_state_machine.state is sync_state_machine.home_state.name  # type: ignore
+
+
+def test_await_next_mission_transitions_to_going_to_lockdown(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.state = sync_state_machine.await_next_mission_state.name  # type: ignore
+
+    await_next_mission_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.await_next_mission_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        await_next_mission_state.get_event_handler_by_name("send_to_lockdown_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.request_lockdown_mission  # type: ignore
+    assert sync_state_machine.events.api_requests.send_to_lockdown.response.check()
+    transition()
+    assert sync_state_machine.state is sync_state_machine.going_to_lockdown_state.name  # type: ignore
 
 
 def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
