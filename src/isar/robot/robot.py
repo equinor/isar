@@ -9,6 +9,7 @@ from isar.models.events import (
     SharedState,
     StateMachineEvents,
 )
+from isar.robot.robot_battery import RobotBatteryThread
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import RobotStopMissionThread
@@ -38,6 +39,11 @@ class Robot(object):
         if self.robot_status_thread is not None and self.robot_status_thread.is_alive():
             self.robot_status_thread.join()
         if (
+            self.robot_battery_thread is not None
+            and self.robot_battery_thread.is_alive()
+        ):
+            self.robot_battery_thread.join()
+        if (
             self.robot_task_status_thread is not None
             and self.robot_task_status_thread.is_alive()
         ):
@@ -50,6 +56,7 @@ class Robot(object):
         if self.stop_mission_thread is not None and self.stop_mission_thread.is_alive():
             self.stop_mission_thread.join()
         self.robot_status_thread = None
+        self.robot_battery_thread = None
         self.robot_task_status_thread = None
         self.start_mission_thread = None
 
@@ -116,6 +123,11 @@ class Robot(object):
             self.robot, self.signal_thread_quitting, self.shared_state
         )
         self.robot_status_thread.start()
+
+        self.robot_battery_thread = RobotBatteryThread(
+            self.robot, self.signal_thread_quitting, self.shared_state
+        )
+        self.robot_battery_thread.start()
 
         while not self.signal_thread_quitting.wait(0):
             self._start_mission_event_handler(self.state_machine_events.start_mission)
