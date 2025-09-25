@@ -73,6 +73,11 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             ],
         },
         {
+            "trigger": "starting_recharging",
+            "source": state_machine.lockdown_state,
+            "dest": state_machine.recharging_state,
+        },
+        {
             "trigger": "return_home_failed",
             "source": state_machine.returning_home_state,
             "dest": state_machine.returning_home_state,

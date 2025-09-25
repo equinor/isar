@@ -834,7 +834,7 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
 def test_lockdown_transitions_to_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
     sync_state_machine.state = sync_state_machine.lockdown_state.name  # type: ignore
 
     lockdown_state: EventHandlerBase = cast(
@@ -853,6 +853,30 @@ def test_lockdown_transitions_to_home(
     assert sync_state_machine.events.api_requests.release_from_lockdown.response.check()
     transition()
     assert sync_state_machine.state is sync_state_machine.home_state.name  # type: ignore
+
+
+def test_lockdown_transitions_to_recharing_if_battery_low(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.state = sync_state_machine.lockdown_state.name  # type: ignore
+
+    lockdown_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.lockdown_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        lockdown_state.get_event_handler_by_name("release_from_lockdown")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.starting_recharging  # type: ignore
+    assert sync_state_machine.events.api_requests.release_from_lockdown.response.check()
+    transition()
+    assert sync_state_machine.state is sync_state_machine.recharging_state.name  # type: ignore
 
 
 def test_await_next_mission_transitions_to_going_to_lockdown(
