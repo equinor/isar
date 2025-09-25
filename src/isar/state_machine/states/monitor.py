@@ -68,7 +68,6 @@ class Monitor(EventHandlerBase):
         ) -> Optional[Callable]:
             should_lockdown: bool = event.consume_event()
             if should_lockdown:
-                state_machine._finalize()
                 state_machine.logger.warning(
                     "Cancelling current mission due to robot going to lockdown"
                 )

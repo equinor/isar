@@ -50,10 +50,10 @@ class StoppingGoToLockdown(EventHandlerBase):
 
         def _successful_stop_event_handler(event: Event[bool]) -> Optional[Callable]:
             if event.consume_event():
-                _stop_mission_cleanup()
                 state_machine.publish_mission_aborted(
                     "Robot being sent to lockdown", True
                 )
+                _stop_mission_cleanup()
                 events.api_requests.send_to_lockdown.response.trigger_event(
                     LockdownResponse(lockdown_started=True)
                 )

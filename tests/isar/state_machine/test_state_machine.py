@@ -671,6 +671,12 @@ def test_mission_stopped_when_going_to_lockdown(
 def test_stopping_lockdown_transitions_to_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
+    sync_state_machine.mission_ongoing = True
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    sync_state_machine.current_task = task_1
+    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
 
@@ -690,6 +696,13 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
     assert (
         sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
     )
+
+    assert not sync_state_machine.events.mqtt_queue.empty()
+    mqtt_message = sync_state_machine.events.mqtt_queue.get(block=False)
+    assert mqtt_message is not None
+    mqtt_payload_topic = mqtt_message[0]
+    assert mqtt_payload_topic is settings.TOPIC_ISAR_MISSION_ABORTED
+
     transition()
     assert sync_state_machine.state is sync_state_machine.going_to_lockdown_state.name  # type: ignore
 
@@ -697,6 +710,12 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
 def test_stopping_lockdown_failing(
     sync_state_machine: StateMachine,
 ) -> None:
+    sync_state_machine.mission_ongoing = True
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    sync_state_machine.current_task = task_1
+    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
 
@@ -716,6 +735,9 @@ def test_stopping_lockdown_failing(
     assert (
         not sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
     )
+
+    assert sync_state_machine.events.mqtt_queue.empty()
+
     transition()
     assert sync_state_machine.state is sync_state_machine.monitor_state.name  # type: ignore
 
