@@ -13,7 +13,7 @@ from isar.state_machine.utils.common_event_handlers import (
     task_status_event_handler,
     task_status_failed_event_handler,
 )
-from robot_interface.models.mission.status import TaskStatus
+from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -44,8 +44,6 @@ class Monitor(EventHandlerBase):
                 )
 
             state_machine.iterate_current_task()
-            if state_machine.current_task is None:
-                return state_machine.mission_finished  # type: ignore
             return None
 
         def _robot_battery_level_updated_handler(
@@ -72,6 +70,12 @@ class Monitor(EventHandlerBase):
                     "Cancelling current mission due to robot going to lockdown"
                 )
                 return state_machine.stop_go_to_lockdown  # type: ignore
+
+        def _mission_status_event_handler(event: Event[MissionStatus]) -> Optional[Callable]:
+            mission_status: Optional[MissionStatus] = event.consume_event()
+            if mission_status != MissionStatus.InProgress:
+                state_machine.logger.info("Mission completed")
+                return state_machine.mission_finished
             return None
 
         event_handlers: List[EventHandlerMapping] = [
@@ -105,6 +109,11 @@ class Monitor(EventHandlerBase):
                 handler=lambda event: task_status_failed_event_handler(
                     state_machine, _handle_task_completed, event
                 ),
+            ),
+            EventHandlerMapping(
+                name="mission_status_event",
+                event=events.robot_service_events.mission_status_updated,
+                handler=_mission_status_event_handler
             ),
             EventHandlerMapping(
                 name="task_status_event",

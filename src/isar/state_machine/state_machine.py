@@ -97,7 +97,6 @@ class StateMachine(object):
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.mqtt_publisher: Optional[MqttClientInterface] = mqtt_publisher
-        self.task_selector: TaskSelectorInterface = task_selector
 
         self.signal_state_machine_to_stop: Event = Event()
 
@@ -197,20 +196,6 @@ class StateMachine(object):
     def terminate(self):
         self.logger.info("Stopping state machine")
         self.signal_state_machine_to_stop.set()
-
-    def iterate_current_task(self):
-        if self.current_task is None:
-            raise ValueError("No current task is set")
-
-        if self.current_task.is_finished():
-            try:
-                self.current_task = self.task_selector.next_task()
-                self.current_task.status = TaskStatus.InProgress
-                self.publish_task_status(task=self.current_task)
-            except TaskSelectorStop:
-                # Indicates that all tasks are finished
-                self.current_task = None
-            self.send_task_status()
 
     def battery_level_is_above_mission_start_threshold(self):
         return (
