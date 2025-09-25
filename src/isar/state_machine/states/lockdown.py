@@ -16,7 +16,10 @@ class Lockdown(EventHandlerBase):
             should_release_from_lockdown: bool = event.consume_event()
             if should_release_from_lockdown:
                 events.api_requests.release_from_lockdown.response.trigger_event(True)
-                return state_machine.release_from_lockdown  # type: ignore
+                if state_machine.battery_level_is_above_mission_start_threshold():
+                    return state_machine.release_from_lockdown  # type: ignore
+                else:
+                    return state_machine.starting_recharging  # type: ignore
             return None
 
         event_handlers: List[EventHandlerMapping] = [
