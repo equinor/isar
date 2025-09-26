@@ -20,16 +20,11 @@ class PausingReturnHome(EventHandlerBase):
         ) -> Optional[Callable]:
             error_message: Optional[ErrorMessage] = event.consume_event()
 
-            paused_mission_response: ControlMissionResponse = (
-                state_machine._make_control_mission_response()
-            )
-
             state_machine.events.api_requests.pause_mission.response.trigger_event(
-                paused_mission_response
+                ControlMissionResponse(success=False, failure_reason="Failed to pause return home mission")
             )
 
             state_machine.publish_mission_status()
-            state_machine.send_task_status()
 
             if error_message is not None:
                 return state_machine.return_home_mission_pausing_failed  # type: ignore
@@ -39,18 +34,12 @@ class PausingReturnHome(EventHandlerBase):
             if event.consume_event():
 
                 state_machine.current_mission.status = MissionStatus.Paused
-                state_machine.current_task.status = TaskStatus.Paused
-
-                paused_mission_response: ControlMissionResponse = (
-                    state_machine._make_control_mission_response()
-                )
 
                 state_machine.events.api_requests.pause_mission.response.trigger_event(
-                    paused_mission_response
+                    ControlMissionResponse(success=True)
                 )
 
                 state_machine.publish_mission_status()
-                state_machine.send_task_status()
 
                 return state_machine.return_home_mission_paused  # type: ignore
             return None
