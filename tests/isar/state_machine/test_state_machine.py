@@ -209,8 +209,6 @@ def test_return_home_starts_when_battery_is_low(
 def test_monitor_goes_to_return_home_when_battery_low(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
-
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
@@ -244,7 +242,6 @@ def test_return_home_goes_to_recharging_when_battery_low(
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
 
-    sync_state_machine.mission_ongoing = True
     sync_state_machine.current_task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )

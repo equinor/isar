@@ -13,9 +13,7 @@ def trigger_stop_mission_event(state_machine: "StateMachine") -> bool:
 
 
 def stop_mission_failed(state_machine: "StateMachine") -> bool:
-    stopped_mission_response: ControlMissionResponse = (
-        state_machine._make_control_mission_response()
-    )
+    stopped_mission_response: ControlMissionResponse = ControlMissionResponse(success=False, failure_reason="ISAR failed to stop mission")
     state_machine.events.api_requests.stop_mission.response.trigger_event(
         stopped_mission_response
     )
@@ -39,9 +37,7 @@ def stop_return_home_mission_cleanup(state_machine: "StateMachine") -> bool:
             ]:
                 task.status = TaskStatus.Cancelled
 
-        stopped_mission_response: ControlMissionResponse = (
-            state_machine._make_control_mission_response()
-        )
+        stopped_mission_response: ControlMissionResponse = ControlMissionResponse(success=True)
         state_machine.events.api_requests.stop_mission.response.trigger_event(
             stopped_mission_response
         )
@@ -53,9 +49,7 @@ def stop_return_home_mission_cleanup(state_machine: "StateMachine") -> bool:
 def stop_return_home_mission_failed(state_machine: "StateMachine") -> bool:
     if state_machine.events.api_requests.start_mission.request.has_event():
         return True
-    stopped_mission_response: ControlMissionResponse = (
-        state_machine._make_control_mission_response()
-    )
+    stopped_mission_response: ControlMissionResponse = ControlMissionResponse(success=False, failure_reason="ISAR failed to stop return home")
     state_machine.events.api_requests.stop_mission.response.trigger_event(
         stopped_mission_response
     )

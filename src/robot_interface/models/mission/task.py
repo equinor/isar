@@ -40,16 +40,6 @@ class Task(BaseModel):
     tag_id: Optional[str] = Field(default=None)
     id: str = Field(default_factory=uuid4_string, frozen=True)
 
-    def is_finished(self) -> bool:
-        if (
-            self.status == TaskStatus.Successful
-            or self.status == TaskStatus.PartiallySuccessful
-            or self.status == TaskStatus.Cancelled
-            or self.status == TaskStatus.Failed
-        ):
-            return True
-        return False
-
 
 class InspectionTask(Task):
     """

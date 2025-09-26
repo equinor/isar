@@ -32,16 +32,10 @@ mock_void = mock.Mock()
 dummy_task = dummy_mission.tasks[0]
 dummy_start_mission_response = DummyMissionDefinition.dummy_start_mission_response
 dummy_control_mission_response = ControlMissionResponse(
-    mission_id=dummy_mission.id,
-    mission_status=dummy_mission.status,
-    task_id=dummy_task.id,
-    task_status=dummy_task.status,
+    success=True
 )
 dummy_stopped_control_mission_response = ControlMissionResponse(
-    mission_id=dummy_mission_stopped.id,
-    mission_status=dummy_mission_stopped.status,
-    task_id=dummy_mission_stopped.tasks[0].id,
-    task_status=dummy_mission_stopped.tasks[0].status,
+    success=True
 )
 mock_return_control_mission_response = mock.Mock(
     return_value=dummy_control_mission_response
@@ -53,11 +47,7 @@ mock_queue_timeout_error = mock.Mock(side_effect=EventTimeoutError)
 mock_mission_planner_error = mock.Mock(side_effect=MissionPlannerError)
 
 dummy_stopped_with_mission_id_control_mission_response = ControlMissionResponse(
-    mission_id=dummy_mission_stopped.id,
-    mission_status=dummy_mission_stopped.status,
-    mission_not_found=True,
-    task_id=dummy_mission_stopped.tasks[0].id,
-    task_status=dummy_mission_stopped.tasks[0].status,
+    success=True
 )
 mock_return_control_mission_stop_wrong_id_response = mock.Mock(
     return_value=dummy_stopped_with_mission_id_control_mission_response

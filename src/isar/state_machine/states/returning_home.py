@@ -99,19 +99,9 @@ class ReturningHome(EventHandlerBase):
                 handler=_start_mission_event_handler,
             ),
             EventHandlerMapping(
-                name="task_status_failed_event",
-                event=events.robot_service_events.task_status_failed,
-                handler=lambda: None,
-            ),
-            EventHandlerMapping(
                 name="mission_status_event",
                 event=events.robot_service_events.mission_status_updated,
                 handler=_mission_status_event_handler,
-            ),
-            EventHandlerMapping(
-                name="task_status_event",
-                event=events.robot_service_events.task_status_updated,
-                handler=lambda: None,
             ),
             EventHandlerMapping(
                 name="send_to_lockdown_event",

@@ -1,6 +1,7 @@
 import logging
+from queue import Queue
 from threading import Event as ThreadEvent
-from typing import Optional
+from typing import List, Optional, Tuple
 
 from isar.models.events import (
     Event,
@@ -13,19 +14,24 @@ from isar.robot.robot_pause_mission import RobotPauseMissionThread
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import RobotStopMissionThread
-from isar.robot.robot_monitor_mission import RobotMonitorMissionThread, RobotTaskStatusThread
+from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
+from isar.robot.robot_upload_inspection import RobotUploadInspectionThread
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.task import TASKS
 from robot_interface.robot_interface import RobotInterface
+from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 
 class Robot(object):
     def __init__(
-        self, events: Events, robot: RobotInterface, shared_state: SharedState
+        self, events: Events, robot: RobotInterface, shared_state: SharedState, mqtt_publisher: MqttClientInterface,
     ) -> None:
         self.logger = logging.getLogger("robot")
         self.state_machine_events: StateMachineEvents = events.state_machine_events
         self.robot_service_events: RobotServiceEvents = events.robot_service_events
+        self.mqtt_publisher: MqttClientInterface = mqtt_publisher
+        self.upload_queue: Queue = events.upload_queue
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.start_mission_thread: Optional[RobotStartMissionThread] = None
@@ -33,6 +39,7 @@ class Robot(object):
         self.monitor_mission_thread: Optional[RobotMonitorMissionThread] = None
         self.stop_mission_thread: Optional[RobotStopMissionThread] = None
         self.pause_mission_thread: Optional[RobotPauseMissionThread] = None
+        self.upload_inspection_threads: List[RobotUploadInspectionThread] = []
         self.signal_thread_quitting: ThreadEvent = ThreadEvent()
 
     def stop(self) -> None:
@@ -84,6 +91,7 @@ class Robot(object):
             self.monitor_mission_thread = RobotMonitorMissionThread(
                 self.robot_service_events,
                 self.robot,
+                self.mqtt_publisher,
                 self.signal_thread_quitting,
                 start_mission,
             )
@@ -146,6 +154,24 @@ class Robot(object):
             )
             self.pause_mission_thread.start()
 
+    def _upload_inspection_event_handler(self, event: Event[Tuple[TASKS, Mission]]) -> None:
+        upload_request = event.consume_event()
+        if upload_request:
+            
+            upload_inspection_thread = RobotUploadInspectionThread(
+                self.upload_queue, self.robot, upload_request[0], upload_request[1]
+            )
+            self.upload_inspection_threads.append(upload_inspection_thread)
+            upload_inspection_thread.start()
+        
+        def _join_threads(thread: RobotUploadInspectionThread) -> bool:
+            if thread.is_done():
+                thread.join()
+                return True
+            return False
+        self.upload_inspection_threads[:] = [thread for thread in self.upload_inspection_threads if _join_threads(thread)]
+
+
     def run(self) -> None:
         self.robot_status_thread = RobotStatusThread(
             self.robot, self.signal_thread_quitting, self.shared_state
@@ -158,5 +184,7 @@ class Robot(object):
             self._pause_mission_request_handler(self.state_machine_events.pause_mission)
 
             self._stop_mission_request_handler(self.state_machine_events.stop_mission)
+
+            self._upload_inspection_event_handler(self.robot_service_events.request_inspection_upload)
 
         self.logger.info("Exiting robot service main thread")

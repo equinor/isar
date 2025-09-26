@@ -1,19 +1,14 @@
-import logging
-from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
-from isar.services.utilities.threaded_request import ThreadedRequest
 from isar.state_machine.utils.common_event_handlers import (
     mission_failed_event_handler,
     mission_started_event_handler,
     stop_mission_event_handler,
-    task_status_event_handler,
-    task_status_failed_event_handler,
 )
-from robot_interface.models.mission.status import MissionStatus, TaskStatus
+from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -22,28 +17,12 @@ if TYPE_CHECKING:
 class Monitor(EventHandlerBase):
 
     def __init__(self, state_machine: "StateMachine"):
-        logger = logging.getLogger("state_machine")
         events = state_machine.events
         shared_state = state_machine.shared_state
 
         def _pause_mission_event_handler(event: Event[bool]) -> Optional[Callable]:
             if event.consume_event():
                 return state_machine.pause  # type: ignore
-            return None
-
-        def _handle_task_completed(task_status: TaskStatus):
-            if state_machine.should_upload_inspections():
-                get_inspection_thread = ThreadedRequest(
-                    state_machine.queue_inspections_for_upload
-                )
-                get_inspection_thread.start_thread(
-                    deepcopy(state_machine.current_mission),
-                    deepcopy(state_machine.current_task),
-                    logger,
-                    name="State Machine Get Inspections",
-                )
-
-            state_machine.iterate_current_task()
             return None
 
         def _robot_battery_level_updated_handler(
@@ -54,7 +33,6 @@ class Monitor(EventHandlerBase):
                 state_machine.publish_mission_aborted(
                     "Robot battery too low to continue mission", True
                 )
-                state_machine._finalize()
                 state_machine.logger.warning(
                     "Cancelling current mission due to low battery"
                 )
@@ -73,9 +51,12 @@ class Monitor(EventHandlerBase):
 
         def _mission_status_event_handler(event: Event[MissionStatus]) -> Optional[Callable]:
             mission_status: Optional[MissionStatus] = event.consume_event()
-            if mission_status != MissionStatus.InProgress:
-                state_machine.logger.info("Mission completed")
-                return state_machine.mission_finished
+            if mission_status:
+                state_machine.current_mission.status = mission_status
+                state_machine.publish_mission_status()
+                if mission_status != MissionStatus.InProgress:
+                    state_machine.logger.info(f"Mission completed with status {mission_status}")
+                    return state_machine.mission_finished  # type: ignore
             return None
 
         event_handlers: List[EventHandlerMapping] = [
@@ -104,23 +85,9 @@ class Monitor(EventHandlerBase):
                 ),
             ),
             EventHandlerMapping(
-                name="task_status_failed_event",
-                event=events.robot_service_events.task_status_failed,
-                handler=lambda event: task_status_failed_event_handler(
-                    state_machine, _handle_task_completed, event
-                ),
-            ),
-            EventHandlerMapping(
                 name="mission_status_event",
                 event=events.robot_service_events.mission_status_updated,
                 handler=_mission_status_event_handler
-            ),
-            EventHandlerMapping(
-                name="task_status_event",
-                event=events.robot_service_events.task_status_updated,
-                handler=lambda event: task_status_event_handler(
-                    state_machine, _handle_task_completed, event
-                ),
             ),
             EventHandlerMapping(
                 name="robot_battery_update_event",

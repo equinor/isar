@@ -5,11 +5,10 @@ if TYPE_CHECKING:
 
 from isar.apis.models.models import MissionStartResponse
 from robot_interface.models.exceptions.robot_exceptions import (
-    ErrorMessage,
     RobotException,
     RobotInitializeException,
 )
-from robot_interface.models.mission.status import MissionStatus, TaskStatus
+from robot_interface.models.mission.status import MissionStatus
 
 
 def acknowledge_mission(state_machine: "StateMachine") -> bool:
@@ -29,13 +28,6 @@ def prepare_state_machine_before_mission(state_machine: "StateMachine") -> bool:
 
     state_machine.current_mission.status = MissionStatus.InProgress
     state_machine.publish_mission_status()
-    state_machine.current_task = state_machine.task_selector.next_task()
-    state_machine.send_task_status()
-    if state_machine.current_task is None:
-        return False
-
-    state_machine.current_task.status = TaskStatus.InProgress
-    state_machine.publish_task_status(task=state_machine.current_task)
     return True
 
 
@@ -43,9 +35,6 @@ def initialize_robot(state_machine: "StateMachine") -> bool:
     try:
         state_machine.robot.initialize()
     except (RobotInitializeException, RobotException) as e:
-        state_machine.current_task.error_message = ErrorMessage(
-            error_reason=e.error_reason, error_description=e.error_description
-        )
         state_machine.logger.error(
             f"Failed to initialize robot because: {e.error_description}"
         )
@@ -56,12 +45,6 @@ def initialize_robot(state_machine: "StateMachine") -> bool:
 
 def set_mission_to_in_progress(state_machine: "StateMachine") -> bool:
     state_machine.current_mission.status = MissionStatus.InProgress
-    state_machine.publish_task_status(task=state_machine.current_task)
-    state_machine.logger.info(
-        f"Successfully initiated "
-        f"{type(state_machine.current_task).__name__} "
-        f"task: {str(state_machine.current_task.id)[:8]}"
-    )
     return True
 
 
