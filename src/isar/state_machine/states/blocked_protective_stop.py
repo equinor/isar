@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, List
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
-from isar.models.events import Event
+from isar.state_machine.utils.common_event_handlers import robot_status_event_handler
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
@@ -11,19 +11,19 @@ if TYPE_CHECKING:
 class BlockedProtectiveStop(EventHandlerBase):
 
     def __init__(self, state_machine: "StateMachine"):
+        events = state_machine.events
         shared_state = state_machine.shared_state
-
-        def _robot_status_event_handler(event: Event[RobotStatus]):
-            robot_status: RobotStatus = event.check()
-            if robot_status != RobotStatus.BlockedProtectiveStop:
-                return state_machine.robot_status_changed  # type: ignore
-            return None
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="robot_status_event",
-                event=shared_state.robot_status,
-                handler=_robot_status_event_handler,
+                event=events.robot_service_events.robot_status_changed,
+                handler=lambda event: robot_status_event_handler(
+                    state_machine=state_machine,
+                    expected_status=RobotStatus.BlockedProtectiveStop,
+                    status_changed_event=event,
+                    status_event=shared_state.robot_status,
+                ),
             ),
         ]
         super().__init__(
