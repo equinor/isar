@@ -151,7 +151,11 @@ class Robot(object):
 
     def run(self) -> None:
         self.robot_status_thread = RobotStatusThread(
-            self.robot, self.signal_thread_quitting, self.shared_state
+            robot=self.robot,
+            signal_thread_quitting=self.signal_thread_quitting,
+            shared_state=self.shared_state,
+            state_machine_events=self.state_machine_events,
+            robot_service_events=self.robot_service_events,
         )
         self.robot_status_thread.start()
 

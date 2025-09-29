@@ -37,6 +37,7 @@ from tests.test_double.robot_interface import (
     StubRobot,
     StubRobotBlockedProtectiveStopToHomeTest,
     StubRobotOfflineToHomeTest,
+    StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus,
 )
 from tests.test_double.task import StubTask
 
@@ -95,21 +96,34 @@ def test_state_machine_transitions_when_running_full_mission(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
-    mocker,
 ) -> None:
     state_machine_thread.state_machine.await_next_mission_state.timers[
         0
     ].timeout_in_seconds = 0.01
+
+    robot_service_thread.robot_service.robot = (
+        StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(
+            current_state=robot_service_thread.robot_service.shared_state.state,
+            initiate_mission_delay=1,
+        )
+    )
     state_machine_thread.start()
-    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     robot_service_thread.start()
+
+    # Setting the poll interval to a lower value to ensure that the robot status is
+    # updated during the mission. This value needs to be set after the robot service
+    # thread has been started.
+    robot_service_thread.robot_service.robot_status_thread.robot_status_poll_interval = (
+        0.5
+    )
+
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
     task_2: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
+    mission: Mission = Mission(name="Dummy mission", tasks=[task_1, task_2])
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
@@ -965,7 +979,11 @@ def test_state_machine_with_return_home_failure_successful_retries(
     ].timeout_in_seconds = 0.01
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     state_machine_thread.start()
-    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Available)
+    mocker.patch.object(
+        StubRobot,
+        "robot_status",
+        side_effect=[RobotStatus.Available, RobotStatus.Home],
+    )
     mocker.patch.object(
         StubRobot, "task_status", side_effect=[TaskStatus.Failed, TaskStatus.Successful]
     )

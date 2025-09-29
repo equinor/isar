@@ -12,6 +12,7 @@ from isar.state_machine.transitions.functions.return_home import (
     should_retry_return_home,
     start_return_home_mission,
 )
+from isar.state_machine.transitions.functions.robot_status import clear_robot_status
 from isar.state_machine.transitions.functions.start_mission import (
     initialize_robot,
     trigger_start_mission_event,
@@ -58,10 +59,18 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "returned_home",
             "source": state_machine.returning_home_state,
             "dest": state_machine.home_state,
+            "conditions": [
+                def_transition(state_machine, clear_robot_status),
+            ],
             "before": [
                 def_transition(state_machine, reset_return_home_failure_counter),
                 def_transition(state_machine, return_home_finished),
             ],
+        },
+        {
+            "trigger": "returned_home",
+            "source": state_machine.returning_home_state,
+            "dest": state_machine.intervention_needed_state,
         },
         {
             "trigger": "starting_recharging",

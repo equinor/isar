@@ -43,9 +43,12 @@ def return_home_event_handler(
 def robot_status_event_handler(
     state_machine: "StateMachine",
     expected_status: RobotStatus,
-    event: Event[RobotStatus],
+    status_changed_event: Event[bool],
+    status_event: Event[RobotStatus],
 ) -> Optional[Callable]:
-    robot_status: RobotStatus = event.check()
+    if not status_changed_event.consume_event():
+        return None
+    robot_status: Optional[RobotStatus] = status_event.check()
     if robot_status != expected_status:
         return state_machine.robot_status_changed  # type: ignore
     return None
