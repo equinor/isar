@@ -20,17 +20,6 @@ class Home(EventHandlerBase):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
-        def _robot_status_event_handler(
-            event: Event[RobotStatus],
-        ) -> Optional[Callable]:
-            robot_status: RobotStatus = event.check()
-            if not (
-                robot_status == RobotStatus.Available
-                or robot_status == RobotStatus.Home
-            ):
-                return state_machine.robot_status_changed  # type: ignore
-            return None
-
         def _send_to_lockdown_event_handler(event: Event[bool]):
             should_send_robot_home: bool = event.consume_event()
             if should_send_robot_home:
@@ -38,6 +27,21 @@ class Home(EventHandlerBase):
                     LockdownResponse(lockdown_started=True)
                 )
                 return state_machine.reached_lockdown  # type: ignore
+            return None
+
+        def _robot_status_event_handler(
+            state_machine: "StateMachine",
+            status_changed_event: Event[bool],
+            status_event: Event[RobotStatus],
+        ) -> Optional[Callable]:
+            if not status_changed_event.consume_event():
+                return None
+            robot_status: Optional[RobotStatus] = status_event.check()
+            if not (
+                robot_status == RobotStatus.Available
+                or robot_status == RobotStatus.Home
+            ):
+                return state_machine.robot_status_changed  # type: ignore
             return None
 
         event_handlers: List[EventHandlerMapping] = [
@@ -60,8 +64,12 @@ class Home(EventHandlerBase):
             ),
             EventHandlerMapping(
                 name="robot_status_event",
-                event=shared_state.robot_status,
-                handler=_robot_status_event_handler,
+                event=events.robot_service_events.robot_status_changed,
+                handler=lambda event: _robot_status_event_handler(
+                    state_machine=state_machine,
+                    status_changed_event=event,
+                    status_event=shared_state.robot_status,
+                ),
             ),
             EventHandlerMapping(
                 name="send_to_lockdown_event",
