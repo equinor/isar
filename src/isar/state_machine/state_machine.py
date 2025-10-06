@@ -15,6 +15,7 @@ from isar.mission_planner.task_selector_interface import (
     TaskSelectorStop,
 )
 from isar.models.events import Events, SharedState
+from isar.models.status import IsarStatus
 from isar.services.service_connections.mqtt.mqtt_client import props_expiry
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
@@ -45,15 +46,15 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import RobotStatus, TaskStatus
+from robot_interface.models.mission.status import TaskStatus
 from robot_interface.models.mission.task import TASKS, InspectionTask, Task
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
     InterventionNeededPayload,
+    IsarStatusPayload,
     MissionAbortedPayload,
     MissionPayload,
-    RobotStatusPayload,
     TaskPayload,
 )
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
@@ -367,7 +368,7 @@ class StateMachine(object):
         if not self.mqtt_publisher:
             return
 
-        payload: RobotStatusPayload = RobotStatusPayload(
+        payload: IsarStatusPayload = IsarStatusPayload(
             isar_id=settings.ISAR_ID,
             robot_name=settings.ROBOT_NAME,
             status=self._current_status(),
@@ -381,31 +382,31 @@ class StateMachine(object):
             retain=True,
         )
 
-    def _current_status(self) -> RobotStatus:
+    def _current_status(self) -> IsarStatus:
         if self.current_state == States.AwaitNextMission:
-            return RobotStatus.Available
+            return IsarStatus.Available
         elif self.current_state == States.ReturnHomePaused:
-            return RobotStatus.ReturnHomePaused
+            return IsarStatus.ReturnHomePaused
         elif self.current_state == States.Paused:
-            return RobotStatus.Paused
+            return IsarStatus.Paused
         elif self.current_state == States.Home:
-            return RobotStatus.Home
+            return IsarStatus.Home
         elif self.current_state == States.ReturningHome:
-            return RobotStatus.ReturningHome
+            return IsarStatus.ReturningHome
         elif self.current_state == States.Offline:
-            return RobotStatus.Offline
+            return IsarStatus.Offline
         elif self.current_state == States.BlockedProtectiveStop:
-            return RobotStatus.BlockedProtectiveStop
+            return IsarStatus.BlockedProtectiveStop
         elif self.current_state == States.InterventionNeeded:
-            return RobotStatus.InterventionNeeded
+            return IsarStatus.InterventionNeeded
         elif self.current_state == States.Recharging:
-            return RobotStatus.Recharging
+            return IsarStatus.Recharging
         elif self.current_state == States.Lockdown:
-            return RobotStatus.Lockdown
+            return IsarStatus.Lockdown
         elif self.current_state == States.GoingToLockdown:
-            return RobotStatus.GoingToLockdown
+            return IsarStatus.GoingToLockdown
         else:
-            return RobotStatus.Busy
+            return IsarStatus.Busy
 
     def _log_state_transition(self, next_state) -> None:
         """Logs all state transitions that are not self-transitions."""
