@@ -4,9 +4,10 @@ from typing import List, Optional
 
 from alitra import Pose
 
+from isar.models.status import IsarStatus
 from isar.storage.storage_interface import BlobStoragePath
 from robot_interface.models.exceptions.robot_exceptions import ErrorReason
-from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
+from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from robot_interface.models.mission.task import TaskTypes
 from robot_interface.models.robots.battery_state import BatteryState
 
@@ -53,10 +54,10 @@ class DocumentInfo:
 
 
 @dataclass
-class RobotStatusPayload:
+class IsarStatusPayload:
     isar_id: str
     robot_name: str
-    status: RobotStatus
+    status: IsarStatus
     timestamp: datetime
 
 
