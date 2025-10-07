@@ -14,7 +14,6 @@ from isar.state_machine.transitions.functions.return_home import (
 )
 from isar.state_machine.transitions.functions.robot_status import clear_robot_status
 from isar.state_machine.transitions.functions.start_mission import (
-    initialize_robot,
     trigger_start_mission_event,
 )
 from isar.state_machine.transitions.functions.utils import def_transition
@@ -39,7 +38,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "conditions": [
                 def_transition(state_machine, start_return_home_mission),
                 def_transition(state_machine, set_return_home_status),
-                def_transition(state_machine, initialize_robot),
             ],
             "before": def_transition(state_machine, trigger_start_mission_event),
         },
@@ -97,7 +95,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 def_transition(state_machine, report_failed_mission_and_finalize),
                 def_transition(state_machine, start_return_home_mission),
                 def_transition(state_machine, set_return_home_status),
-                def_transition(state_machine, initialize_robot),
                 def_transition(state_machine, trigger_start_mission_event),
             ],
         },
@@ -128,7 +125,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "conditions": [
                 def_transition(state_machine, start_return_home_mission),
                 def_transition(state_machine, set_return_home_status),
-                def_transition(state_machine, initialize_robot),
             ],
             "before": def_transition(state_machine, trigger_start_mission_event),
         },
