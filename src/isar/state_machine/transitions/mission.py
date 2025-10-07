@@ -185,6 +185,12 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "before": def_transition(state_machine, report_failed_mission_and_finalize),
         },
         {
+            "trigger": "request_mission_start",
+            "source": state_machine.stopping_return_home_state,
+            "dest": state_machine.intervention_needed_state,
+            "before": def_transition(state_machine, report_failed_mission_and_finalize),
+        },
+        {
             "trigger": "mission_failed_to_start",
             "source": [state_machine.monitor_state, state_machine.returning_home_state],
             "dest": state_machine.await_next_mission_state,
