@@ -84,9 +84,6 @@ class StubRobot(RobotInterface):
     ) -> None:
         return
 
-    def initialize(self) -> None:
-        return
-
     def get_telemetry_publishers(
         self, queue: Queue, isar_id: str, robot_name: str
     ) -> List[Thread]:

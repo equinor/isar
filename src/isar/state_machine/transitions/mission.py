@@ -13,7 +13,6 @@ from isar.state_machine.transitions.functions.return_home import (
 from isar.state_machine.transitions.functions.robot_status import is_home
 from isar.state_machine.transitions.functions.start_mission import (
     acknowledge_mission,
-    initialize_robot,
 )
 from isar.state_machine.transitions.functions.stop import (
     stop_mission_failed,
@@ -194,19 +193,6 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             ],
             "dest": state_machine.monitor_state,
             "prepare": def_transition(state_machine, acknowledge_mission),
-            "conditions": [
-                def_transition(state_machine, initialize_robot),
-            ],
-        },
-        {
-            "trigger": "request_mission_start",
-            "source": state_machine.await_next_mission_state,
-            "dest": state_machine.await_next_mission_state,
-        },
-        {
-            "trigger": "request_mission_start",
-            "source": state_machine.home_state,
-            "dest": state_machine.home_state,
         },
         {
             "trigger": "mission_failed_to_start",
