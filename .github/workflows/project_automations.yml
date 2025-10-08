@@ -1,4 +1,8 @@
 name: Project automations
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 on:
   issues:
     types:
