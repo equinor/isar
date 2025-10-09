@@ -42,12 +42,16 @@ class Event(Queue[T]):
             if timeout is not None:
                 raise EventTimeoutError
             return None
+        except ValueError:
+            raise EventConflictError
 
     def clear_event(self) -> None:
         while True:
             try:
                 self.get(block=False)
             except Empty:
+                break
+            except ValueError:
                 break
 
     def has_event(self) -> bool:
