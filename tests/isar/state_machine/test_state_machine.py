@@ -109,7 +109,7 @@ def test_state_machine_transitions_when_running_full_mission(
     )
     state_machine_thread.start()
     robot_service_thread.start()
-
+    time.sleep(1)
     # Setting the poll interval to a lower value to ensure that the robot status is
     # updated during the mission. This value needs to be set after the robot service
     # thread has been started.
@@ -154,6 +154,7 @@ def test_state_machine_battery_too_low_to_start_mission(
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     mocker.patch.object(StubRobot, "get_battery_level", return_value=10.0)
     robot_service_thread.start()
+    time.sleep(1)
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
@@ -338,7 +339,7 @@ def test_state_machine_failed_dependency(
 
     state_machine_thread.start()
     robot_service_thread.start()
-
+    time.sleep(1)
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
     time.sleep(3)  # Allow the state machine to transition through the mission
@@ -386,7 +387,7 @@ def test_state_machine_with_successful_collection(
     uploader_thread.start()
 
     robot_service_thread.start()
-
+    time.sleep(1)
     scheduling_utilities.start_mission(mission=mission)
     time.sleep(3)  # Allow enough time to run mission and return home
 
@@ -429,9 +430,7 @@ def test_state_machine_with_unsuccessful_collection(
     state_machine_thread.start()
     robot_service_thread.start()
     uploader_thread.start()
-    state_machine_thread.state_machine.shared_state.robot_battery_level.trigger_event(
-        80.0
-    )
+    time.sleep(1)
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
@@ -480,9 +479,10 @@ def test_state_machine_with_successful_mission_stop(
     state_machine_thread.start()
     robot_service_thread.start()
     uploader_thread.start()
-
+    time.sleep(1)
     scheduling_utilities.start_mission(mission=mission)
-    scheduling_utilities.stop_mission(mission_id="")
+    time.sleep(0.5)
+    scheduling_utilities.stop_mission(mission_id=mission.id)
     time.sleep(1)  # Allow enough time to stop the mission
 
     assert state_machine_thread.state_machine.transitions_list == deque(
@@ -549,7 +549,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
 
     state_machine_thread.start()
     robot_service_thread.start()
-
+    time.sleep(1)
     scheduling_utilities.start_mission(mission=mission)
     time.sleep(0.5)
     with pytest.raises(HTTPException) as exception_details:
@@ -595,11 +595,11 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
 
     state_machine_thread.start()
     robot_service_thread.start()
-
+    time.sleep(1)
     scheduling_utilities.return_home()
     time.sleep(1)
     scheduling_utilities.start_mission(mission=mission)
-
+    time.sleep(1)
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
@@ -990,7 +990,7 @@ def test_state_machine_with_return_home_failure_successful_retries(
         StubRobot, "task_status", side_effect=[TaskStatus.Failed, TaskStatus.Successful]
     )
     robot_service_thread.start()
-
+    time.sleep(1)
     scheduling_utilities.return_home()
     time.sleep(3)  # Allow enough time to run mission and return home
 

@@ -343,7 +343,7 @@ class SchedulingUtilities:
                 )
 
             if stop_mission_response.mission_status != MissionStatus.Cancelled.value:
-                error_message = "Failed to stop mission"
+                error_message = f"Failed to stop mission, mission status is {stop_mission_response.mission_status}"
                 self.logger.error(error_message)
                 raise HTTPException(
                     status_code=HTTPStatus.CONFLICT, detail=error_message
