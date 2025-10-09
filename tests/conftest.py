@@ -8,6 +8,7 @@ from pytest_mock import MockerFixture
 
 from isar.apis.security.authentication import Authenticator
 from isar.eventhandlers.eventhandler import EventHandlerBase
+from isar.models.events import Events
 from isar.modules import ApplicationContainer
 from isar.robot.robot import Robot
 from isar.state_machine.state_machine import StateMachine
@@ -26,6 +27,7 @@ from tests.test_double.robot_interface import StubRobot
 def container():
     """Fixture to provide the dependency-injector container without auth."""
     container = ApplicationContainer()
+    container.events.override(providers.Singleton(Events))
     container.storage_handlers.override(
         providers.List(providers.Singleton(StorageFake))
     )
@@ -191,4 +193,5 @@ def run_before_and_after_tests() -> None:  # type: ignore
     print("Removing temporary results folder for testing")
     if results_folder.exists():
         shutil.rmtree(results_folder)
+    print("Cleanup finished")
     print("Cleanup finished")
