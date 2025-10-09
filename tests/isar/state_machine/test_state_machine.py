@@ -429,7 +429,9 @@ def test_state_machine_with_unsuccessful_collection(
     state_machine_thread.start()
     robot_service_thread.start()
     uploader_thread.start()
-
+    state_machine_thread.state_machine.shared_state.robot_battery_level.trigger_event(
+        80.0
+    )
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
