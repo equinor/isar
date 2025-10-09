@@ -213,6 +213,9 @@ class StateMachine(object):
             self.send_task_status()
 
     def battery_level_is_above_mission_start_threshold(self):
+        if not self.shared_state.robot_battery_level.check():
+            self.logger.warning("Battery level is None")
+            return False
         return (
             not self.shared_state.robot_battery_level.check()
             < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
