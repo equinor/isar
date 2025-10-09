@@ -358,6 +358,8 @@ class SchedulingUtilities:
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except HTTPException as e:
+            raise e
         except Exception as e:
             error_message = f"Unexpected error while stopping mission: {e}"
             self.logger.error(error_message)
