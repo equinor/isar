@@ -194,4 +194,3 @@ def run_before_and_after_tests() -> None:  # type: ignore
     if results_folder.exists():
         shutil.rmtree(results_folder)
     print("Cleanup finished")
-    print("Cleanup finished")
