@@ -146,6 +146,9 @@ class Uploader:
                     )
             except Empty:
                 continue
+            except Exception as e:
+                self.logger.error(f"Unexpected error in uploader thread: {e}")
+                continue
 
     def _upload(self, item: BlobItem) -> StoragePaths:
         inspection_paths: StoragePaths
