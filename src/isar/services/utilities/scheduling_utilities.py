@@ -94,6 +94,12 @@ class SchedulingUtilities:
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 detail="Could not plan mission",
             )
+        except Exception as e:
+            self.logger.error(e)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                detail="Could not return mission",
+            )
 
     def verify_robot_capable_of_mission(
         self, mission: Mission, robot_capabilities: List[str]
@@ -171,6 +177,10 @@ class SchedulingUtilities:
         ------
         HTTTPException 408 Request timeout
             If there is a timeout while communicating with the state machine
+        HTTPException 409 Conflict
+            If the state machine is not ready to receive a mission
+        HTTPException 500 Internal Server Error
+            If there is an unexpected error while sending the mission to the state machine
         """
         try:
             mission_start_response = self._send_command(
@@ -195,6 +205,14 @@ class SchedulingUtilities:
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except Exception as e:
+            error_message = (
+                f"Unexpected error while sending mission to state machine: {e}"
+            )
+            self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
         self.logger.info("OK - Mission started in ISAR")
 
     def return_home(
@@ -206,6 +224,10 @@ class SchedulingUtilities:
         ------
         HTTTPException 408 Request timeout
             If there is a timeout while communicating with the state machine
+        HTTPException 409 Conflict
+            If the state machine is not ready to receive a return home mission
+        HTTPException 500 Internal Server Error
+            If there is an unexpected error while sending the return home command
         """
         try:
             self._send_command(
@@ -220,6 +242,12 @@ class SchedulingUtilities:
             error_message = "State machine has entered a state which cannot start a return home mission"
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except Exception as e:
+            error_message = f"Unexpected error while sending return home command: {e}"
+            self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
         self.logger.info("OK - Return home mission started in ISAR")
 
     def pause_mission(self) -> ControlMissionResponse:
@@ -229,6 +257,8 @@ class SchedulingUtilities:
         ------
         HTTTPException 408 Request timeout
             If there is a timeout while communicating with the state machine
+        HTTPException 409 Conflict
+            If the state machine is not in a state which can pause a mission
         """
         try:
             response = self._send_command(True, self.api_events.pause_mission)
@@ -244,6 +274,12 @@ class SchedulingUtilities:
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except Exception as e:
+            error_message = f"Unexpected error while pausing mission: {e}"
+            self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
 
     def resume_mission(self) -> ControlMissionResponse:
         """Resume mission
@@ -252,6 +288,10 @@ class SchedulingUtilities:
         ------
         HTTTPException 408 Request timeout
             If there is a timeout while communicating with the state machine
+        HTTPException 409 Conflict
+            If the state machine is not in a state which can resume a mission
+        HTTPException 500 Internal Server Error
+            If there is an unexpected error while resuming the mission
         """
         try:
             response = self._send_command(True, self.api_events.resume_mission)
@@ -263,6 +303,12 @@ class SchedulingUtilities:
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
             error_message = "Internal Server Error - Failed to resume mission"
+            self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
+        except Exception as e:
+            error_message = f"Unexpected error while resuming mission: {e}"
             self.logger.error(error_message)
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
@@ -279,6 +325,10 @@ class SchedulingUtilities:
             The request was understood, but attempting to stop the mission failed
         HTTPException 408 Request timeout
             If there is a timeout while communicating with the state machine
+        HTTPException 409 Conflict
+            If the state machine is not in a state which can stop a mission
+        HTTPException 500 Internal Server Error
+            If there is an unexpected error while stopping the mission
         """
         try:
             stop_mission_response: ControlMissionResponse = self._send_command(
@@ -308,6 +358,12 @@ class SchedulingUtilities:
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except Exception as e:
+            error_message = f"Unexpected error while stopping mission: {e}"
+            self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
         self.logger.info("OK - Mission successfully stopped")
         return stop_mission_response
 
@@ -316,6 +372,10 @@ class SchedulingUtilities:
 
         Raises
         ------
+        HTTPException 409 Conflict
+            If the state machine is not in intervention needed state
+        HTTPException 408 Request timeout
+            If there is a timeout while communicating with the state machine
         HTTPException 500 Internal Server Error
             If the intervention needed state could not be released
         """
@@ -332,12 +392,22 @@ class SchedulingUtilities:
             error_message = "Cannot release intervention needed as it is not in intervention needed state"
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except Exception as e:
+            error_message = (
+                f"Unexpected error while releasing intervention needed state: {e}"
+            )
+            self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
 
     def lock_down_robot(self) -> None:
         """Lock down robot
 
         Raises
         ------
+        HTTPException 409 Conflict
+            If the state machine is not in a state which can be locked down
         HTTPException 500 Internal Server Error
             If the robot could not be locked down
         """
@@ -352,12 +422,20 @@ class SchedulingUtilities:
             error_message = "Cannot send robot to lockdown as it is already in lockdown"
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except Exception as e:
+            error_message = f"Unexpected error while locking down robot: {e}"
+            self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
 
     def release_robot_lockdown(self) -> None:
         """Release robot from lockdown
 
         Raises
         ------
+        HTTPException 409 Conflict
+            If the state machine is not in lockdown
         HTTPException 500 Internal Server Error
             If the robot could not be released from lockdown
         """
@@ -376,6 +454,12 @@ class SchedulingUtilities:
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except Exception as e:
+            error_message = f"Unexpected error while releasing robot from lockdown: {e}"
+            self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
 
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
         if api_event.request.has_event():
