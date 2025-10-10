@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 
 class PausingReturnHome(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
@@ -37,7 +36,6 @@ class PausingReturnHome(EventHandlerBase):
 
         def _successful_pause_event_handler(event: Event[bool]) -> Optional[Callable]:
             if event.consume_event():
-
                 state_machine.current_mission.status = MissionStatus.Paused
                 state_machine.current_task.status = TaskStatus.Paused
 
@@ -58,12 +56,12 @@ class PausingReturnHome(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="failed_pause_event",
-                event=events.robot_service_events.mission_failed_to_pause,
+                event=events.robot_service_to_state_machine_events.mission_failed_to_pause,
                 handler=_failed_pause_event_handler,
             ),
             EventHandlerMapping(
                 name="successful_stop_event",
-                event=events.robot_service_events.mission_successfully_paused,
+                event=events.robot_service_to_state_machine_events.mission_successfully_paused,
                 handler=_successful_pause_event_handler,
             ),
         ]

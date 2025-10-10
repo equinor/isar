@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 
 
 class GoingToLockdown(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
@@ -48,26 +47,26 @@ class GoingToLockdown(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="mission_started_event",
-                event=events.robot_service_events.mission_started,
+                event=events.robot_service_to_state_machine_events.mission_started,
                 handler=lambda event: mission_started_event_handler(
                     state_machine, event
                 ),
             ),
             EventHandlerMapping(
                 name="mission_failed_event",
-                event=events.robot_service_events.mission_failed,
+                event=events.robot_service_to_state_machine_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
             EventHandlerMapping(
                 name="task_status_failed_event",
-                event=events.robot_service_events.task_status_failed,
+                event=events.robot_service_to_state_machine_events.task_status_failed,
                 handler=lambda event: task_status_failed_event_handler(
                     state_machine, _handle_task_completed, event
                 ),
             ),
             EventHandlerMapping(
                 name="task_status_event",
-                event=events.robot_service_events.task_status_updated,
+                event=events.robot_service_to_state_machine_events.task_status_updated,
                 handler=lambda event: task_status_event_handler(
                     state_machine, _handle_task_completed, event
                 ),

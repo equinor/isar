@@ -18,7 +18,6 @@ if TYPE_CHECKING:
 
 
 class ReturningHome(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         self.failed_return_home_attemps: int = 0
         events = state_machine.events
@@ -79,14 +78,14 @@ class ReturningHome(EventHandlerBase):
             ),
             EventHandlerMapping(
                 name="mission_started_event",
-                event=events.robot_service_events.mission_started,
+                event=events.robot_service_to_state_machine_events.mission_started,
                 handler=lambda event: mission_started_event_handler(
                     state_machine, event
                 ),
             ),
             EventHandlerMapping(
                 name="mission_failed_event",
-                event=events.robot_service_events.mission_failed,
+                event=events.robot_service_to_state_machine_events.mission_failed,
                 handler=lambda event: mission_failed_event_handler(
                     state_machine, event
                 ),
@@ -98,14 +97,14 @@ class ReturningHome(EventHandlerBase):
             ),
             EventHandlerMapping(
                 name="task_status_failed_event",
-                event=events.robot_service_events.task_status_failed,
+                event=events.robot_service_to_state_machine_events.task_status_failed,
                 handler=lambda event: task_status_failed_event_handler(
                     state_machine, _handle_task_completed, event
                 ),
             ),
             EventHandlerMapping(
                 name="task_status_event",
-                event=events.robot_service_events.task_status_updated,
+                event=events.robot_service_to_state_machine_events.task_status_updated,
                 handler=lambda event: task_status_event_handler(
                     state_machine, _handle_task_completed, event
                 ),

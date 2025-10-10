@@ -8,7 +8,9 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
 def trigger_stop_mission_event(state_machine: "StateMachine") -> bool:
-    state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+    state_machine.events.state_machine_to_robot_service_events.stop_mission.trigger_event(
+        True
+    )
     return True
 
 
