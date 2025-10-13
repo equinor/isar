@@ -132,7 +132,7 @@ def task_status_failed_event_handler(
         not state_machine.awaiting_task_status
         and state_machine.current_task is not None
     ):
-        state_machine.events.state_machine_events.task_status_request.trigger_event(
+        state_machine.events.state_machine_to_robot_service_events.task_status_request.trigger_event(
             state_machine.current_task.id,
         )
         state_machine.awaiting_task_status = True
@@ -156,7 +156,7 @@ def task_status_event_handler(
         not state_machine.awaiting_task_status
         and state_machine.current_task is not None
     ):
-        state_machine.events.state_machine_events.task_status_request.trigger_event(
+        state_machine.events.state_machine_to_robot_service_events.task_status_request.trigger_event(
             state_machine.current_task.id,
         )
         state_machine.awaiting_task_status = True

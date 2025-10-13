@@ -7,7 +7,9 @@ if TYPE_CHECKING:
 
 
 def trigger_pause_mission_event(state_machine: "StateMachine") -> bool:
-    state_machine.events.state_machine_events.pause_mission.trigger_event(True)
+    state_machine.events.state_machine_to_robot_service_events.pause_mission.trigger_event(
+        True
+    )
     return True
 
 

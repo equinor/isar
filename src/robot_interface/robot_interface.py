@@ -14,12 +14,36 @@ class RobotInterface(metaclass=ABCMeta):
     """Interface to communicate with robots."""
 
     @abstractmethod
-    def initiate_mission(self, mission: Mission) -> None:
-        """Send a mission to the robot and initiate execution of the mission
+    def prepare_mission(self, mission: Mission) -> None:
+        """Prepare a mission for execution on the robot
 
         Parameters
         ----------
         mission: Mission
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RobotInfeasibleMissionException
+            If the mission input is infeasible and the mission fails to be prepared in
+            a way that means attempting to schedule again is not necessary
+        RobotException
+            Will catch all RobotExceptions not previously listed and retry preparation of
+            the mission until the number of allowed retries is exceeded
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def start_mission(self, mission_id: str) -> None:
+        """Start a prerpared mission on the robot
+
+        Parameters
+        ----------
+        mission_id: str
 
         Returns
         -------
@@ -155,28 +179,6 @@ class RobotInterface(metaclass=ABCMeta):
         Returns
         -------
         None
-
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def initialize(self) -> None:
-        """Initializes the robot. The initialization needed is robot dependent and the
-        function can be a simple return statement if no initialization is needed for the
-        robot.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        RobotInitializeException
-            If the robot package is unable to initialize the robot correctly the mission
-            will be cancelled
-        RobotException
-            Catches other RobotExceptions that might have occurred during initialization
-            where the result is that the mission is cancelled
 
         """
         raise NotImplementedError

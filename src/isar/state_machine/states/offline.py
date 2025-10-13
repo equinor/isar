@@ -9,7 +9,6 @@ if TYPE_CHECKING:
 
 
 class Offline(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
@@ -17,7 +16,7 @@ class Offline(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="robot_status_event",
-                event=events.robot_service_events.robot_status_changed,
+                event=events.robot_service_to_state_machine_events.robot_status_changed,
                 handler=lambda event: robot_status_event_handler(
                     state_machine=state_machine,
                     expected_status=RobotStatus.Offline,

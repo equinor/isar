@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 
 class StoppingReturnHome(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         logger = logging.getLogger("state_machine")
         events = state_machine.events
@@ -23,9 +22,7 @@ class StoppingReturnHome(EventHandlerBase):
             error_message: Optional[ErrorMessage] = event.consume_event()
             if error_message is not None:
                 logger.warning(error_message.error_description)
-                mission: Mission = (
-                    state_machine.events.api_requests.start_mission.request.consume_event()
-                )
+                mission: Mission = state_machine.events.api_requests.start_mission.request.consume_event()
                 state_machine.events.api_requests.start_mission.response.trigger_event(
                     MissionStartResponse(
                         mission_id=mission.id,
@@ -38,9 +35,7 @@ class StoppingReturnHome(EventHandlerBase):
 
         def _successful_stop_event_handler(event: Event[bool]) -> Optional[Callable]:
             if event.consume_event():
-                mission: Mission = (
-                    state_machine.events.api_requests.start_mission.request.consume_event()
-                )
+                mission: Mission = state_machine.events.api_requests.start_mission.request.consume_event()
 
                 state_machine.reset_state_machine()
 
@@ -57,12 +52,12 @@ class StoppingReturnHome(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="failed_stop_event",
-                event=events.robot_service_events.mission_failed_to_stop,
+                event=events.robot_service_to_state_machine_events.mission_failed_to_stop,
                 handler=_failed_stop_event_handler,
             ),
             EventHandlerMapping(
                 name="successful_stop_event",
-                event=events.robot_service_events.mission_successfully_stopped,
+                event=events.robot_service_to_state_machine_events.mission_successfully_stopped,
                 handler=_successful_stop_event_handler,
             ),
         ]

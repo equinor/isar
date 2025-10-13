@@ -4,11 +4,6 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 from isar.apis.models.models import MissionStartResponse
-from robot_interface.models.exceptions.robot_exceptions import (
-    ErrorMessage,
-    RobotException,
-    RobotInitializeException,
-)
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
@@ -39,21 +34,6 @@ def prepare_state_machine_before_mission(state_machine: "StateMachine") -> bool:
     return True
 
 
-def initialize_robot(state_machine: "StateMachine") -> bool:
-    try:
-        state_machine.robot.initialize()
-    except (RobotInitializeException, RobotException) as e:
-        state_machine.current_task.error_message = ErrorMessage(
-            error_reason=e.error_reason, error_description=e.error_description
-        )
-        state_machine.logger.error(
-            f"Failed to initialize robot because: {e.error_description}"
-        )
-        _initialization_failed(state_machine)
-        return False
-    return True
-
-
 def set_mission_to_in_progress(state_machine: "StateMachine") -> bool:
     state_machine.current_mission.status = MissionStatus.InProgress
     state_machine.publish_task_status(task=state_machine.current_task)
@@ -66,17 +46,7 @@ def set_mission_to_in_progress(state_machine: "StateMachine") -> bool:
 
 
 def trigger_start_mission_event(state_machine: "StateMachine") -> bool:
-    state_machine.events.state_machine_events.start_mission.trigger_event(
+    state_machine.events.state_machine_to_robot_service_events.start_mission.trigger_event(
         state_machine.current_mission
     )
     return True
-
-
-def _initialization_failed(state_machine: "StateMachine") -> None:
-    state_machine.events.api_requests.start_mission.response.trigger_event(
-        MissionStartResponse(
-            mission_started=False,
-            mission_not_started_reason="Failed to initialize robot",
-        )
-    )
-    state_machine._finalize()

@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 
 
 class Home(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
@@ -64,7 +63,7 @@ class Home(EventHandlerBase):
             ),
             EventHandlerMapping(
                 name="robot_status_event",
-                event=events.robot_service_events.robot_status_changed,
+                event=events.robot_service_to_state_machine_events.robot_status_changed,
                 handler=lambda event: _robot_status_event_handler(
                     state_machine=state_machine,
                     status_changed_event=event,
