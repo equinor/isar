@@ -32,18 +32,19 @@ class GoingToLockdown(EventHandlerBase):
             event: Event[Optional[ErrorMessage]],
         ) -> Optional[Callable]:
             mission_failed: Optional[ErrorMessage] = event.consume_event()
-            if mission_failed is not None:
-                state_machine.logger.warning(
-                    f"Failed to initiate mission "
-                    f"{str(state_machine.current_mission.id)[:8]} because: "
-                    f"{mission_failed.error_description}"
-                )
-                state_machine.current_mission.error_message = ErrorMessage(
-                    error_reason=mission_failed.error_reason,
-                    error_description=mission_failed.error_description,
-                )
-                return state_machine.lockdown_mission_failed  # type: ignore
-            return None
+            if mission_failed is None:
+                return None
+
+            state_machine.logger.warning(
+                f"Failed to initiate mission "
+                f"{str(state_machine.current_mission.id)[:8]} because: "
+                f"{mission_failed.error_description}"
+            )
+            state_machine.current_mission.error_message = ErrorMessage(
+                error_reason=mission_failed.error_reason,
+                error_description=mission_failed.error_description,
+            )
+            return state_machine.lockdown_mission_failed  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

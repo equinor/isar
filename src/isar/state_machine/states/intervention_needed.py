@@ -17,12 +17,13 @@ class InterventionNeeded(EventHandlerBase):
         def release_intervention_needed_handler(
             event: Event[bool],
         ) -> Optional[Callable]:
-            if event.consume_event():
-                state_machine.events.api_requests.release_intervention_needed.response.trigger_event(
-                    True
-                )
-                return state_machine.release_intervention_needed  # type: ignore
-            return None
+            if not event.consume_event():
+                return None
+
+            state_machine.events.api_requests.release_intervention_needed.response.trigger_event(
+                True
+            )
+            return state_machine.release_intervention_needed  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

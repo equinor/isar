@@ -18,15 +18,18 @@ class UnknownStatus(EventHandlerBase):
         def _robot_status_event_handler(
             event: Event[RobotStatus],
         ) -> Optional[Callable]:
-            robot_status: RobotStatus = event.check()
-            if (
+            robot_status: Optional[RobotStatus] = event.check()
+            if robot_status is None:
+                return None
+            if not (
                 robot_status == RobotStatus.Home
                 or robot_status == RobotStatus.Offline
                 or robot_status == RobotStatus.BlockedProtectiveStop
                 or robot_status == RobotStatus.Available
             ):
-                return state_machine.robot_status_changed  # type: ignore
-            return None
+                return None
+
+            return state_machine.robot_status_changed  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

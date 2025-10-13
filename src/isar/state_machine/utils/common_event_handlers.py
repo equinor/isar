@@ -16,28 +16,30 @@ def start_mission_event_handler(
     response: Event[MissionStartResponse],
 ) -> Optional[Callable]:
     mission: Optional[Mission] = event.consume_event()
-    if mission:
-        if not state_machine.battery_level_is_above_mission_start_threshold():
-            response.trigger_event(
-                MissionStartResponse(
-                    mission_id=mission.id,
-                    mission_started=False,
-                    mission_not_started_reason="Robot battery too low",
-                )
+    if not mission:
+        return None
+
+    if not state_machine.battery_level_is_above_mission_start_threshold():
+        response.trigger_event(
+            MissionStartResponse(
+                mission_id=mission.id,
+                mission_started=False,
+                mission_not_started_reason="Robot battery too low",
             )
-            return None
-        state_machine.start_mission(mission=mission)
-        return state_machine.request_mission_start  # type: ignore
-    return None
+        )
+        return None
+    state_machine.start_mission(mission=mission)
+    return state_machine.request_mission_start  # type: ignore
 
 
 def return_home_event_handler(
     state_machine: "StateMachine", event: Event[bool]
 ) -> Optional[Callable]:
-    if event.consume_event():
-        state_machine.events.api_requests.return_home.response.trigger_event(True)
-        return state_machine.request_return_home  # type: ignore
-    return None
+    if not event.consume_event():
+        return None
+
+    state_machine.events.api_requests.return_home.response.trigger_event(True)
+    return state_machine.request_return_home  # type: ignore
 
 
 def robot_status_event_handler(
@@ -48,6 +50,7 @@ def robot_status_event_handler(
 ) -> Optional[Callable]:
     if not status_changed_event.consume_event():
         return None
+
     robot_status: Optional[RobotStatus] = status_event.check()
     if robot_status != expected_status:
         return state_machine.robot_status_changed  # type: ignore
@@ -58,29 +61,33 @@ def stop_mission_event_handler(
     state_machine: "StateMachine", event: Event[str]
 ) -> Optional[Callable]:
     mission_id: str = event.consume_event()
-    if mission_id is not None:
-        if state_machine.current_mission.id == mission_id or mission_id == "":
-            return state_machine.stop  # type: ignore
-        else:
-            state_machine.events.api_requests.stop_mission.response.trigger_event(
-                ControlMissionResponse(
-                    mission_id=mission_id,
-                    mission_status=state_machine.current_mission.status,
-                    mission_not_found=True,
-                    task_id=state_machine.current_task.id,
-                    task_status=state_machine.current_task.status,
-                )
+    if mission_id is None:
+        return None
+
+    if state_machine.current_mission.id == mission_id or mission_id == "":
+        return state_machine.stop  # type: ignore
+    else:
+        state_machine.events.api_requests.stop_mission.response.trigger_event(
+            ControlMissionResponse(
+                mission_id=mission_id,
+                mission_status=state_machine.current_mission.status,
+                mission_not_found=True,
+                task_id=state_machine.current_task.id,
+                task_status=state_machine.current_task.status,
             )
-    return None
+        )
+        return None
 
 
 def mission_started_event_handler(
     state_machine: "StateMachine",
     event: Event[bool],
 ) -> Optional[Callable]:
-    if event.consume_event():
-        state_machine.logger.info("Received confirmation that mission has started")
-        state_machine.mission_ongoing = True
+    if not event.consume_event():
+        return None
+
+    state_machine.logger.info("Received confirmation that mission has started")
+    state_machine.mission_ongoing = True
     return None
 
 
@@ -89,18 +96,19 @@ def mission_failed_event_handler(
     event: Event[Optional[ErrorMessage]],
 ) -> Optional[Callable]:
     mission_failed: Optional[ErrorMessage] = event.consume_event()
-    if mission_failed is not None:
-        state_machine.logger.warning(
-            f"Failed to initiate mission "
-            f"{str(state_machine.current_mission.id)[:8]} because: "
-            f"{mission_failed.error_description}"
-        )
-        state_machine.current_mission.error_message = ErrorMessage(
-            error_reason=mission_failed.error_reason,
-            error_description=mission_failed.error_description,
-        )
-        return state_machine.mission_failed_to_start  # type: ignore
-    return None
+    if mission_failed is None:
+        return None
+
+    state_machine.logger.warning(
+        f"Failed to initiate mission "
+        f"{str(state_machine.current_mission.id)[:8]} because: "
+        f"{mission_failed.error_description}"
+    )
+    state_machine.current_mission.error_message = ErrorMessage(
+        error_reason=mission_failed.error_reason,
+        error_description=mission_failed.error_description,
+    )
+    return state_machine.mission_failed_to_start  # type: ignore
 
 
 def task_status_failed_event_handler(
@@ -173,9 +181,10 @@ def _handle_new_task_status(
 
     state_machine.current_task.status = status
 
-    if state_machine.current_task.is_finished():
-        state_machine.report_task_status(state_machine.current_task)
-        state_machine.publish_task_status(task=state_machine.current_task)
+    if not state_machine.current_task.is_finished():
+        return None
 
-        return handle_task_completed(status)
-    return None
+    state_machine.report_task_status(state_machine.current_task)
+    state_machine.publish_task_status(task=state_machine.current_task)
+
+    return handle_task_completed(status)

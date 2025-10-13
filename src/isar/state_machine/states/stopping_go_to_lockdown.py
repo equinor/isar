@@ -38,27 +38,27 @@ class StoppingGoToLockdown(EventHandlerBase):
             event: Event[ErrorMessage],
         ) -> Optional[Callable]:
             error_message: Optional[ErrorMessage] = event.consume_event()
-            if error_message is not None:
-                events.api_requests.send_to_lockdown.response.trigger_event(
-                    LockdownResponse(
-                        lockdown_started=False,
-                        failure_reason="Failed to stop ongoing mission",
-                    )
+            if error_message is None:
+                return None
+
+            events.api_requests.send_to_lockdown.response.trigger_event(
+                LockdownResponse(
+                    lockdown_started=False,
+                    failure_reason="Failed to stop ongoing mission",
                 )
-                return state_machine.mission_stopping_failed  # type: ignore
-            return None
+            )
+            return state_machine.mission_stopping_failed  # type: ignore
 
         def _successful_stop_event_handler(event: Event[bool]) -> Optional[Callable]:
-            if event.consume_event():
-                state_machine.publish_mission_aborted(
-                    "Robot being sent to lockdown", True
-                )
-                _stop_mission_cleanup()
-                events.api_requests.send_to_lockdown.response.trigger_event(
-                    LockdownResponse(lockdown_started=True)
-                )
-                return state_machine.request_lockdown_mission  # type: ignore
-            return None
+            if not event.consume_event():
+                return None
+
+            state_machine.publish_mission_aborted("Robot being sent to lockdown", True)
+            _stop_mission_cleanup()
+            events.api_requests.send_to_lockdown.response.trigger_event(
+                LockdownResponse(lockdown_started=True)
+            )
+            return state_machine.request_lockdown_mission  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

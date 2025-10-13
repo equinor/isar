@@ -21,38 +21,40 @@ class StoppingReturnHome(EventHandlerBase):
             event: Event[ErrorMessage],
         ) -> Optional[Callable]:
             error_message: Optional[ErrorMessage] = event.consume_event()
-            if error_message is not None:
-                logger.warning(error_message.error_description)
-                mission: Mission = (
-                    state_machine.events.api_requests.start_mission.request.consume_event()
+            if error_message is None:
+                return None
+
+            logger.warning(error_message.error_description)
+            mission: Mission = (
+                state_machine.events.api_requests.start_mission.request.consume_event()
+            )
+            state_machine.events.api_requests.start_mission.response.trigger_event(
+                MissionStartResponse(
+                    mission_id=mission.id,
+                    mission_started=False,
+                    mission_not_started_reason="Failed to cancel return home mission",
                 )
-                state_machine.events.api_requests.start_mission.response.trigger_event(
-                    MissionStartResponse(
-                        mission_id=mission.id,
-                        mission_started=False,
-                        mission_not_started_reason="Failed to cancel return home mission",
-                    )
-                )
-                return state_machine.return_home_mission_stopping_failed  # type: ignore
-            return None
+            )
+            return state_machine.return_home_mission_stopping_failed  # type: ignore
 
         def _successful_stop_event_handler(event: Event[bool]) -> Optional[Callable]:
-            if event.consume_event():
-                mission: Mission = (
-                    state_machine.events.api_requests.start_mission.request.consume_event()
-                )
+            if not event.consume_event():
+                return None
 
-                state_machine.reset_state_machine()
+            mission: Mission = (
+                state_machine.events.api_requests.start_mission.request.consume_event()
+            )
 
-                if mission:
-                    state_machine.start_mission(mission=mission)
-                    return state_machine.request_mission_start  # type: ignore
+            state_machine.reset_state_machine()
 
-                state_machine.logger.error(
-                    "Stopped return home without a new mission to start"
-                )
-                return state_machine.request_return_home  # type: ignore
-            return None
+            if mission:
+                state_machine.start_mission(mission=mission)
+                return state_machine.request_mission_start  # type: ignore
+
+            state_machine.logger.error(
+                "Stopped return home without a new mission to start"
+            )
+            return state_machine.request_return_home  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

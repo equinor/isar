@@ -14,13 +14,14 @@ class Lockdown(EventHandlerBase):
 
         def _release_from_lockdown_handler(event: Event[bool]):
             should_release_from_lockdown: bool = event.consume_event()
-            if should_release_from_lockdown:
-                events.api_requests.release_from_lockdown.response.trigger_event(True)
-                if state_machine.battery_level_is_above_mission_start_threshold():
-                    return state_machine.release_from_lockdown  # type: ignore
-                else:
-                    return state_machine.starting_recharging  # type: ignore
-            return None
+            if not should_release_from_lockdown:
+                return None
+
+            events.api_requests.release_from_lockdown.response.trigger_event(True)
+            if state_machine.battery_level_is_above_mission_start_threshold():
+                return state_machine.release_from_lockdown  # type: ignore
+            else:
+                return state_machine.starting_recharging  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

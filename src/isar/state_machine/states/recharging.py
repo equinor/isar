@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from isar.apis.models.models import LockdownResponse
 from isar.config.settings import settings
@@ -18,23 +18,29 @@ class Recharging(EventHandlerBase):
 
         def robot_battery_level_updated_handler(event: Event[float]):
             battery_level: float = event.check()
-            if battery_level >= settings.ROBOT_BATTERY_RECHARGE_THRESHOLD:
-                return state_machine.robot_recharged  # type: ignore
-            return None
+            if battery_level < settings.ROBOT_BATTERY_RECHARGE_THRESHOLD:
+                return None
+
+            return state_machine.robot_recharged  # type: ignore
 
         def robot_offline_handler(event: Event[RobotStatus]):
-            robot_status: RobotStatus = event.check()
+            robot_status: Optional[RobotStatus] = event.check()
+
+            if robot_status is None:
+                return None
+
             if robot_status == RobotStatus.Offline:
                 return state_machine.robot_went_offline  # type: ignore
 
         def _send_to_lockdown_event_handler(event: Event[bool]):
             should_lockdown: bool = event.consume_event()
-            if should_lockdown:
-                events.api_requests.send_to_lockdown.response.trigger_event(
-                    LockdownResponse(lockdown_started=True)
-                )
-                return state_machine.reached_lockdown  # type: ignore
-            return None
+            if not should_lockdown:
+                return None
+
+            events.api_requests.send_to_lockdown.response.trigger_event(
+                LockdownResponse(lockdown_started=True)
+            )
+            return state_machine.reached_lockdown  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
