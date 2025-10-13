@@ -160,6 +160,7 @@ class SharedState:
         self.state: Event[State] = Event("state")
         self.robot_status: Event[RobotStatus] = Event("robot_status")
         self.robot_battery_level: Event[float] = Event("robot_battery_level")
+        self.mission_id: Event[Optional[str]] = Event("mission_id")
 
 
 class EventTimeoutError(Exception):

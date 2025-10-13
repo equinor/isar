@@ -102,6 +102,7 @@ class Robot(object):
             )
             self.monitor_mission_thread = RobotMonitorMissionThread(
                 self.robot_service_events,
+                self.shared_state,
                 self.robot,
                 self.mqtt_publisher,
                 self.signal_thread_quitting,

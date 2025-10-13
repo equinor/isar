@@ -31,7 +31,7 @@ def test_successful_mission(
     )
     time.sleep(5)
 
-    mission_id: str = state_machine_thread.state_machine.current_mission.id
+    mission_id: str = state_machine_thread.state_machine.shared_state.mission_id.check()
     mission: Mission = deepcopy(state_machine_thread.state_machine.current_mission)
 
     start_time: datetime = datetime.now(timezone.utc)

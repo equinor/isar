@@ -4,7 +4,6 @@ from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -16,23 +15,6 @@ class Stopping(EventHandlerBase):
         events = state_machine.events
 
         def _stop_mission_cleanup() -> None:
-            if state_machine.current_mission is None:
-                state_machine.events.api_requests.stop_mission.response.trigger_event(
-                    ControlMissionResponse(success=True)
-                )
-                state_machine.reset_state_machine()
-                return None
-
-            state_machine.current_mission.status = MissionStatus.Cancelled
-
-            for task in state_machine.current_mission.tasks:
-                if task.status in [
-                    TaskStatus.NotStarted,
-                    TaskStatus.InProgress,
-                    TaskStatus.Paused,
-                ]:
-                    task.status = TaskStatus.Cancelled
-
             state_machine.events.api_requests.stop_mission.response.trigger_event(
                 ControlMissionResponse(success=True)
             )

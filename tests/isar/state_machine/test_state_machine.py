@@ -84,12 +84,6 @@ def test_initial_unknown_status(state_machine) -> None:
     assert state_machine.state == "unknown_status"
 
 
-def test_reset_state_machine(state_machine) -> None:
-    state_machine.reset_state_machine()
-
-    assert state_machine.current_mission is None
-
-
 def test_state_machine_transitions_when_running_full_mission(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
@@ -222,7 +216,9 @@ def test_monitor_goes_to_return_home_when_battery_low(
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.mission_id.trigger_event(
+        Mission(name="Dummy misson", tasks=[task_1])
+    )
 
     monitor_state: EventHandlerBase = cast(
         EventHandlerBase, sync_state_machine.monitor_state
@@ -253,7 +249,9 @@ def test_return_home_goes_to_recharging_when_battery_low(
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.mission_id.trigger_event(
+        Mission(name="Dummy misson", tasks=[task_1])
+    )
 
     returning_home_state: EventHandlerBase = cast(
         EventHandlerBase, sync_state_machine.returning_home_state
@@ -687,7 +685,9 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.mission_id.trigger_event(
+        Mission(name="Dummy misson", tasks=[task_1])
+    )
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
 
@@ -822,7 +822,9 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.mission_id.trigger_event(
+        Mission(name="Dummy misson", tasks=[task_1])
+    )
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.going_to_lockdown_state.name  # type: ignore
 
@@ -1045,7 +1047,9 @@ def test_transition_from_monitor_to_pausing(
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.mission_id.trigger_event(
+        Mission(name="Dummy misson", tasks=[task_1])
+    )
     sync_state_machine.state = sync_state_machine.monitor_state.name  # type: ignore
 
     monitor_state: EventHandlerBase = cast(
@@ -1072,7 +1076,9 @@ def test_transition_from_pausing_to_paused(
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.mission_id.trigger_event(
+        Mission(name="Dummy misson", tasks=[task_1])
+    )
     sync_state_machine.state = sync_state_machine.pausing_state.name  # type: ignore
 
     pausing_state: EventHandlerBase = cast(
@@ -1099,7 +1105,9 @@ def test_transition_from_pausing_to_monitor(
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.mission_id.trigger_event(
+        Mission(name="Dummy misson", tasks=[task_1])
+    )
     sync_state_machine.state = sync_state_machine.pausing_state.name  # type: ignore
 
     pausing_state: EventHandlerBase = cast(
@@ -1111,7 +1119,10 @@ def test_transition_from_pausing_to_monitor(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
+    error_event = ErrorMessage(
+        error_reason=ErrorReason.RobotUnknownErrorException, error_description=""
+    )
+    event_handler.event.trigger_event(error_event)
     transition = event_handler.handler(event_handler.event)
 
     assert transition is sync_state_machine.mission_pausing_failed  # type: ignore
@@ -1126,7 +1137,9 @@ def test_transition_from_returning_home_to_pausing_return_home(
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.mission_id.trigger_event(
+        Mission(name="Dummy misson", tasks=[task_1])
+    )
     sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
 
     returning_home_state: EventHandlerBase = cast(
@@ -1153,7 +1166,9 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.mission_id.trigger_event(
+        Mission(name="Dummy misson", tasks=[task_1])
+    )
     sync_state_machine.state = sync_state_machine.pausing_return_home_state.name  # type: ignore
 
     pausing_return_home_state: EventHandlerBase = cast(
@@ -1180,7 +1195,9 @@ def test_transition_from_pausing_return_home_to_returning_home(
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
+    sync_state_machine.shared_state.mission_id.trigger_event(
+        Mission(name="Dummy misson", tasks=[task_1])
+    )
     sync_state_machine.state = sync_state_machine.pausing_return_home_state.name  # type: ignore
 
     pausing_return_home_state: EventHandlerBase = cast(
@@ -1192,7 +1209,10 @@ def test_transition_from_pausing_return_home_to_returning_home(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
+    error_event = ErrorMessage(
+        error_reason=ErrorReason.RobotUnknownErrorException, error_description=""
+    )
+    event_handler.event.trigger_event(error_event)
     transition = event_handler.handler(event_handler.event)
 
     assert transition is sync_state_machine.return_home_mission_pausing_failed  # type: ignore

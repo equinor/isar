@@ -52,6 +52,7 @@ class ReturningHome(EventHandlerBase):
             if mission_status and mission_status not in [
                 MissionStatus.InProgress,
                 MissionStatus.NotStarted,
+                MissionStatus.Paused,
             ]:
                 if mission_status != MissionStatus.Successful:
                     self.failed_return_home_attemps += 1

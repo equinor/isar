@@ -64,7 +64,7 @@ def stop_mission_event_handler(
     if mission_id is None:
         return None
 
-    if state_machine.current_mission.id == mission_id or mission_id == "":
+    if state_machine.shared_state.mission_id.check() == mission_id or mission_id == "":
         return state_machine.stop  # type: ignore
     else:
         state_machine.events.api_requests.stop_mission.response.trigger_event(
@@ -93,12 +93,6 @@ def mission_failed_event_handler(
         return None
 
     state_machine.logger.warning(
-        f"Failed to initiate mission "
-        f"{str(state_machine.current_mission.id)[:8]} because: "
-        f"{mission_failed.error_description}"
-    )
-    state_machine.current_mission.error_message = ErrorMessage(
-        error_reason=mission_failed.error_reason,
-        error_description=mission_failed.error_description,
+        f"Failed to initiate mission because: " f"{mission_failed.error_description}"
     )
     return state_machine.mission_failed_to_start  # type: ignore
