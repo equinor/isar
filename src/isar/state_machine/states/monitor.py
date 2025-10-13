@@ -27,9 +27,10 @@ class Monitor(EventHandlerBase):
         shared_state = state_machine.shared_state
 
         def _pause_mission_event_handler(event: Event[bool]) -> Optional[Callable]:
-            if event.consume_event():
-                return state_machine.pause  # type: ignore
-            return None
+            if not event.consume_event():
+                return None
+
+            return state_machine.pause  # type: ignore
 
         def _handle_task_completed(task_status: TaskStatus):
             if state_machine.should_upload_inspections():
@@ -44,35 +45,38 @@ class Monitor(EventHandlerBase):
                 )
 
             state_machine.iterate_current_task()
-            if state_machine.current_task is None:
-                return state_machine.mission_finished  # type: ignore
-            return None
+            if state_machine.current_task is not None:
+                return None
+
+            return state_machine.mission_finished  # type: ignore
 
         def _robot_battery_level_updated_handler(
             event: Event[float],
         ) -> Optional[Callable]:
             battery_level: float = event.check()
-            if battery_level < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
-                state_machine.publish_mission_aborted(
-                    "Robot battery too low to continue mission", True
-                )
-                state_machine._finalize()
-                state_machine.logger.warning(
-                    "Cancelling current mission due to low battery"
-                )
-                return state_machine.stop  # type: ignore
-            return None
+            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
+                return None
+
+            state_machine.publish_mission_aborted(
+                "Robot battery too low to continue mission", True
+            )
+            state_machine._finalize()
+            state_machine.logger.warning(
+                "Cancelling current mission due to low battery"
+            )
+            return state_machine.stop  # type: ignore
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
         ) -> Optional[Callable]:
             should_lockdown: bool = event.consume_event()
-            if should_lockdown:
-                state_machine.logger.warning(
-                    "Cancelling current mission due to robot going to lockdown"
-                )
-                return state_machine.stop_go_to_lockdown  # type: ignore
-            return None
+            if not should_lockdown:
+                return None
+
+            state_machine.logger.warning(
+                "Cancelling current mission due to robot going to lockdown"
+            )
+            return state_machine.stop_go_to_lockdown  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

@@ -45,17 +45,19 @@ class Stopping(EventHandlerBase):
             event: Event[ErrorMessage],
         ) -> Optional[Callable]:
             error_message: Optional[ErrorMessage] = event.consume_event()
-            if error_message is not None:
-                return state_machine.mission_stopping_failed  # type: ignore
-            return None
+            if error_message is None:
+                return None
+
+            return state_machine.mission_stopping_failed  # type: ignore
 
         def _successful_stop_event_handler(event: Event[bool]) -> Optional[Callable]:
-            if event.consume_event():
-                _stop_mission_cleanup()
-                if not state_machine.battery_level_is_above_mission_start_threshold():
-                    return state_machine.request_return_home  # type: ignore
-                return state_machine.mission_stopped  # type: ignore
-            return None
+            if not event.consume_event():
+                return None
+
+            _stop_mission_cleanup()
+            if not state_machine.battery_level_is_above_mission_start_threshold():
+                return state_machine.request_return_home  # type: ignore
+            return state_machine.mission_stopped  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

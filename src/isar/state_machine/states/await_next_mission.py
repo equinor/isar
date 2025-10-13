@@ -27,12 +27,13 @@ class AwaitNextMission(EventHandlerBase):
             event: Event[bool],
         ) -> Optional[Callable]:
             should_lockdown: bool = event.consume_event()
-            if should_lockdown:
-                events.api_requests.send_to_lockdown.response.trigger_event(
-                    LockdownResponse(lockdown_started=True)
-                )
-                return state_machine.request_lockdown_mission  # type: ignore
-            return None
+            if not should_lockdown:
+                return None
+
+            events.api_requests.send_to_lockdown.response.trigger_event(
+                LockdownResponse(lockdown_started=True)
+            )
+            return state_machine.request_lockdown_mission  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

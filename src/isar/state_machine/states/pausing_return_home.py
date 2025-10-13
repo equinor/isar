@@ -31,29 +31,30 @@ class PausingReturnHome(EventHandlerBase):
             state_machine.publish_mission_status()
             state_machine.send_task_status()
 
-            if error_message is not None:
-                return state_machine.return_home_mission_pausing_failed  # type: ignore
-            return None
+            if error_message is None:
+                return None
+
+            return state_machine.return_home_mission_pausing_failed  # type: ignore
 
         def _successful_pause_event_handler(event: Event[bool]) -> Optional[Callable]:
-            if event.consume_event():
+            if not event.consume_event():
+                return None
 
-                state_machine.current_mission.status = MissionStatus.Paused
-                state_machine.current_task.status = TaskStatus.Paused
+            state_machine.current_mission.status = MissionStatus.Paused
+            state_machine.current_task.status = TaskStatus.Paused
 
-                paused_mission_response: ControlMissionResponse = (
-                    state_machine._make_control_mission_response()
-                )
+            paused_mission_response: ControlMissionResponse = (
+                state_machine._make_control_mission_response()
+            )
 
-                state_machine.events.api_requests.pause_mission.response.trigger_event(
-                    paused_mission_response
-                )
+            state_machine.events.api_requests.pause_mission.response.trigger_event(
+                paused_mission_response
+            )
 
-                state_machine.publish_mission_status()
-                state_machine.send_task_status()
+            state_machine.publish_mission_status()
+            state_machine.send_task_status()
 
-                return state_machine.return_home_mission_paused  # type: ignore
-            return None
+            return state_machine.return_home_mission_paused  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

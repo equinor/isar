@@ -19,28 +19,30 @@ class Paused(EventHandlerBase):
             event: Event[float],
         ) -> Optional[Callable]:
             battery_level: float = event.check()
-            if battery_level < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
-                state_machine.publish_mission_aborted(
-                    "Robot battery too low to continue mission", True
-                )
-                state_machine._finalize()
-                state_machine.logger.warning(
-                    "Cancelling current mission due to low battery"
-                )
-                return state_machine.stop  # type: ignore
-            return None
+            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
+                return None
+
+            state_machine.publish_mission_aborted(
+                "Robot battery too low to continue mission", True
+            )
+            state_machine._finalize()
+            state_machine.logger.warning(
+                "Cancelling current mission due to low battery"
+            )
+            return state_machine.stop  # type: ignore
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
         ) -> Optional[Callable]:
             should_lockdown: bool = event.consume_event()
-            if should_lockdown:
-                state_machine._finalize()
-                state_machine.logger.warning(
-                    "Cancelling current mission due to robot going to lockdown"
-                )
-                return state_machine.stop_go_to_lockdown  # type: ignore
-            return None
+            if not should_lockdown:
+                return None
+
+            state_machine._finalize()
+            state_machine.logger.warning(
+                "Cancelling current mission due to robot going to lockdown"
+            )
+            return state_machine.stop_go_to_lockdown  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

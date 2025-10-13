@@ -20,38 +20,42 @@ class ReturnHomePaused(EventHandlerBase):
             event: Event[float],
         ) -> Optional[Callable]:
             battery_level: float = event.check()
-            if battery_level < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
-                return state_machine.resume  # type: ignore
-            return None
+
+            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
+                return None
+
+            return state_machine.resume  # type: ignore
 
         def _start_mission_event_handler(
             event: Event[Mission],
         ) -> Optional[Callable]:
-            if event.has_event():
-                if not state_machine.battery_level_is_above_mission_start_threshold():
-                    state_machine.events.api_requests.start_mission.request.consume_event()
-                    response = MissionStartResponse(
-                        mission_id=None,
-                        mission_started=False,
-                        mission_not_started_reason="Robot battery too low",
-                    )
-                    state_machine.events.api_requests.start_mission.response.trigger_event(
-                        response
-                    )
-                    return None
-                return state_machine.stop_return_home  # type: ignore
-            return None
+            if not event.has_event():
+                return None
+
+            if not state_machine.battery_level_is_above_mission_start_threshold():
+                state_machine.events.api_requests.start_mission.request.consume_event()
+                response = MissionStartResponse(
+                    mission_id=None,
+                    mission_started=False,
+                    mission_not_started_reason="Robot battery too low",
+                )
+                state_machine.events.api_requests.start_mission.response.trigger_event(
+                    response
+                )
+                return None
+            return state_machine.stop_return_home  # type: ignore
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
         ) -> Optional[Callable]:
             should_lockdown: bool = event.consume_event()
-            if should_lockdown:
-                events.api_requests.send_to_lockdown.response.trigger_event(
-                    LockdownResponse(lockdown_started=True)
-                )
-                return state_machine.resume_lockdown  # type: ignore
-            return None
+            if not should_lockdown:
+                return None
+
+            events.api_requests.send_to_lockdown.response.trigger_event(
+                LockdownResponse(lockdown_started=True)
+            )
+            return state_machine.resume_lockdown  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

@@ -22,12 +22,13 @@ class Home(EventHandlerBase):
 
         def _send_to_lockdown_event_handler(event: Event[bool]):
             should_send_robot_home: bool = event.consume_event()
-            if should_send_robot_home:
-                events.api_requests.send_to_lockdown.response.trigger_event(
-                    LockdownResponse(lockdown_started=True)
-                )
-                return state_machine.reached_lockdown  # type: ignore
-            return None
+            if not should_send_robot_home:
+                return None
+
+            events.api_requests.send_to_lockdown.response.trigger_event(
+                LockdownResponse(lockdown_started=True)
+            )
+            return state_machine.reached_lockdown  # type: ignore
 
         def _robot_status_event_handler(
             state_machine: "StateMachine",
