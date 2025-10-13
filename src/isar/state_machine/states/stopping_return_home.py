@@ -45,8 +45,6 @@ class StoppingReturnHome(EventHandlerBase):
                 state_machine.events.api_requests.start_mission.request.consume_event()
             )
 
-            state_machine.reset_state_machine()
-
             if mission:
                 state_machine.start_mission(mission=mission)
                 return state_machine.request_mission_start  # type: ignore

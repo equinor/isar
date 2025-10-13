@@ -11,7 +11,6 @@ from transitions.core import State
 from isar.config.settings import settings
 from isar.models.events import Events, SharedState
 from isar.models.status import IsarStatus
-from isar.services.service_connections.mqtt.mqtt_client import props_expiry
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
@@ -34,7 +33,6 @@ from isar.state_machine.states_enum import States
 from isar.state_machine.transitions.mission import get_mission_transitions
 from isar.state_machine.transitions.return_home import get_return_home_transitions
 from isar.state_machine.transitions.robot_status import get_robot_status_transitions
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
@@ -42,7 +40,6 @@ from robot_interface.telemetry.payloads import (
     InterventionNeededPayload,
     IsarStatusPayload,
     MissionAbortedPayload,
-    MissionPayload,
 )
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
@@ -150,8 +147,6 @@ class StateMachine(object):
         self.stop_robot_attempts_limit: int = stop_robot_attempts_limit
         self.sleep_time: float = sleep_time
 
-        self.current_mission: Optional[Mission] = None
-
         self.current_state: State = States(self.state)  # type: ignore
 
         self.transitions_log_length: int = transitions_log_length
@@ -160,8 +155,6 @@ class StateMachine(object):
     #################################################################################
 
     def _finalize(self) -> None:
-        self.publish_mission_status()
-        self.log_mission_overview(mission=self.current_mission)
         state_transitions: str = ", ".join(
             [
                 f"\n  {transition}" if (i + 1) % 10 == 0 else f"{transition}"
@@ -169,7 +162,6 @@ class StateMachine(object):
             ]
         )
         self.logger.info("State transitions:\n  %s", state_transitions)
-        self.reset_state_machine()
 
     def begin(self):
         """Starts the state machine. Transitions into unknown status state."""
@@ -196,19 +188,15 @@ class StateMachine(object):
         self.logger.info("State: %s", self.current_state)
         self.publish_status()
 
-    def reset_state_machine(self) -> None:
-        self.logger.info("Resetting state machine")
-        self.current_mission = None
-
     def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
-        self.current_mission = mission
+        self.events.state_machine_events.start_mission.trigger_event(mission)
 
     def publish_mission_aborted(self, reason: str, can_be_continued: bool) -> None:
         if not self.mqtt_publisher:
             return
 
-        if self.current_mission is None:
+        if self.shared_state.mission_id.check() is None:
             self.logger.warning(
                 "Could not publish mission aborted message. No ongoing mission."
             )
@@ -217,7 +205,7 @@ class StateMachine(object):
         payload: MissionAbortedPayload = MissionAbortedPayload(
             isar_id=settings.ISAR_ID,
             robot_name=settings.ROBOT_NAME,
-            mission_id=self.current_mission.id,
+            mission_id=self.shared_state.mission_id.check(),
             reason=reason,
             can_be_continued=can_be_continued,
             timestamp=datetime.now(timezone.utc),
@@ -229,36 +217,6 @@ class StateMachine(object):
             qos=1,
             retain=True,
         )
-
-    def publish_mission_status(self) -> None:
-        if not self.mqtt_publisher:
-            return
-
-        error_message: Optional[ErrorMessage] = None
-        if self.current_mission:
-            if self.current_mission.error_message:
-                error_message = self.current_mission.error_message
-
-        payload: MissionPayload = MissionPayload(
-            isar_id=settings.ISAR_ID,
-            robot_name=settings.ROBOT_NAME,
-            mission_id=self.current_mission.id if self.current_mission else None,
-            status=self.current_mission.status if self.current_mission else None,
-            error_reason=error_message.error_reason if error_message else None,
-            error_description=(
-                error_message.error_description if error_message else None
-            ),
-            timestamp=datetime.now(timezone.utc),
-        )
-
-        if self.current_mission:
-            self.mqtt_publisher.publish(
-                topic=settings.TOPIC_ISAR_MISSION + f"/{self.current_mission.id}",
-                payload=json.dumps(payload, cls=EnhancedJSONEncoder),
-                qos=1,
-                retain=True,
-                properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
-            )
 
     def publish_intervention_needed(self, error_message: str) -> None:
         """Publishes the intervention needed message to the MQTT Broker"""

@@ -58,11 +58,10 @@ class Monitor(EventHandlerBase):
         ) -> Optional[Callable]:
             mission_status: Optional[MissionStatus] = event.consume_event()
             if mission_status:
-                state_machine.current_mission.status = mission_status
-                state_machine.publish_mission_status()
                 if mission_status not in [
                     MissionStatus.InProgress,
                     MissionStatus.NotStarted,
+                    MissionStatus.Paused,
                 ]:
                     state_machine.logger.info(
                         f"Mission completed with status {mission_status}"

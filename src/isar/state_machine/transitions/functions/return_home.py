@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from isar.config.settings import settings
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, RobotStatus
+from robot_interface.models.mission.status import RobotStatus
 from robot_interface.models.mission.task import ReturnToHome
 
 if TYPE_CHECKING:
@@ -36,15 +36,4 @@ def should_retry_return_home(state_machine: "StateMachine") -> bool:
 
 def reset_return_home_failure_counter(state_machine: "StateMachine") -> bool:
     state_machine.returning_home_state.failed_return_home_attemps = 0
-    return True
-
-
-def set_return_home_status(state_machine: "StateMachine") -> bool:
-    state_machine.log_mission_overview(mission=state_machine.current_mission)
-    state_machine.current_mission.status = MissionStatus.InProgress
-    return True
-
-
-def return_home_finished(state_machine: "StateMachine") -> bool:
-    state_machine.reset_state_machine()
     return True

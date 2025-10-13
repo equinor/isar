@@ -35,8 +35,6 @@ class StoppingGoToLockdown(EventHandlerBase):
 
             state_machine.publish_mission_aborted("Robot being sent to lockdown", True)
 
-            state_machine.reset_state_machine()
-
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )

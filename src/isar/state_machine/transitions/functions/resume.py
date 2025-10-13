@@ -11,11 +11,10 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotActionException,
     RobotException,
 )
-from robot_interface.models.mission.status import MissionStatus
 
 
 def resume_mission(state_machine: "StateMachine") -> bool:
-    state_machine.logger.info("Resuming mission: %s", state_machine.current_mission.id)
+    state_machine.logger.info("Resuming mission")
 
     max_retries = settings.STATE_TRANSITION_NUM_RETIRES
     retry_interval = settings.STATE_TRANSITION_RETRY_INTERVAL_SEC
@@ -23,10 +22,6 @@ def resume_mission(state_machine: "StateMachine") -> bool:
     for attempt in range(max_retries):
         try:
             state_machine.robot.resume()
-            state_machine.current_mission.status = MissionStatus.InProgress
-            state_machine.current_mission.error_message = None
-
-            state_machine.publish_mission_status()
 
             resume_mission_response: ControlMissionResponse = ControlMissionResponse(
                 success=True

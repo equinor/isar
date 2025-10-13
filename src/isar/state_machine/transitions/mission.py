@@ -1,8 +1,5 @@
 from typing import TYPE_CHECKING, List
 
-from isar.state_machine.transitions.functions.fail_mission import (
-    report_failed_mission_and_finalize,
-)
 from isar.state_machine.transitions.functions.finish_mission import finish_mission
 from isar.state_machine.transitions.functions.pause import (
     pause_mission_failed,
@@ -12,14 +9,10 @@ from isar.state_machine.transitions.functions.pause import (
 from isar.state_machine.transitions.functions.resume import resume_mission
 from isar.state_machine.transitions.functions.return_home import (
     reset_return_home_failure_counter,
-    return_home_finished,
 )
 from isar.state_machine.transitions.functions.start_mission import (
     acknowledge_mission,
     initialize_robot,
-    prepare_state_machine_before_mission,
-    set_mission_to_in_progress,
-    trigger_start_mission_event,
 )
 from isar.state_machine.transitions.functions.stop import (
     stop_mission_failed,
@@ -127,7 +120,6 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "before": [
                 def_transition(state_machine, trigger_stop_mission_event),
                 def_transition(state_machine, reset_return_home_failure_counter),
-                def_transition(state_machine, return_home_finished),
             ],
         },
         {
@@ -167,31 +159,23 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.monitor_state,
             "prepare": def_transition(state_machine, acknowledge_mission),
             "conditions": [
-                def_transition(state_machine, prepare_state_machine_before_mission),
                 def_transition(state_machine, initialize_robot),
-            ],
-            "before": [
-                def_transition(state_machine, set_mission_to_in_progress),
-                def_transition(state_machine, trigger_start_mission_event),
             ],
         },
         {
             "trigger": "request_mission_start",
             "source": state_machine.await_next_mission_state,
             "dest": state_machine.await_next_mission_state,
-            "before": def_transition(state_machine, report_failed_mission_and_finalize),
         },
         {
             "trigger": "request_mission_start",
             "source": state_machine.home_state,
             "dest": state_machine.home_state,
-            "before": def_transition(state_machine, report_failed_mission_and_finalize),
         },
         {
             "trigger": "mission_failed_to_start",
             "source": [state_machine.monitor_state, state_machine.returning_home_state],
             "dest": state_machine.await_next_mission_state,
-            "before": def_transition(state_machine, report_failed_mission_and_finalize),
         },
         {
             "trigger": "mission_finished",

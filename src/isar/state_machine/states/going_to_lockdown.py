@@ -36,6 +36,7 @@ class GoingToLockdown(EventHandlerBase):
             if mission_status and mission_status not in [
                 MissionStatus.InProgress,
                 MissionStatus.NotStarted,
+                MissionStatus.Paused,
             ]:
                 if mission_status != MissionStatus.Successful:
                     return state_machine.lockdown_mission_failed  # type: ignore

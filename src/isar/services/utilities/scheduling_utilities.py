@@ -182,6 +182,12 @@ class SchedulingUtilities:
             If there is an unexpected error while sending the mission to the state machine
         """
         try:
+            self.logger.info(
+                "Requesting to start mission:\n"
+                f"  Mission ID: {mission.id}\n"
+                f"  Mission Name: {mission.name}\n"
+                f"  Number of Tasks: {len(mission.tasks)}"
+            )
             mission_start_response = self._send_command(
                 deepcopy(mission),
                 self.api_events.start_mission,
@@ -261,6 +267,14 @@ class SchedulingUtilities:
         """
         try:
             response = self._send_command(True, self.api_events.pause_mission)
+            if not response.success:
+                self.logger.warning(
+                    f"Mission failed to pause - {response.failure_reason}"
+                )
+                raise HTTPException(
+                    status_code=HTTPStatus.CONFLICT,
+                    detail=response.failure_reason,
+                )
             self.logger.info("OK - Mission successfully paused")
             return response
         except EventConflictError:
