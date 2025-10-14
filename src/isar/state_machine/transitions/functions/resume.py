@@ -32,8 +32,8 @@ def resume_mission(state_machine: "StateMachine") -> bool:
             state_machine.publish_mission_status()
             state_machine.publish_task_status(task=state_machine.current_task)
 
-            resume_mission_response: ControlMissionResponse = (
-                state_machine._make_control_mission_response()
+            resume_mission_response: ControlMissionResponse = ControlMissionResponse(
+                success=True
             )
             state_machine.events.api_requests.resume_mission.response.trigger_event(
                 resume_mission_response
