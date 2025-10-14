@@ -9,7 +9,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotException,
     RobotInitializeException,
 )
-from robot_interface.models.mission.status import MissionStatus, TaskStatus
+from robot_interface.models.mission.status import MissionStatus
 
 
 def acknowledge_mission(state_machine: "StateMachine") -> bool:
@@ -29,13 +29,6 @@ def prepare_state_machine_before_mission(state_machine: "StateMachine") -> bool:
 
     state_machine.current_mission.status = MissionStatus.InProgress
     state_machine.publish_mission_status()
-    state_machine.current_task = state_machine.task_selector.next_task()
-    state_machine.send_task_status()
-    if state_machine.current_task is None:
-        return False
-
-    state_machine.current_task.status = TaskStatus.InProgress
-    state_machine.publish_task_status(task=state_machine.current_task)
     return True
 
 

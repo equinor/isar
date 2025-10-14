@@ -10,10 +10,6 @@ from transitions.core import State
 
 from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
-from isar.mission_planner.task_selector_interface import (
-    TaskSelectorInterface,
-    TaskSelectorStop,
-)
 from isar.models.events import Events, SharedState
 from isar.models.status import IsarStatus
 from isar.services.service_connections.mqtt.mqtt_client import props_expiry
@@ -69,7 +65,6 @@ class StateMachine(object):
         shared_state: SharedState,
         robot: RobotInterface,
         mqtt_publisher: MqttClientInterface,
-        task_selector: TaskSelectorInterface,
         sleep_time: float = settings.FSM_SLEEP_TIME,
         stop_robot_attempts_limit: int = settings.STOP_ROBOT_ATTEMPTS_LIMIT,
         transitions_log_length: int = settings.STATE_TRANSITIONS_LOG_LENGTH,
@@ -98,7 +93,6 @@ class StateMachine(object):
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.mqtt_publisher: Optional[MqttClientInterface] = mqtt_publisher
-        self.task_selector: TaskSelectorInterface = task_selector
 
         self.signal_state_machine_to_stop: Event = Event()
 
@@ -198,20 +192,6 @@ class StateMachine(object):
     def terminate(self):
         self.logger.info("Stopping state machine")
         self.signal_state_machine_to_stop.set()
-
-    def iterate_current_task(self):
-        if self.current_task is None:
-            raise ValueError("No current task is set")
-
-        if self.current_task.is_finished():
-            try:
-                self.current_task = self.task_selector.next_task()
-                self.current_task.status = TaskStatus.InProgress
-                self.publish_task_status(task=self.current_task)
-            except TaskSelectorStop:
-                # Indicates that all tasks are finished
-                self.current_task = None
-            self.send_task_status()
 
     def battery_level_is_above_mission_start_threshold(self):
         if not self.shared_state.robot_battery_level.check():
