@@ -4,7 +4,7 @@ from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.status import MissionStatus, TaskStatus
+from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -20,12 +20,10 @@ class PausingReturnHome(EventHandlerBase):
         ) -> Optional[Callable]:
             error_message: Optional[ErrorMessage] = event.consume_event()
 
-            paused_mission_response: ControlMissionResponse = (
-                state_machine._make_control_mission_response()
-            )
-
             state_machine.events.api_requests.pause_mission.response.trigger_event(
-                paused_mission_response
+                ControlMissionResponse(
+                    success=False, failure_reason="Failed to pause return home mission"
+                )
             )
 
             state_machine.publish_mission_status()
@@ -41,14 +39,9 @@ class PausingReturnHome(EventHandlerBase):
                 return None
 
             state_machine.current_mission.status = MissionStatus.Paused
-            state_machine.current_task.status = TaskStatus.Paused
-
-            paused_mission_response: ControlMissionResponse = (
-                state_machine._make_control_mission_response()
-            )
 
             state_machine.events.api_requests.pause_mission.response.trigger_event(
-                paused_mission_response
+                ControlMissionResponse(success=True)
             )
 
             state_machine.publish_mission_status()

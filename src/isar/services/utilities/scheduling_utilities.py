@@ -23,7 +23,6 @@ from isar.models.events import (
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus
 
 T1 = TypeVar("T1")
 T2 = TypeVar("T2")
@@ -335,18 +334,13 @@ class SchedulingUtilities:
                 mission_id, self.api_events.stop_mission
             )
 
-            if stop_mission_response.mission_not_found:
-                error_message = f"Mission ID {stop_mission_response.mission_id} is not currently running"
-                self.logger.error(error_message)
-                raise HTTPException(
-                    status_code=HTTPStatus.NOT_FOUND, detail=error_message
+            if not stop_mission_response.success:
+                error_message = (
+                    f"Failed to stop mission: {stop_mission_response.failure_reason}"
                 )
-
-            if stop_mission_response.mission_status != MissionStatus.Cancelled.value:
-                error_message = f"Failed to stop mission, mission status is {stop_mission_response.mission_status}"
                 self.logger.error(error_message)
                 raise HTTPException(
-                    status_code=HTTPStatus.CONFLICT, detail=error_message
+                    status_code=HTTPStatus.SERVICE_UNAVAILABLE, detail=error_message
                 )
         except EventConflictError:
             error_message = "Previous stop mission request is still being processed"

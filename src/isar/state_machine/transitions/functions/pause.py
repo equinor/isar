@@ -12,18 +12,19 @@ def trigger_pause_mission_event(state_machine: "StateMachine") -> bool:
 
 
 def pause_mission_failed(state_machine: "StateMachine") -> bool:
-    paused_mission_response: ControlMissionResponse = (
-        state_machine._make_control_mission_response()
-    )
     state_machine.events.api_requests.pause_mission.response.trigger_event(
-        paused_mission_response
+        ControlMissionResponse(
+            success=False, failure_reason="Failed to pause mission in ISAR"
+        )
     )
     return True
 
 
-def stop_return_home_mission_failed(state_machine: "StateMachine") -> bool:
-    paused_mission_response: ControlMissionResponse = (
-        state_machine._make_control_mission_response()
+def pause_return_home_mission_failed(state_machine: "StateMachine") -> bool:
+    if state_machine.events.api_requests.start_mission.request.has_event():
+        return True
+    paused_mission_response: ControlMissionResponse = ControlMissionResponse(
+        success=False, failure_reason="ISAR failed to pause return home"
     )
     state_machine.events.api_requests.pause_mission.response.trigger_event(
         paused_mission_response

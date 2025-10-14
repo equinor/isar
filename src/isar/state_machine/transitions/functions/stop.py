@@ -4,7 +4,6 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 from isar.apis.models.models import ControlMissionResponse
-from robot_interface.models.mission.status import MissionStatus, TaskStatus
 
 
 def trigger_stop_mission_event(state_machine: "StateMachine") -> bool:
@@ -13,8 +12,8 @@ def trigger_stop_mission_event(state_machine: "StateMachine") -> bool:
 
 
 def stop_mission_failed(state_machine: "StateMachine") -> bool:
-    stopped_mission_response: ControlMissionResponse = (
-        state_machine._make_control_mission_response()
+    stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
+        success=False, failure_reason="ISAR failed to stop mission"
     )
     state_machine.events.api_requests.stop_mission.response.trigger_event(
         stopped_mission_response
@@ -22,39 +21,11 @@ def stop_mission_failed(state_machine: "StateMachine") -> bool:
     return True
 
 
-def stop_return_home_mission_cleanup(state_machine: "StateMachine") -> bool:
-    if state_machine.current_mission is None:
-        state_machine._queue_empty_response()
-        state_machine.reset_state_machine()
-        return True
-
-    if not state_machine.events.api_requests.start_mission.request.has_event():
-        state_machine.current_mission.status = MissionStatus.Cancelled
-
-        for task in state_machine.current_mission.tasks:
-            if task.status in [
-                TaskStatus.NotStarted,
-                TaskStatus.InProgress,
-                TaskStatus.Paused,
-            ]:
-                task.status = TaskStatus.Cancelled
-
-        stopped_mission_response: ControlMissionResponse = (
-            state_machine._make_control_mission_response()
-        )
-        state_machine.events.api_requests.stop_mission.response.trigger_event(
-            stopped_mission_response
-        )
-
-    state_machine._finalize()
-    return True
-
-
 def stop_return_home_mission_failed(state_machine: "StateMachine") -> bool:
     if state_machine.events.api_requests.start_mission.request.has_event():
         return True
-    stopped_mission_response: ControlMissionResponse = (
-        state_machine._make_control_mission_response()
+    stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
+        success=False, failure_reason="ISAR failed to stop return home"
     )
     state_machine.events.api_requests.stop_mission.response.trigger_event(
         stopped_mission_response

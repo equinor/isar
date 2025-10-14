@@ -17,7 +17,9 @@ class Stopping(EventHandlerBase):
 
         def _stop_mission_cleanup() -> None:
             if state_machine.current_mission is None:
-                state_machine._queue_empty_response()
+                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                    ControlMissionResponse(success=True)
+                )
                 state_machine.reset_state_machine()
                 return None
 
@@ -31,11 +33,8 @@ class Stopping(EventHandlerBase):
                 ]:
                     task.status = TaskStatus.Cancelled
 
-            stopped_mission_response: ControlMissionResponse = (
-                state_machine._make_control_mission_response()
-            )
             state_machine.events.api_requests.stop_mission.response.trigger_event(
-                stopped_mission_response
+                ControlMissionResponse(success=True)
             )
             state_machine.publish_task_status(task=state_machine.current_task)
             state_machine._finalize()
