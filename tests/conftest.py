@@ -101,7 +101,6 @@ def state_machine(container: ApplicationContainer, robot):
         shared_state=container.shared_state(),
         robot=robot,
         mqtt_publisher=container.mqtt_client(),
-        task_selector=container.task_selector(),
     )
 
 
@@ -114,7 +113,6 @@ def sync_state_machine(container: ApplicationContainer, robot, mocker: MockerFix
         shared_state=container.shared_state(),
         robot=robot,
         mqtt_publisher=container.mqtt_client(),
-        task_selector=container.task_selector(),
     )
 
 

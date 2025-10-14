@@ -10,8 +10,6 @@ from isar.apis.security.authentication import Authenticator
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 from isar.mission_planner.local_planner import LocalPlanner
-from isar.mission_planner.sequential_task_selector import SequentialTaskSelector
-from isar.mission_planner.task_selector_interface import TaskSelectorInterface
 from isar.models.events import Events, SharedState
 from isar.robot.robot import Robot
 from isar.services.utilities.robot_utilities import RobotUtilities
@@ -89,19 +87,12 @@ class ApplicationContainer(containers.DeclarativeContainer):
     storage_handlers = providers.List(*storage_handlers_temp)
 
     # State machine
-    task_selector = providers.Singleton(
-        SequentialTaskSelector
-        if settings.TASK_SELECTOR == "sequential"
-        else TaskSelectorInterface
-    )
-
     state_machine = providers.Singleton(
         StateMachine,
         events=events,
         shared_state=shared_state,
         robot=robot_interface,
         mqtt_publisher=mqtt_client,
-        task_selector=task_selector,
     )
 
     # Robot
@@ -126,7 +117,6 @@ def get_injector() -> ApplicationContainer:
         {
             "KEYVAULT_NAME": settings.KEYVAULT_NAME,
             "MQTT_ENABLED": settings.MQTT_ENABLED,
-            "TASK_SELECTOR": settings.TASK_SELECTOR,
         }
     )
 
