@@ -11,7 +11,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotActionException,
     RobotException,
 )
-from robot_interface.models.mission.status import MissionStatus, TaskStatus
+from robot_interface.models.mission.status import MissionStatus
 
 
 def resume_mission(state_machine: "StateMachine") -> bool:
@@ -25,12 +25,8 @@ def resume_mission(state_machine: "StateMachine") -> bool:
             state_machine.robot.resume()
             state_machine.current_mission.status = MissionStatus.InProgress
             state_machine.current_mission.error_message = None
-            state_machine.current_task.status = TaskStatus.InProgress
-
-            state_machine.mission_ongoing = True
 
             state_machine.publish_mission_status()
-            state_machine.publish_task_status(task=state_machine.current_task)
 
             resume_mission_response: ControlMissionResponse = ControlMissionResponse(
                 success=True

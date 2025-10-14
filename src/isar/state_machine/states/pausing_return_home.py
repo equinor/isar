@@ -27,7 +27,6 @@ class PausingReturnHome(EventHandlerBase):
             )
 
             state_machine.publish_mission_status()
-            state_machine.send_task_status()
 
             if error_message is None:
                 return None
@@ -45,7 +44,6 @@ class PausingReturnHome(EventHandlerBase):
             )
 
             state_machine.publish_mission_status()
-            state_machine.send_task_status()
 
             return state_machine.return_home_mission_paused  # type: ignore
 

@@ -33,7 +33,4 @@ def finish_mission(state_machine: "StateMachine") -> bool:
     else:
         state_machine.current_mission.status = MissionStatus.Successful
     state_machine._finalize()
-
-    state_machine.current_task = None
-    state_machine.send_task_status()
     return True

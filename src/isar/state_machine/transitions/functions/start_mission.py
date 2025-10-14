@@ -5,7 +5,6 @@ if TYPE_CHECKING:
 
 from isar.apis.models.models import MissionStartResponse
 from robot_interface.models.exceptions.robot_exceptions import (
-    ErrorMessage,
     RobotException,
     RobotInitializeException,
 )
@@ -36,9 +35,6 @@ def initialize_robot(state_machine: "StateMachine") -> bool:
     try:
         state_machine.robot.initialize()
     except (RobotInitializeException, RobotException) as e:
-        state_machine.current_task.error_message = ErrorMessage(
-            error_reason=e.error_reason, error_description=e.error_description
-        )
         state_machine.logger.error(
             f"Failed to initialize robot because: {e.error_description}"
         )
@@ -49,12 +45,6 @@ def initialize_robot(state_machine: "StateMachine") -> bool:
 
 def set_mission_to_in_progress(state_machine: "StateMachine") -> bool:
     state_machine.current_mission.status = MissionStatus.InProgress
-    state_machine.publish_task_status(task=state_machine.current_task)
-    state_machine.logger.info(
-        f"Successfully initiated "
-        f"{type(state_machine.current_task).__name__} "
-        f"task: {str(state_machine.current_task.id)[:8]}"
-    )
     return True
 
 

@@ -1,6 +1,6 @@
 from collections import deque
 from queue import Empty, Queue
-from typing import Generic, Optional, TypeVar
+from typing import Generic, Optional, Tuple, TypeVar
 
 from transitions import State
 
@@ -150,15 +150,15 @@ class RobotServiceEvents:
         self.mission_successfully_paused: Event[bool] = Event(
             "mission_successfully_paused"
         )
+        self.request_inspection_upload: Event[Tuple[TASKS, Mission]] = Event(
+            "request_inspection_upload"
+        )
 
 
 class SharedState:
     def __init__(self) -> None:
         self.state: Event[State] = Event("state")
         self.robot_status: Event[RobotStatus] = Event("robot_status")
-        self.state_machine_current_task: Event[TASKS] = Event(
-            "state_machine_current_task"
-        )
         self.robot_battery_level: Event[float] = Event("robot_battery_level")
 
 

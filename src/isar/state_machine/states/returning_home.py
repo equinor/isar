@@ -3,15 +3,10 @@ from typing import TYPE_CHECKING, Callable, List, Optional
 from isar.apis.models.models import LockdownResponse, MissionStartResponse
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
-from isar.state_machine.utils.common_event_handlers import (
-    mission_failed_event_handler,
-    mission_started_event_handler,
-    task_status_event_handler,
-    task_status_failed_event_handler,
-)
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
+from isar.state_machine.utils.common_event_handlers import mission_started_event_handler
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import TaskStatus
+from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -28,20 +23,6 @@ class ReturningHome(EventHandlerBase):
                 return None
 
             return state_machine.pause_return_home  # type: ignore
-
-        def _handle_task_completed(status: TaskStatus):
-            if status != TaskStatus.Successful:
-                state_machine.current_mission.error_message = ErrorMessage(
-                    error_reason=ErrorReason.RobotActionException,
-                    error_description="Return home failed.",
-                )
-                self.failed_return_home_attemps += 1
-                return state_machine.return_home_failed  # type: ignore
-
-            if not state_machine.battery_level_is_above_mission_start_threshold():
-                return state_machine.starting_recharging  # type: ignore
-            else:
-                return state_machine.returned_home  # type: ignore
 
         def _start_mission_event_handler(
             event: Event[Mission],
@@ -63,6 +44,26 @@ class ReturningHome(EventHandlerBase):
 
             return state_machine.stop_return_home  # type: ignore
 
+        def _mission_status_event_handler(
+            event: Event[MissionStatus],
+        ) -> Optional[Callable]:
+            mission_status: Optional[MissionStatus] = event.consume_event()
+
+            if mission_status and mission_status not in [
+                MissionStatus.InProgress,
+                MissionStatus.NotStarted,
+            ]:
+                if mission_status != MissionStatus.Successful:
+                    self.failed_return_home_attemps += 1
+                    return state_machine.return_home_failed  # type: ignore
+
+                self.failed_return_home_attemps = 0
+                if not state_machine.battery_level_is_above_mission_start_threshold():
+                    return state_machine.starting_recharging  # type: ignore
+                else:
+                    return state_machine.returned_home  # type: ignore
+            return None
+
         def _send_to_lockdown_event_handler(
             event: Event[bool],
         ) -> Optional[Callable]:
@@ -74,6 +75,18 @@ class ReturningHome(EventHandlerBase):
                 LockdownResponse(lockdown_started=True)
             )
             return state_machine.go_to_lockdown  # type: ignore
+
+        def _mission_failed_event_handler(
+            event: Event[Optional[ErrorMessage]],
+        ) -> Optional[Callable]:
+            mission_failed: Optional[ErrorMessage] = event.consume_event()
+            if mission_failed is not None:
+                state_machine.logger.warning(
+                    f"Failed to initiate return home because: "
+                    f"{mission_failed.error_description}"
+                )
+                return state_machine.return_home_failed  # type: ignore
+            return None
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -91,9 +104,7 @@ class ReturningHome(EventHandlerBase):
             EventHandlerMapping(
                 name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
-                handler=lambda event: mission_failed_event_handler(
-                    state_machine, event
-                ),
+                handler=_mission_failed_event_handler,
             ),
             EventHandlerMapping(
                 name="start_mission_event",
@@ -101,18 +112,9 @@ class ReturningHome(EventHandlerBase):
                 handler=_start_mission_event_handler,
             ),
             EventHandlerMapping(
-                name="task_status_failed_event",
-                event=events.robot_service_events.task_status_failed,
-                handler=lambda event: task_status_failed_event_handler(
-                    state_machine, _handle_task_completed, event
-                ),
-            ),
-            EventHandlerMapping(
-                name="task_status_event",
-                event=events.robot_service_events.task_status_updated,
-                handler=lambda event: task_status_event_handler(
-                    state_machine, _handle_task_completed, event
-                ),
+                name="mission_status_event",
+                event=events.robot_service_events.mission_status_updated,
+                handler=_mission_status_event_handler,
             ),
             EventHandlerMapping(
                 name="send_to_lockdown_event",

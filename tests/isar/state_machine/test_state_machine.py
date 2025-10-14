@@ -30,14 +30,13 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotException,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import RobotStatus, TaskStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus
 from robot_interface.models.mission.task import ReturnToHome, TakeImage, Task
 from tests.test_double.pose import DummyPose
 from tests.test_double.robot_interface import (
     StubRobot,
     StubRobotBlockedProtectiveStopToHomeTest,
     StubRobotOfflineToHomeTest,
-    StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus,
 )
 from tests.test_double.task import StubTask
 
@@ -88,7 +87,6 @@ def test_initial_unknown_status(state_machine) -> None:
 def test_reset_state_machine(state_machine) -> None:
     state_machine.reset_state_machine()
 
-    assert state_machine.current_task is None
     assert state_machine.current_mission is None
 
 
@@ -96,17 +94,14 @@ def test_state_machine_transitions_when_running_full_mission(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
+    mocker,
 ) -> None:
     state_machine_thread.state_machine.await_next_mission_state.timers[
         0
     ].timeout_in_seconds = 0.01
 
-    robot_service_thread.robot_service.robot = (
-        StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(
-            current_state=robot_service_thread.robot_service.shared_state.state,
-            initiate_mission_delay=1,
-        )
-    )
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
+
     state_machine_thread.start()
     robot_service_thread.start()
     time.sleep(1)
@@ -224,13 +219,10 @@ def test_return_home_starts_when_battery_is_low(
 def test_monitor_goes_to_return_home_when_battery_low(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
-
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
     sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
-    sync_state_machine.current_task = task_1
 
     monitor_state: EventHandlerBase = cast(
         EventHandlerBase, sync_state_machine.monitor_state
@@ -241,7 +233,7 @@ def test_monitor_goes_to_return_home_when_battery_low(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(10.0, timeout=1)
+    event_handler.event.trigger_event(10.0)
     transition = event_handler.handler(event_handler.event)
 
     assert transition is sync_state_machine.stop  # type: ignore
@@ -251,7 +243,6 @@ def test_monitor_goes_to_return_home_when_battery_low(
     assert mqtt_message is not None
     mqtt_payload_topic = mqtt_message[0]
     assert mqtt_payload_topic is settings.TOPIC_ISAR_MISSION_ABORTED
-    assert sync_state_machine.events.mqtt_queue.get()[0]
 
 
 def test_return_home_goes_to_recharging_when_battery_low(
@@ -259,21 +250,21 @@ def test_return_home_goes_to_recharging_when_battery_low(
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
 
-    sync_state_machine.mission_ongoing = True
-    sync_state_machine.current_task = TakeImage(
+    task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
+    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
 
     returning_home_state: EventHandlerBase = cast(
         EventHandlerBase, sync_state_machine.returning_home_state
     )
     event_handler: Optional[EventHandlerMapping] = (
-        returning_home_state.get_event_handler_by_name("task_status_event")
+        returning_home_state.get_event_handler_by_name("mission_status_event")
     )
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(TaskStatus.Successful)
+    event_handler.event.trigger_event(MissionStatus.Successful)
     transition = event_handler.handler(event_handler.event)
 
     assert transition is sync_state_machine.starting_recharging  # type: ignore
@@ -325,8 +316,6 @@ def test_state_machine_failed_dependency(
         0
     ].timeout_in_seconds = 0.01
 
-    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.Failed)
-
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
@@ -335,7 +324,7 @@ def test_state_machine_failed_dependency(
     )
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
-    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.Failed)
+    mocker.patch.object(StubRobot, "mission_status", return_value=MissionStatus.Failed)
 
     state_machine_thread.start()
     robot_service_thread.start()
@@ -459,7 +448,9 @@ def test_state_machine_with_successful_mission_stop(
     mocker,
 ) -> None:
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
-    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
+    mocker.patch.object(
+        StubRobot, "mission_status", return_value=MissionStatus.InProgress
+    )
 
     mocker.patch.object(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
@@ -468,7 +459,7 @@ def test_state_machine_with_successful_mission_stop(
     # Set the return home delay to a higher value than the test needs to run
     state_machine_thread.state_machine.await_next_mission_state.timers[
         0
-    ].timeout_in_seconds = 100
+    ].timeout_in_seconds = 15
 
     mission: Mission = Mission(
         name="Dummy misson", tasks=[StubTask.take_image() for _ in range(0, 20)]
@@ -506,7 +497,9 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
+    mocker.patch.object(
+        StubRobot, "mission_status", return_value=MissionStatus.InProgress
+    )
     mocker.patch.object(
         StubRobot, "stop", side_effect=_mock_robot_exception_with_message
     )
@@ -521,7 +514,7 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
     with pytest.raises(HTTPException) as exception_details:
         scheduling_utilities.stop_mission(str(uuid4()))
 
-    assert exception_details.value.status_code == HTTPStatus.NOT_FOUND.value
+    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
@@ -540,7 +533,9 @@ def test_state_machine_with_unsuccessful_mission_stop(
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
+    mocker.patch.object(
+        StubRobot, "mission_status", return_value=MissionStatus.InProgress
+    )
     mocker.patch.object(
         StubRobot, "stop", side_effect=_mock_robot_exception_with_message
     )
@@ -555,7 +550,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
     with pytest.raises(HTTPException) as exception_details:
         scheduling_utilities.stop_mission()
 
-    assert exception_details.value.status_code == HTTPStatus.CONFLICT.value
+    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
@@ -577,7 +572,7 @@ def test_api_with_unsuccessful_return_home_stop(
     with pytest.raises(HTTPException) as exception_details:
         scheduling_utilities.stop_mission()
 
-    assert exception_details.value.status_code == HTTPStatus.CONFLICT.value
+    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
 
 
 def test_state_machine_with_mission_start_during_return_home_without_queueing_stop_response(
@@ -586,10 +581,12 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
 ) -> None:
-    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Available)
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
+    mocker.patch.object(
+        StubRobot, "mission_status", return_value=MissionStatus.InProgress
+    )
 
     state_machine_thread.state_machine.sleep_time = 0
 
@@ -687,11 +684,9 @@ def test_mission_stopped_when_going_to_lockdown(
 def test_stopping_lockdown_transitions_to_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_task = task_1
     sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
@@ -726,12 +721,6 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
 def test_stopping_lockdown_failing(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    sync_state_machine.current_task = task_1
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
 
@@ -784,10 +773,6 @@ def test_return_home_transitions_to_going_to_lockdown(
 def test_going_to_lockdown_transitions_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
-    sync_state_machine.current_task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.going_to_lockdown_state.name  # type: ignore
 
@@ -795,12 +780,12 @@ def test_going_to_lockdown_transitions_to_lockdown(
         EventHandlerBase, sync_state_machine.going_to_lockdown_state
     )
     event_handler: Optional[EventHandlerMapping] = (
-        going_to_lockdown_state.get_event_handler_by_name("task_status_event")
+        going_to_lockdown_state.get_event_handler_by_name("mission_status_event")
     )
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(TaskStatus.Successful)
+    event_handler.event.trigger_event(MissionStatus.Successful)
     transition = event_handler.handler(event_handler.event)
 
     assert transition is sync_state_machine.reached_lockdown  # type: ignore
@@ -811,12 +796,6 @@ def test_going_to_lockdown_transitions_to_lockdown(
 def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    sync_state_machine.current_task = task_1
-    sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.going_to_lockdown_state.name  # type: ignore
 
@@ -824,12 +803,12 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
         EventHandlerBase, sync_state_machine.going_to_lockdown_state
     )
     event_handler: Optional[EventHandlerMapping] = (
-        going_to_lockdown_state.get_event_handler_by_name("task_status_event")
+        going_to_lockdown_state.get_event_handler_by_name("mission_status_event")
     )
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(TaskStatus.Failed)
+    event_handler.event.trigger_event(MissionStatus.Failed)
     transition = event_handler.handler(event_handler.event)
 
     assert transition is sync_state_machine.lockdown_mission_failed  # type: ignore
@@ -840,11 +819,9 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
 def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_task = task_1
     sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.going_to_lockdown_state.name  # type: ignore
@@ -971,38 +948,43 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
 
 
 def test_state_machine_with_return_home_failure_successful_retries(
-    container: ApplicationContainer,
-    mocker: MockerFixture,
-    state_machine_thread: StateMachineThreadMock,
-    robot_service_thread: RobotServiceThreadMock,
+    sync_state_machine: StateMachine,
 ) -> None:
-    state_machine_thread.state_machine.await_next_mission_state.timers[
-        0
-    ].timeout_in_seconds = 0.01
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    state_machine_thread.start()
-    mocker.patch.object(
-        StubRobot,
-        "robot_status",
-        side_effect=[RobotStatus.Available, RobotStatus.Home],
-    )
-    mocker.patch.object(
-        StubRobot, "task_status", side_effect=[TaskStatus.Failed, TaskStatus.Successful]
-    )
-    robot_service_thread.start()
-    time.sleep(1)
-    scheduling_utilities.return_home()
-    time.sleep(3)  # Allow enough time to run mission and return home
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
+    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
 
-    assert state_machine_thread.state_machine.transitions_list == deque(
-        [
-            States.UnknownStatus,
-            States.Home,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.Home,
-        ]
+    returning_home_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.returning_home_state
     )
+    event_handler: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("mission_status_event")
+    )
+
+    # We do not retry return home missions if the robot is not ready for another mission
+    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Available)
+    # This is expected when entering return_home state in the transition condition
+    sync_state_machine.events.robot_service_events.robot_status_cleared.trigger_event(
+        True
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(MissionStatus.Failed)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.return_home_failed  # type: ignore
+
+    transition()
+    assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
+    assert sync_state_machine.returning_home_state.failed_return_home_attemps == 1
+
+    event_handler.event.trigger_event(MissionStatus.Successful)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.returned_home  # type: ignore
+
+    transition()
+    assert sync_state_machine.state is sync_state_machine.home_state.name  # type: ignore
 
 
 def test_state_machine_offline_to_home(
@@ -1060,11 +1042,9 @@ def _mock_robot_exception_with_message() -> RobotException:
 def test_transition_from_monitor_to_pausing(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_task = task_1
     sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.state = sync_state_machine.monitor_state.name  # type: ignore
 
@@ -1089,11 +1069,9 @@ def test_transition_from_monitor_to_pausing(
 def test_transition_from_pausing_to_paused(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_task = task_1
     sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.state = sync_state_machine.pausing_state.name  # type: ignore
 
@@ -1118,11 +1096,9 @@ def test_transition_from_pausing_to_paused(
 def test_transition_from_pausing_to_monitor(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_task = task_1
     sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.state = sync_state_machine.pausing_state.name  # type: ignore
 
@@ -1147,11 +1123,9 @@ def test_transition_from_pausing_to_monitor(
 def test_transition_from_returning_home_to_pausing_return_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_task = task_1
     sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
 
@@ -1176,11 +1150,9 @@ def test_transition_from_returning_home_to_pausing_return_home(
 def test_transition_from_pausing_return_home_to_return_home_paused(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_task = task_1
     sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.state = sync_state_machine.pausing_return_home_state.name  # type: ignore
 
@@ -1205,11 +1177,9 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
 def test_transition_from_pausing_return_home_to_returning_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.mission_ongoing = True
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
-    sync_state_machine.current_task = task_1
     sync_state_machine.current_mission = Mission(name="Dummy misson", tasks=[task_1])
     sync_state_machine.state = sync_state_machine.pausing_return_home_state.name  # type: ignore
 

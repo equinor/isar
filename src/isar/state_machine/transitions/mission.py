@@ -6,6 +6,7 @@ from isar.state_machine.transitions.functions.fail_mission import (
 from isar.state_machine.transitions.functions.finish_mission import finish_mission
 from isar.state_machine.transitions.functions.pause import (
     pause_mission_failed,
+    pause_return_home_mission_failed,
     trigger_pause_mission_event,
 )
 from isar.state_machine.transitions.functions.resume import resume_mission
@@ -63,7 +64,7 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "return_home_mission_pausing_failed",
             "source": state_machine.pausing_return_home_state,
             "dest": state_machine.returning_home_state,
-            "before": def_transition(state_machine, stop_return_home_mission_failed),
+            "before": def_transition(state_machine, pause_return_home_mission_failed),
         },
         {
             "trigger": "return_home_mission_paused",

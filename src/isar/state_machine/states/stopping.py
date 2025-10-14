@@ -36,7 +36,6 @@ class Stopping(EventHandlerBase):
             state_machine.events.api_requests.stop_mission.response.trigger_event(
                 ControlMissionResponse(success=True)
             )
-            state_machine.publish_task_status(task=state_machine.current_task)
             state_machine._finalize()
             return None
 

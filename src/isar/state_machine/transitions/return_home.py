@@ -94,7 +94,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 def_transition(state_machine, should_retry_return_home),
             ],
             "before": [
-                def_transition(state_machine, report_failed_mission_and_finalize),
                 def_transition(state_machine, start_return_home_mission),
                 def_transition(state_machine, set_return_home_status),
                 def_transition(state_machine, initialize_robot),
@@ -157,7 +156,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 def_transition(
                     state_machine, report_failed_lockdown_and_intervention_needed
                 ),
-                def_transition(state_machine, report_failed_mission_and_finalize),
             ],
         },
         {

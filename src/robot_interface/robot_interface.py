@@ -5,7 +5,7 @@ from typing import Callable, List, Optional
 
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import RobotStatus, TaskStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig
 
@@ -51,8 +51,32 @@ class RobotInterface(metaclass=ABCMeta):
         RobotCommunicationTimeoutException or RobotCommunicationException
             If the robot package is unable to communicate with the robot API the fetching
             of task status will be attempted again until a certain number of retries
+        RobotTaskStatusException
+            If there was an error when retrieving the task status
         RobotException
             If the task status could not be retrieved.
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def mission_status(self, mission_id: str) -> MissionStatus:
+        """Gets the status of the mission with ID mission_id on robot.
+
+        Returns
+        -------
+        MissionStatus
+            Status of the execution of mission.
+
+        Raises
+        ------
+        RobotCommunicationTimeoutException or RobotCommunicationException
+            If the robot package is unable to communicate with the robot API the fetching
+            of mission status will be attempted again until a certain number of retries
+        RobotMissionStatusException
+            If there was an error when retrieving the mission status
+        RobotException
+            If the mission status could not be retrieved.
 
         """
         raise NotImplementedError
