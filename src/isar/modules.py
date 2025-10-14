@@ -97,7 +97,11 @@ class ApplicationContainer(containers.DeclarativeContainer):
 
     # Robot
     robot = providers.Singleton(
-        Robot, events=events, robot=robot_interface, shared_state=shared_state
+        Robot,
+        events=events,
+        robot=robot_interface,
+        shared_state=shared_state,
+        mqtt_publisher=mqtt_client,
     )
 
     # Uploader

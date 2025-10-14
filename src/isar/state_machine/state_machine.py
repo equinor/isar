@@ -3,12 +3,11 @@ import logging
 from collections import deque
 from datetime import datetime, timezone
 from threading import Event
-from typing import Deque, List, Optional, Tuple
+from typing import Deque, List, Optional
 
 from transitions import Machine
 from transitions.core import State
 
-from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.models.events import Events, SharedState
 from isar.models.status import IsarStatus
@@ -35,15 +34,8 @@ from isar.state_machine.states_enum import States
 from isar.state_machine.transitions.mission import get_mission_transitions
 from isar.state_machine.transitions.return_home import get_return_home_transitions
 from isar.state_machine.transitions.robot_status import get_robot_status_transitions
-from robot_interface.models.exceptions.robot_exceptions import (
-    ErrorMessage,
-    RobotException,
-    RobotRetrieveInspectionException,
-)
-from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import TaskStatus
-from robot_interface.models.mission.task import TASKS, InspectionTask, Task
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
@@ -51,7 +43,6 @@ from robot_interface.telemetry.payloads import (
     IsarStatusPayload,
     MissionAbortedPayload,
     MissionPayload,
-    TaskPayload,
 )
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
@@ -160,13 +151,8 @@ class StateMachine(object):
         self.sleep_time: float = sleep_time
 
         self.current_mission: Optional[Mission] = None
-        self.current_task: Optional[TASKS] = None
-
-        self.mission_ongoing: bool = False
 
         self.current_state: State = States(self.state)  # type: ignore
-
-        self.awaiting_task_status: bool = False
 
         self.transitions_log_length: int = transitions_log_length
         self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
@@ -212,33 +198,11 @@ class StateMachine(object):
 
     def reset_state_machine(self) -> None:
         self.logger.info("Resetting state machine")
-        self.current_task = None
-        self.send_task_status()
         self.current_mission = None
-        self.mission_ongoing = False
 
     def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
         self.current_mission = mission
-
-        self.task_selector.initialize(tasks=self.current_mission.tasks)
-
-    def send_task_status(self):
-        self.shared_state.state_machine_current_task.update(self.current_task)
-
-    def report_task_status(self, task: Task) -> None:
-        if task.status == TaskStatus.Failed:
-            self.logger.warning(
-                f"Task: {str(task.id)[:8]} was reported as failed by the robot"
-            )
-        elif task.status == TaskStatus.Successful:
-            self.logger.info(
-                f"{type(task).__name__} task: {str(task.id)[:8]} completed"
-            )
-        else:
-            self.logger.info(
-                f"Task: {str(task.id)[:8]} was reported as task.status by the robot"
-            )
 
     def publish_mission_aborted(self, reason: str, can_be_continued: bool) -> None:
         if not self.mqtt_publisher:
@@ -295,38 +259,6 @@ class StateMachine(object):
                 retain=True,
                 properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
             )
-
-    def publish_task_status(self, task: TASKS) -> None:
-        """Publishes the task status to the MQTT Broker"""
-        if not self.mqtt_publisher:
-            return
-
-        error_message: Optional[ErrorMessage] = None
-        if task:
-            if task.error_message:
-                error_message = task.error_message
-
-        payload: TaskPayload = TaskPayload(
-            isar_id=settings.ISAR_ID,
-            robot_name=settings.ROBOT_NAME,
-            mission_id=self.current_mission.id if self.current_mission else None,
-            task_id=task.id if task else None,
-            status=task.status if task else None,
-            task_type=task.type if task else None,
-            error_reason=error_message.error_reason if error_message else None,
-            error_description=(
-                error_message.error_description if error_message else None
-            ),
-            timestamp=datetime.now(timezone.utc),
-        )
-
-        self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_TASK + f"/{task.id}",
-            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
-            qos=1,
-            retain=True,
-            properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
-        )
 
     def publish_intervention_needed(self, error_message: str) -> None:
         """Publishes the intervention needed message to the MQTT Broker"""
@@ -405,78 +337,6 @@ class StateMachine(object):
         log_statement: str = "\n".join(log_statements)
 
         self.logger.info("Mission overview:\n%s", log_statement)
-
-    def _make_control_mission_response(self) -> ControlMissionResponse:
-        return ControlMissionResponse(
-            mission_id=self.current_mission.id if self.current_mission else None,
-            mission_status=(
-                self.current_mission.status if self.current_mission else None
-            ),
-            task_id=self.current_task.id if self.current_task else None,
-            task_status=self.current_task.status if self.current_task else None,
-        )
-
-    def _queue_empty_response(self) -> None:
-        self.events.api_requests.stop_mission.response.trigger_event(
-            ControlMissionResponse(
-                mission_id="None",
-                mission_status="None",
-                task_id="None",
-                task_status="None",
-            )
-        )
-
-    def should_upload_inspections(self) -> bool:
-        if settings.UPLOAD_INSPECTIONS_ASYNC:
-            return False
-
-        return (
-            self.current_task.is_finished()
-            and self.current_task.status == TaskStatus.Successful
-            and isinstance(self.current_task, InspectionTask)
-        )
-
-    def queue_inspections_for_upload(
-        self, mission: Mission, current_task: InspectionTask, logger: logging.Logger
-    ) -> None:
-        try:
-            inspection: Inspection = self.robot.get_inspection(task=current_task)
-            if current_task.inspection_id != inspection.id:
-                logger.warning(
-                    f"The inspection_id of task ({current_task.inspection_id}) "
-                    f"and result ({inspection.id}) is not matching. "
-                    f"This may lead to confusions when accessing the inspection later"
-                )
-
-        except (RobotRetrieveInspectionException, RobotException) as e:
-            error_message: ErrorMessage = ErrorMessage(
-                error_reason=e.error_reason, error_description=e.error_description
-            )
-            self.current_task.error_message = error_message
-            logger.error(
-                f"Failed to retrieve inspections because: {e.error_description}"
-            )
-            return
-
-        except Exception as e:
-            logger.error(
-                f"Failed to retrieve inspections because of unexpected error: {e}"
-            )
-            return
-
-        if not inspection:
-            logger.warning(
-                f"No inspection result data retrieved for task {str(current_task.id)[:8]}"
-            )
-
-        inspection.metadata.tag_id = current_task.tag_id
-
-        message: Tuple[Inspection, Mission] = (
-            inspection,
-            mission,
-        )
-        self.events.upload_queue.put(message)
-        logger.info(f"Inspection result: {str(inspection.id)[:8]} queued for upload")
 
 
 def main(state_machine: StateMachine):

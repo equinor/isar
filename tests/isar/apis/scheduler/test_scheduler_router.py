@@ -273,7 +273,7 @@ class TestStopMission:
                 {"mission_id": StopMissionDefinition(mission_id=str(uuid4()))}
             ),
         )
-        assert response.status_code == HTTPStatus.NOT_FOUND
+        assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
 
 
 class TestInfoRobotSettings:

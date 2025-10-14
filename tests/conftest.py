@@ -174,6 +174,7 @@ def robot_service_thread(container: ApplicationContainer):
         events=container.events(),
         robot=container.robot_interface(),
         shared_state=container.shared_state(),
+        mqtt_publisher=container.mqtt_client(),
     )
 
     robot_service_thread: RobotServiceThreadMock = RobotServiceThreadMock(
