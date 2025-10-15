@@ -49,10 +49,8 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "returned_home",
             "source": state_machine.returning_home_state,
             "dest": state_machine.home_state,
-            "conditions": [
-                def_transition(state_machine, clear_robot_status),
-            ],
             "before": [
+                def_transition(state_machine, clear_robot_status),
                 def_transition(state_machine, reset_return_home_failure_counter),
             ],
         },

@@ -126,7 +126,6 @@ class StateMachineEvents:
         self.start_mission: Event[Mission] = Event("start_mission")
         self.stop_mission: Event[bool] = Event("stop_mission")
         self.pause_mission: Event[bool] = Event("pause_mission")
-        self.clear_robot_status: Event[bool] = Event("clear_robot_status")
 
 
 class RobotServiceEvents:
@@ -137,7 +136,6 @@ class RobotServiceEvents:
         self.mission_started: Event[bool] = Event("mission_started")
         self.mission_failed: Event[ErrorMessage] = Event("mission_failed")
         self.robot_status_changed: Event[bool] = Event("robot_status_changed")
-        self.robot_status_cleared: Event[bool] = Event("robot_status_cleared")
         self.mission_failed_to_stop: Event[ErrorMessage] = Event(
             "mission_failed_to_stop"
         )

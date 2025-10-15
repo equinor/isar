@@ -59,9 +59,6 @@ class Settings(BaseSettings):
     # issues
     REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY: float = Field(default=10)
 
-    # Time allowed to clear the robot status before giving up
-    CLEAR_ROBOT_STATUS_TIMEOUT: int = Field(default=3)
-
     # Number of attempts for state transitions resume and pause if failed
     STATE_TRANSITION_NUM_RETIRES: int = Field(default=10)
 
