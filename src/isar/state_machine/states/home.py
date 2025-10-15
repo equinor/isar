@@ -31,13 +31,12 @@ class Home(EventHandlerBase):
             return state_machine.reached_lockdown  # type: ignore
 
         def _robot_status_event_handler(
-            state_machine: "StateMachine",
             status_changed_event: Event[bool],
-            status_event: Event[RobotStatus],
         ) -> Optional[Callable]:
-            if not status_changed_event.consume_event():
+            has_changed = status_changed_event.consume_event()
+            if not has_changed:
                 return None
-            robot_status: Optional[RobotStatus] = status_event.check()
+            robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
             if not (
                 robot_status == RobotStatus.Available
                 or robot_status == RobotStatus.Home
@@ -66,11 +65,7 @@ class Home(EventHandlerBase):
             EventHandlerMapping(
                 name="robot_status_event",
                 event=events.robot_service_events.robot_status_changed,
-                handler=lambda event: _robot_status_event_handler(
-                    state_machine=state_machine,
-                    status_changed_event=event,
-                    status_event=shared_state.robot_status,
-                ),
+                handler=_robot_status_event_handler,
             ),
             EventHandlerMapping(
                 name="send_to_lockdown_event",

@@ -162,3 +162,34 @@ class StubRobotOfflineToHomeTest(StubRobot):
         if not self.entered_offline:
             return RobotStatus.Offline
         return RobotStatus.Home
+
+
+class StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(StubRobot):
+    def __init__(
+        self,
+        current_state: Event,
+        initiate_mission_delay: float = 0.0,
+    ):
+        super().__init__()
+        self.current_state = current_state
+        self.initiate_mission_delay: float = initiate_mission_delay
+        self.return_home_mission_just_finished_successfully = False
+
+    def task_status(self, task_id: str) -> TaskStatus:
+        if self.mission._is_return_to_home_mission():
+            if self.task_status_return_value == TaskStatus.Successful:
+                self.return_home_mission_just_finished_successfully = True
+        return self.task_status_return_value
+
+    def robot_status(self) -> RobotStatus:
+        current_state = self.current_state.check()
+        if current_state is None:
+            raise RobotCommunicationException("Could not read state machine state")
+        if current_state == "home":
+            return RobotStatus.Home
+        elif current_state == "unknown_status":
+            return RobotStatus.Home
+        elif self.return_home_mission_just_finished_successfully:
+            return RobotStatus.Home
+
+        return RobotStatus.Busy
