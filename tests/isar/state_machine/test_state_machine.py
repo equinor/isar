@@ -37,6 +37,7 @@ from tests.test_double.robot_interface import (
     StubRobot,
     StubRobotBlockedProtectiveStopToHomeTest,
     StubRobotOfflineToHomeTest,
+    StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus,
 )
 from tests.test_double.task import StubTask
 
@@ -94,7 +95,7 @@ def test_state_machine_transitions_when_running_full_mission(
         0
     ].timeout_in_seconds = 0.01
 
-    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
+    # mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
 
     state_machine_thread.start()
     robot_service_thread.start()
@@ -102,6 +103,12 @@ def test_state_machine_transitions_when_running_full_mission(
     # Setting the poll interval to a lower value to ensure that the robot status is
     # updated during the mission. This value needs to be set after the robot service
     # thread has been started.
+    robot_service_thread.robot_service.robot = (
+        StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(
+            current_state=robot_service_thread.robot_service.shared_state.state,
+            initiate_mission_delay=1,
+        )
+    )
     robot_service_thread.robot_service.robot_status_thread.robot_status_poll_interval = (
         0.5
     )
@@ -1039,12 +1046,6 @@ def _mock_robot_exception_with_message() -> RobotException:
 def test_transition_from_monitor_to_pausing(
     sync_state_machine: StateMachine,
 ) -> None:
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    sync_state_machine.shared_state.mission_id.trigger_event(
-        Mission(name="Dummy misson", tasks=[task_1])
-    )
     sync_state_machine.state = sync_state_machine.monitor_state.name  # type: ignore
 
     monitor_state: EventHandlerBase = cast(
@@ -1068,12 +1069,6 @@ def test_transition_from_monitor_to_pausing(
 def test_transition_from_pausing_to_paused(
     sync_state_machine: StateMachine,
 ) -> None:
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    sync_state_machine.shared_state.mission_id.trigger_event(
-        Mission(name="Dummy misson", tasks=[task_1])
-    )
     sync_state_machine.state = sync_state_machine.pausing_state.name  # type: ignore
 
     pausing_state: EventHandlerBase = cast(
@@ -1097,12 +1092,6 @@ def test_transition_from_pausing_to_paused(
 def test_transition_from_pausing_to_monitor(
     sync_state_machine: StateMachine,
 ) -> None:
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    sync_state_machine.shared_state.mission_id.trigger_event(
-        Mission(name="Dummy misson", tasks=[task_1])
-    )
     sync_state_machine.state = sync_state_machine.pausing_state.name  # type: ignore
 
     pausing_state: EventHandlerBase = cast(
@@ -1129,12 +1118,6 @@ def test_transition_from_pausing_to_monitor(
 def test_transition_from_returning_home_to_pausing_return_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    sync_state_machine.shared_state.mission_id.trigger_event(
-        Mission(name="Dummy misson", tasks=[task_1])
-    )
     sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
 
     returning_home_state: EventHandlerBase = cast(
@@ -1158,12 +1141,6 @@ def test_transition_from_returning_home_to_pausing_return_home(
 def test_transition_from_pausing_return_home_to_return_home_paused(
     sync_state_machine: StateMachine,
 ) -> None:
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    sync_state_machine.shared_state.mission_id.trigger_event(
-        Mission(name="Dummy misson", tasks=[task_1])
-    )
     sync_state_machine.state = sync_state_machine.pausing_return_home_state.name  # type: ignore
 
     pausing_return_home_state: EventHandlerBase = cast(
@@ -1187,12 +1164,6 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
 def test_transition_from_pausing_return_home_to_returning_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    sync_state_machine.shared_state.mission_id.trigger_event(
-        Mission(name="Dummy misson", tasks=[task_1])
-    )
     sync_state_machine.state = sync_state_machine.pausing_return_home_state.name  # type: ignore
 
     pausing_return_home_state: EventHandlerBase = cast(
@@ -1214,3 +1185,45 @@ def test_transition_from_pausing_return_home_to_returning_home(
 
     transition()
     assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
+
+
+def test_transition_from_returning_home_to_home_robot_status_not_updated(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
+    sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
+    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
+
+    returning_home_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.returning_home_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("mission_status_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(MissionStatus.Successful)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.returned_home  # type: ignore
+
+    transition()
+    assert sync_state_machine.state is sync_state_machine.home_state.name  # type: ignore
+    assert (
+        not sync_state_machine.events.robot_service_events.robot_status_changed.check()
+    )
+
+    home_state: EventHandlerBase = cast(EventHandlerBase, sync_state_machine.home_state)
+    event_handler_robot_status: Optional[EventHandlerMapping] = (
+        home_state.get_event_handler_by_name("robot_status_event")
+    )
+
+    assert event_handler_robot_status is not None
+
+    # This status should not be used, if the event handler is working correctly
+    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Busy)
+
+    transition = event_handler_robot_status.handler(event_handler_robot_status.event)
+
+    assert transition is None

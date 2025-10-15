@@ -74,6 +74,34 @@ class Robot(object):
         self.start_mission_thread = None
         self.monitor_mission_thread = None
 
+    def _start_mission_done_handler(self) -> None:
+        if (
+            self.start_mission_thread is not None
+            and not self.start_mission_thread.is_alive()
+        ):
+            self.start_mission_thread.join()
+            mission = self.start_mission_thread.mission
+            self.start_mission_thread = None
+
+            if (
+                self.monitor_mission_thread is not None
+                and self.monitor_mission_thread.is_alive()
+            ):
+                self.logger.warning(
+                    "Attempted to start mission while monitoring an old mission."
+                )
+                self.monitor_mission_thread.join()
+
+            self.monitor_mission_thread = RobotMonitorMissionThread(
+                self.robot_service_events,
+                self.shared_state,
+                self.robot,
+                self.mqtt_publisher,
+                self.signal_thread_quitting,
+                mission,
+            )
+            self.monitor_mission_thread.start()
+
     def _start_mission_event_handler(self, event: Event[Mission]) -> None:
         start_mission = event.consume_event()
         if start_mission is not None:
@@ -85,14 +113,6 @@ class Robot(object):
                     "Attempted to start mission while another mission was starting."
                 )
                 self.start_mission_thread.join()
-            if (
-                self.monitor_mission_thread is not None
-                and self.monitor_mission_thread.is_alive()
-            ):
-                self.logger.warning(
-                    "Attempted to start mission while monitoring an old mission."
-                )
-                self.monitor_mission_thread.join()
 
             self.start_mission_thread = RobotStartMissionThread(
                 self.robot_service_events,
@@ -100,16 +120,7 @@ class Robot(object):
                 self.signal_thread_quitting,
                 start_mission,
             )
-            self.monitor_mission_thread = RobotMonitorMissionThread(
-                self.robot_service_events,
-                self.shared_state,
-                self.robot,
-                self.mqtt_publisher,
-                self.signal_thread_quitting,
-                start_mission,
-            )
             self.start_mission_thread.start()
-            self.monitor_mission_thread.start()
 
     def _stop_mission_request_handler(self, event: Event[bool]) -> None:
         if event.consume_event():
@@ -214,5 +225,7 @@ class Robot(object):
             self._upload_inspection_event_handler(
                 self.robot_service_events.request_inspection_upload
             )
+
+            self._start_mission_done_handler()
 
         self.logger.info("Exiting robot service main thread")

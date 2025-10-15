@@ -1,7 +1,5 @@
-import time
 from typing import TYPE_CHECKING
 
-from isar.config.settings import settings
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
@@ -24,8 +22,5 @@ def is_blocked_protective_stop(state_machine: "StateMachine") -> bool:
 
 
 def clear_robot_status(state_machine: "StateMachine") -> bool:
-    # TODO: just clear the robot_status_updated event here
-    # TODO: this will ensure that we will not get any event updates older than this
-    # TODO: in the robot status thread we can even avoid checking status while robot_status_updated is set
-    state_machine.events.robot_service_events.robot_status_changed.trigger_event(False)
+    state_machine.events.robot_service_events.robot_status_changed.clear_event()
     return True
