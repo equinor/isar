@@ -656,9 +656,8 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
 
 
 def test_mission_stopped_when_going_to_lockdown(
-    sync_state_machine: StateMachine, mocker: MockerFixture
+    sync_state_machine: StateMachine,
 ) -> None:
-    mocker.patch.object(StateMachine, "_finalize", return_value=None)
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.monitor_state.name  # type: ignore
 

@@ -18,7 +18,7 @@ class Stopping(EventHandlerBase):
             state_machine.events.api_requests.stop_mission.response.trigger_event(
                 ControlMissionResponse(success=True)
             )
-            state_machine._finalize()
+            state_machine.print_transitions()
             return None
 
         def _failed_stop_event_handler(

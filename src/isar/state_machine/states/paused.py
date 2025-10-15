@@ -25,7 +25,7 @@ class Paused(EventHandlerBase):
             state_machine.publish_mission_aborted(
                 "Robot battery too low to continue mission", True
             )
-            state_machine._finalize()
+            state_machine.print_transitions()
             state_machine.logger.warning(
                 "Cancelling current mission due to low battery"
             )
@@ -38,7 +38,7 @@ class Paused(EventHandlerBase):
             if not should_lockdown:
                 return None
 
-            state_machine._finalize()
+            state_machine.print_transitions()
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to lockdown"
             )
