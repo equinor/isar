@@ -24,13 +24,8 @@ def is_blocked_protective_stop(state_machine: "StateMachine") -> bool:
 
 
 def clear_robot_status(state_machine: "StateMachine") -> bool:
-    state_machine.events.state_machine_events.clear_robot_status.trigger_event(True)
-    start_time: float = time.time()
-    while time.time() - start_time < settings.CLEAR_ROBOT_STATUS_TIMEOUT:
-        if (
-            state_machine.events.robot_service_events.robot_status_cleared.consume_event()
-        ):
-            return True
-        time.sleep(settings.FSM_SLEEP_TIME)
-    state_machine.logger.error("Timed out waiting for robot status to be cleared")
-    return False
+    # TODO: just clear the robot_status_updated event here
+    # TODO: this will ensure that we will not get any event updates older than this
+    # TODO: in the robot status thread we can even avoid checking status while robot_status_updated is set
+    state_machine.events.robot_service_events.robot_status_changed.trigger_event(False)
+    return True

@@ -963,10 +963,6 @@ def test_state_machine_with_return_home_failure_successful_retries(
 
     # We do not retry return home missions if the robot is not ready for another mission
     sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Available)
-    # This is expected when entering return_home state in the transition condition
-    sync_state_machine.events.robot_service_events.robot_status_cleared.trigger_event(
-        True
-    )
 
     assert event_handler is not None
 
