@@ -25,7 +25,7 @@ def initialize_robot(state_machine: "StateMachine") -> bool:
             f"Failed to initialize robot because: {e.error_description}"
         )
         _initialization_failed(state_machine)
-        state_machine._finalize()
+        state_machine.print_transitions()
         return False
     return True
 
@@ -37,4 +37,4 @@ def _initialization_failed(state_machine: "StateMachine") -> None:
             mission_not_started_reason="Failed to initialize robot",
         )
     )
-    state_machine._finalize()
+    state_machine.print_transitions()

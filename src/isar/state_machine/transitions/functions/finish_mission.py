@@ -5,5 +5,5 @@ if TYPE_CHECKING:
 
 
 def finish_mission(state_machine: "StateMachine") -> bool:
-    state_machine._finalize()
+    state_machine.print_transitions()
     return True

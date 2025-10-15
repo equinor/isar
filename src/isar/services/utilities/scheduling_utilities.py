@@ -166,6 +166,17 @@ class SchedulingUtilities:
         self.logger.warning(error_message)
         raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
+    def log_mission_overview(self, mission: Mission) -> None:
+        """Log an overview of the tasks in a mission"""
+        log_statements: List[str] = []
+        for task in mission.tasks:
+            log_statements.append(
+                f"{type(task).__name__:<20} {str(task.id)[:8]:<32} -- {task.status}"
+            )
+        log_statement: str = "\n".join(log_statements)
+
+        self.logger.info("Started mission:\n%s", log_statement)
+
     def start_mission(
         self,
         mission: Mission,
@@ -218,6 +229,7 @@ class SchedulingUtilities:
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
+        self.log_mission_overview(mission)
         self.logger.info("OK - Mission started in ISAR")
 
     def return_home(

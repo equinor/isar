@@ -154,7 +154,7 @@ class StateMachine(object):
 
     #################################################################################
 
-    def _finalize(self) -> None:
+    def print_transitions(self) -> None:
         state_transitions: str = ", ".join(
             [
                 f"\n  {transition}" if (i + 1) % 10 == 0 else f"{transition}"
@@ -162,6 +162,7 @@ class StateMachine(object):
             ]
         )
         self.logger.info("State transitions:\n  %s", state_transitions)
+        self.transitions = []
 
     def begin(self):
         """Starts the state machine. Transitions into unknown status state."""
@@ -184,7 +185,7 @@ class StateMachine(object):
         """Updates the current state of the state machine."""
         self.current_state = States(self.state)  # type: ignore
         self.shared_state.state.update(self.current_state)
-        self._log_state_transition(self.current_state)
+        self.transitions_list.append(self.current_state)
         self.logger.info("State: %s", self.current_state)
         self.publish_status()
 
@@ -280,21 +281,6 @@ class StateMachine(object):
             return IsarStatus.GoingToLockdown
         else:
             return IsarStatus.Busy
-
-    def _log_state_transition(self, next_state) -> None:
-        """Logs all state transitions that are not self-transitions."""
-        self.transitions_list.append(next_state)
-
-    def log_mission_overview(self, mission: Mission) -> None:
-        """Log an overview of the tasks in a mission"""
-        log_statements: List[str] = []
-        for task in mission.tasks:
-            log_statements.append(
-                f"{type(task).__name__:<20} {str(task.id)[:8]:<32} -- {task.status}"
-            )
-        log_statement: str = "\n".join(log_statements)
-
-        self.logger.info("Mission overview:\n%s", log_statement)
 
 
 def main(state_machine: StateMachine):
