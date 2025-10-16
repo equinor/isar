@@ -47,6 +47,7 @@ class Robot(object):
         self.pause_mission_thread: Optional[RobotPauseMissionThread] = None
         self.upload_inspection_threads: List[RobotUploadInspectionThread] = []
         self.signal_thread_quitting: ThreadEvent = ThreadEvent()
+        self.signal_mission_stopped: ThreadEvent = ThreadEvent()
 
     def stop(self) -> None:
         self.signal_thread_quitting.set()
@@ -92,15 +93,43 @@ class Robot(object):
                 )
                 self.monitor_mission_thread.join()
 
+            self.signal_mission_stopped.clear()
             self.monitor_mission_thread = RobotMonitorMissionThread(
                 self.robot_service_events,
                 self.shared_state,
                 self.robot,
                 self.mqtt_publisher,
                 self.signal_thread_quitting,
+                self.signal_mission_stopped,
                 mission,
             )
             self.monitor_mission_thread.start()
+
+    def _stop_mission_done_handler(self) -> None:
+        if (
+            self.stop_mission_thread is not None
+            and not self.stop_mission_thread.is_alive()
+            and (
+                not self.monitor_mission_thread
+                or not self.monitor_mission_thread.is_alive()
+            )
+        ):
+            self.stop_mission_thread.join()
+            error_message = self.stop_mission_thread.error_message
+            self.stop_mission_thread = None
+
+            if self.monitor_mission_thread is not None:
+                self.monitor_mission_thread.join()
+                self.monitor_mission_thread = None
+
+            if error_message:
+                self.robot_service_events.mission_failed_to_stop.trigger_event(
+                    error_message
+                )
+            else:
+                self.robot_service_events.mission_successfully_stopped.trigger_event(
+                    True
+                )
 
     def _start_mission_event_handler(self, event: Event[Mission]) -> None:
         start_mission = event.consume_event()
@@ -146,9 +175,10 @@ class Robot(object):
                 )
                 return
             self.stop_mission_thread = RobotStopMissionThread(
-                self.robot_service_events, self.robot, self.signal_thread_quitting
+                self.robot, self.signal_thread_quitting
             )
             self.stop_mission_thread.start()
+            self.signal_mission_stopped.set()
 
     def _pause_mission_request_handler(self, event: Event[bool]) -> None:
         if event.consume_event():
@@ -227,5 +257,7 @@ class Robot(object):
             )
 
             self._start_mission_done_handler()
+
+            self._stop_mission_done_handler()
 
         self.logger.info("Exiting robot service main thread")

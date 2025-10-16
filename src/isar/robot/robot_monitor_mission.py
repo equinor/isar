@@ -59,12 +59,14 @@ class RobotMonitorMissionThread(Thread):
         robot: RobotInterface,
         mqtt_publisher: MqttClientInterface,
         signal_thread_quitting: Event,
+        signal_mission_stopped: Event,
         mission: Mission,
     ):
         self.logger = logging.getLogger("robot")
         self.robot_service_events: RobotServiceEvents = robot_service_events
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
+        self.signal_mission_stopped: Event = signal_mission_stopped
         self.mqtt_publisher = mqtt_publisher
         self.current_mission: Optional[Mission] = mission
         self.shared_state: SharedState = shared_state
@@ -81,7 +83,9 @@ class RobotMonitorMissionThread(Thread):
             request_status_failure_counter
             < settings.REQUEST_STATUS_FAILURE_COUNTER_LIMIT
         ):
-            if self.signal_thread_quitting.wait(0):
+            if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
+                0
+            ):
                 break
             if request_status_failure_counter > 0:
                 time.sleep(settings.REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY)
@@ -142,7 +146,9 @@ class RobotMonitorMissionThread(Thread):
             request_status_failure_counter
             < settings.REQUEST_STATUS_FAILURE_COUNTER_LIMIT
         ):
-            if self.signal_thread_quitting.wait(0):
+            if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
+                0
+            ):
                 break
             if request_status_failure_counter > 0:
                 time.sleep(settings.REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY)
@@ -305,16 +311,17 @@ class RobotMonitorMissionThread(Thread):
 
         last_mission_status: MissionStatus = MissionStatus.NotStarted
 
-        while not self.signal_thread_quitting.wait(0):
-
-            if self.signal_thread_quitting.wait(0):
-                break
+        while not self.signal_thread_quitting.wait(
+            0
+        ) or self.signal_mission_stopped.wait(0):
 
             if current_task:
                 try:
                     new_task_status = self._get_task_status(current_task.id)
                 except RobotTaskStatusException as e:
-                    self.logger.error("Failed to collect task status", e.error_description)
+                    self.logger.error(
+                        "Failed to collect task status", e.error_description
+                    )
                     break
                 except Exception:
                     break
@@ -335,6 +342,11 @@ class RobotMonitorMissionThread(Thread):
                         current_task.status = TaskStatus.InProgress
                         self._report_task_status(current_task)
                         self.publish_task_status(task=current_task)
+
+            if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
+                0
+            ):
+                break
 
             try:
                 new_mission_status = self._get_mission_status(self.current_mission.id)
@@ -361,6 +373,27 @@ class RobotMonitorMissionThread(Thread):
                     self.publish_mission_status()
                 break
 
+            if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
+                0
+            ):
+                break
+
             time.sleep(settings.FSM_SLEEP_TIME)
         self.shared_state.mission_id.trigger_event(None)
-        self.logger.info("Done monitoring current mission")
+
+        if not self.signal_mission_stopped.wait(0):
+            self.logger.info("Done monitoring current mission")
+            return
+
+        if current_task:
+            current_task.status = TaskStatus.Cancelled
+            self.publish_task_status(task=current_task)
+        if new_mission_status not in [
+            MissionStatus.Cancelled,
+            MissionStatus.PartiallySuccessful,
+            MissionStatus.Failed,
+            MissionStatus.Successful,
+        ]:
+            self.current_mission.status = MissionStatus.Cancelled
+            self.publish_mission_status()
+        self.logger.info("Stopped monitoring mission due to mission stop")
