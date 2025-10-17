@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.apis.models.models import LockdownResponse
+from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
 from isar.state_machine.utils.common_event_handlers import (
@@ -44,6 +45,15 @@ class Home(EventHandlerBase):
                 return state_machine.robot_status_changed  # type: ignore
             return None
 
+        def _robot_battery_level_updated_handler(
+            event: Event[float],
+        ) -> Optional[Callable]:
+            battery_level: float = event.check()
+            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
+                return None
+
+            return state_machine.starting_recharging  # type: ignore
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="start_mission_event",
@@ -71,6 +81,11 @@ class Home(EventHandlerBase):
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
+            ),
+            EventHandlerMapping(
+                name="robot_battery_update_event",
+                event=shared_state.robot_battery_level,
+                handler=_robot_battery_level_updated_handler,
             ),
         ]
         super().__init__(

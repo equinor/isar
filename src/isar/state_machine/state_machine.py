@@ -14,6 +14,7 @@ from isar.models.status import IsarStatus
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
+from isar.state_machine.states.going_to_recharging import GoingToRecharging
 from isar.state_machine.states.home import Home
 from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.lockdown import Lockdown
@@ -27,6 +28,7 @@ from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping import Stopping
 from isar.state_machine.states.stopping_go_to_lockdown import StoppingGoToLockdown
+from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRecharge
 from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
@@ -95,7 +97,9 @@ class StateMachine(object):
         self.stopping_return_home_state: State = StoppingReturnHome(self)
         self.pausing_return_home_state: State = PausingReturnHome(self)
         self.stopping_go_to_lockdown_state: State = StoppingGoToLockdown(self)
+        self.stopping_go_to_recharge_state: State = StoppingGoToRecharge(self)
         self.going_to_lockdown_state: State = GoingToLockdown(self)
+        self.going_to_recharging_state: State = GoingToRecharging(self)
 
         # States Waiting for mission
         self.await_next_mission_state: State = AwaitNextMission(self)
@@ -130,6 +134,8 @@ class StateMachine(object):
             self.stopping_go_to_lockdown_state,
             self.going_to_lockdown_state,
             self.lockdown_state,
+            self.going_to_recharging_state,
+            self.stopping_go_to_recharge_state,
         ]
 
         self.machine = Machine(
@@ -279,6 +285,8 @@ class StateMachine(object):
             return IsarStatus.Lockdown
         elif self.current_state == States.GoingToLockdown:
             return IsarStatus.GoingToLockdown
+        elif self.current_state == States.GoingToRecharging:
+            return IsarStatus.GoingToRecharging
         else:
             return IsarStatus.Busy
 
