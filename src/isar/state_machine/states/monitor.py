@@ -33,13 +33,10 @@ class Monitor(EventHandlerBase):
             if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
                 return None
 
-            state_machine.publish_mission_aborted(
-                "Robot battery too low to continue mission", True
-            )
             state_machine.logger.warning(
                 "Cancelling current mission due to low battery"
             )
-            return state_machine.stop  # type: ignore
+            return state_machine.stop_go_to_recharge  # type: ignore
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
