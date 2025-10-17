@@ -169,6 +169,7 @@ def test_state_machine_battery_too_low_to_start_mission(
         [
             States.UnknownStatus,
             States.Home,
+            States.Recharging,
         ]
     )
 
@@ -220,13 +221,7 @@ def test_return_home_starts_when_battery_is_low(
 def test_monitor_goes_to_return_home_when_battery_low(
     sync_state_machine: StateMachine,
 ) -> None:
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    sync_state_machine.shared_state.mission_id.trigger_event(
-        Mission(name="Dummy misson", tasks=[task_1])
-    )
-
+    sync_state_machine.state = sync_state_machine.monitor_state.name  # type: ignore
     monitor_state: EventHandlerBase = cast(
         EventHandlerBase, sync_state_machine.monitor_state
     )
@@ -239,7 +234,30 @@ def test_monitor_goes_to_return_home_when_battery_low(
     event_handler.event.trigger_event(10.0)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.stop  # type: ignore
+    assert transition is sync_state_machine.stop_go_to_recharge  # type: ignore
+
+    transition()
+    assert sync_state_machine.state is sync_state_machine.stopping_go_to_recharge_state.name  # type: ignore
+
+
+def test_stopping_to_recharge_goes_to_going_to_recharging(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
+    sync_state_machine.state = sync_state_machine.stopping_go_to_recharge_state.name  # type: ignore
+    stopping_go_to_recharge_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.stopping_go_to_recharge_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        stopping_go_to_recharge_state.get_event_handler_by_name("successful_stop_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.request_recharging_mission  # type: ignore
     assert not sync_state_machine.events.mqtt_queue.empty()
 
     mqtt_message = sync_state_machine.events.mqtt_queue.get(block=False)
@@ -247,24 +265,43 @@ def test_monitor_goes_to_return_home_when_battery_low(
     mqtt_payload_topic = mqtt_message[0]
     assert mqtt_payload_topic is settings.TOPIC_ISAR_MISSION_ABORTED
 
+    transition()
+    assert sync_state_machine.state is sync_state_machine.going_to_recharging_state.name  # type: ignore
 
-def test_return_home_goes_to_recharging_when_battery_low(
+
+def test_stopping_to_recharge_goes_to_monitor(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
-
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    sync_state_machine.shared_state.mission_id.trigger_event(
-        Mission(name="Dummy misson", tasks=[task_1])
-    )
-
-    returning_home_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.returning_home_state
+    sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
+    sync_state_machine.state = sync_state_machine.stopping_go_to_recharge_state.name  # type: ignore
+    stopping_go_to_recharge_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.stopping_go_to_recharge_state
     )
     event_handler: Optional[EventHandlerMapping] = (
-        returning_home_state.get_event_handler_by_name("mission_status_event")
+        stopping_go_to_recharge_state.get_event_handler_by_name("failed_stop_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.mission_stopping_failed  # type: ignore
+    assert sync_state_machine.events.mqtt_queue.empty()
+
+    transition()
+    assert sync_state_machine.state is sync_state_machine.monitor_state.name  # type: ignore
+
+
+def test_going_to_recharging_goes_to_recharge(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.state = sync_state_machine.going_to_recharging_state.name  # type: ignore
+    going_to_recharging_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.going_to_recharging_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        going_to_recharging_state.get_event_handler_by_name("mission_status_event")
     )
 
     assert event_handler is not None
@@ -273,6 +310,69 @@ def test_return_home_goes_to_recharging_when_battery_low(
     transition = event_handler.handler(event_handler.event)
 
     assert transition is sync_state_machine.starting_recharging  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.recharging_state.name  # type: ignore
+
+
+def test_going_to_recharging_goes_to_intervention_needed(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.state = sync_state_machine.going_to_recharging_state.name  # type: ignore
+    going_to_recharging_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.going_to_recharging_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        going_to_recharging_state.get_event_handler_by_name("mission_status_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(MissionStatus.Failed)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.return_home_failed  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore
+
+
+def test_return_home_goes_to_recharging_when_battery_low(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
+    returning_home_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.returning_home_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("robot_battery_update_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(10.0)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.go_to_recharging  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.going_to_recharging_state.name  # type: ignore
+
+
+def test_home_goes_to_recharging_when_battery_low(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.state = sync_state_machine.home_state.name  # type: ignore
+    home_state: EventHandlerBase = cast(EventHandlerBase, sync_state_machine.home_state)
+    event_handler: Optional[EventHandlerMapping] = home_state.get_event_handler_by_name(
+        "robot_battery_update_event"
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(10.0)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.starting_recharging  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.recharging_state.name  # type: ignore
 
 
 def test_recharging_goes_to_home_when_battery_high(
@@ -764,6 +864,29 @@ def test_return_home_transitions_to_going_to_lockdown(
     )
     event_handler: Optional[EventHandlerMapping] = (
         returning_home_state.get_event_handler_by_name("send_to_lockdown_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.go_to_lockdown  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.going_to_lockdown_state.name  # type: ignore
+
+
+def test_recharging_transitions_to_going_to_lockdown(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.state = sync_state_machine.going_to_recharging_state.name  # type: ignore
+
+    going_to_recharging_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.going_to_recharging_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        going_to_recharging_state.get_event_handler_by_name("send_to_lockdown_event")
     )
 
     assert event_handler is not None

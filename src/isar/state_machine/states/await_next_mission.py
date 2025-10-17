@@ -22,6 +22,7 @@ class AwaitNextMission(EventHandlerBase):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
+        shared_state = state_machine.shared_state
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
@@ -34,6 +35,15 @@ class AwaitNextMission(EventHandlerBase):
                 LockdownResponse(lockdown_started=True)
             )
             return state_machine.request_lockdown_mission  # type: ignore
+
+        def _robot_battery_level_updated_handler(
+            event: Event[float],
+        ) -> Optional[Callable]:
+            battery_level: float = event.check()
+            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
+                return None
+
+            return state_machine.request_recharging_mission  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -57,6 +67,11 @@ class AwaitNextMission(EventHandlerBase):
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
+            ),
+            EventHandlerMapping(
+                name="robot_battery_update_event",
+                event=shared_state.robot_battery_level,
+                handler=_robot_battery_level_updated_handler,
             ),
         ]
 

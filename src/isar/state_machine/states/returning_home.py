@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.apis.models.models import LockdownResponse, MissionStartResponse
+from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
 from isar.state_machine.utils.common_event_handlers import mission_started_event_handler
@@ -17,6 +18,7 @@ class ReturningHome(EventHandlerBase):
     def __init__(self, state_machine: "StateMachine"):
         self.failed_return_home_attemps: int = 0
         events = state_machine.events
+        shared_state = state_machine.shared_state
 
         def _pause_mission_event_handler(event: Event[bool]) -> Optional[Callable]:
             if not event.consume_event():
@@ -59,10 +61,7 @@ class ReturningHome(EventHandlerBase):
                     return state_machine.return_home_failed  # type: ignore
 
                 self.failed_return_home_attemps = 0
-                if not state_machine.battery_level_is_above_mission_start_threshold():
-                    return state_machine.starting_recharging  # type: ignore
-                else:
-                    return state_machine.returned_home  # type: ignore
+                return state_machine.returned_home  # type: ignore
             return None
 
         def _send_to_lockdown_event_handler(
@@ -88,6 +87,15 @@ class ReturningHome(EventHandlerBase):
                 )
                 return state_machine.return_home_failed  # type: ignore
             return None
+
+        def _robot_battery_level_updated_handler(
+            event: Event[float],
+        ) -> Optional[Callable]:
+            battery_level: float = event.check()
+            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
+                return None
+
+            return state_machine.go_to_recharging  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -116,6 +124,11 @@ class ReturningHome(EventHandlerBase):
                 name="mission_status_event",
                 event=events.robot_service_events.mission_status_updated,
                 handler=_mission_status_event_handler,
+            ),
+            EventHandlerMapping(
+                name="robot_battery_update_event",
+                event=shared_state.robot_battery_level,
+                handler=_robot_battery_level_updated_handler,
             ),
             EventHandlerMapping(
                 name="send_to_lockdown_event",

@@ -61,7 +61,7 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
         },
         {
             "trigger": "starting_recharging",
-            "source": state_machine.returning_home_state,
+            "source": state_machine.going_to_recharging_state,
             "dest": state_machine.recharging_state,
             "before": [
                 def_transition(state_machine, reset_return_home_failure_counter),
@@ -69,7 +69,7 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
         },
         {
             "trigger": "starting_recharging",
-            "source": state_machine.lockdown_state,
+            "source": [state_machine.lockdown_state, state_machine.home_state],
             "dest": state_machine.recharging_state,
         },
         {
@@ -86,7 +86,10 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
         },
         {
             "trigger": "return_home_failed",
-            "source": state_machine.returning_home_state,
+            "source": [
+                state_machine.returning_home_state,
+                state_machine.going_to_recharging_state,
+            ],
             "dest": state_machine.intervention_needed_state,
             "before": [
                 def_transition(
@@ -113,12 +116,34 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             ],
         },
         {
+            "trigger": "request_recharging_mission",
+            "source": [
+                state_machine.stopping_go_to_recharge_state,
+                state_machine.await_next_mission_state,
+            ],
+            "dest": state_machine.going_to_recharging_state,
+            "conditions": [
+                def_transition(state_machine, start_return_home_mission),
+                def_transition(state_machine, initialize_robot),
+            ],
+        },
+        {
             "trigger": "go_to_lockdown",
             "source": [
                 state_machine.returning_home_state,
                 state_machine.return_home_paused_state,
+                state_machine.going_to_recharging_state,
             ],
             "dest": state_machine.going_to_lockdown_state,
+        },
+        {
+            "trigger": "go_to_recharging",
+            "source": [
+                state_machine.returning_home_state,
+                state_machine.return_home_paused_state,
+                state_machine.home_state,
+            ],
+            "dest": state_machine.going_to_recharging_state,
         },
         {
             "trigger": "reached_lockdown",

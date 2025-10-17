@@ -20,6 +20,8 @@ class States(str, Enum):
     StoppingGoToLockdown = "stopping_go_to_lockdown"
     GoingToLockdown = "going_to_lockdown"
     Lockdown = "lockdown"
+    GoingToRecharging = "going_to_recharging"
+    StoppingGoToRecharge = "stopping_go_to_recharge"
 
     def __repr__(self):
         return self.value
