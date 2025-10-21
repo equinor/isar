@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, List
 
 from isar.state_machine.transitions.functions.robot_status import (
+    is_available,
     is_available_or_home,
     is_blocked_protective_stop,
     is_offline,
@@ -13,6 +14,14 @@ if TYPE_CHECKING:
 
 def get_robot_status_transitions(state_machine: "StateMachine") -> List[dict]:
     robot_status_transitions: List[dict] = [
+        {
+            "trigger": "robot_status_changed",
+            "source": [
+                state_machine.unknown_status_state,
+            ],
+            "dest": state_machine.await_next_mission_state,
+            "conditions": def_transition(state_machine, is_available),
+        },
         {
             "trigger": "robot_status_changed",
             "source": [
