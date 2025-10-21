@@ -128,7 +128,7 @@ def test_state_machine_transitions_when_running_full_mission(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
-            States.Home,
+            States.AwaitNextMission,
             States.Monitor,
             States.AwaitNextMission,
             States.ReturningHome,
@@ -341,7 +341,7 @@ def test_state_machine_failed_dependency(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
-            States.Home,
+            States.AwaitNextMission,
             States.Monitor,
             States.AwaitNextMission,
             States.ReturningHome,
@@ -523,7 +523,7 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
-            States.Home,
+            States.AwaitNextMission,
             States.Monitor,
         ]
     )
@@ -559,7 +559,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
-            States.Home,
+            States.AwaitNextMission,
             States.Monitor,
             States.Stopping,
             States.Monitor,
