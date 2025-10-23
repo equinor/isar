@@ -350,8 +350,14 @@ class RobotMonitorMissionThread(Thread):
 
             try:
                 new_mission_status = self._get_mission_status(self.current_mission.id)
-            except RobotMissionStatusException:
+            except RobotMissionStatusException as e:
                 self.logger.exception("Failed to collect mission status")
+                self.robot_service_events.mission_failed.trigger_event(
+                    ErrorMessage(
+                        error_reason=e.error_reason,
+                        error_description=e.error_description,
+                    )
+                )
                 break
             if new_mission_status != last_mission_status:
                 self.current_mission.status = new_mission_status
