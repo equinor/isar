@@ -324,6 +324,7 @@ class RobotMonitorMissionThread(Thread):
                     )
                     break
                 except Exception:
+                    self.logger.exception("Failed to collect task status")
                     break
 
                 if current_task.status != new_task_status:
