@@ -320,7 +320,8 @@ class RobotMonitorMissionThread(Thread):
                     new_task_status = self._get_task_status(current_task.id)
                 except RobotTaskStatusException as e:
                     self.logger.error(
-                        "Failed to collect task status", e.error_description
+                        "Failed to collect task status. Error description: %s",
+                        e.error_description,
                     )
                     break
                 except Exception:
