@@ -82,7 +82,13 @@ class Robot(object):
         ):
             self.start_mission_thread.join()
             mission = self.start_mission_thread.mission
+            error_message = self.start_mission_thread.error_message
             self.start_mission_thread = None
+
+            if error_message:
+                self.robot_service_events.mission_failed.trigger_event(error_message)
+            else:
+                self.robot_service_events.mission_started.trigger_event(True)
 
             if (
                 self.monitor_mission_thread is not None
@@ -162,7 +168,6 @@ class Robot(object):
                 self.start_mission_thread.join()
 
             self.start_mission_thread = RobotStartMissionThread(
-                self.robot_service_events,
                 self.robot,
                 self.signal_thread_quitting,
                 start_mission,
