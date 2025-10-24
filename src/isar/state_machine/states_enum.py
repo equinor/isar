@@ -22,6 +22,8 @@ class States(str, Enum):
     Lockdown = "lockdown"
     GoingToRecharging = "going_to_recharging"
     StoppingGoToRecharge = "stopping_go_to_recharge"
+    Maintenance = "maintenance"
+    StoppingDueToMaintenance = "stopping_due_to_maintenance"
 
     def __repr__(self):
         return self.value

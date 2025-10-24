@@ -36,7 +36,7 @@
       }
     },
     {
-      "type": "take_thermal_image",
+      "type": "take_image",
       "robot_pose": {
         "position": {
           "x": -2,

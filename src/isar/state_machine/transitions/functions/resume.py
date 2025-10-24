@@ -37,7 +37,6 @@ def resume_mission(state_machine: "StateMachine") -> bool:
             state_machine.logger.error(
                 f"Failed to resume mission: {e.error_reason}. {e.error_description}"
             )
-            # TODO: this will make it go to paused, instead of awaitnextmission
             return False
         except RobotActionException as e:
             state_machine.logger.warning(

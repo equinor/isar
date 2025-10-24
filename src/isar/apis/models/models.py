@@ -34,6 +34,11 @@ class LockdownResponse(BaseModel):
     failure_reason: Optional[str] = None
 
 
+class MaintenanceResponse(BaseModel):
+    is_maintenance_mode: bool
+    failure_reason: Optional[str] = None
+
+
 class RobotInfoResponse(BaseModel):
     robot_package: str
     isar_id: str

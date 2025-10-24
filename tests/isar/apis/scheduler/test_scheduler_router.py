@@ -152,7 +152,7 @@ class TestStartMission:
     @mock.patch("isar.config.settings.robot_settings.CAPABILITIES", [])
     @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
     def test_robot_not_capable(self, client: TestClient):
-        response = client.post(url=f"{self.schedule_start_mission_path}/1")
+        response = client.post(url=f"{self.schedule_start_mission_path}/2")
         assert response.status_code == HTTPStatus.BAD_REQUEST
         response_detail = response.json()["detail"]
         assert re.match(

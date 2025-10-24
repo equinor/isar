@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Callable, List, Optional
 
-from isar.apis.models.models import LockdownResponse
+from isar.apis.models.models import LockdownResponse, MaintenanceResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
@@ -30,6 +30,15 @@ class Home(EventHandlerBase):
                 LockdownResponse(lockdown_started=True)
             )
             return state_machine.reached_lockdown  # type: ignore
+
+        def _set_maintenance_mode_event_handler(event: Event[bool]):
+            should_set_maintenande_mode: bool = event.consume_event()
+            if should_set_maintenande_mode:
+                events.api_requests.set_maintenance_mode.response.trigger_event(
+                    MaintenanceResponse(is_maintenance_mode=True)
+                )
+                return state_machine.set_maintenance_mode  # type: ignore
+            return None
 
         def _robot_status_event_handler(
             status_changed_event: Event[bool],
@@ -89,6 +98,11 @@ class Home(EventHandlerBase):
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
+            ),
+            EventHandlerMapping(
+                name="set_maintenance_mode",
+                event=events.api_requests.set_maintenance_mode.request,
+                handler=_set_maintenance_mode_event_handler,
             ),
         ]
         super().__init__(

@@ -1,6 +1,6 @@
 {
   "id": "2",
-  "name": "Default mission Turtlebot",
+  "name": "Default mission with extra capabilities",
   "tasks": [
     {
       "type": "take_image",
