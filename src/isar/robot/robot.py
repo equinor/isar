@@ -70,6 +70,10 @@ class Robot(object):
             self.start_mission_thread.join()
         if self.stop_mission_thread is not None and self.stop_mission_thread.is_alive():
             self.stop_mission_thread.join()
+        for thread in self.upload_inspection_threads:
+            if thread.is_alive():
+                thread.join()
+        self.upload_inspection_threads = []
         self.robot_status_thread = None
         self.robot_battery_thread = None
         self.start_mission_thread = None
@@ -243,15 +247,20 @@ class Robot(object):
             self.upload_inspection_threads.append(upload_inspection_thread)
             upload_inspection_thread.start()
 
-        def _join_threads(thread: RobotUploadInspectionThread) -> bool:
-            if thread.is_done():
-                thread.join()
-                return True
-            return False
+    def _upload_inspection_done_handler(self):
+        if len(self.upload_inspection_threads) > 0:
 
-        self.upload_inspection_threads[:] = [
-            thread for thread in self.upload_inspection_threads if _join_threads(thread)
-        ]
+            def _join_threads(thread: RobotUploadInspectionThread) -> bool:
+                if not thread.is_alive():
+                    thread.join()
+                    return True
+                return False
+
+            self.upload_inspection_threads[:] = [
+                thread
+                for thread in self.upload_inspection_threads
+                if _join_threads(thread)
+            ]
 
     def run(self) -> None:
         self.robot_status_thread = RobotStatusThread(
@@ -284,5 +293,7 @@ class Robot(object):
             self._stop_mission_done_handler()
 
             self._pause_mission_done_handler()
+
+            self._upload_inspection_done_handler()
 
         self.logger.info("Exiting robot service main thread")

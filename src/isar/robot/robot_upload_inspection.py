@@ -27,14 +27,10 @@ class RobotUploadInspectionThread(Thread):
         self.task: TASKS = task
         self.upload_queue = upload_queue
         self.mission: Mission = mission
-        self._is_done = False
         Thread.__init__(self, name=f"Robot inspection upload thread - {task.id}")
 
     def stop(self) -> None:
         return
-
-    def is_done(self) -> bool:
-        return self._is_done
 
     def run(self):
         try:
@@ -77,4 +73,3 @@ class RobotUploadInspectionThread(Thread):
         self.logger.info(
             f"Inspection result: {str(inspection.id)[:8]} queued for upload"
         )
-        self._is_done = True
