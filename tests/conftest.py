@@ -2,15 +2,19 @@ import shutil
 from pathlib import Path
 
 import pytest
+import sqlalchemy
 from dependency_injector.wiring import providers
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
+from testcontainers.mysql import MySqlContainer
 
 from isar.apis.security.authentication import Authenticator
+from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerBase
 from isar.models.events import Events
 from isar.modules import ApplicationContainer
 from isar.robot.robot import Robot
+from isar.services.service_connections.persistent_memory import Base
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.monitor import Monitor
 from isar.storage.uploader import Uploader
@@ -193,3 +197,15 @@ def run_before_and_after_tests() -> None:  # type: ignore
     if results_folder.exists():
         shutil.rmtree(results_folder)
     print("Cleanup finished")
+
+
+@pytest.fixture()
+def setup_db_connection_string():
+    with MySqlContainer("mysql:9.4.0", dialect="pymysql") as mysql:
+        connection_url = mysql.get_connection_url()
+        settings.PERSISTENT_STORAGE_CONNECTION_STRING = connection_url
+
+        engine = sqlalchemy.create_engine(connection_url)
+        Base.metadata.create_all(engine)
+
+        yield

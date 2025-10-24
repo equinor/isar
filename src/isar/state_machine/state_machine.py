@@ -11,6 +11,11 @@ from transitions.core import State
 from isar.config.settings import settings
 from isar.models.events import Events, SharedState
 from isar.models.status import IsarStatus
+from isar.services.service_connections.persistent_memory import (
+    NoSuchRobotException,
+    create_persistent_robot_state,
+    read_persistent_robot_state_is_maintenance_mode,
+)
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
@@ -18,6 +23,7 @@ from isar.state_machine.states.going_to_recharging import GoingToRecharging
 from isar.state_machine.states.home import Home
 from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.lockdown import Lockdown
+from isar.state_machine.states.maintenance import Maintenance
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.offline import Offline
 from isar.state_machine.states.paused import Paused
@@ -27,6 +33,9 @@ from isar.state_machine.states.recharging import Recharging
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping import Stopping
+from isar.state_machine.states.stopping_due_to_maintenance import (
+    StoppingDueToMaintenance,
+)
 from isar.state_machine.states.stopping_go_to_lockdown import StoppingGoToLockdown
 from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRecharge
 from isar.state_machine.states.stopping_return_home import StoppingReturnHome
@@ -100,6 +109,7 @@ class StateMachine(object):
         self.stopping_go_to_recharge_state: State = StoppingGoToRecharge(self)
         self.going_to_lockdown_state: State = GoingToLockdown(self)
         self.going_to_recharging_state: State = GoingToRecharging(self)
+        self.stopping_due_to_maintenance_state: State = StoppingDueToMaintenance(self)
 
         # States Waiting for mission
         self.await_next_mission_state: State = AwaitNextMission(self)
@@ -111,6 +121,7 @@ class StateMachine(object):
         self.blocked_protective_stopping_state: State = BlockedProtectiveStop(self)
         self.recharging_state: State = Recharging(self)
         self.lockdown_state: State = Lockdown(self)
+        self.maintenance_state: State = Maintenance(self)
 
         # Error and special status states
         self.unknown_status_state: State = UnknownStatus(self)
@@ -136,10 +147,24 @@ class StateMachine(object):
             self.lockdown_state,
             self.going_to_recharging_state,
             self.stopping_go_to_recharge_state,
+            self.stopping_due_to_maintenance_state,
+            self.maintenance_state,
         ]
 
+        if settings.PERSISTENT_STORAGE_CONNECTION_STRING == "":
+            initial_state = "unknown_status"
+            self.logger.warning(
+                "PERSISTENT_STORAGE_CONNECTION_STRING is not set. Restarting ISAR will forget the state, including maintenance mode. "
+            )
+        else:
+            is_maintenance_mode = read_or_create_persistent_maintenance_mode()
+            if is_maintenance_mode:
+                initial_state = "maintenance"
+            else:
+                initial_state = "unknown_status"
+
         self.machine = Machine(
-            self, states=self.states, initial="unknown_status", queued=True
+            self, states=self.states, initial=initial_state, queued=True
         )
 
         self.transitions: List[dict] = []
@@ -289,6 +314,21 @@ class StateMachine(object):
             return IsarStatus.GoingToRecharging
         else:
             return IsarStatus.Busy
+
+
+def read_or_create_persistent_maintenance_mode():
+    try:
+        is_maintenance_mode = read_persistent_robot_state_is_maintenance_mode(
+            settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID
+        )
+    except NoSuchRobotException:
+        create_persistent_robot_state(
+            settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID
+        )
+        is_maintenance_mode = read_persistent_robot_state_is_maintenance_mode(
+            settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID
+        )
+    return is_maintenance_mode
 
 
 def main(state_machine: StateMachine):

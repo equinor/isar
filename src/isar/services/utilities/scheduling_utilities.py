@@ -6,7 +6,7 @@ from typing import List, TypeVar
 from fastapi import HTTPException
 from requests import HTTPError
 
-from isar.apis.models.models import ControlMissionResponse
+from isar.apis.models.models import ControlMissionResponse, MaintenanceResponse
 from isar.config.settings import settings
 from isar.mission_planner.mission_planner_interface import (
     MissionNotFoundError,
@@ -20,6 +20,9 @@ from isar.models.events import (
     Events,
     EventTimeoutError,
     SharedState,
+)
+from isar.services.service_connections.persistent_memory import (
+    change_persistent_robot_state_is_maintenance_mode,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
@@ -479,6 +482,70 @@ class SchedulingUtilities:
         except Exception as e:
             error_message = f"Unexpected error while releasing robot from lockdown: {e}"
             self.logger.error(error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
+
+    def set_maintenance_mode(self) -> None:
+        """Set maintenance mode"""
+        try:
+            if settings.PERSISTENT_STORAGE_CONNECTION_STRING != "":
+                change_persistent_robot_state_is_maintenance_mode(
+                    settings.PERSISTENT_STORAGE_CONNECTION_STRING,
+                    settings.ISAR_ID,
+                    value=True,
+                )
+            response: MaintenanceResponse = self._send_command(
+                True, self.api_events.set_maintenance_mode
+            )
+            if response.failure_reason is not None:
+                self.logger.warning(response.failure_reason)
+                raise HTTPException(
+                    status_code=HTTPStatus.CONFLICT,
+                    detail="Conflict attempting to set maintenance mode",
+                )
+            self.logger.info("OK - Robot sent into maintenance mode")
+        except EventConflictError:
+            error_message = "Previous maintenance request is still being processed"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except EventTimeoutError:
+            error_message = (
+                "Cannot send robot to maintenance as it is already in maintenance"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except Exception as e:
+            error_message = "Unexpected error while setting maintenance mode"
+            self.logger.error(f"{error_message} Exception: {e}")
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
+            )
+
+    def release_maintenance_mode(self) -> None:
+        """Release robot from maintenance mode"""
+        try:
+            self._send_command(True, self.api_events.release_from_maintenance_mode)
+            if settings.PERSISTENT_STORAGE_CONNECTION_STRING != "":
+                change_persistent_robot_state_is_maintenance_mode(
+                    settings.PERSISTENT_STORAGE_CONNECTION_STRING,
+                    settings.ISAR_ID,
+                    value=False,
+                )
+            self.logger.info("OK - Robot released form maintenance mode")
+        except EventConflictError:
+            error_message = "Previous release robot from maintenance request is still being processed"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except EventTimeoutError:
+            error_message = (
+                "Cannot release robot from maintenance as it is not in maintenance"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except Exception as e:
+            error_message = "Unexpected error while releasing maintenance mode"
+            self.logger.error(f"{error_message} Exception: {e}")
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )

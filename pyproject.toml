@@ -52,6 +52,7 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi",
     "azure-monitor-opentelemetry",
     "azure-monitor-opentelemetry-exporter>=1.0.0b38",
+    "pymysql",
 ]
 dynamic = ["version"]
 
@@ -73,6 +74,7 @@ dev = [
     "pytest",
     "requests-mock",
     "ruff",
+    "testcontainers[mysql]",
 ]
 
 [tool.setuptools_scm]

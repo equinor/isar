@@ -88,6 +88,15 @@ class ReturningHome(EventHandlerBase):
                 return state_machine.return_home_failed  # type: ignore
             return None
 
+        def _set_maintenance_mode_event_handler(event: Event[bool]):
+            should_set_maintenande_mode: bool = event.consume_event()
+            if should_set_maintenande_mode:
+                state_machine.logger.warning(
+                    "Cancelling current mission due to robot going to maintenance mode"
+                )
+                return state_machine.stop_due_to_maintenance  # type: ignore
+            return None
+
         def _robot_battery_level_updated_handler(
             event: Event[float],
         ) -> Optional[Callable]:
@@ -137,6 +146,11 @@ class ReturningHome(EventHandlerBase):
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
+            ),
+            EventHandlerMapping(
+                name="set_maintenance_mode",
+                event=events.api_requests.set_maintenance_mode.request,
+                handler=_set_maintenance_mode_event_handler,
             ),
         ]
         super().__init__(

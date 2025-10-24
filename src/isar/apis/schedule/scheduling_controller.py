@@ -288,6 +288,40 @@ class SchedulingController:
         self.scheduling_utilities.release_robot_lockdown()
         self.logger.info("Released lockdown successfully")
 
+    @tracer.start_as_current_span("maintenance_mode")
+    def set_maintenance_mode(self) -> None:
+        self.logger.info("Received request to set maintenance_mode")
+
+        state: States = self.scheduling_utilities.get_state()
+
+        if state == States.Maintenance or state == States.StoppingDueToMaintenance:
+            message = f"Conflict - Call to set maintenance mode was given while in state {state}."
+            self.logger.info(message)
+            raise HTTPException(
+                status_code=HTTPStatus.CONFLICT,
+                detail=message,
+            )
+
+        self.scheduling_utilities.set_maintenance_mode()
+        self.logger.info("Maintenance mode has been set")
+
+    @tracer.start_as_current_span("release_maintenance_mode")
+    def release_maintenance_mode(self) -> None:
+        self.logger.info("Received request to release robot from maintenance mode")
+
+        state: States = self.scheduling_utilities.get_state()
+
+        if state != States.Maintenance:
+            message = f"Conflict - Release maintenance mode command received in invalid state - State: {state}"
+            self.logger.info(message)
+            raise HTTPException(
+                status_code=HTTPStatus.CONFLICT,
+                detail=message,
+            )
+
+        self.scheduling_utilities.release_maintenance_mode()
+        self.logger.info("Maintenance mode successfully released")
+
     def _api_response(self, mission: Mission) -> StartMissionResponse:
         return StartMissionResponse(
             id=mission.id,

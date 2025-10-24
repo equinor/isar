@@ -64,6 +64,13 @@ def get_robot_status_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.unknown_status_state,
         },
         {
+            "trigger": "robot_status_changed",
+            "source": [
+                state_machine.maintenance_state,
+            ],
+            "dest": state_machine.maintenance_state,
+        },
+        {
             "trigger": "robot_went_offline",
             "source": [state_machine.recharging_state],
             "dest": state_machine.offline_state,
