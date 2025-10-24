@@ -4,7 +4,6 @@ from threading import Event, Thread
 from typing import Optional
 
 from isar.config.settings import settings
-from isar.models.events import RobotServiceEvents
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotActionException,
@@ -17,14 +16,13 @@ from robot_interface.robot_interface import RobotInterface
 class RobotPauseMissionThread(Thread):
     def __init__(
         self,
-        robot_service_events: RobotServiceEvents,
         robot: RobotInterface,
         signal_thread_quitting: Event,
     ):
         self.logger = logging.getLogger("robot")
-        self.robot_service_events: RobotServiceEvents = robot_service_events
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
+        self.error_message: Optional[ErrorMessage] = None
         Thread.__init__(self, name="Robot pause mission thread")
 
     def run(self) -> None:
@@ -52,7 +50,6 @@ class RobotPauseMissionThread(Thread):
                 )
                 time.sleep(settings.FSM_SLEEP_TIME)
                 continue
-            self.robot_service_events.mission_successfully_paused.trigger_event(True)
             return
 
         error_description = (
@@ -62,8 +59,7 @@ class RobotPauseMissionThread(Thread):
             "been attempted"
         )
 
-        error_message = ErrorMessage(
+        self.error_message = ErrorMessage(
             error_reason=error.error_reason,
             error_description=error_description,
         )
-        self.robot_service_events.mission_failed_to_pause.trigger_event(error_message)

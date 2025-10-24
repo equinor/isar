@@ -131,6 +131,24 @@ class Robot(object):
                     True
                 )
 
+    def _pause_mission_done_handler(self) -> None:
+        if (
+            self.pause_mission_thread is not None
+            and not self.pause_mission_thread.is_alive()
+        ):
+            self.pause_mission_thread.join()
+            error_message = self.pause_mission_thread.error_message
+            self.pause_mission_thread = None
+
+            if error_message:
+                self.robot_service_events.mission_failed_to_pause.trigger_event(
+                    error_message
+                )
+            else:
+                self.robot_service_events.mission_successfully_paused.trigger_event(
+                    True
+                )
+
     def _start_mission_event_handler(self, event: Event[Mission]) -> None:
         start_mission = event.consume_event()
         if start_mission is not None:
@@ -204,7 +222,7 @@ class Robot(object):
                 )
                 return
             self.pause_mission_thread = RobotPauseMissionThread(
-                self.robot_service_events, self.robot, self.signal_thread_quitting
+                self.robot, self.signal_thread_quitting
             )
             self.pause_mission_thread.start()
 
@@ -259,5 +277,7 @@ class Robot(object):
             self._start_mission_done_handler()
 
             self._stop_mission_done_handler()
+
+            self._pause_mission_done_handler()
 
         self.logger.info("Exiting robot service main thread")
