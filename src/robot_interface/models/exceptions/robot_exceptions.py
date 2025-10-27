@@ -24,6 +24,7 @@ class ErrorReason(str, Enum):
     RobotTransformException = "robot_transform_exception"
     RobotUnknownErrorException = "robot_unknown_error_exception"
     RobotDisconnectedException = "robot_disconnected_exception"
+    RobotNoMissionRunningException = "robot_no_mission_running_exception"
 
 
 @dataclass
@@ -47,6 +48,18 @@ class RobotCommunicationException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
             error_reason=ErrorReason.RobotCommunicationException,
+            error_description=error_description,
+        )
+
+    pass
+
+
+# An exception which should be thrown by the robot package if it is unable to
+# complete a request as there is no ongoing mission.
+class RobotNoMissionRunningException(RobotException):
+    def __init__(self, error_description: str) -> None:
+        super().__init__(
+            error_reason=ErrorReason.RobotNoMissionRunningException,
             error_description=error_description,
         )
 
