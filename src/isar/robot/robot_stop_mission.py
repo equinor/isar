@@ -9,6 +9,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     ErrorReason,
     RobotActionException,
     RobotException,
+    RobotNoMissionRunningException,
 )
 from robot_interface.robot_interface import RobotInterface
 
@@ -38,6 +39,8 @@ class RobotStopMissionThread(Thread):
 
             try:
                 self.robot.stop()
+            except RobotNoMissionRunningException:
+                return
             except (RobotActionException, RobotException) as e:
                 self.logger.warning(
                     f"\nFailed to stop robot because: {e.error_description}"
