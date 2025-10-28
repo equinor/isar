@@ -10,6 +10,7 @@ from isar.config.settings import settings
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotActionException,
     RobotException,
+    RobotNoMissionRunningException,
 )
 
 
@@ -32,6 +33,12 @@ def resume_mission(state_machine: "StateMachine") -> bool:
 
             state_machine.logger.info("Mission resumed successfully.")
             return True
+        except RobotNoMissionRunningException as e:
+            state_machine.logger.error(
+                f"Failed to resume mission: {e.error_reason}. {e.error_description}"
+            )
+            # TODO: this will make it go to paused, instead of awaitnextmission
+            return False
         except RobotActionException as e:
             state_machine.logger.warning(
                 f"Attempt {attempt + 1} to resume mission failed: {e.error_description}"
