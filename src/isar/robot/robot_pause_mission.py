@@ -9,6 +9,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotActionException,
     RobotException,
+    RobotNoMissionRunningException,
 )
 from robot_interface.robot_interface import RobotInterface
 
@@ -35,6 +36,11 @@ class RobotPauseMissionThread(Thread):
 
             try:
                 self.robot.pause()
+            except RobotNoMissionRunningException as e:
+                error = ErrorMessage(
+                    error_reason=e.error_reason, error_description=e.error_description
+                )
+                break
             except (RobotActionException, RobotException) as e:
                 self.logger.warning(
                     f"\nFailed to pause robot because: {e.error_description}"
