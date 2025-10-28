@@ -30,7 +30,10 @@ class Monitor(EventHandlerBase):
             event: Event[float],
         ) -> Optional[Callable]:
             battery_level: float = event.check()
-            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
+            if (
+                battery_level is None
+                or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
+            ):
                 return None
 
             state_machine.logger.warning(
