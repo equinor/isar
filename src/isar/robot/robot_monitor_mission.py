@@ -86,6 +86,10 @@ class RobotMonitorMissionThread(Thread):
             if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
                 0
             ):
+                failed_task_error = ErrorMessage(
+                    error_reason=ErrorReason.RobotTaskStatusException,
+                    error_description="Task status collection was cancelled by monitor thread exit",
+                )
                 break
             if request_status_failure_counter > 0:
                 time.sleep(settings.REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY)
