@@ -36,6 +36,7 @@ from tests.test_double.pose import DummyPose
 from tests.test_double.robot_interface import (
     StubRobot,
     StubRobotBlockedProtectiveStopToHomeTest,
+    StubRobotMissionStatusRaisesException,
     StubRobotOfflineToHomeTest,
     StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus,
 )
@@ -1350,3 +1351,60 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
     transition = event_handler_robot_status.handler(event_handler_robot_status.event)
 
     assert transition is None
+
+
+def test_robot_mission_status_exception_handling(
+    container: ApplicationContainer,
+    state_machine_thread: StateMachineThreadMock,
+    robot_service_thread: RobotServiceThreadMock,
+) -> None:
+
+    mission = Mission(
+        name="Dummy mission",
+        tasks=[StubTask.take_image()],
+    )
+    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
+
+    robot_service_thread.robot_service.robot = StubRobotMissionStatusRaisesException()
+
+    state_machine_thread.start()
+    robot_service_thread.start()
+
+    scheduling_utilities.start_mission(mission=mission)
+
+    time.sleep(1)
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [
+            States.UnknownStatus,
+            States.AwaitNextMission,
+            States.Monitor,
+            States.AwaitNextMission,
+        ]
+    )
+
+
+def test_return_home_mission_failed_transitions_to_intervention_needed(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
+
+    returning_home_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.returning_home_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("mission_failed_event")
+    )
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(
+        ErrorMessage(
+            error_description="Test return to home mission failed",
+            error_reason=ErrorReason.RobotMissionStatusException,
+        )
+    )
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.return_home_failed  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore

@@ -9,6 +9,7 @@ from alitra import Frame, Orientation, Pose, Position
 from isar.models.events import Event
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotCommunicationException,
+    RobotMissionStatusException,
 )
 from robot_interface.models.inspection.inspection import (
     Image,
@@ -109,6 +110,14 @@ def stub_image_metadata() -> ImageMetadata:
         target_position=Position(0, 0, 0, Frame("robot")),
         file_type="jpg",
     )
+
+
+class StubRobotMissionStatusRaisesException(StubRobot):
+    def __init__(self):
+        super().__init__()
+
+    def mission_status(self, mission_id: str) -> MissionStatus:
+        raise RobotMissionStatusException("Testing Mission Status Exception")
 
 
 class StubRobotOfflineToAvailableTest(StubRobot):
