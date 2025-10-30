@@ -65,6 +65,7 @@ def stop_mission_event_handler(
         return None
 
     if state_machine.shared_state.mission_id.check() == mission_id or mission_id == "":
+        state_machine.events.state_machine_events.stop_mission.trigger_event(True)
         return state_machine.stop  # type: ignore
     else:
         state_machine.events.api_requests.stop_mission.response.trigger_event(

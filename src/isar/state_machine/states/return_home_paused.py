@@ -46,6 +46,7 @@ class ReturnHomePaused(EventHandlerBase):
                     response
                 )
                 return None
+            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
             return state_machine.stop_return_home  # type: ignore
 
         def _send_to_lockdown_event_handler(
