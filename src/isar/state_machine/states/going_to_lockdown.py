@@ -54,6 +54,7 @@ class GoingToLockdown(EventHandlerBase):
                 if mission_status != MissionStatus.Successful:
                     return state_machine.lockdown_mission_failed  # type: ignore
 
+                state_machine.print_transitions()
                 return state_machine.reached_lockdown  # type: ignore
             return None
 

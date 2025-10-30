@@ -27,6 +27,7 @@ class ReturnHomePaused(EventHandlerBase):
             ):
                 return None
 
+            state_machine.events.state_machine_events.resume_mission.trigger_event(True)
             return state_machine.resume  # type: ignore
 
         def _start_mission_event_handler(
@@ -59,6 +60,7 @@ class ReturnHomePaused(EventHandlerBase):
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
+            state_machine.events.state_machine_events.resume_mission.trigger_event(True)
             return state_machine.resume_lockdown  # type: ignore
 
         def _set_maintenance_mode_event_handler(event: Event[bool]):
