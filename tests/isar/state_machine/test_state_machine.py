@@ -9,6 +9,7 @@ import pytest
 from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
+from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import (
     EventHandlerBase,
@@ -625,7 +626,7 @@ def test_state_machine_with_successful_mission_stop(
     scheduling_utilities.start_mission(mission=mission)
     time.sleep(0.5)
     scheduling_utilities.stop_mission(mission_id=mission.id)
-    time.sleep(1)  # Allow enough time to stop the mission
+    time.sleep(3)  # Allow enough time to stop the mission
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
@@ -717,6 +718,24 @@ def test_state_machine_with_unsuccessful_mission_stop(
             States.Monitor,
         ]
     )
+
+
+def test_api_with_unsuccessful_return_home_stop(
+    container: ApplicationContainer,
+    sync_state_machine: StateMachine,
+) -> None:
+    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
+    stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
+        success=False, failure_reason="ISAR failed to stop mission"
+    )
+    sync_state_machine.events.api_requests.stop_mission.response.trigger_event(
+        stopped_mission_response
+    )
+
+    with pytest.raises(HTTPException) as exception_details:
+        scheduling_utilities.stop_mission()
+
+    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
 
 
 def test_state_machine_with_mission_start_during_return_home_without_queueing_stop_response(

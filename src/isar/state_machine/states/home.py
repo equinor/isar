@@ -47,12 +47,15 @@ class Home(EventHandlerBase):
             if not has_changed:
                 return None
             robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
-            if not (
-                robot_status == RobotStatus.Available
-                or robot_status == RobotStatus.Home
-            ):
-                return state_machine.robot_status_changed  # type: ignore
-            return None
+            if robot_status == RobotStatus.Home:
+                return None
+            elif robot_status == RobotStatus.Available:
+                return state_machine.robot_status_available  # type: ignore
+            elif robot_status == RobotStatus.Offline:
+                return state_machine.robot_status_offline  # type: ignore
+            elif robot_status == RobotStatus.BlockedProtectiveStop:
+                return state_machine.robot_status_blocked_protective_stop  # type: ignore
+            return state_machine.robot_status_unknown  # type: ignore
 
         def _robot_battery_level_updated_handler(
             event: Event[float],

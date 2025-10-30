@@ -203,7 +203,7 @@ class StateMachine(object):
 
     def begin(self):
         """Starts the state machine. Transitions into unknown status state."""
-        self.robot_status_changed()  # type: ignore
+        self.initial_transition()  # type: ignore
 
     def terminate(self):
         self.logger.info("Stopping state machine")

@@ -1,13 +1,5 @@
 from typing import TYPE_CHECKING, List
 
-from isar.state_machine.transitions.functions.robot_status import (
-    is_available,
-    is_available_or_home,
-    is_blocked_protective_stop,
-    is_offline,
-)
-from isar.state_machine.transitions.functions.utils import def_transition
-
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
@@ -15,15 +7,33 @@ if TYPE_CHECKING:
 def get_robot_status_transitions(state_machine: "StateMachine") -> List[dict]:
     robot_status_transitions: List[dict] = [
         {
-            "trigger": "robot_status_changed",
+            "trigger": "initial_transition",
+            "source": state_machine.unknown_status_state,
+            "dest": state_machine.unknown_status_state,
+        },
+        {
+            "trigger": "initial_transition",
+            "source": state_machine.maintenance_state,
+            "dest": state_machine.maintenance_state,
+        },
+        {
+            "trigger": "robot_status_available",
             "source": [
                 state_machine.unknown_status_state,
             ],
             "dest": state_machine.await_next_mission_state,
-            "conditions": def_transition(state_machine, is_available),
         },
         {
-            "trigger": "robot_status_changed",
+            "trigger": "robot_status_available",
+            "source": [
+                state_machine.offline_state,
+                state_machine.blocked_protective_stopping_state,
+                state_machine.home_state,
+            ],
+            "dest": state_machine.intervention_needed_state,
+        },
+        {
+            "trigger": "robot_status_home",
             "source": [
                 state_machine.home_state,
                 state_machine.blocked_protective_stopping_state,
@@ -31,30 +41,28 @@ def get_robot_status_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.unknown_status_state,
             ],
             "dest": state_machine.home_state,
-            "conditions": def_transition(state_machine, is_available_or_home),
         },
         {
-            "trigger": "robot_status_changed",
+            "trigger": "robot_status_blocked_protective_stop",
             "source": [
                 state_machine.home_state,
                 state_machine.offline_state,
                 state_machine.unknown_status_state,
             ],
             "dest": state_machine.blocked_protective_stopping_state,
-            "conditions": def_transition(state_machine, is_blocked_protective_stop),
         },
         {
-            "trigger": "robot_status_changed",
+            "trigger": "robot_status_offline",
             "source": [
                 state_machine.home_state,
                 state_machine.blocked_protective_stopping_state,
                 state_machine.unknown_status_state,
+                state_machine.recharging_state,
             ],
             "dest": state_machine.offline_state,
-            "conditions": def_transition(state_machine, is_offline),
         },
         {
-            "trigger": "robot_status_changed",
+            "trigger": "robot_status_unknown",
             "source": [
                 state_machine.home_state,
                 state_machine.blocked_protective_stopping_state,
@@ -62,18 +70,6 @@ def get_robot_status_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.unknown_status_state,
             ],
             "dest": state_machine.unknown_status_state,
-        },
-        {
-            "trigger": "robot_status_changed",
-            "source": [
-                state_machine.maintenance_state,
-            ],
-            "dest": state_machine.maintenance_state,
-        },
-        {
-            "trigger": "robot_went_offline",
-            "source": [state_machine.recharging_state],
-            "dest": state_machine.offline_state,
         },
         {
             "trigger": "robot_recharged",
