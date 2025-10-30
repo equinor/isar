@@ -68,6 +68,7 @@ def stop_mission_event_handler(
         state_machine.events.api_requests.stop_mission.response.trigger_event(
             ControlMissionResponse(success=True)
         )
+        state_machine.events.state_machine_events.stop_mission.trigger_event(True)
         return state_machine.stop  # type: ignore
     else:
         state_machine.events.api_requests.stop_mission.response.trigger_event(
