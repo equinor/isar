@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
-from isar.state_machine.utils.common_event_handlers import robot_status_event_handler
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
@@ -25,16 +24,28 @@ class BlockedProtectiveStop(EventHandlerBase):
                 return state_machine.set_maintenance_mode  # type: ignore
             return None
 
+        def _robot_status_event_handler(
+            status_changed_event: Event[bool],
+        ) -> Optional[Callable]:
+            has_changed = status_changed_event.consume_event()
+            if not has_changed:
+                return None
+            robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
+            if robot_status == RobotStatus.BlockedProtectiveStop:
+                return None
+            elif robot_status == RobotStatus.Home:
+                return state_machine.robot_status_home  # type: ignore
+            elif robot_status == RobotStatus.Available:
+                return state_machine.robot_status_available  # type: ignore
+            elif robot_status == RobotStatus.Offline:
+                return state_machine.robot_status_offline  # type: ignore
+            return state_machine.robot_status_unknown  # type: ignore
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="robot_status_event",
                 event=events.robot_service_events.robot_status_changed,
-                handler=lambda event: robot_status_event_handler(
-                    state_machine=state_machine,
-                    expected_status=RobotStatus.BlockedProtectiveStop,
-                    status_changed_event=event,
-                    status_event=shared_state.robot_status,
-                ),
+                handler=_robot_status_event_handler,
             ),
             EventHandlerMapping(
                 name="set_maintenance_mode",

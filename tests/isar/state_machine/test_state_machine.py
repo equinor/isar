@@ -9,6 +9,7 @@ import pytest
 from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
+from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import (
     EventHandlerBase,
@@ -21,7 +22,6 @@ from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states_enum import States
-from isar.state_machine.transitions.functions.stop import stop_mission_failed
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.exceptions.robot_exceptions import (
@@ -673,7 +673,12 @@ def test_api_with_unsuccessful_return_home_stop(
     sync_state_machine: StateMachine,
 ) -> None:
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    stop_mission_failed(sync_state_machine)
+    stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
+        success=False, failure_reason="ISAR failed to stop mission"
+    )
+    sync_state_machine.events.api_requests.stop_mission.response.trigger_event(
+        stopped_mission_response
+    )
 
     with pytest.raises(HTTPException) as exception_details:
         scheduling_utilities.stop_mission()

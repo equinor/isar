@@ -69,6 +69,9 @@ class ReturnHomePaused(EventHandlerBase):
                 state_machine.logger.warning(
                     "Cancelling current mission due to robot going to maintenance mode"
                 )
+                state_machine.events.state_machine_events.stop_mission.trigger_event(
+                    True
+                )
                 return state_machine.stop_due_to_maintenance  # type: ignore
             return None
 
