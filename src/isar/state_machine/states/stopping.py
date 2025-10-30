@@ -21,6 +21,12 @@ class Stopping(EventHandlerBase):
             if error_message is None:
                 return None
 
+            stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
+                success=False, failure_reason="ISAR failed to stop mission"
+            )
+            state_machine.events.api_requests.stop_mission.response.trigger_event(
+                stopped_mission_response
+            )
             return state_machine.mission_stopping_failed  # type: ignore
 
         def _successful_stop_event_handler(event: Event[bool]) -> Optional[Callable]:

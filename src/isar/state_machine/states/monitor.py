@@ -69,6 +69,7 @@ class Monitor(EventHandlerBase):
                     state_machine.logger.info(
                         f"Mission completed with status {mission_status}"
                     )
+                    state_machine.print_transitions()
                     return state_machine.mission_finished  # type: ignore
             return None
 
