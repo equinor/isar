@@ -89,6 +89,15 @@ ISAR_ROBOT_PACKAGE = isar_turtlebot
 ISAR_DEFAULT_MAP = turtleworld
 ```
 
+### Run with make
+Common commands for the project are in [Makefile](./Makefile).
+This requires the CLI program `make`.
+
+Usage:
+```bash
+make <command-in-makefile> # for example: make run
+```
+
 ### Run ISAR server
 
 To run ISAR:
