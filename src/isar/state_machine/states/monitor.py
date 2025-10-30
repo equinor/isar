@@ -24,6 +24,7 @@ class Monitor(EventHandlerBase):
             if not event.consume_event():
                 return None
 
+            state_machine.events.state_machine_events.pause_mission.trigger_event(True)
             return state_machine.pause  # type: ignore
 
         def _robot_battery_level_updated_handler(
@@ -39,6 +40,7 @@ class Monitor(EventHandlerBase):
             state_machine.logger.warning(
                 "Cancelling current mission due to low battery"
             )
+            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
             return state_machine.stop_go_to_recharge  # type: ignore
 
         def _send_to_lockdown_event_handler(
@@ -51,6 +53,7 @@ class Monitor(EventHandlerBase):
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to lockdown"
             )
+            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
             return state_machine.stop_go_to_lockdown  # type: ignore
 
         def _mission_status_event_handler(

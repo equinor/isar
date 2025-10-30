@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, List
 
 from isar.state_machine.transitions.functions.finish_mission import finish_mission
-from isar.state_machine.transitions.functions.pause import trigger_pause_mission_event
 from isar.state_machine.transitions.functions.resume import trigger_resume_mission_event
 from isar.state_machine.transitions.functions.return_home import (
     reset_return_home_failure_counter,
@@ -24,7 +23,6 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "pause",
             "source": state_machine.monitor_state,
             "dest": state_machine.pausing_state,
-            "conditions": def_transition(state_machine, trigger_pause_mission_event),
         },
         {
             "trigger": "mission_paused",
@@ -41,7 +39,6 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "source": state_machine.returning_home_state,
             "dest": state_machine.pausing_return_home_state,
             "before": [
-                def_transition(state_machine, trigger_pause_mission_event),
                 def_transition(state_machine, reset_return_home_failure_counter),
             ],
         },
@@ -101,7 +98,6 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.paused_state,
             ],
             "dest": state_machine.stopping_state,
-            "before": def_transition(state_machine, trigger_stop_mission_event),
         },
         {
             "trigger": "stop_go_to_lockdown",
@@ -110,13 +106,11 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.paused_state,
             ],
             "dest": state_machine.stopping_go_to_lockdown_state,
-            "before": def_transition(state_machine, trigger_stop_mission_event),
         },
         {
             "trigger": "stop_go_to_recharge",
             "source": state_machine.monitor_state,
             "dest": state_machine.stopping_go_to_recharge_state,
-            "before": def_transition(state_machine, trigger_stop_mission_event),
         },
         {
             "trigger": "stop_due_to_maintenance",
@@ -140,10 +134,7 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.return_home_paused_state,
             ],
             "dest": state_machine.stopping_return_home_state,
-            "before": [
-                def_transition(state_machine, trigger_stop_mission_event),
-                def_transition(state_machine, reset_return_home_failure_counter),
-            ],
+            "before": def_transition(state_machine, reset_return_home_failure_counter),
         },
         {
             "trigger": "mission_stopped",
