@@ -46,6 +46,15 @@ class Paused(EventHandlerBase):
                 "Cancelling current mission due to robot going to lockdown"
             )
             return state_machine.stop_go_to_lockdown  # type: ignore
+        
+        def _set_maintenance_mode_event_handler(event: Event[bool]):
+            should_set_maintenande_mode: bool = event.consume_event()
+            if should_set_maintenande_mode:
+                state_machine.logger.warning(
+                    "Cancelling current mission due to robot going to maintenance mode"
+                )
+                return state_machine.stop_due_to_maintenance  # type: ignore
+            return None
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -67,6 +76,11 @@ class Paused(EventHandlerBase):
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
+            ),
+            EventHandlerMapping(
+                name="set_maintenance_mode",
+                event=events.api_requests.set_maintenance_mode.request,
+                handler=_set_maintenance_mode_event_handler,
             ),
         ]
         super().__init__(
