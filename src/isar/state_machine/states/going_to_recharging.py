@@ -26,6 +26,10 @@ class GoingToRecharging(EventHandlerBase):
                 f"Failed to go to recharging because: "
                 f"{mission_failed.error_description}"
             )
+            state_machine.publish_intervention_needed(
+                error_message="Return home to recharge failed."
+            )
+            state_machine.print_transitions()
             return state_machine.return_home_failed  # type: ignore
 
         def _mission_status_event_handler(
@@ -41,6 +45,10 @@ class GoingToRecharging(EventHandlerBase):
                 return None
 
             if mission_status != MissionStatus.Successful:
+                state_machine.publish_intervention_needed(
+                    error_message="Return home to recharge failed."
+                )
+                state_machine.print_transitions()
                 return state_machine.return_home_failed  # type: ignore
 
             return state_machine.starting_recharging  # type: ignore

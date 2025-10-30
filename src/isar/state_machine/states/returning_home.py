@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class ReturningHome(EventHandlerBase):
 
     def __init__(self, state_machine: "StateMachine"):
-        self.failed_return_home_attemps: int = 0
+        self.failed_return_home_attempts: int = 0
         events = state_machine.events
         shared_state = state_machine.shared_state
 
@@ -59,10 +59,20 @@ class ReturningHome(EventHandlerBase):
                 MissionStatus.Paused,
             ]:
                 if mission_status != MissionStatus.Successful:
-                    self.failed_return_home_attemps += 1
-                    return state_machine.return_home_failed  # type: ignore
+                    self.failed_return_home_attempts += 1
+                    if (
+                        self.failed_return_home_attempts
+                        >= settings.RETURN_HOME_RETRY_LIMIT
+                    ):
+                        state_machine.publish_intervention_needed(
+                            error_message=f"Return home failed after {self.failed_return_home_attempts} attempts."
+                        )
+                        state_machine.print_transitions()
+                        return state_machine.return_home_failed  # type: ignore
+                    else:
+                        return state_machine.retry_return_home  # type: ignore
 
-                self.failed_return_home_attemps = 0
+                self.failed_return_home_attempts = 0
                 # This clears the current robot status value, so we don't read an outdated value
                 state_machine.events.robot_service_events.robot_status_changed.clear_event()
                 return state_machine.returned_home  # type: ignore
@@ -89,6 +99,10 @@ class ReturningHome(EventHandlerBase):
                     f"Failed to initiate return home because: "
                     f"{mission_failed.error_description}"
                 )
+                state_machine.publish_intervention_needed(
+                    error_message="Return home failed to initiate."
+                )
+                state_machine.print_transitions()
                 return state_machine.return_home_failed  # type: ignore
             return None
 
