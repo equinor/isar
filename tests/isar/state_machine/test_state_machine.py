@@ -492,10 +492,6 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
             States.Monitor,
             States.AwaitNextMission,
             States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
             States.InterventionNeeded,
         ]
     )
@@ -1157,11 +1153,11 @@ def test_state_machine_with_return_home_failure_successful_retries(
     event_handler.event.trigger_event(MissionStatus.Failed)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.return_home_failed  # type: ignore
+    assert transition is sync_state_machine.retry_return_home  # type: ignore
 
     transition()
     assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
-    assert sync_state_machine.returning_home_state.failed_return_home_attemps == 1
+    assert sync_state_machine.returning_home_state.failed_return_home_attempts == 1
 
     event_handler.event.trigger_event(MissionStatus.Successful)
     transition = event_handler.handler(event_handler.event)

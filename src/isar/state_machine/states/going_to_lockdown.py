@@ -26,6 +26,9 @@ class GoingToLockdown(EventHandlerBase):
                 f"Failed to go to lockdown because: "
                 f"{mission_failed.error_description}"
             )
+            state_machine.publish_intervention_needed(
+                error_message="Lockdown mission failed."
+            )
             return state_machine.lockdown_mission_failed  # type: ignore
 
         def _mission_failed_to_resume_event_handler(
@@ -52,6 +55,9 @@ class GoingToLockdown(EventHandlerBase):
                 MissionStatus.Paused,
             ]:
                 if mission_status != MissionStatus.Successful:
+                    state_machine.publish_intervention_needed(
+                        error_message="Lockdown mission failed."
+                    )
                     return state_machine.lockdown_mission_failed  # type: ignore
 
                 state_machine.print_transitions()
