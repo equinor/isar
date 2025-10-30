@@ -63,6 +63,8 @@ class ReturningHome(EventHandlerBase):
                     return state_machine.return_home_failed  # type: ignore
 
                 self.failed_return_home_attemps = 0
+                # This clears the current robot status value, so we don't read an outdated value
+                state_machine.events.robot_service_events.robot_status_changed.clear_event()
                 return state_machine.returned_home  # type: ignore
             return None
 

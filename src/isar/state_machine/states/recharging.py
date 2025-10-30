@@ -30,7 +30,7 @@ class Recharging(EventHandlerBase):
                 return None
 
             if robot_status == RobotStatus.Offline:
-                return state_machine.robot_went_offline  # type: ignore
+                return state_machine.robot_status_offline  # type: ignore
 
         def _send_to_lockdown_event_handler(event: Event[bool]):
             should_lockdown: bool = event.consume_event()
