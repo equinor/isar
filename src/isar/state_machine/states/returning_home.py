@@ -24,6 +24,7 @@ class ReturningHome(EventHandlerBase):
             if not event.consume_event():
                 return None
 
+            state_machine.events.state_machine_events.pause_mission.trigger_event(True)
             return state_machine.pause_return_home  # type: ignore
 
         def _start_mission_event_handler(
@@ -44,6 +45,7 @@ class ReturningHome(EventHandlerBase):
                 )
                 return None
 
+            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
             return state_machine.stop_return_home  # type: ignore
 
         def _mission_status_event_handler(
