@@ -10,13 +10,6 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 
 
-def acknowledge_mission(state_machine: "StateMachine") -> bool:
-    state_machine.events.api_requests.start_mission.response.trigger_event(
-        MissionStartResponse(mission_started=True)
-    )
-    return True
-
-
 def initialize_robot(state_machine: "StateMachine") -> bool:
     try:
         state_machine.robot.initialize()
