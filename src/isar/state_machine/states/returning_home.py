@@ -63,6 +63,8 @@ class ReturningHome(EventHandlerBase):
                     return state_machine.return_home_failed  # type: ignore
 
                 self.failed_return_home_attemps = 0
+                # This clears the current robot status value, so we don't read an outdated value
+                state_machine.events.robot_service_events.robot_status_changed.clear_event()
                 return state_machine.returned_home  # type: ignore
             return None
 
@@ -96,6 +98,9 @@ class ReturningHome(EventHandlerBase):
             if should_set_maintenande_mode:
                 state_machine.logger.warning(
                     "Cancelling current mission due to robot going to maintenance mode"
+                )
+                state_machine.events.state_machine_events.stop_mission.trigger_event(
+                    True
                 )
                 return state_machine.stop_due_to_maintenance  # type: ignore
             return None

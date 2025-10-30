@@ -26,20 +26,22 @@ class UnknownStatus(EventHandlerBase):
             return None
 
         def _robot_status_event_handler(
-            event: Event[RobotStatus],
+            status_changed_event: Event[bool],
         ) -> Optional[Callable]:
-            robot_status: Optional[RobotStatus] = event.check()
-            if robot_status is None:
+            has_changed = status_changed_event.consume_event()
+            if not has_changed:
                 return None
-            if not (
-                robot_status == RobotStatus.Home
-                or robot_status == RobotStatus.Offline
-                or robot_status == RobotStatus.BlockedProtectiveStop
-                or robot_status == RobotStatus.Available
-            ):
-                return None
+            robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
 
-            return state_machine.robot_status_changed  # type: ignore
+            if robot_status == RobotStatus.Home:
+                return state_machine.robot_status_home  # type: ignore
+            elif robot_status == RobotStatus.Available:
+                return state_machine.robot_status_available  # type: ignore
+            elif robot_status == RobotStatus.Offline:
+                return state_machine.robot_status_offline  # type: ignore
+            elif robot_status == RobotStatus.BlockedProtectiveStop:
+                return state_machine.robot_status_blocked_protective_stop  # type: ignore
+            return None
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -49,7 +51,7 @@ class UnknownStatus(EventHandlerBase):
             ),
             EventHandlerMapping(
                 name="robot_status_event",
-                event=shared_state.robot_status,
+                event=events.robot_service_events.robot_status_changed,
                 handler=_robot_status_event_handler,
             ),
             EventHandlerMapping(

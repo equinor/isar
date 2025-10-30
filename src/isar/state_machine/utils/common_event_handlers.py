@@ -4,7 +4,6 @@ from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
 from isar.models.events import Event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -29,9 +28,7 @@ def start_mission_event_handler(
         )
         return None
     state_machine.start_mission(mission=mission)
-    state_machine.events.api_requests.start_mission.response.trigger_event(
-        MissionStartResponse(mission_started=True)
-    )
+    response.trigger_event(MissionStartResponse(mission_started=True))
     return state_machine.request_mission_start  # type: ignore
 
 
@@ -43,21 +40,6 @@ def return_home_event_handler(
 
     state_machine.events.api_requests.return_home.response.trigger_event(True)
     return state_machine.request_return_home  # type: ignore
-
-
-def robot_status_event_handler(
-    state_machine: "StateMachine",
-    expected_status: RobotStatus,
-    status_changed_event: Event[bool],
-    status_event: Event[RobotStatus],
-) -> Optional[Callable]:
-    if not status_changed_event.consume_event():
-        return None
-
-    robot_status: Optional[RobotStatus] = status_event.check()
-    if robot_status != expected_status:
-        return state_machine.robot_status_changed  # type: ignore
-    return None
 
 
 def stop_mission_event_handler(
