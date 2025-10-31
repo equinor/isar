@@ -6,7 +6,6 @@ from typing import Optional
 from isar.config.settings import settings
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
-    ErrorReason,
     RobotActionException,
     RobotException,
     RobotNoMissionRunningException,
@@ -14,7 +13,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 from robot_interface.robot_interface import RobotInterface
 
 
-class RobotPauseMissionThread(Thread):
+class RobotResumeMissionThread(Thread):
     def __init__(
         self,
         robot: RobotInterface,
@@ -24,7 +23,7 @@ class RobotPauseMissionThread(Thread):
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
         self.error_message: Optional[ErrorMessage] = None
-        Thread.__init__(self, name="Robot pause mission thread")
+        Thread.__init__(self, name="Robot resume mission thread")
 
     def run(self) -> None:
         retries = 0
@@ -33,38 +32,32 @@ class RobotPauseMissionThread(Thread):
             if self.signal_thread_quitting.wait(0):
                 return
             try:
-                self.robot.pause()
-            except RobotNoMissionRunningException as e:
-                error = ErrorMessage(
-                    error_reason=e.error_reason, error_description=e.error_description
-                )
-                break
+                self.robot.resume()
+                return
             except (RobotActionException, RobotException) as e:
                 self.logger.warning(
-                    f"\nFailed to pause robot because: {e.error_description}"
-                    f"\nAttempting to pause the robot again"
+                    f"Attempt {retries + 1} to resume mission failed: {e.error_description}"
+                    f"\nAttempting to resume the robot again"
                 )
-                retries += 1
                 error = ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
                 )
                 time.sleep(settings.FSM_SLEEP_TIME)
+                retries += 1
                 continue
-            except Exception as e:
+            except RobotNoMissionRunningException as e:
                 self.logger.error(
-                    f"\nAn unexpected error occurred while pausing the robot: {e}"
+                    f"Failed to resume mission: {e.error_reason}. {e.error_description}"
                 )
                 error = ErrorMessage(
-                    error_reason=ErrorReason.RobotUnknownErrorException,
-                    error_description=str(e),
+                    error_reason=e.error_reason, error_description=e.error_description
                 )
                 break
-            return
 
         error_description = (
-            f"\nFailed to pause the robot after {retries} attempts because: "
+            f"\nFailed to resume the robot after {retries + 1} attempts because: "
             f"{error.error_description}"
-            f"\nBe aware that the robot may still be moving even though a pause has "
+            f"\nBe aware that the robot may still be moving even though a resume has "
             "been attempted"
         )
 
