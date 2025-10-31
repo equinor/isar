@@ -20,8 +20,3 @@ def start_return_home_mission(state_machine: "StateMachine") -> bool:
         )
     )
     return True
-
-
-def reset_return_home_failure_counter(state_machine: "StateMachine") -> bool:
-    state_machine.returning_home_state.failed_return_home_attempts = 0
-    return True
