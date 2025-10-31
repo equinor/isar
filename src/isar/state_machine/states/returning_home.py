@@ -25,6 +25,7 @@ class ReturningHome(EventHandlerBase):
                 return None
 
             state_machine.events.state_machine_events.pause_mission.trigger_event(True)
+            self.failed_return_home_attempts = 0
             return state_machine.pause_return_home  # type: ignore
 
         def _start_mission_event_handler(
@@ -46,6 +47,7 @@ class ReturningHome(EventHandlerBase):
                 return None
 
             state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            self.failed_return_home_attempts = 0
             return state_machine.stop_return_home  # type: ignore
 
         def _mission_status_event_handler(
@@ -68,6 +70,7 @@ class ReturningHome(EventHandlerBase):
                             error_message=f"Return home failed after {self.failed_return_home_attempts} attempts."
                         )
                         state_machine.print_transitions()
+                        self.failed_return_home_attempts = 0
                         return state_machine.return_home_failed  # type: ignore
                     else:
                         return state_machine.retry_return_home  # type: ignore
@@ -88,6 +91,7 @@ class ReturningHome(EventHandlerBase):
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
+            self.failed_return_home_attempts = 0
             return state_machine.go_to_lockdown  # type: ignore
 
         def _mission_failed_event_handler(
@@ -103,6 +107,7 @@ class ReturningHome(EventHandlerBase):
                     error_message="Return home failed to initiate."
                 )
                 state_machine.print_transitions()
+                self.failed_return_home_attempts = 0
                 return state_machine.return_home_failed  # type: ignore
             return None
 
@@ -128,6 +133,7 @@ class ReturningHome(EventHandlerBase):
             ):
                 return None
 
+            self.failed_return_home_attempts = 0
             return state_machine.go_to_recharging  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
