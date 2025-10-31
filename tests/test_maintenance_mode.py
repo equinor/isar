@@ -1,4 +1,5 @@
 from http import HTTPStatus
+import time
 
 from pytest import MonkeyPatch
 import pytest
@@ -71,12 +72,19 @@ def test_maintenance_mode(
         assert response.status_code == HTTPStatus.OK
         assert state_machine_thread.state_machine.current_state != States.Maintenance
 
+        t_start = time.time()
+        while state_machine_thread.state_machine.current_state == States.UnknownStatus:
+             if time.time() - t_start > 10:
+                  raise Exception("Robot could not leave unknown state after releasing maintenance mode")
+             time.sleep(0.5)
 
-        mocker.patch.object(StubRobot, "mission_status", return_value=MissionStatus.InProgress) # The robot will not go to awaitng next mission. In order to test the "stop" functionality. 
+        # Find transitions list: state_machine_thread.state_machine.transitions_list
+        mocker.patch.object(StubRobot, "mission_status", return_value=MissionStatus.InProgress) # The robot will not go to awaitng next mission after mission has started, it should remain in monitor. In order to test the "stop" functionality. 
         response = client.post(url="/schedule/start-mission/1")
         assert response.status_code == HTTPStatus.OK
         # assert "monitor" in state_machine_thread.state_machine.transitions_list
 
+        assert state_machine_thread.state_machine.current_state == States.Monitor
         response = client.post(url="/schedule/maintenance-mode")
         assert response.status_code == HTTPStatus.OK
 
