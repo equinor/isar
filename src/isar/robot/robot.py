@@ -13,6 +13,7 @@ from isar.models.events import (
 from isar.robot.robot_battery import RobotBatteryThread
 from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
 from isar.robot.robot_pause_mission import RobotPauseMissionThread
+from isar.robot.robot_resume_mission import RobotResumeMissionThread
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import RobotStopMissionThread
@@ -45,6 +46,7 @@ class Robot(object):
         self.monitor_mission_thread: Optional[RobotMonitorMissionThread] = None
         self.stop_mission_thread: Optional[RobotStopMissionThread] = None
         self.pause_mission_thread: Optional[RobotPauseMissionThread] = None
+        self.resume_mission_thread: Optional[RobotResumeMissionThread] = None
         self.upload_inspection_threads: List[RobotUploadInspectionThread] = []
         self.signal_thread_quitting: ThreadEvent = ThreadEvent()
         self.signal_mission_stopped: ThreadEvent = ThreadEvent()
@@ -226,7 +228,7 @@ class Robot(object):
                     error_reason=ErrorReason.RobotStillStartingMissionException,
                     error_description=error_description,
                 )
-                self.robot_service_events.mission_failed_to_stop.trigger_event(
+                self.robot_service_events.mission_failed_to_pause.trigger_event(
                     error_message
                 )
                 return
@@ -234,6 +236,52 @@ class Robot(object):
                 self.robot, self.signal_thread_quitting
             )
             self.pause_mission_thread.start()
+
+    def _resume_mission_request_handler(self, event: Event[bool]) -> None:
+        if event.consume_event():
+            if (
+                self.resume_mission_thread is not None
+                and self.resume_mission_thread.is_alive()
+            ):
+                self.logger.warning(
+                    "Received resume mission event while trying to resume a mission. Aborting resume attempt."
+                )
+                return
+            if (
+                self.start_mission_thread is not None
+                and self.start_mission_thread.is_alive()
+            ):
+                error_description = "Received resume mission event while trying to start a mission. Aborting resume attempt."
+                error_message = ErrorMessage(
+                    error_reason=ErrorReason.RobotStillStartingMissionException,
+                    error_description=error_description,
+                )
+                self.robot_service_events.mission_failed_to_resume.trigger_event(
+                    error_message
+                )
+                return
+            self.resume_mission_thread = RobotResumeMissionThread(
+                self.robot, self.signal_thread_quitting
+            )
+            self.resume_mission_thread.start()
+
+    def _resume_mission_done_handler(self) -> None:
+        if (
+            self.resume_mission_thread is not None
+            and not self.resume_mission_thread.is_alive()
+        ):
+            self.resume_mission_thread.join()
+            error_message = self.resume_mission_thread.error_message
+            self.resume_mission_thread = None
+
+            if error_message:
+                self.robot_service_events.mission_failed_to_resume.trigger_event(
+                    error_message
+                )
+            else:
+                self.robot_service_events.mission_successfully_resumed.trigger_event(
+                    True
+                )
 
     def _upload_inspection_event_handler(
         self, event: Event[Tuple[TASKS, Mission]]
@@ -282,6 +330,10 @@ class Robot(object):
 
             self._pause_mission_request_handler(self.state_machine_events.pause_mission)
 
+            self._resume_mission_request_handler(
+                self.state_machine_events.resume_mission
+            )
+
             self._stop_mission_request_handler(self.state_machine_events.stop_mission)
 
             self._upload_inspection_event_handler(
@@ -295,5 +347,7 @@ class Robot(object):
             self._pause_mission_done_handler()
 
             self._upload_inspection_done_handler()
+
+            self._resume_mission_done_handler()
 
         self.logger.info("Exiting robot service main thread")

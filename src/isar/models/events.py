@@ -133,6 +133,7 @@ class StateMachineEvents:
         self.start_mission: Event[Mission] = Event("start_mission")
         self.stop_mission: Event[bool] = Event("stop_mission")
         self.pause_mission: Event[bool] = Event("pause_mission")
+        self.resume_mission: Event[bool] = Event("resume_mission")
 
 
 class RobotServiceEvents:
@@ -154,6 +155,12 @@ class RobotServiceEvents:
         )
         self.mission_successfully_paused: Event[bool] = Event(
             "mission_successfully_paused"
+        )
+        self.mission_failed_to_resume: Event[ErrorMessage] = Event(
+            "mission_failed_to_resume"
+        )
+        self.mission_successfully_resumed: Event[bool] = Event(
+            "mission_successfully_resumed"
         )
         self.request_inspection_upload: Event[Tuple[TASKS, Mission]] = Event(
             "request_inspection_upload"

@@ -30,6 +30,8 @@ from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.pausing import Pausing
 from isar.state_machine.states.pausing_return_home import PausingReturnHome
 from isar.state_machine.states.recharging import Recharging
+from isar.state_machine.states.resuming import Resuming
+from isar.state_machine.states.resuming_return_home import ResumingReturnHome
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping import Stopping
@@ -105,6 +107,8 @@ class StateMachine(object):
         self.return_home_paused_state: State = ReturnHomePaused(self)
         self.stopping_return_home_state: State = StoppingReturnHome(self)
         self.pausing_return_home_state: State = PausingReturnHome(self)
+        self.resuming_state: State = Resuming(self)
+        self.resuming_return_home_state: State = ResumingReturnHome(self)
         self.stopping_go_to_lockdown_state: State = StoppingGoToLockdown(self)
         self.stopping_go_to_recharge_state: State = StoppingGoToRecharge(self)
         self.going_to_lockdown_state: State = GoingToLockdown(self)
@@ -134,6 +138,7 @@ class StateMachine(object):
             self.pausing_return_home_state,
             self.paused_state,
             self.pausing_state,
+            self.resuming_state,
             self.return_home_paused_state,
             self.await_next_mission_state,
             self.home_state,
@@ -143,6 +148,7 @@ class StateMachine(object):
             self.intervention_needed_state,
             self.recharging_state,
             self.stopping_go_to_lockdown_state,
+            self.resuming_return_home_state,
             self.going_to_lockdown_state,
             self.lockdown_state,
             self.going_to_recharging_state,
