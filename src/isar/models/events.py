@@ -7,6 +7,7 @@ from transitions import State
 from isar.apis.models.models import (
     ControlMissionResponse,
     LockdownResponse,
+    MaintenanceResponse,
     MissionStartResponse,
 )
 from isar.config.settings import settings
@@ -118,6 +119,12 @@ class APIRequests:
         )
         self.release_from_lockdown: APIEvent[bool, bool] = APIEvent(
             "release_from_lockdown"
+        )
+        self.set_maintenance_mode: APIEvent[bool, MaintenanceResponse] = APIEvent(
+            "set_maintenance_mode"
+        )
+        self.release_from_maintenance_mode: APIEvent[bool, bool] = APIEvent(
+            "release_from_maintenance_mode"
         )
 
 

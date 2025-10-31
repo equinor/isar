@@ -21,6 +21,7 @@ from isar.models.events import (
     EventTimeoutError,
     SharedState,
 )
+from isar.services.service_connections.persistent_memory import change_persistent_robot_state_is_maintenance_mode
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
@@ -482,6 +483,52 @@ class SchedulingUtilities:
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
+    
+    def set_maintenance_mode(self) -> None:
+        """Set maintenance mode
+
+        Raises
+        ------
+        HTTPException 500 Internal Server Error
+            If the robot could not be set to maintenance mode
+        """
+        try:
+            change_persistent_robot_state_is_maintenance_mode(settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID, value=True)
+            self._send_command(True, self.api_events.set_maintenance_mode)
+            self.logger.info("OK - Robot sent into maintenance mode")
+        except EventConflictError: 
+            error_message = "Previous maintenance request is still being processed"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except EventTimeoutError:
+            error_message = "Cannot send robot to maintenance as it is already in maintenance"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+
+    def release_maintenance_mode(self) -> None:
+        """Release robot from maintenance mode
+
+        Raises
+        ------
+        HTTPException 500 Internal Server Error
+            If the robot could not be released from maintenance mode
+        """
+        try:
+            self._send_command(True, self.api_events.release_from_maintenance_mode)
+            change_persistent_robot_state_is_maintenance_mode(settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID, value=False)
+            self.logger.info("OK - Robot released form maintenance mode")
+        except EventConflictError:
+            error_message = (
+                "Previous release robot from maintenance request is still being processed"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except EventTimeoutError:
+            error_message = (
+                "Cannot release robot from maintenance as it is not in maintenance"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
         if api_event.request.has_event():

@@ -166,6 +166,8 @@ class Settings(BaseSettings):
     # Name of blob container in Azure Blob Storage [slimm test]
     BLOB_CONTAINER: str = Field(default="test")
 
+    PERSISTENT_STORAGE_CONNECTION_STRING: str = Field(default="")
+
     # The configuration of this section is tightly coupled with the metadata that is
     # submitted with the results once they have been uploaded.
 
