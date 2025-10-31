@@ -23,9 +23,7 @@ class Pausing(EventHandlerBase):
                 return None
 
             state_machine.events.api_requests.pause_mission.response.trigger_event(
-                ControlMissionResponse(
-                    success=False, failure_reason=error_message.error_reason
-                )
+                ControlMissionResponse(success=False)
             )
 
             return state_machine.mission_pausing_failed  # type: ignore
