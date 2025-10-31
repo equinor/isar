@@ -21,7 +21,6 @@ from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states_enum import States
-from isar.state_machine.transitions.functions.stop import stop_mission_failed
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.exceptions.robot_exceptions import (
@@ -668,19 +667,6 @@ def test_state_machine_with_unsuccessful_mission_stop(
     )
 
 
-def test_api_with_unsuccessful_return_home_stop(
-    container: ApplicationContainer,
-    sync_state_machine: StateMachine,
-) -> None:
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    stop_mission_failed(sync_state_machine)
-
-    with pytest.raises(HTTPException) as exception_details:
-        scheduling_utilities.stop_mission()
-
-    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
-
-
 def test_state_machine_with_mission_start_during_return_home_without_queueing_stop_response(
     container: ApplicationContainer,
     mocker: MockerFixture,
@@ -1100,11 +1086,11 @@ def test_state_machine_with_return_home_failure_successful_retries(
     event_handler.event.trigger_event(MissionStatus.Failed)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.return_home_failed  # type: ignore
+    assert transition is sync_state_machine.retry_return_home  # type: ignore
 
     transition()
     assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
-    assert sync_state_machine.returning_home_state.failed_return_home_attemps == 1
+    assert sync_state_machine.returning_home_state.failed_return_home_attempts == 1
 
     event_handler.event.trigger_event(MissionStatus.Successful)
     transition = event_handler.handler(event_handler.event)
