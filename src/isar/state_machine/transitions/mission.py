@@ -1,8 +1,5 @@
 from typing import TYPE_CHECKING, List
 
-from isar.state_machine.transitions.functions.start_mission import initialize_robot
-from isar.state_machine.transitions.functions.utils import def_transition
-
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
@@ -164,19 +161,6 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.stopping_return_home_state,
             ],
             "dest": state_machine.monitor_state,
-            "conditions": [
-                def_transition(state_machine, initialize_robot),
-            ],
-        },
-        {
-            "trigger": "request_mission_start",
-            "source": state_machine.await_next_mission_state,
-            "dest": state_machine.await_next_mission_state,
-        },
-        {
-            "trigger": "request_mission_start",
-            "source": state_machine.home_state,
-            "dest": state_machine.home_state,
         },
         {
             "trigger": "mission_failed_to_start",

@@ -13,7 +13,6 @@ class ErrorReason(str, Enum):
     RobotTaskStatusException = "robot_task_status_exception"
     RobotAPIException = "robot_api_exception"
     RobotActionException = "robot_action_exception"
-    RobotInitializeException = "robot_initialize_exception"
     RobotRetrieveDataException = "robot_retrieve_data_exception"
     RobotRetrieveInspectionException = "robot_retrieve_inspection_exception"
     RobotStillStartingMissionException = "robot_still_starting_mission_exception"
@@ -155,19 +154,6 @@ class RobotActionException(RobotException):
     def __init__(self, error_description: str) -> None:
         super().__init__(
             error_reason=ErrorReason.RobotActionException,
-            error_description=error_description,
-        )
-
-    pass
-
-
-# An exception which should be thrown by the robot package if something is wrong during
-# the initialization of the robot. This exception will cause the mission to fail as
-# initialization is performed prior to starting the mission.
-class RobotInitializeException(RobotException):
-    def __init__(self, error_description: str) -> None:
-        super().__init__(
-            error_reason=ErrorReason.RobotInitializeException,
             error_description=error_description,
         )
 
