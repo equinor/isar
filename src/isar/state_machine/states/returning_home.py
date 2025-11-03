@@ -8,6 +8,7 @@ from isar.state_machine.utils.common_event_handlers import mission_started_event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.task import ReturnToHome
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -25,7 +26,6 @@ class ReturningHome(EventHandlerBase):
                 return None
 
             state_machine.events.state_machine_events.pause_mission.trigger_event(True)
-            self.failed_return_home_attempts = 0
             return state_machine.pause_return_home  # type: ignore
 
         def _start_mission_event_handler(
@@ -47,7 +47,6 @@ class ReturningHome(EventHandlerBase):
                 return None
 
             state_machine.events.state_machine_events.stop_mission.trigger_event(True)
-            self.failed_return_home_attempts = 0
             return state_machine.stop_return_home  # type: ignore
 
         def _mission_status_event_handler(
@@ -70,12 +69,16 @@ class ReturningHome(EventHandlerBase):
                             error_message=f"Return home failed after {self.failed_return_home_attempts} attempts."
                         )
                         state_machine.print_transitions()
-                        self.failed_return_home_attempts = 0
                         return state_machine.return_home_failed  # type: ignore
                     else:
-                        return state_machine.retry_return_home  # type: ignore
+                        state_machine.start_mission(
+                            Mission(
+                                tasks=[ReturnToHome()],
+                                name="Return Home",
+                            )
+                        )
+                        return None
 
-                self.failed_return_home_attempts = 0
                 # This clears the current robot status value, so we don't read an outdated value
                 state_machine.events.robot_service_events.robot_status_changed.clear_event()
                 return state_machine.returned_home  # type: ignore
@@ -91,7 +94,6 @@ class ReturningHome(EventHandlerBase):
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
-            self.failed_return_home_attempts = 0
             return state_machine.go_to_lockdown  # type: ignore
 
         def _mission_failed_event_handler(
@@ -107,7 +109,6 @@ class ReturningHome(EventHandlerBase):
                     error_message="Return home failed to initiate."
                 )
                 state_machine.print_transitions()
-                self.failed_return_home_attempts = 0
                 return state_machine.return_home_failed  # type: ignore
             return None
 
@@ -133,7 +134,6 @@ class ReturningHome(EventHandlerBase):
             ):
                 return None
 
-            self.failed_return_home_attempts = 0
             return state_machine.go_to_recharging  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
@@ -184,4 +184,9 @@ class ReturningHome(EventHandlerBase):
             state_name="returning_home",
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
+            on_transition=self._reset_failure_counter,
+            on_entry=self._reset_failure_counter,
         )
+
+    def _reset_failure_counter(self):
+        self.failed_return_home_attempts = 0
