@@ -59,15 +59,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.recharging_state,
         },
         {
-            "trigger": "retry_return_home",
-            "source": state_machine.returning_home_state,
-            "dest": state_machine.returning_home_state,
-            "before": [
-                def_transition(state_machine, start_return_home_mission),
-                def_transition(state_machine, initialize_robot),
-            ],
-        },
-        {
             "trigger": "return_home_failed",
             "source": [
                 state_machine.returning_home_state,

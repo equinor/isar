@@ -447,10 +447,6 @@ def test_state_machine_failed_dependency(
             States.Monitor,
             States.AwaitNextMission,
             States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
             States.InterventionNeeded,
         ]
     )
@@ -1153,10 +1149,7 @@ def test_state_machine_with_return_home_failure_successful_retries(
     event_handler.event.trigger_event(MissionStatus.Failed)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.retry_return_home  # type: ignore
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
+    assert transition is None  # type: ignore
     assert sync_state_machine.returning_home_state.failed_return_home_attempts == 1
 
     event_handler.event.trigger_event(MissionStatus.Successful)
@@ -1166,6 +1159,43 @@ def test_state_machine_with_return_home_failure_successful_retries(
 
     transition()
     assert sync_state_machine.state is sync_state_machine.home_state.name  # type: ignore
+
+
+def test_state_machine_with_return_home_failure(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
+    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
+
+    returning_home_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.returning_home_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("mission_status_event")
+    )
+
+    # We do not retry return home missions if the robot is not ready for another mission
+    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Available)
+
+    assert event_handler is not None
+
+    for i in range(settings.RETURN_HOME_RETRY_LIMIT - 1):
+
+        event_handler.event.trigger_event(MissionStatus.Failed)
+        transition = event_handler.handler(event_handler.event)
+
+        assert transition is None  # type: ignore
+        assert (
+            sync_state_machine.returning_home_state.failed_return_home_attempts == i + 1
+        )
+
+    event_handler.event.trigger_event(MissionStatus.Failed)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.return_home_failed  # type: ignore
+
+    transition()
+    assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore
 
 
 def test_state_machine_offline_to_home(
