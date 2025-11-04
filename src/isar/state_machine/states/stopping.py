@@ -39,7 +39,7 @@ class Stopping(EventHandlerBase):
             state_machine.print_transitions()
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 state_machine.start_return_home_mission()
-                return state_machine.request_return_home  # type: ignore
+                return state_machine.start_return_home  # type: ignore
             return state_machine.mission_stopped  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [

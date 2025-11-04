@@ -50,13 +50,13 @@ class StoppingReturnHome(EventHandlerBase):
                 state_machine.events.api_requests.start_mission.response.trigger_event(
                     MissionStartResponse(mission_started=True)
                 )
-                return state_machine.request_mission_start  # type: ignore
+                return state_machine.start_mission_monitoring  # type: ignore
 
             state_machine.logger.error(
                 "Stopped return home without a new mission to start"
             )
             state_machine.start_return_home_mission()
-            return state_machine.request_return_home  # type: ignore
+            return state_machine.start_return_home  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

@@ -29,7 +29,7 @@ def start_mission_event_handler(
         return None
     state_machine.start_mission(mission=mission)
     response.trigger_event(MissionStartResponse(mission_started=True))
-    return state_machine.request_mission_start  # type: ignore
+    return state_machine.start_mission_monitoring  # type: ignore
 
 
 def return_home_event_handler(
@@ -40,7 +40,7 @@ def return_home_event_handler(
 
     state_machine.events.api_requests.return_home.response.trigger_event(True)
     state_machine.start_return_home_mission()
-    return state_machine.request_return_home  # type: ignore
+    return state_machine.start_return_home  # type: ignore
 
 
 def stop_mission_event_handler(
