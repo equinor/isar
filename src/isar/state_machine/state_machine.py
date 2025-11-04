@@ -48,6 +48,7 @@ from isar.state_machine.transitions.mission import get_mission_transitions
 from isar.state_machine.transitions.return_home import get_return_home_transitions
 from isar.state_machine.transitions.robot_status import get_robot_status_transitions
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.task import ReturnToHome
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
@@ -228,6 +229,14 @@ class StateMachine(object):
 
     def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
+        self.events.state_machine_events.start_mission.trigger_event(mission)
+
+    def start_return_home_mission(self):
+        """Starts a return to home mission."""
+        mission = Mission(
+            tasks=[ReturnToHome()],
+            name="Return Home",
+        )
         self.events.state_machine_events.start_mission.trigger_event(mission)
 
     def publish_mission_aborted(self, reason: str, can_be_continued: bool) -> None:
