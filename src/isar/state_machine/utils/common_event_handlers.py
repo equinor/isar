@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING, Callable, Optional
 
 from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
 from isar.models.events import Event
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 
 if TYPE_CHECKING:
@@ -72,17 +71,3 @@ def mission_started_event_handler(
 
     state_machine.logger.info("Received confirmation that mission has started")
     return None
-
-
-def mission_failed_event_handler(
-    state_machine: "StateMachine",
-    event: Event[Optional[ErrorMessage]],
-) -> Optional[Callable]:
-    mission_failed: Optional[ErrorMessage] = event.consume_event()
-    if mission_failed is None:
-        return None
-
-    state_machine.logger.warning(
-        f"Failed to initiate mission because: " f"{mission_failed.error_description}"
-    )
-    return state_machine.mission_failed_to_start  # type: ignore
