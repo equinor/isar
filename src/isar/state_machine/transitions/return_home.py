@@ -24,18 +24,12 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.home_state,
         },
         {
-            "trigger": "returned_home",
-            "source": state_machine.returning_home_state,
-            "dest": state_machine.intervention_needed_state,
-        },
-        {
             "trigger": "starting_recharging",
-            "source": state_machine.going_to_recharging_state,
-            "dest": state_machine.recharging_state,
-        },
-        {
-            "trigger": "starting_recharging",
-            "source": [state_machine.lockdown_state, state_machine.home_state],
+            "source": [
+                state_machine.lockdown_state,
+                state_machine.home_state,
+                state_machine.going_to_recharging_state,
+            ],
             "dest": state_machine.recharging_state,
         },
         {
