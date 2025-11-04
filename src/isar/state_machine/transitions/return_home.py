@@ -1,10 +1,5 @@
 from typing import TYPE_CHECKING, List
 
-from isar.state_machine.transitions.functions.return_home import (
-    start_return_home_mission,
-)
-from isar.state_machine.transitions.functions.utils import def_transition
-
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
@@ -22,7 +17,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.stopping_return_home_state,
             ],
             "dest": state_machine.returning_home_state,
-            "before": def_transition(state_machine, start_return_home_mission),
         },
         {
             "trigger": "returned_home",
@@ -64,9 +58,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.await_next_mission_state,
             ],
             "dest": state_machine.going_to_lockdown_state,
-            "conditions": [
-                def_transition(state_machine, start_return_home_mission),
-            ],
         },
         {
             "trigger": "request_recharging_mission",
@@ -75,9 +66,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.await_next_mission_state,
             ],
             "dest": state_machine.going_to_recharging_state,
-            "conditions": [
-                def_transition(state_machine, start_return_home_mission),
-            ],
         },
         {
             "trigger": "go_to_lockdown",

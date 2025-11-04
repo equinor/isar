@@ -29,7 +29,7 @@ class StoppingGoToRecharge(EventHandlerBase):
             state_machine.publish_mission_aborted(
                 "Robot battery too low to continue mission", True
             )
-
+            state_machine.start_return_home_mission()
             return state_machine.request_recharging_mission  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
