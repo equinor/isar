@@ -134,14 +134,10 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
         },
         {
             "trigger": "mission_stopping_failed",
-            "source": state_machine.stopping_state,
-            "dest": state_machine.monitor_state,
-        },
-        {
-            "trigger": "mission_stopping_failed",
             "source": [
                 state_machine.stopping_go_to_lockdown_state,
                 state_machine.stopping_go_to_recharge_state,
+                state_machine.stopping_state,
             ],
             "dest": state_machine.monitor_state,
         },
@@ -166,7 +162,7 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
         },
         {
             "trigger": "mission_failed_to_start",
-            "source": [state_machine.monitor_state, state_machine.returning_home_state],
+            "source": state_machine.monitor_state,
             "dest": state_machine.await_next_mission_state,
         },
         {

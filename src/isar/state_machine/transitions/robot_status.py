@@ -73,7 +73,7 @@ def get_robot_status_transitions(state_machine: "StateMachine") -> List[dict]:
         },
         {
             "trigger": "robot_recharged",
-            "source": [state_machine.recharging_state],
+            "source": state_machine.recharging_state,
             "dest": state_machine.home_state,
         },
     ]
