@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
     return_home_transitions: List[dict] = [
         {
-            "trigger": "request_return_home",
+            "trigger": "start_return_home",
             "source": [
                 state_machine.await_next_mission_state,
                 state_machine.home_state,
@@ -52,7 +52,7 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.unknown_status_state,
         },
         {
-            "trigger": "request_lockdown_mission",
+            "trigger": "start_lockdown_mission",
             "source": [
                 state_machine.stopping_go_to_lockdown_state,
                 state_machine.await_next_mission_state,
@@ -60,7 +60,7 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.going_to_lockdown_state,
         },
         {
-            "trigger": "request_recharging_mission",
+            "trigger": "start_recharging_mission",
             "source": [
                 state_machine.stopping_go_to_recharge_state,
                 state_machine.await_next_mission_state,
