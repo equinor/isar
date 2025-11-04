@@ -67,9 +67,6 @@ class StateMachine(object):
         shared_state: SharedState,
         robot: RobotInterface,
         mqtt_publisher: MqttClientInterface,
-        sleep_time: float = settings.FSM_SLEEP_TIME,
-        stop_robot_attempts_limit: int = settings.STOP_ROBOT_ATTEMPTS_LIMIT,
-        transitions_log_length: int = settings.STATE_TRANSITIONS_LOG_LENGTH,
     ):
         """Initializes the state machine.
 
@@ -81,12 +78,6 @@ class StateMachine(object):
             Instance of robot interface.
         mqtt_publisher : MqttClientInterface
             Instance of MQTT client interface which has a publish function
-        sleep_time : float
-            Time to sleep in between state machine iterations.
-        stop_robot_attempts_limit : int
-            Maximum attempts to stop the robot when stop command is received
-        transitions_log_length : int
-            Length of state transition log list.
 
         """
         self.logger = logging.getLogger("state_machine")
@@ -182,13 +173,11 @@ class StateMachine(object):
 
         self.machine.add_transitions(self.transitions)
 
-        self.stop_robot_attempts_limit: int = stop_robot_attempts_limit
-        self.sleep_time: float = sleep_time
-
         self.current_state: State = States(self.state)  # type: ignore
 
-        self.transitions_log_length: int = transitions_log_length
-        self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
+        self.transitions_list: Deque[States] = deque(
+            [], settings.STATE_TRANSITIONS_LOG_LENGTH
+        )
 
     #################################################################################
 
