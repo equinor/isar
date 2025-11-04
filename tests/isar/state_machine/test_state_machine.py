@@ -655,7 +655,7 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
         StubRobot, "stop", side_effect=_mock_robot_exception_with_message
     )
 
-    state_machine_thread.state_machine.sleep_time = 0
+    settings.FSM_SLEEP_TIME = 0
 
     state_machine_thread.start()
     robot_service_thread.start()
@@ -691,7 +691,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
         StubRobot, "stop", side_effect=_mock_robot_exception_with_message
     )
 
-    state_machine_thread.state_machine.sleep_time = 0
+    settings.FSM_SLEEP_TIME = 0
 
     state_machine_thread.start()
     robot_service_thread.start()
@@ -743,7 +743,7 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
     )
 
-    state_machine_thread.state_machine.sleep_time = 0
+    settings.FSM_SLEEP_TIME = 0
 
     state_machine_thread.start()
     robot_service_thread.start()

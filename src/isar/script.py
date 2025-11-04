@@ -168,4 +168,4 @@ def start() -> None:
             if not thread.is_alive():
                 logger.critical("Thread '%s' failed - ISAR shutting down", thread.name)
                 sys.exit(1)
-        time.sleep(state_machine.sleep_time)
+        time.sleep(settings.FSM_SLEEP_TIME)
