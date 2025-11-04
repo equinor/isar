@@ -4,10 +4,10 @@ from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
 from isar.state_machine.utils.common_event_handlers import (
-    mission_failed_event_handler,
     mission_started_event_handler,
     stop_mission_event_handler,
 )
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
@@ -85,6 +85,19 @@ class Monitor(EventHandlerBase):
                 return state_machine.stop_due_to_maintenance  # type: ignore
             return None
 
+        def _mission_failed_event_handler(
+            event: Event[Optional[ErrorMessage]],
+        ) -> Optional[Callable]:
+            mission_failed: Optional[ErrorMessage] = event.consume_event()
+            if mission_failed is None:
+                return None
+
+            state_machine.logger.warning(
+                f"Failed to initiate mission because: "
+                f"{mission_failed.error_description}"
+            )
+            return state_machine.mission_failed_to_start  # type: ignore
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="stop_mission_event",
@@ -106,9 +119,7 @@ class Monitor(EventHandlerBase):
             EventHandlerMapping(
                 name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
-                handler=lambda event: mission_failed_event_handler(
-                    state_machine, event
-                ),
+                handler=_mission_failed_event_handler,
             ),
             EventHandlerMapping(
                 name="mission_status_event",
