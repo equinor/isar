@@ -35,7 +35,7 @@ class AwaitNextMission(EventHandlerBase):
                 LockdownResponse(lockdown_started=True)
             )
             state_machine.start_return_home_mission()
-            return state_machine.request_lockdown_mission  # type: ignore
+            return state_machine.start_lockdown_mission  # type: ignore
 
         def _robot_battery_level_updated_handler(
             event: Event[float],
@@ -48,7 +48,7 @@ class AwaitNextMission(EventHandlerBase):
                 return None
 
             state_machine.start_return_home_mission()
-            return state_machine.request_recharging_mission  # type: ignore
+            return state_machine.start_recharging_mission  # type: ignore
 
         def _set_maintenance_mode_event_handler(event: Event[bool]):
             should_set_maintenande_mode: bool = event.consume_event()
@@ -61,7 +61,7 @@ class AwaitNextMission(EventHandlerBase):
 
         def _start_return_home():
             state_machine.start_return_home_mission()
-            return state_machine.request_return_home  # type: ignore
+            return state_machine.start_return_home  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
