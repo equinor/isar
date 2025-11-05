@@ -225,10 +225,8 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except Exception as e:
-            error_message = (
-                f"Unexpected error while sending mission to state machine: {e}"
-            )
-            self.logger.error(error_message)
+            error_message = "Unexpected error while sending mission to state machine"
+            self.logger.error(f"{error_message}. Exception: {e}")
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
@@ -263,8 +261,8 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except Exception as e:
-            error_message = f"Unexpected error while sending return home command: {e}"
-            self.logger.error(error_message)
+            error_message = "Unexpected error while sending return home command"
+            self.logger.error(f"{error_message}. Exception: {e}")
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
@@ -303,8 +301,8 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except Exception as e:
-            error_message = f"Unexpected error while pausing mission: {e}"
-            self.logger.error(error_message)
+            error_message = "Unexpected error while pausing mission"
+            self.logger.error(f"{error_message}. Exception: {e}")
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
@@ -336,8 +334,8 @@ class SchedulingUtilities:
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
         except Exception as e:
-            error_message = f"Unexpected error while resuming mission: {e}"
-            self.logger.error(error_message)
+            error_message = "Unexpected error while resuming mission"
+            self.logger.error(f"{error_message}. Exception: {e}")
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
@@ -384,8 +382,8 @@ class SchedulingUtilities:
         except HTTPException as e:
             raise e
         except Exception as e:
-            error_message = f"Unexpected error while stopping mission: {e}"
-            self.logger.error(error_message)
+            error_message = "Unexpected error while stopping mission"
+            self.logger.error(f"{error_message}. Exception: {e}")
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
@@ -418,10 +416,8 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except Exception as e:
-            error_message = (
-                f"Unexpected error while releasing intervention needed state: {e}"
-            )
-            self.logger.error(error_message)
+            error_message = "Unexpected error while releasing intervention needed state"
+            self.logger.error(f"{error_message}. Exception: {e}")
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
@@ -448,8 +444,8 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except Exception as e:
-            error_message = f"Unexpected error while locking down robot: {e}"
-            self.logger.error(error_message)
+            error_message = "Unexpected error while locking down robot"
+            self.logger.error(f"{error_message}. Exception: {e}")
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
@@ -480,8 +476,8 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except Exception as e:
-            error_message = f"Unexpected error while releasing robot from lockdown: {e}"
-            self.logger.error(error_message)
+            error_message = "Unexpected error while releasing robot from lockdown"
+            self.logger.error(f"{error_message}. Exception: {e}")
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
