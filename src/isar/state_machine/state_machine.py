@@ -222,7 +222,9 @@ class StateMachine(object):
 
     def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
-        self.events.state_machine_events.start_mission.trigger_event(mission)
+        self.events.state_machine_to_robot_service_events.start_mission.trigger_event(
+            mission
+        )
 
     def publish_mission_aborted(self, reason: str, can_be_continued: bool) -> None:
         if not self.mqtt_publisher:

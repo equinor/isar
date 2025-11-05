@@ -103,7 +103,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.going_to_recharging_state,
             "conditions": [
                 def_transition(state_machine, start_return_home_mission),
-                def_transition(state_machine, initialize_robot),
             ],
         },
         {

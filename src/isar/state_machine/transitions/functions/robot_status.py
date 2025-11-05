@@ -32,5 +32,5 @@ def is_blocked_protective_stop(state_machine: "StateMachine") -> bool:
 
 
 def clear_robot_status(state_machine: "StateMachine") -> bool:
-    state_machine.events.robot_service_events.robot_status_changed.clear_event()
+    state_machine.events.robot_service_to_state_machine_events.robot_status_changed.clear_event()
     return True

@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 
 class ReturningHome(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         self.failed_return_home_attemps: int = 0
         events = state_machine.events
@@ -67,7 +66,7 @@ class ReturningHome(EventHandlerBase):
         def _send_to_lockdown_event_handler(
             event: Event[bool],
         ) -> Optional[Callable]:
-            should_lockdown: bool = event.consume_event()
+            should_lockdown: Optional[bool] = event.consume_event()
             if not should_lockdown:
                 return None
 
@@ -77,7 +76,7 @@ class ReturningHome(EventHandlerBase):
             return state_machine.go_to_lockdown  # type: ignore
 
         def _mission_failed_event_handler(
-            event: Event[Optional[ErrorMessage]],
+            event: Event[ErrorMessage],
         ) -> Optional[Callable]:
             mission_failed: Optional[ErrorMessage] = event.consume_event()
             if mission_failed is not None:
@@ -117,14 +116,14 @@ class ReturningHome(EventHandlerBase):
             ),
             EventHandlerMapping(
                 name="mission_started_event",
-                event=events.robot_service_events.mission_started,
+                event=events.robot_service_to_state_machine_events.mission_started,
                 handler=lambda event: mission_started_event_handler(
                     state_machine, event
                 ),
             ),
             EventHandlerMapping(
                 name="mission_failed_event",
-                event=events.robot_service_events.mission_failed,
+                event=events.robot_service_to_state_machine_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
             EventHandlerMapping(
@@ -134,7 +133,7 @@ class ReturningHome(EventHandlerBase):
             ),
             EventHandlerMapping(
                 name="mission_status_event",
-                event=events.robot_service_events.mission_status_updated,
+                event=events.robot_service_to_state_machine_events.mission_status_updated,
                 handler=_mission_status_event_handler,
             ),
             EventHandlerMapping(

@@ -76,8 +76,15 @@ class Event(Queue[T]):
 class Events:
     def __init__(self) -> None:
         self.api_requests: APIRequests = APIRequests()
-        self.state_machine_events: StateMachineEvents = StateMachineEvents()
-        self.robot_service_events: RobotServiceEvents = RobotServiceEvents()
+        self.state_machine_to_robot_service_events: StateMachineToRobotSerivceEvents = (
+            StateMachineToRobotSerivceEvents()
+        )
+        self.robot_service_to_state_machine_events: RobotServiceToStateMachineEvents = (
+            RobotServiceToStateMachineEvents()
+        )
+        self.robot_service_to_robot_service_events: RobotServiceToRobotServiceEvents = (
+            RobotServiceToRobotServiceEvents()
+        )
 
         self.upload_queue: Queue = Queue(maxsize=10)
 
@@ -128,14 +135,14 @@ class APIRequests:
         )
 
 
-class StateMachineEvents:
+class StateMachineToRobotSerivceEvents:
     def __init__(self) -> None:
         self.start_mission: Event[Mission] = Event("start_mission")
         self.stop_mission: Event[bool] = Event("stop_mission")
         self.pause_mission: Event[bool] = Event("pause_mission")
 
 
-class RobotServiceEvents:
+class RobotServiceToStateMachineEvents:
     def __init__(self) -> None:
         self.mission_status_updated: Event[MissionStatus] = Event(
             "mission_status_updated"
@@ -158,6 +165,15 @@ class RobotServiceEvents:
         self.request_inspection_upload: Event[Tuple[TASKS, Mission]] = Event(
             "request_inspection_upload"
         )
+
+
+class RobotServiceToRobotServiceEvents:
+    def __init__(self) -> None:
+        self.mission_prepared: Event[Mission] = Event("mission_prepared")
+        self.cancel_mission_preparation: Event[bool] = Event(
+            "cancel_mission_preparation"
+        )
+        self.cancel_mission_start: Event[bool] = Event("cancel_mission_start")
 
 
 class SharedState:

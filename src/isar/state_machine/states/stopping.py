@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 
 
 class Stopping(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
@@ -42,12 +41,12 @@ class Stopping(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="failed_stop_event",
-                event=events.robot_service_events.mission_failed_to_stop,
+                event=events.robot_service_to_state_machine_events.mission_failed_to_stop,
                 handler=_failed_stop_event_handler,
             ),
             EventHandlerMapping(
                 name="successful_stop_event",
-                event=events.robot_service_events.mission_successfully_stopped,
+                event=events.robot_service_to_state_machine_events.mission_successfully_stopped,
                 handler=_successful_stop_event_handler,
             ),
         ]

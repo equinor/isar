@@ -6,7 +6,7 @@ from threading import Event, Thread
 from typing import Iterator, Optional
 
 from isar.config.settings import settings
-from isar.models.events import RobotServiceEvents, SharedState
+from isar.models.events import RobotServiceToStateMachineEvents, SharedState
 from isar.services.service_connections.mqtt.mqtt_client import props_expiry
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -54,7 +54,7 @@ def should_upload_inspections(task: TASKS) -> bool:
 class RobotMonitorMissionThread(Thread):
     def __init__(
         self,
-        robot_service_events: RobotServiceEvents,
+        robot_service_to_state_machine_events: RobotServiceToStateMachineEvents,
         shared_state: SharedState,
         robot: RobotInterface,
         mqtt_publisher: MqttClientInterface,
@@ -63,7 +63,9 @@ class RobotMonitorMissionThread(Thread):
         mission: Mission,
     ):
         self.logger = logging.getLogger("robot")
-        self.robot_service_events: RobotServiceEvents = robot_service_events
+        self.robot_service_to_state_machine_events: RobotServiceToStateMachineEvents = (
+            robot_service_to_state_machine_events
+        )
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
         self.signal_mission_stopped: Event = signal_mission_stopped
@@ -308,7 +310,6 @@ class RobotMonitorMissionThread(Thread):
             self.current_mission.status = MissionStatus.Successful
 
     def run(self) -> None:
-
         self.task_iterator: Iterator[TASKS] = iter(self.current_mission.tasks)
         current_task: Optional[TASKS] = get_next_task(self.task_iterator)
         current_task.status = TaskStatus.NotStarted
@@ -318,7 +319,6 @@ class RobotMonitorMissionThread(Thread):
         while not self.signal_thread_quitting.wait(
             0
         ) or self.signal_mission_stopped.wait(0):
-
             if current_task:
                 try:
                     new_task_status = self._get_task_status(current_task.id)
@@ -339,7 +339,7 @@ class RobotMonitorMissionThread(Thread):
 
                 if is_finished(new_task_status):
                     if should_upload_inspections(current_task):
-                        self.robot_service_events.request_inspection_upload.trigger_event(
+                        self.robot_service_to_state_machine_events.request_inspection_upload.trigger_event(
                             (current_task, self.current_mission)
                         )
                     current_task = get_next_task(self.task_iterator)
@@ -358,7 +358,7 @@ class RobotMonitorMissionThread(Thread):
                 new_mission_status = self._get_mission_status(self.current_mission.id)
             except RobotMissionStatusException as e:
                 self.logger.exception("Failed to collect mission status")
-                self.robot_service_events.mission_failed.trigger_event(
+                self.robot_service_to_state_machine_events.mission_failed.trigger_event(
                     ErrorMessage(
                         error_reason=e.error_reason,
                         error_description=e.error_description,
@@ -369,7 +369,7 @@ class RobotMonitorMissionThread(Thread):
                 self.current_mission.status = new_mission_status
                 last_mission_status = new_mission_status
                 self.publish_mission_status()
-                self.robot_service_events.mission_status_updated.trigger_event(
+                self.robot_service_to_state_machine_events.mission_status_updated.trigger_event(
                     new_mission_status
                 )
 

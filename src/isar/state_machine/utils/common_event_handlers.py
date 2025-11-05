@@ -86,13 +86,13 @@ def mission_started_event_handler(
 
 def mission_failed_event_handler(
     state_machine: "StateMachine",
-    event: Event[Optional[ErrorMessage]],
+    event: Event[ErrorMessage],
 ) -> Optional[Callable]:
     mission_failed: Optional[ErrorMessage] = event.consume_event()
     if mission_failed is None:
         return None
 
     state_machine.logger.warning(
-        f"Failed to initiate mission because: " f"{mission_failed.error_description}"
+        f"Failed to initiate mission because: {mission_failed.error_description}"
     )
     return state_machine.mission_failed_to_start  # type: ignore

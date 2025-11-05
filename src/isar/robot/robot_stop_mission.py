@@ -4,6 +4,7 @@ from threading import Event, Thread
 from typing import Optional
 
 from isar.config.settings import settings
+from isar.models.events import RobotServiceToStateMachineEvents
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     ErrorReason,
@@ -17,10 +18,14 @@ from robot_interface.robot_interface import RobotInterface
 class RobotStopMissionThread(Thread):
     def __init__(
         self,
+        robot_service_to_state_machine_events: RobotServiceToStateMachineEvents,
         robot: RobotInterface,
         signal_thread_quitting: Event,
     ):
         self.logger = logging.getLogger("robot")
+        self.robot_service_to_state_machine_events: RobotServiceToStateMachineEvents = (
+            robot_service_to_state_machine_events
+        )
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
         self.error_message: Optional[ErrorMessage] = None

@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 
 
 class Monitor(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
@@ -44,7 +43,7 @@ class Monitor(EventHandlerBase):
         def _send_to_lockdown_event_handler(
             event: Event[bool],
         ) -> Optional[Callable]:
-            should_lockdown: bool = event.consume_event()
+            should_lockdown: Optional[bool] = event.consume_event()
             if not should_lockdown:
                 return None
 
@@ -91,21 +90,21 @@ class Monitor(EventHandlerBase):
             ),
             EventHandlerMapping(
                 name="mission_started_event",
-                event=events.robot_service_events.mission_started,
+                event=events.robot_service_to_state_machine_events.mission_started,
                 handler=lambda event: mission_started_event_handler(
                     state_machine, event
                 ),
             ),
             EventHandlerMapping(
                 name="mission_failed_event",
-                event=events.robot_service_events.mission_failed,
+                event=events.robot_service_to_state_machine_events.mission_failed,
                 handler=lambda event: mission_failed_event_handler(
                     state_machine, event
                 ),
             ),
             EventHandlerMapping(
                 name="mission_status_event",
-                event=events.robot_service_events.mission_status_updated,
+                event=events.robot_service_to_state_machine_events.mission_status_updated,
                 handler=_mission_status_event_handler,
             ),
             EventHandlerMapping(
