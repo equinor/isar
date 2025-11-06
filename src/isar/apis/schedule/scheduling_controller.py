@@ -14,12 +14,12 @@ from isar.apis.models.start_mission_definition import (
     StopMissionDefinition,
     to_isar_mission,
 )
-from isar.config.settings import robot_settings, settings
+from isar.config.settings import robot_settings
 from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import TASKS, InspectionTask, MoveArm
+from robot_interface.models.mission.task import TASKS, InspectionTask
 
 tracer = trace.get_tracer(__name__)
 
@@ -189,53 +189,6 @@ class SchedulingController:
             self.scheduling_utilities.stop_mission(mission_id.mission_id)
         )
         return stop_mission_response
-
-    @tracer.start_as_current_span("start_move_arm_mission")
-    def start_move_arm_mission(
-        self,
-        arm_pose_literal: str = Path(
-            ...,
-            alias="arm_pose_literal",
-            title="Arm pose literal",
-            description="Arm pose as a literal",
-        ),
-    ) -> StartMissionResponse:
-        self.logger.info("Received request to start new move arm mission")
-
-        if not robot_settings.VALID_ARM_POSES:
-            error_message: str = (
-                f"Received a request to move the arm but the robot "
-                f"{settings.ROBOT_NAME} does not support moving an arm"
-            )
-            self.logger.warning(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST, detail=error_message
-            )
-
-        if arm_pose_literal not in robot_settings.VALID_ARM_POSES:
-            error_message = (
-                f"Received a request to move the arm but the arm pose "
-                f"{arm_pose_literal} is not supported by the robot "
-                f"{settings.ROBOT_NAME}"
-            )
-            self.logger.warning(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST, detail=error_message
-            )
-
-        state: States = self.scheduling_utilities.get_state()
-
-        self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
-
-        mission: Mission = Mission(
-            name="Move arm mission", tasks=[MoveArm(arm_pose=arm_pose_literal)]
-        )
-
-        self.logger.info(
-            f"Starting move arm mission with ISAR Mission ID: '{mission.id}'"
-        )
-        self.scheduling_utilities.start_mission(mission=mission)
-        return self._api_response(mission)
 
     @tracer.start_as_current_span("release_intervention_needed")
     def release_intervention_needed(self) -> None:

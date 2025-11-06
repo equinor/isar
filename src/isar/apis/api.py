@@ -329,28 +329,6 @@ class API:
                 },
             },
         )
-        router.add_api_route(
-            path="/schedule/move_arm/{arm_pose_literal}",
-            endpoint=self.scheduling_controller.start_move_arm_mission,
-            methods=["POST"],
-            dependencies=[authentication_dependency],
-            summary="Move arm to the given arm pose literal",
-            responses={
-                HTTPStatus.OK.value: {
-                    "description": "Move arm mission successfully started",
-                },
-                HTTPStatus.BAD_REQUEST.value: {
-                    "description": "A move arm mission was scheduled on a robot that "
-                    "does not support it or the input was incorrect",
-                },
-                HTTPStatus.CONFLICT.value: {
-                    "description": "Conflict - Invalid command in the current state",
-                },
-                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
-                    "description": "Internal Server Error - Current state of state machine unknown",
-                },
-            },
-        )
 
         return router
 

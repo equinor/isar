@@ -1,6 +1,6 @@
 import os
 from importlib.resources import as_file, files
-from typing import Any, List, Optional
+from typing import Any, List
 
 from dotenv import load_dotenv
 from pydantic import Field, ValidationInfo, field_validator
@@ -344,11 +344,6 @@ class RobotSettings(BaseSettings):
     # This should be set in the robot package settings.env file
     ROBOT_MODEL: RobotModel = Field(default=RobotModel.Robot)  # type: ignore
 
-    # Valid arm poses that the robot may utilize
-    # This should be set in the robot package settings.env file
-    # Note that if the robot does not support moving an arm this will be None and
-    # the functionality will be unavailable
-    VALID_ARM_POSES: Optional[List[str]] = Field(default=None)
     model_config = SettingsConfigDict(
         env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
     )
