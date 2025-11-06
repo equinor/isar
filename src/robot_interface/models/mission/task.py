@@ -20,7 +20,6 @@ from robot_interface.utilities.uuid_string_factory import uuid4_string
 
 class TaskTypes(str, Enum):
     ReturnToHome = "return_to_home"
-    MoveArm = "move_arm"
     TakeImage = "take_image"
     TakeThermalImage = "take_thermal_image"
     TakeVideo = "take_video"
@@ -62,15 +61,6 @@ class ReturnToHome(Task):
     """
 
     type: Literal[TaskTypes.ReturnToHome] = TaskTypes.ReturnToHome
-
-
-class MoveArm(Task):
-    """
-    Task which causes the robot to move its arm
-    """
-
-    arm_pose: str = Field(default=None)
-    type: Literal[TaskTypes.MoveArm] = TaskTypes.MoveArm
 
 
 class TakeImage(InspectionTask):
@@ -161,7 +151,6 @@ class TakeCO2Measurement(InspectionTask):
 
 TASKS = Union[
     ReturnToHome,
-    MoveArm,
     TakeImage,
     TakeThermalImage,
     TakeVideo,
