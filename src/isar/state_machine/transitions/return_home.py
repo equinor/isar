@@ -131,7 +131,6 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "trigger": "go_to_lockdown",
             "source": [
                 state_machine.returning_home_state,
-                state_machine.return_home_paused_state,
                 state_machine.going_to_recharging_state,
             ],
             "dest": state_machine.going_to_lockdown_state,
