@@ -28,6 +28,19 @@ class GoingToLockdown(EventHandlerBase):
             )
             return state_machine.lockdown_mission_failed  # type: ignore
 
+        def _mission_failed_to_resume_event_handler(
+            event: Event[Optional[ErrorMessage]],
+        ) -> Optional[Callable]:
+            mission_failed_to_resume: Optional[ErrorMessage] = event.consume_event()
+            if mission_failed_to_resume is None:
+                return None
+
+            state_machine.logger.warning(
+                f"Failed to resume return to home mission and going to lockdown because: "
+                f"{mission_failed_to_resume.error_description or ''}"
+            )
+            return state_machine.lockdown_mission_failed  # type: ignore
+
         def _mission_status_event_handler(
             event: Event[MissionStatus],
         ) -> Optional[Callable]:
@@ -56,6 +69,11 @@ class GoingToLockdown(EventHandlerBase):
                 name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
                 handler=_mission_failed_event_handler,
+            ),
+            EventHandlerMapping(
+                name="mission_failed_to_resume",
+                event=events.robot_service_events.mission_failed_to_resume,
+                handler=_mission_failed_to_resume_event_handler,
             ),
             EventHandlerMapping(
                 name="mission_status_event",
