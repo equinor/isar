@@ -39,7 +39,7 @@ class StoppingGoToLockdown(EventHandlerBase):
                 LockdownResponse(lockdown_started=True)
             )
             state_machine.start_return_home_mission()
-            return state_machine.start_lockdown_mission  # type: ignore
+            return state_machine.start_lockdown_mission_monitoring  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
