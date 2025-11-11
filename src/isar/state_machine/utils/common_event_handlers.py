@@ -39,7 +39,7 @@ def return_home_event_handler(
 
     state_machine.events.api_requests.return_home.response.trigger_event(True)
     state_machine.start_return_home_mission()
-    return state_machine.start_return_home  # type: ignore
+    return state_machine.start_return_home_monitoring  # type: ignore
 
 
 def stop_mission_event_handler(
