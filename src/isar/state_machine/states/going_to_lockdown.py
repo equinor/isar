@@ -11,20 +11,18 @@ if TYPE_CHECKING:
 
 
 class GoingToLockdown(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
         def _mission_failed_event_handler(
-            event: Event[Optional[ErrorMessage]],
+            event: Event[ErrorMessage],
         ) -> Optional[Callable]:
             mission_failed: Optional[ErrorMessage] = event.consume_event()
             if mission_failed is None:
                 return None
 
             state_machine.logger.warning(
-                f"Failed to go to lockdown because: "
-                f"{mission_failed.error_description}"
+                f"Failed to go to lockdown because: {mission_failed.error_description}"
             )
             return state_machine.lockdown_mission_failed  # type: ignore
 
@@ -47,19 +45,19 @@ class GoingToLockdown(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="mission_started_event",
-                event=events.robot_service_events.mission_started,
+                event=events.robot_service_to_state_machine_events.mission_started,
                 handler=lambda event: mission_started_event_handler(
                     state_machine, event
                 ),
             ),
             EventHandlerMapping(
                 name="mission_failed_event",
-                event=events.robot_service_events.mission_failed,
+                event=events.robot_service_to_state_machine_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
             EventHandlerMapping(
                 name="mission_status_event",
-                event=events.robot_service_events.mission_status_updated,
+                event=events.robot_service_to_state_machine_events.mission_status_updated,
                 handler=_mission_status_event_handler,
             ),
         ]

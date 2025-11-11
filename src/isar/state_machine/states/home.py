@@ -16,13 +16,12 @@ if TYPE_CHECKING:
 
 
 class Home(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
         def _send_to_lockdown_event_handler(event: Event[bool]):
-            should_send_robot_home: bool = event.consume_event()
+            should_send_robot_home: Optional[bool] = event.consume_event()
             if not should_send_robot_home:
                 return None
 
@@ -81,12 +80,12 @@ class Home(EventHandlerBase):
             ),
             EventHandlerMapping(
                 name="stop_mission_event",
-                event=events.api_requests.return_home.request,
+                event=events.api_requests.stop_mission.request,
                 handler=lambda event: stop_mission_event_handler(state_machine, event),
             ),
             EventHandlerMapping(
                 name="robot_status_event",
-                event=events.robot_service_events.robot_status_changed,
+                event=events.robot_service_to_state_machine_events.robot_status_changed,
                 handler=_robot_status_event_handler,
             ),
             EventHandlerMapping(

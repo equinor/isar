@@ -96,23 +96,19 @@ def test_state_machine_transitions_when_running_full_mission(
         0
     ].timeout_in_seconds = 0.01
 
-    # mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
-
+    robot_service_thread.robot_service.robot = (
+        StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(
+            current_state=robot_service_thread.robot_service.shared_state.state,
+            start_mission_delay=1,
+        )
+    )
     state_machine_thread.start()
     robot_service_thread.start()
     time.sleep(1)
     # Setting the poll interval to a lower value to ensure that the robot status is
     # updated during the mission. This value needs to be set after the robot service
     # thread has been started.
-    robot_service_thread.robot_service.robot = (
-        StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(
-            current_state=robot_service_thread.robot_service.shared_state.state,
-            initiate_mission_delay=1,
-        )
-    )
-    robot_service_thread.robot_service.robot_status_thread.robot_status_poll_interval = (
-        0.5
-    )
+    robot_service_thread.robot_service.robot_status_thread.robot_status_poll_interval = 0.5
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
@@ -124,12 +120,12 @@ def test_state_machine_transitions_when_running_full_mission(
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(3)  # Allow enough time to run mission and return home
+    time.sleep(5)  # Allow enough time to run mission and return home
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
-            States.AwaitNextMission,
+            States.Home,
             States.Monitor,
             States.AwaitNextMission,
             States.ReturningHome,
@@ -712,9 +708,7 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
             States.Monitor,
         ]
     )
-    assert (
-        not state_machine_thread.state_machine.events.api_requests.start_mission.request.has_event()
-    )
+    assert not state_machine_thread.state_machine.events.api_requests.start_mission.request.has_event()
 
 
 def test_return_home_cancelled_when_new_mission_received(
@@ -737,7 +731,9 @@ def test_return_home_cancelled_when_new_mission_received(
 
     assert transition is sync_state_machine.stop_return_home  # type: ignore
     transition()
-    assert sync_state_machine.state is sync_state_machine.stopping_return_home_state.name  # type: ignore
+    assert (
+        sync_state_machine.state is sync_state_machine.stopping_return_home_state.name
+    )  # type: ignore
 
 
 def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
@@ -783,7 +779,10 @@ def test_mission_stopped_when_going_to_lockdown(
 
     assert transition is sync_state_machine.stop_go_to_lockdown  # type: ignore
     transition()
-    assert sync_state_machine.state is sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
+    assert (
+        sync_state_machine.state
+        is sync_state_machine.stopping_go_to_lockdown_state.name
+    )  # type: ignore
 
 
 def test_stopping_lockdown_transitions_to_going_to_lockdown(
@@ -811,9 +810,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
     transition = event_handler.handler(event_handler.event)
 
     assert transition is sync_state_machine.request_lockdown_mission  # type: ignore
-    assert (
-        sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
-    )
+    assert sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
 
     assert not sync_state_machine.events.mqtt_queue.empty()
     mqtt_message = sync_state_machine.events.mqtt_queue.get(block=False)
@@ -844,9 +841,7 @@ def test_stopping_lockdown_failing(
     transition = event_handler.handler(event_handler.event)
 
     assert transition is sync_state_machine.mission_stopping_failed  # type: ignore
-    assert (
-        not sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
-    )
+    assert not sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
 
     assert sync_state_machine.events.mqtt_queue.empty()
 
@@ -1334,9 +1329,7 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
 
     transition()
     assert sync_state_machine.state is sync_state_machine.home_state.name  # type: ignore
-    assert (
-        not sync_state_machine.events.robot_service_events.robot_status_changed.check()
-    )
+    assert not sync_state_machine.events.robot_service_to_state_machine_events.robot_status_changed.check()
 
     home_state: EventHandlerBase = cast(EventHandlerBase, sync_state_machine.home_state)
     event_handler_robot_status: Optional[EventHandlerMapping] = (

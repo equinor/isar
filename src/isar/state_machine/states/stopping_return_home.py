@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 
 class StoppingReturnHome(EventHandlerBase):
-
     def __init__(self, state_machine: "StateMachine"):
         logger = logging.getLogger("state_machine")
         events = state_machine.events
@@ -25,23 +24,24 @@ class StoppingReturnHome(EventHandlerBase):
                 return None
 
             logger.warning(error_message.error_description)
-            mission: Mission = (
+            mission: Optional[Mission] = (
                 state_machine.events.api_requests.start_mission.request.consume_event()
             )
-            state_machine.events.api_requests.start_mission.response.trigger_event(
-                MissionStartResponse(
-                    mission_id=mission.id,
-                    mission_started=False,
-                    mission_not_started_reason="Failed to cancel return home mission",
+            if mission:
+                state_machine.events.api_requests.start_mission.response.trigger_event(
+                    MissionStartResponse(
+                        mission_id=mission.id,
+                        mission_started=False,
+                        mission_not_started_reason="Failed to cancel return home mission",
+                    )
                 )
-            )
             return state_machine.return_home_mission_stopping_failed  # type: ignore
 
         def _successful_stop_event_handler(event: Event[bool]) -> Optional[Callable]:
             if not event.consume_event():
                 return None
 
-            mission: Mission = (
+            mission: Optional[Mission] = (
                 state_machine.events.api_requests.start_mission.request.consume_event()
             )
 
@@ -57,12 +57,12 @@ class StoppingReturnHome(EventHandlerBase):
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="failed_stop_event",
-                event=events.robot_service_events.mission_failed_to_stop,
+                event=events.robot_service_to_state_machine_events.mission_failed_to_stop,
                 handler=_failed_stop_event_handler,
             ),
             EventHandlerMapping(
                 name="successful_stop_event",
-                event=events.robot_service_events.mission_successfully_stopped,
+                event=events.robot_service_to_state_machine_events.mission_successfully_stopped,
                 handler=_successful_stop_event_handler,
             ),
         ]
