@@ -217,7 +217,7 @@ def test_return_home_starts_when_battery_is_low(
 
     transition = timer.handler()
 
-    assert transition is sync_state_machine.start_return_home  # type: ignore
+    assert transition is sync_state_machine.start_return_home_monitoring  # type: ignore
 
 
 def test_monitor_goes_to_return_home_when_battery_low(
@@ -259,7 +259,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging(
     event_handler.event.trigger_event(True)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.start_recharging_mission  # type: ignore
+    assert transition is sync_state_machine.start_recharging_mission_monitoring  # type: ignore
     assert not sync_state_machine.events.mqtt_queue.empty()
 
     mqtt_message = sync_state_machine.events.mqtt_queue.get(block=False)
@@ -808,7 +808,7 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
     transition = event_handler.handler(event_handler.event)
     transition()
 
-    assert transition is sync_state_machine.start_return_home  # type: ignore
+    assert transition is sync_state_machine.start_return_home_monitoring  # type: ignore
     assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
 
 
@@ -859,7 +859,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
     event_handler.event.trigger_event(True)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.start_lockdown_mission  # type: ignore
+    assert transition is sync_state_machine.start_lockdown_mission_monitoring  # type: ignore
     assert (
         sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
     )
@@ -1093,7 +1093,7 @@ def test_await_next_mission_transitions_to_going_to_lockdown(
     event_handler.event.trigger_event(True)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.start_lockdown_mission  # type: ignore
+    assert transition is sync_state_machine.start_lockdown_mission_monitoring  # type: ignore
     assert sync_state_machine.events.api_requests.send_to_lockdown.response.check()
     transition()
     assert sync_state_machine.state is sync_state_machine.going_to_lockdown_state.name  # type: ignore
