@@ -7,6 +7,8 @@ from uvicorn.logging import ColourizedFormatter
 
 from isar.config.settings import settings
 
+from .settings import Settings
+
 
 def setup_loggers() -> None:
     log_levels: dict = settings.LOG_LEVELS
@@ -16,7 +18,9 @@ def setup_loggers() -> None:
 
     handlers = []
     if settings.LOG_HANDLER_LOCAL_ENABLED:
-        handlers.append(configure_console_handler(log_config=log_config))
+        handlers.append(
+            configure_console_handler(log_config=log_config, settings=settings)
+        )
 
     for log_handler in handlers:
         for loggers in log_config["loggers"].keys():
@@ -32,14 +36,23 @@ def load_log_config():
     return log_config
 
 
-def configure_console_handler(log_config: dict) -> logging.Handler:
+def configure_console_handler(log_config: dict, settings: Settings) -> logging.Handler:
     handler = logging.StreamHandler()
     handler.setLevel(log_config["root"]["level"])
-    handler.setFormatter(
-        ColourizedFormatter(
-            log_config["formatters"]["colourized"]["format"],
-            style="{",
-            use_colors=True,
+    if settings.DEBUG_LOG_FORMATTER:
+        handler.setFormatter(
+            ColourizedFormatter(
+                log_config["formatters"]["debug-formatter"]["format"],
+                style="{",
+                use_colors=True,
+            )
         )
-    )
+    else:
+        handler.setFormatter(
+            ColourizedFormatter(
+                log_config["formatters"]["colourized"]["format"],
+                style="{",
+                use_colors=True,
+            )
+        )
     return handler

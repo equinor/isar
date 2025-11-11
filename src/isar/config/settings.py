@@ -270,6 +270,8 @@ class Settings(BaseSettings):
     UVICORN_LOG_LEVEL: str = Field(default="WARNING")
     AZURE_LOG_LEVEL: str = Field(default="WARNING")
 
+    DEBUG_LOG_FORMATTER: bool = Field(default=False)
+
     LOG_LEVELS: dict = Field(default={})
 
     REQUIRED_ROLE: str = Field(default="Mission.Control")
