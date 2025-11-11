@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING, List
 
-from isar.state_machine.transitions.functions.utils import def_transition
-
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
