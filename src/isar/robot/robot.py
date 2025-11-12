@@ -121,24 +121,20 @@ class Robot(object):
         if (
             self.stop_mission_thread is not None
             and not self.stop_mission_thread.is_alive()
-            and (
-                not self.monitor_mission_thread
-                or not self.monitor_mission_thread.is_alive()
-            )
         ):
             self.stop_mission_thread.join()
             error_message = self.stop_mission_thread.error_message
             self.stop_mission_thread = None
-
-            if self.monitor_mission_thread is not None:
-                self.monitor_mission_thread.join()
-                self.monitor_mission_thread = None
 
             if error_message:
                 self.robot_service_events.mission_failed_to_stop.trigger_event(
                     error_message
                 )
             else:
+                self.signal_mission_stopped.set()
+                if self.monitor_mission_thread is not None:
+                    self.monitor_mission_thread.join()
+                    self.monitor_mission_thread = None
                 self.robot_service_events.mission_successfully_stopped.trigger_event(
                     True
                 )
@@ -207,7 +203,6 @@ class Robot(object):
                 self.robot, self.signal_thread_quitting
             )
             self.stop_mission_thread.start()
-            self.signal_mission_stopped.set()
 
     def _pause_mission_request_handler(self, event: Event[bool]) -> None:
         if event.consume_event():
