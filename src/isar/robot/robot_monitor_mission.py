@@ -393,12 +393,12 @@ class RobotMonitorMissionThread(Thread):
             time.sleep(settings.FSM_SLEEP_TIME)
         self.shared_state.mission_id.trigger_event(None)
 
-        if not self.signal_mission_stopped.wait(0):
-            self.logger.info("Done monitoring current mission")
-            return
+        mission_stopped = self.signal_mission_stopped.wait(0)
 
         if current_task:
-            current_task.status = TaskStatus.Cancelled
+            current_task.status = (
+                TaskStatus.Cancelled if mission_stopped else TaskStatus.Failed
+            )
             self.publish_task_status(task=current_task)
         if new_mission_status not in [
             MissionStatus.Cancelled,
@@ -408,4 +408,8 @@ class RobotMonitorMissionThread(Thread):
         ]:
             self.current_mission.status = MissionStatus.Cancelled
             self.publish_mission_status()
-        self.logger.info("Stopped monitoring mission due to mission stop")
+            if not mission_stopped:
+                self.robot_service_events.mission_status_updated.trigger_event(
+                    self.current_mission.status
+                )
+        self.logger.info("Stopped monitoring mission")
