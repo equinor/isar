@@ -318,6 +318,8 @@ class StateMachine(object):
             return IsarStatus.GoingToLockdown
         elif self.current_state == States.GoingToRecharging:
             return IsarStatus.GoingToRecharging
+        elif self.current_state == States.Maintenance:
+            return IsarStatus.Maintenance
         else:
             return IsarStatus.Busy
 
