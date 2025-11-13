@@ -60,6 +60,7 @@ dynamic = ["version"]
 
 [project.scripts]
 isar-start = "isar.script:start"
+isar-test-print = "isar.script:print_startup_info"
 
 [project.urls]
 repository = "https://github.com/equinor/isar.git"
