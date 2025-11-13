@@ -32,6 +32,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
 
+      - name: Verify imported modules are valid without .[dev] 
+        run: |
+          pip install -e .
+          isar-test-print
+          echo "Core non-dev imports are valid"
+
       - name: Install dependencies with the compiled requirements (for Python 3.13)
         if: ${{matrix.python-version == '3.13'}}
         run: |
