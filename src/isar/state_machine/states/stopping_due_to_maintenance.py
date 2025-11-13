@@ -25,6 +25,9 @@ class StoppingDueToMaintenance(EventHandlerBase):
                         failure_reason="Failed to stop ongoing mission",
                     )
                 )
+                state_machine.logger.error(
+                    f"Failed to stop mission in StoppingDueToMaintenance. Message: {error_message.error_description}"
+                )
                 return state_machine.mission_stopping_failed  # type: ignore
             return None
 
