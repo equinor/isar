@@ -27,6 +27,7 @@ class ReturnHomePaused(EventHandlerBase):
             ):
                 return None
 
+            state_machine.events.state_machine_events.resume_mission.trigger_event(True)
             return state_machine.resume  # type: ignore
 
         def _start_mission_event_handler(
@@ -46,6 +47,7 @@ class ReturnHomePaused(EventHandlerBase):
                     response
                 )
                 return None
+            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
             return state_machine.stop_return_home  # type: ignore
 
         def _send_to_lockdown_event_handler(
@@ -58,6 +60,7 @@ class ReturnHomePaused(EventHandlerBase):
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
+            state_machine.events.state_machine_events.resume_mission.trigger_event(True)
             return state_machine.resume_lockdown  # type: ignore
 
         def _set_maintenance_mode_event_handler(event: Event[bool]):
@@ -65,6 +68,9 @@ class ReturnHomePaused(EventHandlerBase):
             if should_set_maintenande_mode:
                 state_machine.logger.warning(
                     "Cancelling current mission due to robot going to maintenance mode"
+                )
+                state_machine.events.state_machine_events.stop_mission.trigger_event(
+                    True
                 )
                 return state_machine.stop_due_to_maintenance  # type: ignore
             return None

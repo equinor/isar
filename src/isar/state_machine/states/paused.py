@@ -32,6 +32,7 @@ class Paused(EventHandlerBase):
             state_machine.logger.warning(
                 "Cancelling current mission due to low battery"
             )
+            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
             return state_machine.stop  # type: ignore
 
         def _send_to_lockdown_event_handler(
@@ -45,6 +46,7 @@ class Paused(EventHandlerBase):
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to lockdown"
             )
+            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
             return state_machine.stop_go_to_lockdown  # type: ignore
 
         def _set_maintenance_mode_event_handler(event: Event[bool]):
@@ -53,7 +55,18 @@ class Paused(EventHandlerBase):
                 state_machine.logger.warning(
                     "Cancelling current mission due to robot going to maintenance mode"
                 )
+                state_machine.events.state_machine_events.stop_mission.trigger_event(
+                    True
+                )
                 return state_machine.stop_due_to_maintenance  # type: ignore
+            return None
+
+        def _resume_misison_event_handler(event: Event[bool]):
+            if event.consume_event():
+                state_machine.events.state_machine_events.resume_mission.trigger_event(
+                    True
+                )
+                return state_machine.resume  # type: ignore
             return None
 
         event_handlers: List[EventHandlerMapping] = [
@@ -65,7 +78,7 @@ class Paused(EventHandlerBase):
             EventHandlerMapping(
                 name="resume_mission_event",
                 event=events.api_requests.resume_mission.request,
-                handler=lambda event: state_machine.resume if event.consume_event() else None,  # type: ignore
+                handler=_resume_misison_event_handler,
             ),
             EventHandlerMapping(
                 name="robot_battery_update_event",

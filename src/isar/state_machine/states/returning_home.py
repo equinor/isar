@@ -8,6 +8,7 @@ from isar.state_machine.utils.common_event_handlers import mission_started_event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.task import ReturnToHome
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 class ReturningHome(EventHandlerBase):
 
     def __init__(self, state_machine: "StateMachine"):
-        self.failed_return_home_attemps: int = 0
+        self.failed_return_home_attempts: int = 0
         events = state_machine.events
         shared_state = state_machine.shared_state
 
@@ -24,6 +25,7 @@ class ReturningHome(EventHandlerBase):
             if not event.consume_event():
                 return None
 
+            state_machine.events.state_machine_events.pause_mission.trigger_event(True)
             return state_machine.pause_return_home  # type: ignore
 
         def _start_mission_event_handler(
@@ -44,6 +46,7 @@ class ReturningHome(EventHandlerBase):
                 )
                 return None
 
+            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
             return state_machine.stop_return_home  # type: ignore
 
         def _mission_status_event_handler(
@@ -57,10 +60,27 @@ class ReturningHome(EventHandlerBase):
                 MissionStatus.Paused,
             ]:
                 if mission_status != MissionStatus.Successful:
-                    self.failed_return_home_attemps += 1
-                    return state_machine.return_home_failed  # type: ignore
+                    self.failed_return_home_attempts += 1
+                    if (
+                        self.failed_return_home_attempts
+                        >= settings.RETURN_HOME_RETRY_LIMIT
+                    ):
+                        state_machine.publish_intervention_needed(
+                            error_message=f"Return home failed after {self.failed_return_home_attempts} attempts."
+                        )
+                        state_machine.print_transitions()
+                        return state_machine.return_home_failed  # type: ignore
+                    else:
+                        state_machine.start_mission(
+                            Mission(
+                                tasks=[ReturnToHome()],
+                                name="Return Home",
+                            )
+                        )
+                        return None
 
-                self.failed_return_home_attemps = 0
+                # This clears the current robot status value, so we don't read an outdated value
+                state_machine.events.robot_service_events.robot_status_changed.clear_event()
                 return state_machine.returned_home  # type: ignore
             return None
 
@@ -85,6 +105,10 @@ class ReturningHome(EventHandlerBase):
                     f"Failed to initiate return home because: "
                     f"{mission_failed.error_description}"
                 )
+                state_machine.publish_intervention_needed(
+                    error_message="Return home failed to initiate."
+                )
+                state_machine.print_transitions()
                 return state_machine.return_home_failed  # type: ignore
             return None
 
@@ -93,6 +117,9 @@ class ReturningHome(EventHandlerBase):
             if should_set_maintenande_mode:
                 state_machine.logger.warning(
                     "Cancelling current mission due to robot going to maintenance mode"
+                )
+                state_machine.events.state_machine_events.stop_mission.trigger_event(
+                    True
                 )
                 return state_machine.stop_due_to_maintenance  # type: ignore
             return None
@@ -157,4 +184,9 @@ class ReturningHome(EventHandlerBase):
             state_name="returning_home",
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
+            on_transition=self._reset_failure_counter,
+            on_entry=self._reset_failure_counter,
         )
+
+    def _reset_failure_counter(self):
+        self.failed_return_home_attempts = 0

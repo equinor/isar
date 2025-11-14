@@ -184,28 +184,6 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def initialize(self) -> None:
-        """Initializes the robot. The initialization needed is robot dependent and the
-        function can be a simple return statement if no initialization is needed for the
-        robot.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        RobotInitializeException
-            If the robot package is unable to initialize the robot correctly the mission
-            will be cancelled
-        RobotException
-            Catches other RobotExceptions that might have occurred during initialization
-            where the result is that the mission is cancelled
-
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def generate_media_config(self) -> Optional[MediaConfig]:
         """
         Generate a JSON containing the url and token needed to establish a media stream

@@ -84,9 +84,6 @@ class StubRobot(RobotInterface):
     ) -> None:
         return
 
-    def initialize(self) -> None:
-        return
-
     def get_telemetry_publishers(
         self, queue: Queue, isar_id: str, robot_name: str
     ) -> List[Thread]:
@@ -150,10 +147,10 @@ class StubRobotBlockedProtectiveStopToHomeTest(StubRobot):
             raise RobotCommunicationException("Could not read state machine state")
         if current_state == "blocked_protective_stop":
             self.entered_blocked_p_stop = True
-            return RobotStatus.Available
+            return RobotStatus.Home
         if not self.entered_blocked_p_stop:
             return RobotStatus.BlockedProtectiveStop
-        return RobotStatus.Available
+        return RobotStatus.Home
 
 
 class StubRobotOfflineToHomeTest(StubRobot):

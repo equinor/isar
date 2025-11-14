@@ -38,6 +38,8 @@ class EventHandlerBase(State):
         state_name: str,
         event_handler_mappings: List[EventHandlerMapping],
         timers: List[TimeoutHandlerMapping] = [],
+        on_entry: Optional[Callable[[], None]] = None,
+        on_transition: Optional[Callable[[], None]] = None,
     ) -> None:
 
         super().__init__(name=state_name, on_enter=self.start)
@@ -50,9 +52,13 @@ class EventHandlerBase(State):
         self.event_handler_mappings = event_handler_mappings
         self.state_name: str = state_name
         self.timers = timers
+        self.on_entry = on_entry
+        self.on_transition = on_transition
 
     def start(self) -> None:
         self.state_machine.update_state()
+        if self.on_entry:
+            self.on_entry()
         self._run()
 
     def stop(self) -> None:
@@ -113,3 +119,5 @@ class EventHandlerBase(State):
             if should_exit_state:
                 break
             time.sleep(settings.FSM_SLEEP_TIME)
+        if self.on_transition:
+            self.on_transition()

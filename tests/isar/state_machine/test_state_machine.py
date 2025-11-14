@@ -9,6 +9,7 @@ import pytest
 from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
+from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import (
     EventHandlerBase,
@@ -21,7 +22,6 @@ from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states_enum import States
-from isar.state_machine.transitions.functions.stop import stop_mission_failed
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.exceptions.robot_exceptions import (
@@ -216,7 +216,7 @@ def test_return_home_starts_when_battery_is_low(
 
     transition = timer.handler()
 
-    assert transition is sync_state_machine.request_return_home  # type: ignore
+    assert transition is sync_state_machine.start_return_home_monitoring  # type: ignore
 
 
 def test_monitor_goes_to_return_home_when_battery_low(
@@ -258,7 +258,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging(
     event_handler.event.trigger_event(True)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.request_recharging_mission  # type: ignore
+    assert transition is sync_state_machine.start_recharging_mission_monitoring  # type: ignore
     assert not sync_state_machine.events.mqtt_queue.empty()
 
     mqtt_message = sync_state_machine.events.mqtt_queue.get(block=False)
@@ -446,10 +446,6 @@ def test_state_machine_failed_dependency(
             States.Monitor,
             States.AwaitNextMission,
             States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
             States.InterventionNeeded,
         ]
     )
@@ -610,7 +606,7 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
         StubRobot, "stop", side_effect=_mock_robot_exception_with_message
     )
 
-    state_machine_thread.state_machine.sleep_time = 0
+    settings.FSM_SLEEP_TIME = 0
 
     state_machine_thread.start()
     robot_service_thread.start()
@@ -646,7 +642,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
         StubRobot, "stop", side_effect=_mock_robot_exception_with_message
     )
 
-    state_machine_thread.state_machine.sleep_time = 0
+    settings.FSM_SLEEP_TIME = 0
 
     state_machine_thread.start()
     robot_service_thread.start()
@@ -673,7 +669,12 @@ def test_api_with_unsuccessful_return_home_stop(
     sync_state_machine: StateMachine,
 ) -> None:
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    stop_mission_failed(sync_state_machine)
+    stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
+        success=False, failure_reason="ISAR failed to stop mission"
+    )
+    sync_state_machine.events.api_requests.stop_mission.response.trigger_event(
+        stopped_mission_response
+    )
 
     with pytest.raises(HTTPException) as exception_details:
         scheduling_utilities.stop_mission()
@@ -694,7 +695,7 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
     )
 
-    state_machine_thread.state_machine.sleep_time = 0
+    settings.FSM_SLEEP_TIME = 0
 
     state_machine_thread.start()
     robot_service_thread.start()
@@ -759,7 +760,7 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
     transition = event_handler.handler(event_handler.event)
     transition()
 
-    assert transition is sync_state_machine.request_return_home  # type: ignore
+    assert transition is sync_state_machine.start_return_home_monitoring  # type: ignore
     assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
 
 
@@ -810,7 +811,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
     event_handler.event.trigger_event(True)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.request_lockdown_mission  # type: ignore
+    assert transition is sync_state_machine.start_lockdown_mission_monitoring  # type: ignore
     assert (
         sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
     )
@@ -1044,7 +1045,7 @@ def test_await_next_mission_transitions_to_going_to_lockdown(
     event_handler.event.trigger_event(True)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.request_lockdown_mission  # type: ignore
+    assert transition is sync_state_machine.start_lockdown_mission_monitoring  # type: ignore
     assert sync_state_machine.events.api_requests.send_to_lockdown.response.check()
     transition()
     assert sync_state_machine.state is sync_state_machine.going_to_lockdown_state.name  # type: ignore
@@ -1075,7 +1076,7 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     transition = event_handler.handler(event_handler.event)
     transition()
 
-    assert transition is sync_state_machine.request_mission_start  # type: ignore
+    assert transition is sync_state_machine.start_mission_monitoring  # type: ignore
     assert sync_state_machine.state is sync_state_machine.monitor_state.name  # type: ignore
 
 
@@ -1100,11 +1101,8 @@ def test_state_machine_with_return_home_failure_successful_retries(
     event_handler.event.trigger_event(MissionStatus.Failed)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.return_home_failed  # type: ignore
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
-    assert sync_state_machine.returning_home_state.failed_return_home_attemps == 1
+    assert transition is None  # type: ignore
+    assert sync_state_machine.returning_home_state.failed_return_home_attempts == 1
 
     event_handler.event.trigger_event(MissionStatus.Successful)
     transition = event_handler.handler(event_handler.event)
@@ -1113,6 +1111,43 @@ def test_state_machine_with_return_home_failure_successful_retries(
 
     transition()
     assert sync_state_machine.state is sync_state_machine.home_state.name  # type: ignore
+
+
+def test_state_machine_with_return_home_failure(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
+    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
+
+    returning_home_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.returning_home_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("mission_status_event")
+    )
+
+    # We do not retry return home missions if the robot is not ready for another mission
+    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Available)
+
+    assert event_handler is not None
+
+    for i in range(settings.RETURN_HOME_RETRY_LIMIT - 1):
+
+        event_handler.event.trigger_event(MissionStatus.Failed)
+        transition = event_handler.handler(event_handler.event)
+
+        assert transition is None  # type: ignore
+        assert (
+            sync_state_machine.returning_home_state.failed_return_home_attempts == i + 1
+        )
+
+    event_handler.event.trigger_event(MissionStatus.Failed)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.return_home_failed  # type: ignore
+
+    transition()
+    assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore
 
 
 def test_state_machine_offline_to_home(

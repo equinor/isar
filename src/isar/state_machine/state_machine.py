@@ -47,6 +47,7 @@ from isar.state_machine.transitions.mission import get_mission_transitions
 from isar.state_machine.transitions.return_home import get_return_home_transitions
 from isar.state_machine.transitions.robot_status import get_robot_status_transitions
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.task import ReturnToHome
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
@@ -66,9 +67,6 @@ class StateMachine(object):
         shared_state: SharedState,
         robot: RobotInterface,
         mqtt_publisher: MqttClientInterface,
-        sleep_time: float = settings.FSM_SLEEP_TIME,
-        stop_robot_attempts_limit: int = settings.STOP_ROBOT_ATTEMPTS_LIMIT,
-        transitions_log_length: int = settings.STATE_TRANSITIONS_LOG_LENGTH,
     ):
         """Initializes the state machine.
 
@@ -80,12 +78,6 @@ class StateMachine(object):
             Instance of robot interface.
         mqtt_publisher : MqttClientInterface
             Instance of MQTT client interface which has a publish function
-        sleep_time : float
-            Time to sleep in between state machine iterations.
-        stop_robot_attempts_limit : int
-            Maximum attempts to stop the robot when stop command is received
-        transitions_log_length : int
-            Length of state transition log list.
 
         """
         self.logger = logging.getLogger("state_machine")
@@ -181,13 +173,11 @@ class StateMachine(object):
 
         self.machine.add_transitions(self.transitions)
 
-        self.stop_robot_attempts_limit: int = stop_robot_attempts_limit
-        self.sleep_time: float = sleep_time
-
         self.current_state: State = States(self.state)  # type: ignore
 
-        self.transitions_log_length: int = transitions_log_length
-        self.transitions_list: Deque[States] = deque([], self.transitions_log_length)
+        self.transitions_list: Deque[States] = deque(
+            [], settings.STATE_TRANSITIONS_LOG_LENGTH
+        )
 
     #################################################################################
 
@@ -203,7 +193,7 @@ class StateMachine(object):
 
     def begin(self):
         """Starts the state machine. Transitions into unknown status state."""
-        self.robot_status_changed()  # type: ignore
+        self.initial_transition()  # type: ignore
 
     def terminate(self):
         self.logger.info("Stopping state machine")
@@ -228,6 +218,14 @@ class StateMachine(object):
 
     def start_mission(self, mission: Mission):
         """Starts a scheduled mission."""
+        self.events.state_machine_events.start_mission.trigger_event(mission)
+
+    def start_return_home_mission(self):
+        """Starts a return to home mission."""
+        mission = Mission(
+            tasks=[ReturnToHome()],
+            name="Return Home",
+        )
         self.events.state_machine_events.start_mission.trigger_event(mission)
 
     def publish_mission_aborted(self, reason: str, can_be_continued: bool) -> None:
