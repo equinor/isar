@@ -36,6 +36,7 @@ from tests.test_double.pose import DummyPose
 from tests.test_double.robot_interface import (
     StubRobot,
     StubRobotBlockedProtectiveStopToHomeTest,
+    StubRobotInitiateMissionRaisesException,
     StubRobotMissionStatusRaisesException,
     StubRobotOfflineToHomeTest,
     StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus,
@@ -434,6 +435,51 @@ def test_state_machine_failed_dependency(
 
     state_machine_thread.start()
     robot_service_thread.start()
+    time.sleep(1)
+    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
+    scheduling_utilities.start_mission(mission=mission)
+    time.sleep(3)  # Allow the state machine to transition through the mission
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [
+            States.UnknownStatus,
+            States.AwaitNextMission,
+            States.Monitor,
+            States.AwaitNextMission,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.InterventionNeeded,
+        ]
+    )
+
+
+def test_state_machine_failed_to_initiate_mission_and_return_home(
+    container: ApplicationContainer,
+    state_machine_thread: StateMachineThreadMock,
+    robot_service_thread: RobotServiceThreadMock,
+    mocker,
+) -> None:
+    state_machine_thread.state_machine.await_next_mission_state.timers[
+        0
+    ].timeout_in_seconds = 0.01
+
+    robot_service_thread.robot_service.robot = StubRobotInitiateMissionRaisesException()
+
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    task_2: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
+
+    state_machine_thread.start()
+    robot_service_thread.start()
+
+    # TODO: check mqtt
     time.sleep(1)
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)

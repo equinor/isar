@@ -16,6 +16,7 @@ from isar.services.service_connections.persistent_memory import (
     create_persistent_robot_state,
     read_persistent_robot_state_is_maintenance_mode,
 )
+from isar.services.utilities.mqtt_utilities import publish_isar_status
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
@@ -51,7 +52,6 @@ from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
     InterventionNeededPayload,
-    IsarStatusPayload,
     MissionAbortedPayload,
 )
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
@@ -279,19 +279,7 @@ class StateMachine(object):
         if not self.mqtt_publisher:
             return
 
-        payload: IsarStatusPayload = IsarStatusPayload(
-            isar_id=settings.ISAR_ID,
-            robot_name=settings.ROBOT_NAME,
-            status=self._current_status(),
-            timestamp=datetime.now(timezone.utc),
-        )
-
-        self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_STATUS,
-            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
-            qos=1,
-            retain=True,
-        )
+        publish_isar_status(self.mqtt_publisher, self._current_status())
 
     def _current_status(self) -> IsarStatus:
         if self.current_state == States.AwaitNextMission:
