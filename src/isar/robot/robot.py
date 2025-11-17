@@ -186,7 +186,7 @@ class Robot(object):
             self.start_mission_thread.start()
 
     def _stop_mission_request_handler(self, event: Event[bool]) -> None:
-        if event.consume_event():
+        if event.has_event():
             if (
                 self.stop_mission_thread is not None
                 and self.stop_mission_thread.is_alive()
@@ -199,15 +199,8 @@ class Robot(object):
                 self.start_mission_thread is not None
                 and self.start_mission_thread.is_alive()
             ):
-                error_description = "Received stop mission event while trying to start a mission. Aborting stop attempt."
-                error_message = ErrorMessage(
-                    error_reason=ErrorReason.RobotStillStartingMissionException,
-                    error_description=error_description,
-                )
-                self.robot_service_events.mission_failed_to_stop.trigger_event(
-                    error_message
-                )
                 return
+            event.consume_event()
             self.stop_mission_thread = RobotStopMissionThread(
                 self.robot, self.signal_thread_quitting
             )
