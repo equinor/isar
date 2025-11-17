@@ -1,0 +1,13 @@
+Alembic is used to migrate the databases. [link](https://alembic.sqlalchemy.org/en/latest/front.html#installation)
+
+# Creating new migrations
+Requires setting the correct environment variable connection string `ISAR_PERSISTENT_STORAGE_CONNECTION_STRING` for the database. 
+```
+alembic revision --autogenerate -m "Migration name"
+```
+This will compare what is in the metadata of sqlalchemy Base with what is in the database and create a migration for it. 
+
+# Run migration
+```
+alembic upgrade head
+```

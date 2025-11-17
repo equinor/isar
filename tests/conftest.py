@@ -35,6 +35,11 @@ from tests.test_double.blob_storage import StorageFake
 from tests.test_double.robot_interface import StubRobot
 
 
+@pytest.fixture(autouse=True)
+def setup_test_environment():
+    settings.PERSISTENT_STORAGE_CONNECTION_STRING = ""
+
+
 @pytest.fixture()
 def container():
     """Fixture to provide the dependency-injector container without auth."""

@@ -54,7 +54,8 @@ dependencies = [
     "azure-monitor-opentelemetry",
     "azure-monitor-opentelemetry-exporter>=1.0.0b38",
     "pymysql",
-    "sqlalchemy"
+    "sqlalchemy",
+    "psycopg2"
 ]
 dynamic = ["version"]
 
@@ -78,6 +79,7 @@ dev = [
     "requests-mock",
     "ruff",
     "testcontainers[mysql]",
+    "alembic"
 ]
 
 [tool.setuptools_scm]
