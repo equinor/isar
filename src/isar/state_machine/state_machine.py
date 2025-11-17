@@ -156,6 +156,9 @@ class StateMachine(object):
             )
         else:
             is_maintenance_mode = read_or_create_persistent_maintenance_mode()
+            self.logger.info(
+                f"Connected to robot status database and the maintenance mode was: {is_maintenance_mode}. "
+            )
             if is_maintenance_mode:
                 initial_state = "maintenance"
             else:

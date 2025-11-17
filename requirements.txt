@@ -235,6 +235,8 @@ protobuf==6.33.1
     #   opentelemetry-proto
 psutil==7.1.3
     # via azure-monitor-opentelemetry-exporter
+psycopg2==2.9.11
+    # via isar (pyproject.toml)
 pycparser==2.23
     # via cffi
 pydantic==2.12.4
