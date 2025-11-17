@@ -112,6 +112,14 @@ def stub_image_metadata() -> ImageMetadata:
     )
 
 
+class StubRobotInitiateMissionRaisesException(StubRobot):
+    def __init__(self):
+        super().__init__()
+
+    def initiate_mission(self, mission: Mission) -> None:
+        raise RobotCommunicationException("Testing Initate Mission Exception")
+
+
 class StubRobotMissionStatusRaisesException(StubRobot):
     def __init__(self):
         super().__init__()

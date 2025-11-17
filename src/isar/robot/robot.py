@@ -18,8 +18,10 @@ from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import RobotStopMissionThread
 from isar.robot.robot_upload_inspection import RobotUploadInspectionThread
+from isar.services.utilities.mqtt_utilities import publish_mission_status
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.status import MissionStatus
 from robot_interface.models.mission.task import TASKS
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
@@ -92,7 +94,14 @@ class Robot(object):
             self.start_mission_thread = None
 
             if error_message:
+                mission.status = MissionStatus.Failed
+                error_message.error_description = (
+                    f"Failed to initiate due to: {error_message.error_description}"
+                )
+                mission.error_message = error_message
+                publish_mission_status(self.mqtt_publisher, mission)
                 self.robot_service_events.mission_failed.trigger_event(error_message)
+                return
             else:
                 self.robot_service_events.mission_started.trigger_event(True)
 

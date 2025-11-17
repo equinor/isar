@@ -85,6 +85,7 @@ class ReturningHome(EventHandlerBase):
                     f"Failed to initiate return home because: "
                     f"{mission_failed.error_description}"
                 )
+                self.failed_return_home_attemps += 1
                 return state_machine.return_home_failed  # type: ignore
             return None
 

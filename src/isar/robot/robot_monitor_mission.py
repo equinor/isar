@@ -1,13 +1,14 @@
-import json
 import logging
 import time
-from datetime import datetime, timezone
 from threading import Event, Thread
 from typing import Iterator, Optional
 
 from isar.config.settings import settings
 from isar.models.events import RobotServiceEvents, SharedState
-from isar.services.service_connections.mqtt.mqtt_client import props_expiry
+from isar.services.utilities.mqtt_utilities import (
+    publish_mission_status,
+    publish_task_status,
+)
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     ErrorReason,
@@ -22,8 +23,6 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from robot_interface.models.mission.task import TASKS, InspectionTask
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
-from robot_interface.telemetry.payloads import MissionPayload, TaskPayload
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 def get_next_task(task_iterator: Iterator[TASKS]) -> Optional[TASKS]:
@@ -208,38 +207,6 @@ class RobotMonitorMissionThread(Thread):
             )
         )
 
-    def publish_task_status(self, task: TASKS) -> None:
-        """Publishes the task status to the MQTT Broker"""
-        if not self.mqtt_publisher:
-            return
-
-        error_message: Optional[ErrorMessage] = None
-        if task:
-            if task.error_message:
-                error_message = task.error_message
-
-        payload: TaskPayload = TaskPayload(
-            isar_id=settings.ISAR_ID,
-            robot_name=settings.ROBOT_NAME,
-            mission_id=self.current_mission.id if self.current_mission else None,
-            task_id=task.id if task else None,
-            status=task.status if task else None,
-            task_type=task.type if task else None,
-            error_reason=error_message.error_reason if error_message else None,
-            error_description=(
-                error_message.error_description if error_message else None
-            ),
-            timestamp=datetime.now(timezone.utc),
-        )
-
-        self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_TASK + f"/{task.id}",
-            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
-            qos=1,
-            retain=True,
-            properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
-        )
-
     def _report_task_status(self, task: TASKS) -> None:
         if task.status == TaskStatus.Failed:
             self.logger.warning(
@@ -253,35 +220,6 @@ class RobotMonitorMissionThread(Thread):
             self.logger.info(
                 f"Task: {str(task.id)[:8]} was reported as {task.status} by the robot"
             )
-
-    def publish_mission_status(self) -> None:
-        if not self.mqtt_publisher:
-            return
-
-        error_message: Optional[ErrorMessage] = None
-        if self.current_mission:
-            if self.current_mission.error_message:
-                error_message = self.current_mission.error_message
-
-        payload: MissionPayload = MissionPayload(
-            isar_id=settings.ISAR_ID,
-            robot_name=settings.ROBOT_NAME,
-            mission_id=self.current_mission.id if self.current_mission else None,
-            status=self.current_mission.status if self.current_mission else None,
-            error_reason=error_message.error_reason if error_message else None,
-            error_description=(
-                error_message.error_description if error_message else None
-            ),
-            timestamp=datetime.now(timezone.utc),
-        )
-
-        self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_MISSION + f"/{self.current_mission.id}",
-            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
-            qos=1,
-            retain=True,
-            properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
-        )
 
     def _finalize_mission_status(self):
         fail_statuses = [
@@ -335,7 +273,9 @@ class RobotMonitorMissionThread(Thread):
                 if current_task.status != new_task_status:
                     current_task.status = new_task_status
                     self._report_task_status(current_task)
-                    self.publish_task_status(task=current_task)
+                    publish_task_status(
+                        self.mqtt_publisher, current_task, self.current_mission
+                    )
 
                 if is_finished(new_task_status):
                     if should_upload_inspections(current_task):
@@ -347,7 +287,9 @@ class RobotMonitorMissionThread(Thread):
                         # This is not required, but does make reporting more responsive
                         current_task.status = TaskStatus.InProgress
                         self._report_task_status(current_task)
-                        self.publish_task_status(task=current_task)
+                        publish_task_status(
+                            self.mqtt_publisher, current_task, self.current_mission
+                        )
 
             if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
                 0
@@ -368,7 +310,7 @@ class RobotMonitorMissionThread(Thread):
             if new_mission_status != last_mission_status:
                 self.current_mission.status = new_mission_status
                 last_mission_status = new_mission_status
-                self.publish_mission_status()
+                publish_mission_status(self.mqtt_publisher, self.current_mission)
                 self.robot_service_events.mission_status_updated.trigger_event(
                     new_mission_status
                 )
@@ -382,7 +324,7 @@ class RobotMonitorMissionThread(Thread):
                 mission_status = self.current_mission.status
                 self._finalize_mission_status()
                 if mission_status != self.current_mission.status:
-                    self.publish_mission_status()
+                    publish_mission_status(self.mqtt_publisher, self.current_mission)
                 break
 
             if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
@@ -399,15 +341,15 @@ class RobotMonitorMissionThread(Thread):
             current_task.status = (
                 TaskStatus.Cancelled if mission_stopped else TaskStatus.Failed
             )
-            self.publish_task_status(task=current_task)
-        if new_mission_status not in [
+            publish_task_status(self.mqtt_publisher, current_task, self.current_mission)
+        if self.current_mission.status not in [
             MissionStatus.Cancelled,
             MissionStatus.PartiallySuccessful,
             MissionStatus.Failed,
             MissionStatus.Successful,
         ]:
             self.current_mission.status = MissionStatus.Cancelled
-            self.publish_mission_status()
+            publish_mission_status(self.mqtt_publisher, self.current_mission)
             if not mission_stopped:
                 self.robot_service_events.mission_status_updated.trigger_event(
                     self.current_mission.status
