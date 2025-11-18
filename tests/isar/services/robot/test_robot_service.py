@@ -1,5 +1,6 @@
 from isar.robot.robot import Robot
 from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
+from isar.robot.robot_pause_mission import RobotPauseMissionThread
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_stop_mission import RobotStopMissionThread
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
@@ -129,3 +130,44 @@ def test_mission_succeeds_to_stop(mocked_robot_service: Robot, mocker) -> None:
     assert r_service.signal_mission_stopped.is_set()
 
     assert r_service.monitor_mission_thread is None
+
+
+def test_mission_fails_to_pause(mocked_robot_service: Robot, mocker) -> None:
+    r_service = mocked_robot_service
+    mocker.patch.object(RobotPauseMissionThread, "is_alive", return_value=False)
+
+    r_service.pause_mission_thread = RobotPauseMissionThread(
+        r_service.robot, r_service.signal_thread_quitting
+    )
+    r_service.pause_mission_thread.error_message = ErrorMessage(
+        error_reason=ErrorReason.RobotUnknownErrorException, error_description="test"
+    )
+
+    r_service._pause_mission_done_handler()
+
+    assert r_service.robot_service_events.mission_failed_to_pause.has_event()
+    mission_failed_to_pause_event = (
+        r_service.robot_service_events.mission_failed_to_pause.get()
+    )
+    assert mission_failed_to_pause_event is not None
+    assert (
+        mission_failed_to_pause_event.error_reason
+        == ErrorReason.RobotUnknownErrorException
+    )
+
+    assert not r_service.robot_service_events.mission_successfully_paused.has_event()
+
+
+def test_mission_succeeds_to_pause(mocked_robot_service: Robot, mocker) -> None:
+    r_service = mocked_robot_service
+    mocker.patch.object(RobotPauseMissionThread, "is_alive", return_value=False)
+
+    r_service.pause_mission_thread = RobotPauseMissionThread(
+        r_service.robot, r_service.signal_thread_quitting
+    )
+
+    r_service._pause_mission_done_handler()
+
+    assert not r_service.robot_service_events.mission_failed_to_pause.has_event()
+
+    assert r_service.robot_service_events.mission_successfully_paused.has_event()
