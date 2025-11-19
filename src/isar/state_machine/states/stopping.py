@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Callable, List, Optional
 
-from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
@@ -15,9 +14,6 @@ class Stopping(EventHandlerBase):
         events = state_machine.events
 
         def _stop_mission_cleanup() -> None:
-            state_machine.events.api_requests.stop_mission.response.trigger_event(
-                ControlMissionResponse(success=True)
-            )
             state_machine.print_transitions()
             return None
 

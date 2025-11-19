@@ -21,7 +21,6 @@ from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine, main
 from isar.state_machine.states_enum import States
-from isar.state_machine.transitions.functions.stop import stop_mission_failed
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.exceptions.robot_exceptions import (
@@ -639,6 +638,13 @@ def test_state_machine_with_successful_mission_stop(
     )
 
 
+def _mock_robot_exception_with_message() -> RobotException:
+    raise RobotException(
+        error_reason=ErrorReason.RobotUnknownErrorException,
+        error_description="This is an example error description",
+    )
+
+
 def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
     container: ApplicationContainer,
     mocker: MockerFixture,
@@ -699,10 +705,9 @@ def test_state_machine_with_unsuccessful_mission_stop(
     time.sleep(1)
     scheduling_utilities.start_mission(mission=mission)
     time.sleep(0.5)
-    with pytest.raises(HTTPException) as exception_details:
-        scheduling_utilities.stop_mission()
+    scheduling_utilities.stop_mission()
+    time.sleep(2)
 
-    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
             States.UnknownStatus,
@@ -712,19 +717,6 @@ def test_state_machine_with_unsuccessful_mission_stop(
             States.Monitor,
         ]
     )
-
-
-def test_api_with_unsuccessful_return_home_stop(
-    container: ApplicationContainer,
-    sync_state_machine: StateMachine,
-) -> None:
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-    stop_mission_failed(sync_state_machine)
-
-    with pytest.raises(HTTPException) as exception_details:
-        scheduling_utilities.stop_mission()
-
-    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
 
 
 def test_state_machine_with_mission_start_during_return_home_without_queueing_stop_response(
@@ -1203,13 +1195,6 @@ def test_state_machine_idle_to_blocked_protective_stop_to_idle(
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [States.UnknownStatus, States.BlockedProtectiveStop, States.Home]
-    )
-
-
-def _mock_robot_exception_with_message() -> RobotException:
-    raise RobotException(
-        error_reason=ErrorReason.RobotUnknownErrorException,
-        error_description="This is an example error description",
     )
 
 
