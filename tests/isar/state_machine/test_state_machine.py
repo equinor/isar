@@ -1665,3 +1665,55 @@ def test_return_home_mission_failed_transitions_to_intervention_needed(
     assert transition is sync_state_machine.return_home_failed  # type: ignore
     transition()
     assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore
+
+
+def test_intervention_needed_transitions_to_home_if_robot_is_home(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.state = sync_state_machine.intervention_needed_state.name  # type: ignore
+
+    intervention_needed_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.intervention_needed_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        intervention_needed_state.get_event_handler_by_name("robot_status_event")
+    )
+    assert event_handler is not None
+
+    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Home)
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.go_to_home  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.home_state.name  # type: ignore
+
+
+def test_intervention_needed_transitions_does_not_transition_if_status_is_not_home(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.state = sync_state_machine.intervention_needed_state.name  # type: ignore
+
+    intervention_needed_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.intervention_needed_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        intervention_needed_state.get_event_handler_by_name("robot_status_event")
+    )
+    assert event_handler is not None
+
+    statuses = [
+        RobotStatus.Available,
+        RobotStatus.BlockedProtectiveStop,
+        RobotStatus.Busy,
+        RobotStatus.Paused,
+        RobotStatus.Offline,
+    ]
+    for status in statuses:
+        sync_state_machine.shared_state.robot_status.update(status)
+
+        event_handler.event.trigger_event(True)
+        transition = event_handler.handler(event_handler.event)
+
+        assert transition is None  # type: ignore
