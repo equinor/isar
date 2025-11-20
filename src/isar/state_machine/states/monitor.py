@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Callable, List, Optional
 
+from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
@@ -24,6 +25,9 @@ class Monitor(EventHandlerBase):
             if not event.consume_event():
                 return None
 
+            state_machine.events.api_requests.pause_mission.response.trigger_event(
+                ControlMissionResponse(success=True)
+            )
             state_machine.events.state_machine_events.pause_mission.trigger_event(True)
             return state_machine.pause  # type: ignore
 

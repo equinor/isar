@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Callable, List, Optional
 
-from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
@@ -22,21 +21,11 @@ class Pausing(EventHandlerBase):
             if error_message is None:
                 return None
 
-            state_machine.events.api_requests.pause_mission.response.trigger_event(
-                ControlMissionResponse(
-                    success=False, failure_reason=error_message.error_reason
-                )
-            )
-
             return state_machine.mission_pausing_failed  # type: ignore
 
         def _successful_pause_event_handler(event: Event[bool]) -> Optional[Callable]:
             if not event.consume_event():
                 return None
-
-            state_machine.events.api_requests.pause_mission.response.trigger_event(
-                ControlMissionResponse(success=True)
-            )
 
             return state_machine.mission_paused  # type:ignore
 
