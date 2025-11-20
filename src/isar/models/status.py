@@ -16,3 +16,7 @@ class IsarStatus(Enum):
     GoingToLockdown = "goingtolockdown"
     GoingToRecharging = "goingtorecharging"
     Maintenance = "maintenance"
+    Pausing = "pausing"
+    PausingReturnHome = "pausingreturnhome"
+    Stopping = "stopping"
+    StoppingReturnHome = "stoppingreturnhome"
