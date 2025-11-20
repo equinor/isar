@@ -207,7 +207,7 @@ class Robot(object):
             self.stop_mission_thread.start()
 
     def _pause_mission_request_handler(self, event: Event[bool]) -> None:
-        if event.consume_event():
+        if event.has_event():
             if (
                 self.pause_mission_thread is not None
                 and self.pause_mission_thread.is_alive()
@@ -220,15 +220,8 @@ class Robot(object):
                 self.start_mission_thread is not None
                 and self.start_mission_thread.is_alive()
             ):
-                error_description = "Received pause mission event while trying to start a mission. Aborting pause attempt."
-                error_message = ErrorMessage(
-                    error_reason=ErrorReason.RobotStillStartingMissionException,
-                    error_description=error_description,
-                )
-                self.robot_service_events.mission_failed_to_pause.trigger_event(
-                    error_message
-                )
                 return
+            event.consume_event()
             self.pause_mission_thread = RobotPauseMissionThread(
                 self.robot, self.signal_thread_quitting
             )
