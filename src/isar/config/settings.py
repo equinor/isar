@@ -43,9 +43,6 @@ class Settings(BaseSettings):
     # Name of default map transformation
     DEFAULT_MAP: str = Field(default="default_map")
 
-    # Location of JSON files containing predefined maps
-    MAPS_FOLDER: str = Field(default="src/isar/config/maps/")
-
     # Determines the number of state transitions that are kept in the log
     STATE_TRANSITIONS_LOG_LENGTH: int = Field(default=20)
 
@@ -59,9 +56,6 @@ class Settings(BaseSettings):
     # Number of attempts for state transitions resume and pause if failed
     STATE_TRANSITION_NUM_RETIRES: int = Field(default=10)
 
-    # Interval between attempt of state transition
-    STATE_TRANSITION_RETRY_INTERVAL_SEC: float = Field(default=1)
-
     # Number of attempts to stop the robot before giving up
     STOP_ROBOT_ATTEMPTS_LIMIT: int = Field(default=3)
 
@@ -72,7 +66,6 @@ class Settings(BaseSettings):
     UPLOAD_FAILURE_MAX_WAIT: int = Field(default=60)
 
     # ISAR telemetry intervals
-    ROBOT_STATUS_PUBLISH_INTERVAL: float = Field(default=1)
     ROBOT_HEARTBEAT_PUBLISH_INTERVAL: float = Field(default=1)
     ROBOT_INFO_PUBLISH_INTERVAL: float = Field(default=5)
     ROBOT_API_BATTERY_POLL_INTERVAL: float = Field(default=5)
@@ -177,12 +170,6 @@ class Settings(BaseSettings):
     # Shortname of the facility the robot is operating in
     PLANT_SHORT_NAME: str = Field(default="HUA")
 
-    # Country the robot is operating in
-    COUNTRY: str = Field(default="Norway")
-
-    # Type of robot ISAR is monitoring
-    ROBOT_TYPE: str = Field(default="robot")
-
     # Name of robot
     ROBOT_NAME: str = Field(default="Placebot")
 
@@ -195,10 +182,6 @@ class Settings(BaseSettings):
     # Info about robot documentation
     DOCUMENTATION: List[DocumentInfo] = Field(default=[])
 
-    # Data scheme the robot should adhere to
-    # Options [DS0001]
-    DATA_SCHEME: str = Field(default="DS0001")
-
     # Coordinate reference system of facility
     COORDINATE_REFERENCE_SYSTEM: str = Field(default="EQUINOR:4100001")
 
@@ -208,9 +191,6 @@ class Settings(BaseSettings):
     # Rotational representations of reported results
     # Options [quaternion]
     MEDIA_ORIENTATION_REFERENCE_SYSTEM: str = Field(default="quaternion")
-
-    # Contractor who is responsible for robot missions
-    CONTRACTOR: str = Field(default="equinor")
 
     # Timezone
     TIMEZONE: str = Field(default="UTC+00:00")
