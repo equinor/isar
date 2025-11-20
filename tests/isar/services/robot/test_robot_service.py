@@ -264,3 +264,58 @@ def test_mission_stop_starts_when_start_is_done(
     assert not r_service.state_machine_events.stop_mission.has_event()
     assert r_service.stop_mission_thread is not None
     mock_stop_mission_start.assert_called_once()
+
+
+def test_mission_pause_waits_for_mission_to_start(
+    mocked_robot_service: Robot, mocker
+) -> None:
+    r_service = mocked_robot_service
+    mocker.patch.object(RobotStartMissionThread, "is_alive", return_value=True)
+
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
+    r_service.start_mission_thread = RobotStartMissionThread(
+        r_service.robot, r_service.signal_thread_quitting, mission
+    )
+    r_service.pause_mission_thread = None
+
+    r_service.state_machine_events.pause_mission.trigger_event(True)
+
+    r_service._pause_mission_request_handler(
+        r_service.state_machine_events.pause_mission
+    )
+
+    assert r_service.state_machine_events.pause_mission.has_event()
+    assert r_service.pause_mission_thread is None
+
+
+def test_mission_paus_starts_when_start_is_done(
+    mocked_robot_service: Robot, mocker
+) -> None:
+    r_service = mocked_robot_service
+    mocker.patch.object(RobotStartMissionThread, "is_alive", return_value=False)
+
+    mock_pause_mission_start = mocker.patch(
+        "isar.robot.robot.RobotPauseMissionThread.start"
+    )
+
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
+    r_service.start_mission_thread = RobotStartMissionThread(
+        r_service.robot, r_service.signal_thread_quitting, mission
+    )
+    r_service.pause_mission_thread = None
+
+    r_service.state_machine_events.pause_mission.trigger_event(True)
+
+    r_service._pause_mission_request_handler(
+        r_service.state_machine_events.pause_mission
+    )
+
+    assert not r_service.state_machine_events.pause_mission.has_event()
+    assert r_service.pause_mission_thread is not None
+    mock_pause_mission_start.assert_called_once()
