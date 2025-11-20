@@ -97,5 +97,10 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
             "source": state_machine.lockdown_state,
             "dest": state_machine.home_state,
         },
+        {
+            "trigger": "go_to_home",
+            "source": state_machine.intervention_needed_state,
+            "dest": state_machine.home_state,
+        },
     ]
     return return_home_transitions
