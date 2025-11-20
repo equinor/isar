@@ -182,11 +182,18 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.maintenance_state,
         },
         {
-            "trigger": "release_from_maintenance",
+            "trigger": "goto_home",
             "source": [
                 state_machine.maintenance_state,
             ],
             "dest": state_machine.home_state,
+        },
+        {
+            "trigger": "goto_intervention_needed",
+            "source": [
+                state_machine.maintenance_state,
+            ],
+            "dest": state_machine.intervention_needed_state,
         },
     ]
     return mission_transitions
