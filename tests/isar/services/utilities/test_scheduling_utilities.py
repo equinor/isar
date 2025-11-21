@@ -8,7 +8,7 @@ from pytest_mock import MockerFixture
 from isar.models.events import APIEvent, Event, EventTimeoutError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
-from tests.test_double.mission_definition import DummyMissionDefinition
+from tests.test_mocks.mission_definition import DummyMissionDefinition
 
 
 def test_timeout_send_command(

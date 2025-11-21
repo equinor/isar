@@ -7,7 +7,7 @@ from isar.robot.robot_stop_mission import RobotStopMissionThread
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TakeImage, Task
-from tests.test_double.pose import DummyPose
+from tests.test_mocks.pose import DummyPose
 
 
 def test_mission_fails_to_schedule(mocked_robot_service: Robot, mocker) -> None:

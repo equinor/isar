@@ -13,7 +13,7 @@ from isar.apis.models.start_mission_definition import StopMissionDefinition
 from isar.models.events import EventTimeoutError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
-from tests.test_double.mission_definition import DummyMissionDefinition
+from tests.test_mocks.mission_definition import DummyMissionDefinition
 
 dummy_mission = DummyMissionDefinition.default_mission
 dummy_mission_stopped = DummyMissionDefinition.stopped_mission
