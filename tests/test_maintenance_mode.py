@@ -2,8 +2,8 @@ import time
 from collections import deque
 from http import HTTPStatus
 
-from fastapi.encoders import jsonable_encoder
 import sqlalchemy
+from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from testcontainers.mysql import MySqlContainer
@@ -20,8 +20,8 @@ from tests.isar.state_machine.test_state_machine import (
     RobotServiceThreadMock,
     StateMachineThreadMock,
 )
-from tests.test_double.mission_definition import DummyMissionDefinition
-from tests.test_double.robot_interface import StubRobot
+from tests.test_mocks.mission_definition import DummyMissionDefinition
+from tests.test_mocks.robot_interface import StubRobot
 
 
 def test_persistent_storage_schema() -> None:

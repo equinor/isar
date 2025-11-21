@@ -32,8 +32,8 @@ from robot_interface.models.exceptions.robot_exceptions import (
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
 from robot_interface.models.mission.task import ReturnToHome, TakeImage, Task
-from tests.test_double.pose import DummyPose
-from tests.test_double.robot_interface import (
+from tests.test_mocks.pose import DummyPose
+from tests.test_mocks.robot_interface import (
     StubRobot,
     StubRobotBlockedProtectiveStopToHomeTest,
     StubRobotInitiateMissionRaisesException,
@@ -41,7 +41,7 @@ from tests.test_double.robot_interface import (
     StubRobotOfflineToHomeTest,
     StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus,
 )
-from tests.test_double.task import StubTask
+from tests.test_mocks.task import StubTask
 
 
 class StateMachineThreadMock(object):
