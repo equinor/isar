@@ -20,7 +20,6 @@ spec:
       variables:
         AZURE_TENANT_ID: 3aa4a235-b6e2-48d5-9195-7fcf05b459b0
         ROBOT_PACKAGE: isar_robot
-        ISAR_MISSION_PLANNER: local
         ISAR_STORAGE: '["local"]'
         ISAR_MQTT_ENABLED: false
         ISAR_AUTHENTICATION_ENABLED: true
