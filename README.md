@@ -117,11 +117,51 @@ Once the application has been started the swagger site may be accessed at
 http://localhost:3000/docs
 ```
 
-Execute the `/schedule/start-mission` endpoint with `mission_id=1` to run a mission.
+Execute the `/schedule/start-mission` endpoint with the 'mission_definition' value in the body containing a JSON representing a mission definition (see `StartMissionDefinition` in [start_mission_definition.py](./src/isar/apis/models/start_mission_definition.py)). 
 
-In [this](./src/isar/config/predefined_missions) folder there are predefined default missions, for example the mission
-corresponding to `mission_id=1`. A new mission may be added by adding a new json-file with a mission description. Note,
-the mission IDs must be unique.
+Here is an example body:
+{
+   'mission_definition': {
+      'id': 'example ID',
+      'tasks': [
+         {
+            'id': 'example ID',
+            'type': 'inspection',
+            'pose': {
+               'position': {
+                  'x': 1.0,
+                  'y': 1.0,
+                  'z': 1.0,
+                  'frame_name': 'robot'
+               },
+               'orientation': {
+                  'x': 0.0,
+                  'y': 0.0,
+                  'z': 0.0,
+                  'w': 0.0,
+                  'frame_name': 'robot'
+               },
+               'frame_name': 'robot'
+            },
+            'inspection': {
+               'type': 'Image',
+               'inspection_target': {
+                  'x': 5.0,
+                  'y': 5.0,
+                  'z': 5.0,
+                  'frame_name': 'robot'
+               },
+               'inspection_description': 'Example description,
+               'duration': None
+            },
+            'tag': 'example_tag',
+            'zoom': None
+         }
+      ],
+      'name': 'Example name',
+      'start_pose': None
+   }
+}
 
 ### Configuration
 
