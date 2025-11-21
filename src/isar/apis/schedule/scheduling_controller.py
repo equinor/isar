@@ -1,7 +1,7 @@
 import logging
 from http import HTTPStatus
 
-from fastapi import Body, HTTPException, Path
+from fastapi import Body, HTTPException
 from opentelemetry import trace
 
 from isar.apis.models.models import (
@@ -10,12 +10,12 @@ from isar.apis.models.models import (
     TaskResponse,
 )
 from isar.apis.models.start_mission_definition import (
+    MissionFormatError,
     StartMissionDefinition,
     StopMissionDefinition,
     to_isar_mission,
 )
 from isar.config.settings import robot_settings
-from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
@@ -31,32 +31,6 @@ class SchedulingController:
     ):
         self.scheduling_utilities: SchedulingUtilities = scheduling_utilities
         self.logger = logging.getLogger("api")
-
-    @tracer.start_as_current_span("start_mission_by_id")
-    def start_mission_by_id(
-        self,
-        mission_id: str = Path(
-            alias="id",
-            title="Mission ID",
-            description="ID-number for predefined mission",
-        ),
-    ) -> StartMissionResponse:
-        self.logger.info("Received request to start mission with id %s", mission_id)
-
-        state: States = self.scheduling_utilities.get_state()
-        self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
-
-        mission: Mission = self.scheduling_utilities.get_mission(mission_id)
-
-        self.scheduling_utilities.verify_robot_capable_of_mission(
-            mission=mission, robot_capabilities=robot_settings.CAPABILITIES
-        )
-
-        self.logger.info("Starting mission with ISAR Mission ID: '%s'", mission.id)
-
-        self.scheduling_utilities.start_mission(mission=mission)
-
-        return self._api_response(mission)
 
     @tracer.start_as_current_span("start_mission")
     def start_mission(
@@ -87,7 +61,7 @@ class SchedulingController:
             mission: Mission = to_isar_mission(
                 start_mission_definition=mission_definition
             )
-        except MissionPlannerError as e:
+        except MissionFormatError as e:
             error_message = f"Bad Request - Cannot create ISAR mission: {e}"
             self.logger.warning(error_message)
             raise HTTPException(

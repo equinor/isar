@@ -46,6 +46,12 @@ class DummyMissionDefinition:
         type=InspectionTypes.image,
         inspection_target=dummy_input_target_position,
     )
+    dummy_start_mission_inspection_definition_thermal_image = (
+        StartMissionInspectionDefinition(
+            type=InspectionTypes.thermal_image,
+            inspection_target=dummy_input_target_position,
+        )
+    )
     dummy_task_response_take_image = TaskResponse(
         id=dummy_task_take_image.id,
         tag_id=dummy_task_take_image.tag_id,
@@ -63,6 +69,20 @@ class DummyMissionDefinition:
                 pose=dummy_input_pose,
                 tag="dummy_tag",
                 inspection=dummy_start_mission_inspection_definition,
+            ),
+        ]
+    )
+    dummy_start_mission_definition_image_and_thermal = StartMissionDefinition(
+        tasks=[
+            StartMissionTaskDefinition(
+                pose=dummy_input_pose,
+                tag="dummy_tag",
+                inspection=dummy_start_mission_inspection_definition,
+            ),
+            StartMissionTaskDefinition(
+                pose=dummy_input_pose,
+                tag="dummy_tag",
+                inspection=dummy_start_mission_inspection_definition_thermal_image,
             ),
         ]
     )

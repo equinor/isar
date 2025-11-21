@@ -9,7 +9,6 @@ from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
-from isar.mission_planner.local_planner import LocalPlanner
 from isar.models.events import Events, SharedState
 from isar.robot.robot import Robot
 from isar.services.utilities.robot_utilities import RobotUtilities
@@ -59,7 +58,6 @@ class ApplicationContainer(containers.DeclarativeContainer):
         SchedulingUtilities,
         events=events,
         shared_state=shared_state,
-        mission_planner=providers.Singleton(LocalPlanner),
     )
     scheduling_controller = providers.Singleton(
         SchedulingController, scheduling_utilities=scheduling_utilities

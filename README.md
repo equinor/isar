@@ -126,8 +126,7 @@ the mission IDs must be unique.
 ### Configuration
 
 The system consists of many configuration variables which may alter the functionality. As an example, it is possible to
-change mission planners or add multiple storage handlers as described in the [mission planner](#mission-planner)
-and [storage](#storage) sections.
+add multiple storage handlers as described in the [storage](#storage) section.
 
 There are two methods of specifying configuration.
 
@@ -242,12 +241,6 @@ States.Home, States.AwaitNextMission or States.ReturningHome
 The FastAPI establishes an interface to the state machine for the user. As the API and state machine are separate
 threads, they communicate through python queues. FastAPI runs on an ASGI-server, specifically uvicorn. The
 FastAPI-framework is split into routers where the endpoint operations are defined.
-
-## Mission planner
-
-The mission planner that is currently in use is a local mission planner, where missions are specified in a json file. You can create your own mission planner by implementing
-the [mission planner interface](./src/isar/mission_planner/mission_planner_interface.py) and adding your planner to the
-selection [here](./src/isar/modules.py). Note that you must add your module as an option in the dictionary.
 
 ## Storage
 

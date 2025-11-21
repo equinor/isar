@@ -3,6 +3,7 @@ from collections import deque
 from http import HTTPStatus
 
 import sqlalchemy
+from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from testcontainers.mysql import MySqlContainer
@@ -19,6 +20,7 @@ from tests.isar.state_machine.test_state_machine import (
     RobotServiceThreadMock,
     StateMachineThreadMock,
 )
+from tests.test_double.mission_definition import DummyMissionDefinition
 from tests.test_double.robot_interface import StubRobot
 
 
@@ -61,8 +63,15 @@ def test_maintenance_mode(
 
     assert state_machine_thread.state_machine.current_state == States.Maintenance
 
-    # The robot should ahve started in maintenance mode since the robot id is not found in the database.
-    response = client.post(url="/schedule/start-mission/1")
+    # The robot should have started in maintenance mode since the robot id is not found in the database.
+    response = client.post(
+        url="/schedule/start-mission",
+        json=jsonable_encoder(
+            {
+                "mission_definition": DummyMissionDefinition.dummy_start_mission_definition
+            }
+        ),
+    )
     assert response.status_code == HTTPStatus.CONFLICT
 
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
@@ -82,14 +91,28 @@ def test_maintenance_mode(
     mocker.patch.object(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
     )  # The robot will not go to awaitng next mission after mission has started, it should remain in monitor. In order to test the "stop" functionality.
-    response = client.post(url="/schedule/start-mission/1")
+    response = client.post(
+        url="/schedule/start-mission",
+        json=jsonable_encoder(
+            {
+                "mission_definition": DummyMissionDefinition.dummy_start_mission_definition
+            }
+        ),
+    )
     assert response.status_code == HTTPStatus.OK
 
     assert state_machine_thread.state_machine.current_state == States.Monitor
     response = client.post(url="/schedule/maintenance-mode")
     assert response.status_code == HTTPStatus.OK
 
-    response = client.post(url="/schedule/start-mission/1")
+    response = client.post(
+        url="/schedule/start-mission",
+        json=jsonable_encoder(
+            {
+                "mission_definition": DummyMissionDefinition.dummy_start_mission_definition
+            }
+        ),
+    )
     assert response.status_code == HTTPStatus.CONFLICT
 
     assert state_machine_thread.state_machine.transitions_list == deque(
