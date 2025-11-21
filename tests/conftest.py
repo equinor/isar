@@ -31,8 +31,8 @@ from tests.isar.state_machine.test_state_machine import (
     StateMachineThreadMock,
     UploaderThreadMock,
 )
-from tests.test_double.blob_storage import StorageFake
-from tests.test_double.robot_interface import StubRobot
+from tests.test_mocks.blob_storage import StorageFake
+from tests.test_mocks.robot_interface import StubRobot
 
 
 @pytest.fixture(autouse=True)

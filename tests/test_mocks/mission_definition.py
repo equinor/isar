@@ -13,7 +13,7 @@ from isar.apis.models.start_mission_definition import (
 )
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
-from tests.test_double.task import StubTask
+from tests.test_mocks.task import StubTask
 
 
 class DummyMissionDefinition:
