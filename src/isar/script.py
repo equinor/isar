@@ -61,7 +61,6 @@ def print_startup_info():
     print_setting("Robot package", settings.ROBOT_PACKAGE)
     print_setting("Robot name", settings.ROBOT_NAME)
     print_setting("Running on port", settings.API_PORT)
-    print_setting("Mission planner", settings.MISSION_PLANNER)
     print_setting("Using local storage", settings.STORAGE_LOCAL_ENABLED)
     print_setting("Using blob storage", settings.STORAGE_BLOB_ENABLED)
     print_setting("Blob storage account", settings.BLOB_STORAGE_ACCOUNT)

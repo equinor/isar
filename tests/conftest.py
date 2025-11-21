@@ -146,12 +146,6 @@ def request_handler(container: ApplicationContainer):
 
 
 @pytest.fixture()
-def local_planner(container: ApplicationContainer):
-    """Fixture to provide the LocalPlanner instance."""
-    return container.scheduling_utilities().mission_planner
-
-
-@pytest.fixture()
 def robot():
     """Fixture to provide a mock robot instance."""
     return StubRobot()
@@ -161,12 +155,6 @@ def robot():
 def scheduling_utilities(container: ApplicationContainer):
     """Fixture to provide the SchedulingUtilities instance."""
     return container.scheduling_utilities()
-
-
-@pytest.fixture()
-def mission_reader(container: ApplicationContainer):
-    """Fixture to provide the LocalPlanner instance."""
-    return container.scheduling_utilities().mission_planner
 
 
 @pytest.fixture
