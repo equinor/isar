@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, List
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
+from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -18,7 +19,13 @@ class Maintenance(EventHandlerBase):
                 events.api_requests.release_from_maintenance_mode.response.trigger_event(
                     True
                 )
-                return state_machine.release_from_maintenance  # type: ignore
+
+                robot_status = state_machine.shared_state.robot_status.check()
+                if robot_status == RobotStatus.Home:
+                    return state_machine.goto_home  # type: ignore
+                else:
+                    return state_machine.goto_intervention_needed  # type: ignore
+
             return None
 
         event_handlers: List[EventHandlerMapping] = [
