@@ -131,6 +131,16 @@ class ReturningHome(EventHandlerBase):
                 return state_machine.stop_due_to_maintenance  # type: ignore
             return None
 
+        def _robot_already_home_event_handler(event: Event[bool]):
+            already_home: bool = event.consume_event()
+            if already_home:
+                state_machine.logger.info(
+                    "Robot reported that it is already home. "
+                    "Assuming return home mission successful without running."
+                )
+                return state_machine.returned_home  # type: ignore
+            return None
+
         def _robot_battery_level_updated_handler(
             event: Event[float],
         ) -> Optional[Callable]:
@@ -185,6 +195,11 @@ class ReturningHome(EventHandlerBase):
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,
+            ),
+            EventHandlerMapping(
+                name="robot_already_home",
+                event=events.robot_service_events.robot_already_home,
+                handler=_robot_already_home_event_handler,
             ),
         ]
         super().__init__(
