@@ -1,8 +1,10 @@
 import logging
 from queue import Queue
 from threading import Event as ThreadEvent
-from typing import List, Optional, Tuple
+from threading import Thread
+from typing import Callable, List, Optional, Tuple
 
+from isar.config.settings import settings
 from isar.models.events import (
     Event,
     Events,
@@ -52,6 +54,7 @@ class Robot(object):
         self.upload_inspection_threads: List[RobotUploadInspectionThread] = []
         self.signal_thread_quitting: ThreadEvent = ThreadEvent()
         self.signal_mission_stopped: ThreadEvent = ThreadEvent()
+        self.inspection_callback_thread: Optional[Thread] = None
 
     def stop(self) -> None:
         self.signal_thread_quitting.set()
@@ -307,6 +310,28 @@ class Robot(object):
                 if _join_threads(thread)
             ]
 
+    def register_and_monitor_inspection_callback(
+        self,
+        callback_function: Callable,
+    ) -> None:
+        self.inspection_callback_function = callback_function
+
+        self.inspection_callback_thread = self.robot.register_inspection_callback(
+            callback_function
+        )
+        if self.inspection_callback_thread is not None:
+            self.inspection_callback_thread.start()
+            self.logger.info("Inspection callback thread started and will be monitored")
+
+    def _monitor_inspection_callback_thread(self) -> None:
+        if (
+            self.inspection_callback_thread is not None
+            and not self.inspection_callback_thread.is_alive()
+        ):
+            self.logger.warning("Inspection callback thread died - restarting")
+            self.inspection_callback_thread.join()
+            self.inspection_callback_thread.start()
+
     def run(self) -> None:
         self.robot_status_thread = RobotStatusThread(
             robot=self.robot,
@@ -346,5 +371,8 @@ class Robot(object):
             self._upload_inspection_done_handler()
 
             self._resume_mission_done_handler()
+
+            if settings.UPLOAD_INSPECTIONS_ASYNC:
+                self._monitor_inspection_callback_thread()
 
         self.logger.info("Exiting robot service main thread")
