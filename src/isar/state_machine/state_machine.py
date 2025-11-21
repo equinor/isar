@@ -309,6 +309,19 @@ class StateMachine(object):
             return IsarStatus.GoingToRecharging
         elif self.current_state == States.Maintenance:
             return IsarStatus.Maintenance
+        elif self.current_state == States.Pausing:
+            return IsarStatus.Pausing
+        elif self.current_state == States.PausingReturnHome:
+            return IsarStatus.PausingReturnHome
+        elif self.current_state in [
+            States.Stopping,
+            States.StoppingDueToMaintenance,
+            States.StoppingGoToLockdown,
+            States.StoppingGoToRecharge,
+        ]:
+            return IsarStatus.Stopping
+        elif self.current_state == States.StoppingReturnHome:
+            return IsarStatus.StoppingReturnHome
         else:
             return IsarStatus.Busy
 
