@@ -165,6 +165,7 @@ class RobotServiceEvents:
         self.request_inspection_upload: Event[Tuple[TASKS, Mission]] = Event(
             "request_inspection_upload"
         )
+        self.robot_already_home: Event[bool] = Event("robot_already_home")
 
 
 class SharedState:

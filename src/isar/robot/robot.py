@@ -96,7 +96,13 @@ class Robot(object):
             error_message = self.start_mission_thread.error_message
             self.start_mission_thread = None
 
-            if error_message:
+            if (
+                error_message
+                and error_message.error_reason == ErrorReason.RobotAlreadyHomeException
+            ):
+                self.robot_service_events.robot_already_home.trigger_event(True)
+                return
+            elif error_message:
                 mission.status = MissionStatus.Failed
                 error_message.error_description = (
                     f"Failed to initiate due to: {error_message.error_description}"

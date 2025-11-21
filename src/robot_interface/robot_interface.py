@@ -27,6 +27,9 @@ class RobotInterface(metaclass=ABCMeta):
 
         Raises
         ------
+        RobotAlreadyHomeException
+            If the mission is a return home mission and the robot wish to disregard the
+            mission as it is already at home
         RobotInfeasibleMissionException
             If the mission input is infeasible and the mission fails to be scheduled in
             a way that means attempting to schedule again is not necessary
