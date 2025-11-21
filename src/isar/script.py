@@ -113,7 +113,7 @@ def start() -> None:
             )
             state_machine.events.upload_queue.put(message)
 
-        robot_interface.register_inspection_callback(inspections_callback)
+        robot.register_and_monitor_inspection_callback(inspections_callback)
 
     if settings.MQTT_ENABLED:
         mqtt_client: MqttClient = MqttClient(mqtt_queue=events.mqtt_queue)
