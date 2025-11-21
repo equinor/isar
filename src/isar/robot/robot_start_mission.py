@@ -5,6 +5,7 @@ from typing import Optional
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     ErrorReason,
+    RobotAlreadyHomeException,
     RobotException,
     RobotInfeasibleMissionException,
 )
@@ -31,6 +32,14 @@ class RobotStartMissionThread(Thread):
             return
         try:
             self.robot.initiate_mission(self.mission)
+        except RobotAlreadyHomeException as e:
+            self.logger.info(
+                "Robot disregarded return to home mission as its already at home. Return home mission will be assumed successful without running."
+            )
+            self.error_message = ErrorMessage(
+                error_reason=e.error_reason,
+                error_description=e.error_description,
+            )
         except RobotInfeasibleMissionException as e:
             self.logger.error(
                 f"Mission is infeasible and cannot be scheduled because: {e.error_description}"
