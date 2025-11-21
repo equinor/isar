@@ -1,2 +1,0 @@
-class KeyvaultError(Exception):
-    pass
