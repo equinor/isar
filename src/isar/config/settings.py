@@ -236,6 +236,9 @@ class Settings(BaseSettings):
     # In general logging is configured in logging.conf
     LOG_HANDLER_LOCAL_ENABLED: bool = Field(default=True)
     LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED: bool = Field(default=False)
+
+    DEBUG_LOG_FORMATTER: bool = Field(default=False)
+
     # You can set logger levels from environment variables ending with _LOG_LEVEL
     # For example, MQTT_LOG_LEVEL="DEBUG" will set the logger MQTT_LOGGER to DEBUG level
     # Handeled in log.py and only work for loggers defined in logging.conf
