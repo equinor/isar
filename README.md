@@ -117,17 +117,56 @@ Once the application has been started the swagger site may be accessed at
 http://localhost:3000/docs
 ```
 
-Execute the `/schedule/start-mission` endpoint with `mission_id=1` to run a mission.
+Execute the `/schedule/start-mission` endpoint with the 'mission_definition' value in the body containing a JSON representing a mission definition (see `StartMissionDefinition` in [start_mission_definition.py](./src/isar/apis/models/start_mission_definition.py)). 
 
-In [this](./src/isar/config/predefined_missions) folder there are predefined default missions, for example the mission
-corresponding to `mission_id=1`. A new mission may be added by adding a new json-file with a mission description. Note,
-the mission IDs must be unique.
+Here is an example body:
+{
+   'mission_definition': {
+      'id': 'example ID',
+      'tasks': [
+         {
+            'id': 'example ID',
+            'type': 'inspection',
+            'pose': {
+               'position': {
+                  'x': 1.0,
+                  'y': 1.0,
+                  'z': 1.0,
+                  'frame_name': 'robot'
+               },
+               'orientation': {
+                  'x': 0.0,
+                  'y': 0.0,
+                  'z': 0.0,
+                  'w': 0.0,
+                  'frame_name': 'robot'
+               },
+               'frame_name': 'robot'
+            },
+            'inspection': {
+               'type': 'Image',
+               'inspection_target': {
+                  'x': 5.0,
+                  'y': 5.0,
+                  'z': 5.0,
+                  'frame_name': 'robot'
+               },
+               'inspection_description': 'Example description,
+               'duration': None
+            },
+            'tag': 'example_tag',
+            'zoom': None
+         }
+      ],
+      'name': 'Example name',
+      'start_pose': None
+   }
+}
 
 ### Configuration
 
 The system consists of many configuration variables which may alter the functionality. As an example, it is possible to
-change mission planners or add multiple storage handlers as described in the [mission planner](#mission-planner)
-and [storage](#storage) sections.
+add multiple storage handlers as described in the [storage](#storage) section.
 
 There are two methods of specifying configuration.
 
@@ -242,12 +281,6 @@ States.Home, States.AwaitNextMission or States.ReturningHome
 The FastAPI establishes an interface to the state machine for the user. As the API and state machine are separate
 threads, they communicate through python queues. FastAPI runs on an ASGI-server, specifically uvicorn. The
 FastAPI-framework is split into routers where the endpoint operations are defined.
-
-## Mission planner
-
-The mission planner that is currently in use is a local mission planner, where missions are specified in a json file. You can create your own mission planner by implementing
-the [mission planner interface](./src/isar/mission_planner/mission_planner_interface.py) and adding your planner to the
-selection [here](./src/isar/modules.py). Note that you must add your module as an option in the dictionary.
 
 ## Storage
 

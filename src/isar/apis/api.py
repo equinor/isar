@@ -113,29 +113,6 @@ class API:
         authentication_dependency: Security = Security(self.authenticator.get_scheme())
 
         router.add_api_route(
-            path="/schedule/start-mission/{id}",
-            endpoint=self.scheduling_controller.start_mission_by_id,
-            methods=["POST"],
-            deprecated=True,
-            dependencies=[authentication_dependency],
-            summary="Start a mission with id='id' from the current mission planner",
-            responses={
-                HTTPStatus.OK.value: {
-                    "description": "Mission succesfully started",
-                    "model": StartMissionResponse,
-                },
-                HTTPStatus.NOT_FOUND.value: {
-                    "description": "Not found - Mission not found",
-                },
-                HTTPStatus.CONFLICT.value: {
-                    "description": "Conflict - Invalid command in the current state",
-                },
-                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
-                    "description": "Internal Server Error - Current state of state machine unknown",
-                },
-            },
-        )
-        router.add_api_route(
             path="/schedule/start-mission",
             endpoint=self.scheduling_controller.start_mission,
             methods=["POST"],

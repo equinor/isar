@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 
 from isar.apis.models.models import InputPose, InputPosition
 from isar.config.settings import settings
-from isar.mission_planner.mission_planner_interface import MissionPlannerError
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
     TASKS,
@@ -63,6 +62,10 @@ class StopMissionDefinition(BaseModel):
     mission_id: Optional[str] = None
 
 
+class MissionFormatError(Exception):
+    pass
+
+
 def to_isar_mission(
     start_mission_definition: StartMissionDefinition,
 ) -> Mission:
@@ -73,7 +76,7 @@ def to_isar_mission(
         isar_tasks.append(task)
 
     if not isar_tasks:
-        raise MissionPlannerError("Mission does not contain any valid tasks")
+        raise MissionFormatError("Mission does not contain any valid tasks")
 
     isar_mission_name: str = (
         start_mission_definition.name
@@ -101,7 +104,7 @@ def to_isar_task(task_definition: StartMissionTaskDefinition) -> TASKS:
     elif task_definition.type == TaskType.ReturnToHome:
         return ReturnToHome()
     else:
-        raise MissionPlannerError(
+        raise MissionFormatError(
             f"Failed to create task: '{task_definition.type}' is not a valid"
         )
 

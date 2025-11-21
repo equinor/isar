@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 from pydantic import Field, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from isar.config import predefined_missions
 from robot_interface.models.robots.robot_model import RobotModel
 from robot_interface.telemetry.payloads import DocumentInfo
 
@@ -35,10 +34,6 @@ class Settings(BaseSettings):
     # Sleep time for while loops in the finite state machine in seconds
     # The sleep is used to throttle the system on every iteration in the loop
     FSM_SLEEP_TIME: float = Field(default=0.1)
-
-    # Location of JSON files containing predefined missions for the Local Planner to use
-    path: str = os.path.dirname(predefined_missions.__file__)
-    PREDEFINED_MISSIONS_FOLDER: str = Field(default=path + "/")
 
     # Name of default map transformation
     DEFAULT_MAP: str = Field(default="default_map")
@@ -92,9 +87,6 @@ class Settings(BaseSettings):
 
     # Sets how many times the robot should try to return home if a return home fails
     RETURN_HOME_RETRY_LIMIT: int = Field(default=5)
-
-    # Determines which mission planner module is used by ISAR
-    MISSION_PLANNER: str = Field(default="local")
 
     # Determines which storage modules are used by ISAR
     # Multiple storage modules can be chosen

@@ -4,15 +4,9 @@ from http import HTTPStatus
 from typing import List, TypeVar
 
 from fastapi import HTTPException
-from requests import HTTPError
 
 from isar.apis.models.models import ControlMissionResponse, MaintenanceResponse
 from isar.config.settings import settings
-from isar.mission_planner.mission_planner_interface import (
-    MissionNotFoundError,
-    MissionPlannerError,
-    MissionPlannerInterface,
-)
 from isar.models.events import (
     APIEvent,
     APIRequests,
@@ -41,12 +35,10 @@ class SchedulingUtilities:
         self,
         events: Events,
         shared_state: SharedState,
-        mission_planner: MissionPlannerInterface,
         queue_timeout: int = settings.QUEUE_TIMEOUT,
     ):
         self.api_events: APIRequests = events.api_requests
         self.shared_state: SharedState = shared_state
-        self.mission_planner: MissionPlannerInterface = mission_planner
         self.queue_timeout: int = queue_timeout
         self.logger = logging.getLogger("api")
 
@@ -68,40 +60,6 @@ class SchedulingUtilities:
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
         return current_state
-
-    def get_mission(self, mission_id: str) -> Mission:
-        """Get the mission with mission_id from the current mission planner
-
-        Raises
-        ------
-        HTTPException 404 Not Found
-            If requested mission with mission_id is not found
-        HTTPException 500 Internal Server Error
-            If for some reason the mission can not be returned
-        """
-        try:
-            return self.mission_planner.get_mission(mission_id)
-        except HTTPError as e:
-            self.logger.error(e)
-            raise HTTPException(status_code=e.response.status_code)
-        except MissionNotFoundError as e:
-            self.logger.error(e)
-            raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND,
-                detail=f"Mission with id '{mission_id}' not found",
-            )
-        except MissionPlannerError as e:
-            self.logger.error(e)
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                detail="Could not plan mission",
-            )
-        except Exception as e:
-            self.logger.error(e)
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                detail="Could not return mission",
-            )
 
     def verify_robot_capable_of_mission(
         self, mission: Mission, robot_capabilities: List[str]
