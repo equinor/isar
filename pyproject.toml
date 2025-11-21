@@ -55,7 +55,7 @@ dependencies = [
     "azure-monitor-opentelemetry-exporter>=1.0.0b38",
     "pymysql",
     "sqlalchemy",
-    "psycopg2"
+    "psycopg2-binary"
 ]
 dynamic = ["version"]
 
