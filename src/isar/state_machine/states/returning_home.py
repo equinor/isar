@@ -72,6 +72,9 @@ class ReturningHome(EventHandlerBase):
                         self.failed_return_home_attempts
                         >= settings.RETURN_HOME_RETRY_LIMIT
                     ):
+                        state_machine.logger.warning(
+                            f"Failed to return home after {self.failed_return_home_attempts} attempts."
+                        )
                         state_machine.publish_intervention_needed(
                             error_message=f"Return home failed after {self.failed_return_home_attempts} attempts."
                         )
