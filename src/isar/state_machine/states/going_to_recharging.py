@@ -45,6 +45,9 @@ class GoingToRecharging(EventHandlerBase):
                 return None
 
             if mission_status != MissionStatus.Successful:
+                state_machine.logger.warning(
+                    "Failed to return home. Mission reported as failed."
+                )
                 state_machine.publish_intervention_needed(
                     error_message="Return home to recharge failed."
                 )
