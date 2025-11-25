@@ -82,6 +82,7 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     event_handler: Optional[EventHandlerMapping] = (
         stopping_state.get_event_handler_by_name("successful_stop_event")
     )
+    stopping_state.start()
 
     assert event_handler is not None
 

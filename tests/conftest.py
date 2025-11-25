@@ -124,7 +124,7 @@ def state_machine(container: ApplicationContainer, robot):
 @pytest.fixture()
 def sync_state_machine(container: ApplicationContainer, robot, mocker: MockerFixture):
     """Fixture to provide the StateMachine instance without running the state loops."""
-    mocker.patch.object(EventHandlerBase, "enter", return_value=lambda: None)
+    mocker.patch.object(EventHandlerBase, "_run", return_value=lambda: None)
     return StateMachine(
         events=container.events(),
         shared_state=container.shared_state(),

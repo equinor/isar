@@ -29,9 +29,10 @@ def test_mqtt_message_not_sent_on_mission_stopped(
     )
 
     assert transition is sync_state_machine.mission_stopped  # type: ignore
+    assert sync_state_machine.events.mqtt_queue.empty() is True
+
     transition()
 
-    assert sync_state_machine.events.mqtt_queue.empty() is True
     assert sync_state_machine.state is sync_state_machine.await_next_mission_state.name  # type: ignore
 
 
