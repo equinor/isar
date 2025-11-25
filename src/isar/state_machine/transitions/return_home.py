@@ -16,6 +16,7 @@ def get_return_home_transitions(state_machine: "StateMachine") -> List[dict]:
                 state_machine.stopping_state,
                 state_machine.stopping_return_home_state,
                 state_machine.stopping_paused_mission_state,
+                state_machine.stopping_paused_return_home_state,
             ],
             "dest": state_machine.returning_home_state,
         },

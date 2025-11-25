@@ -49,6 +49,7 @@ def test_transition_from_paused_to_stopping_paused_mission(
     assert sync_state_machine.events.api_requests.stop_mission.response.has_event()
 
     transition()
+
     assert sync_state_machine.state is sync_state_machine.stopping_paused_mission_state.name  # type: ignore
 
 
