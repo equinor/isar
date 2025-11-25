@@ -143,7 +143,7 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.monitor_state,
         },
         {
-            "trigger": "stopping_paused_mission_failed",
+            "trigger": "mission_stopping_failed",
             "source": state_machine.stopping_paused_mission_state,
             "dest": state_machine.paused_state,
         },
