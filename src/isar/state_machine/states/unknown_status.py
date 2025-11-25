@@ -41,6 +41,8 @@ class UnknownStatus(EventHandlerBase):
                 return state_machine.robot_status_offline  # type: ignore
             elif robot_status == RobotStatus.BlockedProtectiveStop:
                 return state_machine.robot_status_blocked_protective_stop  # type: ignore
+            elif robot_status == RobotStatus.Busy:
+                return state_machine.robot_status_busy  # type: ignore
             return None
 
         def _reset_status_check():

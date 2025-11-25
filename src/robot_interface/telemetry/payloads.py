@@ -97,7 +97,7 @@ class MissionPayload:
 class MissionAbortedPayload:
     isar_id: str
     robot_name: str
-    mission_id: str
+    mission_id: Optional[str]
     can_be_continued: bool
     timestamp: datetime
     reason: Optional[str]
