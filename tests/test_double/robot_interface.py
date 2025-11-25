@@ -35,20 +35,21 @@ class StubRobot(RobotInterface):
             frame=Frame("robot"),
         ),
         robot_status: RobotStatus = RobotStatus.Available,
-        initiate_mission_delay: float = 0.0,
+        start_mission_delay: float = 0.0,
     ):
         self.mission_status_return_value: MissionStatus = mission_status
         self.task_status_return_value: TaskStatus = task_status
         self.stop_return_value: bool = stop
         self.robot_pose_return_value: Pose = pose
         self.robot_status_return_value: RobotStatus = robot_status
-        self.initiate_mission_delay: float = initiate_mission_delay
+        self.start_mission_delay: float = start_mission_delay
         self.mission: Optional[Mission] = None
 
-    def initiate_mission(self, mission: Mission) -> None:
-        time.sleep(self.initiate_mission_delay)
+    def prepare_mission(self, mission: Mission) -> None:
         self.mission = mission
-        return
+
+    def start_mission(self, mission_id: str) -> None:
+        time.sleep(self.start_mission_delay)
 
     def task_status(self, task_id: str) -> TaskStatus:
         return self.task_status_return_value
@@ -109,11 +110,11 @@ def stub_image_metadata() -> ImageMetadata:
     )
 
 
-class StubRobotInitiateMissionRaisesException(StubRobot):
+class StubRobotStartMissionRaisesException(StubRobot):
     def __init__(self):
         super().__init__()
 
-    def initiate_mission(self, mission: Mission) -> None:
+    def start_mission(self, mission_id: str) -> None:
         raise RobotCommunicationException("Testing Initate Mission Exception")
 
 
@@ -182,11 +183,11 @@ class StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(StubRobot):
     def __init__(
         self,
         current_state: Event,
-        initiate_mission_delay: float = 0.0,
+        start_mission_delay: float = 0.0,
     ):
         super().__init__()
         self.current_state = current_state
-        self.initiate_mission_delay: float = initiate_mission_delay
+        self.start_mission_delay: float = start_mission_delay
         self.return_home_mission_just_finished_successfully = False
 
     def task_status(self, task_id: str) -> TaskStatus:

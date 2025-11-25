@@ -45,7 +45,7 @@ def return_home_event_handler(
 def stop_mission_event_handler(
     state_machine: "StateMachine", event: Event[str]
 ) -> Optional[Callable]:
-    mission_id: str = event.consume_event()
+    mission_id: Optional[str] = event.consume_event()
     if mission_id is None:
         return None
 

@@ -15,6 +15,7 @@ from isar.models.events import (
 from isar.robot.robot_battery import RobotBatteryThread
 from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
 from isar.robot.robot_pause_mission import RobotPauseMissionThread
+from isar.robot.robot_prepare_mission import RobotPrepareMissionThread
 from isar.robot.robot_resume_mission import RobotResumeMissionThread
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_status import RobotStatusThread
@@ -38,13 +39,14 @@ class Robot(object):
         mqtt_publisher: MqttClientInterface,
     ) -> None:
         self.logger = logging.getLogger("robot")
-        self.state_machine_events: StateMachineEvents = events.state_machine_events
-        self.robot_service_events: RobotServiceEvents = events.robot_service_events
         self.mqtt_publisher: MqttClientInterface = mqtt_publisher
         self.upload_queue: Queue = events.upload_queue
+        self.state_machine_events: StateMachineEvents = events.state_machine_events
+        self.robot_service_events: RobotServiceEvents = events.robot_service_events
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.start_mission_thread: Optional[RobotStartMissionThread] = None
+        self.prepare_mission_thread: Optional[RobotPrepareMissionThread] = None
         self.robot_battery_thread: Optional[RobotBatteryThread] = None
         self.robot_status_thread: Optional[RobotStatusThread] = None
         self.monitor_mission_thread: Optional[RobotMonitorMissionThread] = None
@@ -75,6 +77,11 @@ class Robot(object):
             and self.start_mission_thread.is_alive()
         ):
             self.start_mission_thread.join()
+        if (
+            self.prepare_mission_thread is not None
+            and self.prepare_mission_thread.is_alive()
+        ):
+            self.prepare_mission_thread.join()
         if self.stop_mission_thread is not None and self.stop_mission_thread.is_alive():
             self.stop_mission_thread.join()
         for thread in self.upload_inspection_threads:
@@ -85,6 +92,7 @@ class Robot(object):
         self.robot_battery_thread = None
         self.start_mission_thread = None
         self.monitor_mission_thread = None
+        self.prepare_mission_thread = None
 
     def _start_mission_done_handler(self) -> None:
         if (
@@ -135,6 +143,33 @@ class Robot(object):
             )
             self.monitor_mission_thread.start()
 
+    def _prepare_mission_done_handler(self) -> None:
+        if (
+            self.prepare_mission_thread is not None
+            and not self.prepare_mission_thread.is_alive()
+        ):
+            if self.state_machine_events.stop_mission.consume_event():
+                self.robot_service_events.mission_successfully_stopped.trigger_event(
+                    True
+                )
+                self.prepare_mission_thread = None
+                return
+            if self.prepare_mission_thread.error_message:
+                self.robot_service_events.mission_failed.trigger_event(
+                    self.prepare_mission_thread.error_message
+                )
+                self.prepare_mission_thread = None
+                return
+            elif self.prepare_mission_thread.mission:
+                self.start_mission_thread = RobotStartMissionThread(
+                    self.robot,
+                    self.signal_thread_quitting,
+                    self.prepare_mission_thread.mission,
+                )
+                self.prepare_mission_thread = None
+
+                self.start_mission_thread.start()
+
     def _stop_mission_done_handler(self) -> None:
         if (
             self.stop_mission_thread is not None
@@ -176,44 +211,60 @@ class Robot(object):
                 )
 
     def _start_mission_event_handler(self, event: Event[Mission]) -> None:
-        start_mission = event.consume_event()
-        if start_mission is not None:
-            if (
-                self.start_mission_thread is not None
-                and self.start_mission_thread.is_alive()
-            ):
-                self.logger.warning(
-                    "Attempted to start mission while another mission was starting."
-                )
-                self.start_mission_thread.join()
-
-            self.start_mission_thread = RobotStartMissionThread(
-                self.robot,
-                self.signal_thread_quitting,
-                start_mission,
+        mission = event.consume_event()
+        if mission is None:
+            return
+        if (
+            self.prepare_mission_thread is not None
+            and self.prepare_mission_thread.is_alive()
+        ):
+            self.logger.warning(
+                "Attempted to prepare mission while another mission was preparing."
             )
-            self.start_mission_thread.start()
+            return
+        if (
+            self.start_mission_thread is not None
+            and self.start_mission_thread.is_alive()
+        ):
+            self.logger.warning(
+                "Attempted to prepare mission while another mission was starting."
+            )
+            return
+
+        self.prepare_mission_thread = RobotPrepareMissionThread(
+            self.robot,
+            self.signal_thread_quitting,
+            mission,
+        )
+        self.prepare_mission_thread.start()
 
     def _stop_mission_request_handler(self, event: Event[bool]) -> None:
-        if event.has_event():
-            if (
-                self.stop_mission_thread is not None
-                and self.stop_mission_thread.is_alive()
-            ):
-                self.logger.warning(
-                    "Received stop mission event while trying to stop a mission. Aborting stop attempt."
-                )
-                return
-            if (
-                self.start_mission_thread is not None
-                and self.start_mission_thread.is_alive()
-            ):
-                return
-            event.consume_event()
-            self.stop_mission_thread = RobotStopMissionThread(
-                self.robot, self.signal_thread_quitting
+        if not event.has_event():
+            return
+        if self.stop_mission_thread is not None and self.stop_mission_thread.is_alive():
+            self.logger.warning(
+                "Received stop mission event while trying to stop a mission. Aborting stop attempt."
             )
-            self.stop_mission_thread.start()
+            event.consume_event()
+            return
+        if (
+            self.start_mission_thread is not None
+            and self.start_mission_thread.is_alive()
+        ):
+            return
+        if (
+            self.prepare_mission_thread is not None
+            and self.prepare_mission_thread.is_alive()
+        ):
+            self.prepare_mission_thread.cancel_mission_preparation.set()
+            return
+        self.stop_mission_thread = RobotStopMissionThread(
+            self.robot,
+            self.signal_thread_quitting,
+        )
+        event.consume_event()
+        self.stop_mission_thread.start()
+        self.signal_mission_stopped.set()
 
     def _pause_mission_request_handler(self, event: Event[bool]) -> None:
         if event.has_event():
@@ -228,11 +279,15 @@ class Robot(object):
             if (
                 self.start_mission_thread is not None
                 and self.start_mission_thread.is_alive()
+            ) or (
+                self.prepare_mission_thread is not None
+                and self.prepare_mission_thread.is_alive()
             ):
                 return
             event.consume_event()
             self.pause_mission_thread = RobotPauseMissionThread(
-                self.robot, self.signal_thread_quitting
+                self.robot,
+                self.signal_thread_quitting,
             )
             self.pause_mission_thread.start()
 
@@ -287,7 +342,6 @@ class Robot(object):
     ) -> None:
         upload_request = event.consume_event()
         if upload_request:
-
             upload_inspection_thread = RobotUploadInspectionThread(
                 self.upload_queue, self.robot, upload_request[0], upload_request[1]
             )
@@ -336,7 +390,6 @@ class Robot(object):
             robot=self.robot,
             signal_thread_quitting=self.signal_thread_quitting,
             shared_state=self.shared_state,
-            state_machine_events=self.state_machine_events,
             robot_service_events=self.robot_service_events,
         )
         self.robot_status_thread.start()
@@ -362,6 +415,8 @@ class Robot(object):
             )
 
             self._start_mission_done_handler()
+
+            self._prepare_mission_done_handler()
 
             self._stop_mission_done_handler()
 
