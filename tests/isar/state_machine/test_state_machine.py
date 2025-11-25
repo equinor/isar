@@ -779,9 +779,11 @@ def test_return_home_cancelled_when_new_mission_received(
         returning_home_state.get_event_handler_by_name("start_mission_event")
     )
 
+    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
+    event_handler.event.trigger_event(mission)
     transition = event_handler.handler(event_handler.event)
 
     assert transition is sync_state_machine.stop_return_home  # type: ignore
@@ -1114,6 +1116,7 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     stopping_state: EventHandlerBase = cast(
         EventHandlerBase, sync_state_machine.stopping_return_home_state
     )
+    stopping_state.start()
     event_handler: Optional[EventHandlerMapping] = (
         stopping_state.get_event_handler_by_name("successful_stop_event")
     )

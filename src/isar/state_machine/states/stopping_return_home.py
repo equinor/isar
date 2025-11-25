@@ -16,6 +16,7 @@ class StoppingReturnHome(EventHandlerBase):
     def __init__(self, state_machine: "StateMachine"):
         logger = logging.getLogger("state_machine")
         events = state_machine.events
+        self.mission: Optional[Mission] = None
 
         def _failed_stop_event_handler(
             event: Event[ErrorMessage],
@@ -41,15 +42,8 @@ class StoppingReturnHome(EventHandlerBase):
             if not event.consume_event():
                 return None
 
-            mission: Mission = (
-                state_machine.events.api_requests.start_mission.request.consume_event()
-            )
-
-            if mission:
-                state_machine.start_mission(mission=mission)
-                state_machine.events.api_requests.start_mission.response.trigger_event(
-                    MissionStartResponse(mission_started=True)
-                )
+            if self.mission:
+                state_machine.start_mission(mission=self.mission)
                 return state_machine.start_mission_monitoring  # type: ignore
 
             state_machine.logger.error(
@@ -57,6 +51,23 @@ class StoppingReturnHome(EventHandlerBase):
             )
             state_machine.start_return_home_mission()
             return state_machine.start_return_home_monitoring  # type: ignore
+
+        def _respond_to_start_mission_request():
+            self.mission = (
+                state_machine.events.api_requests.start_mission.request.consume_event()
+            )
+            if not self.mission:
+                state_machine.logger.error(
+                    "Reached stopping return home without a mission request"
+                )
+            else:
+                response = MissionStartResponse(
+                    mission_id=self.mission.id,
+                    mission_started=True,
+                )
+                state_machine.events.api_requests.start_mission.response.trigger_event(
+                    response
+                )
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -74,4 +85,5 @@ class StoppingReturnHome(EventHandlerBase):
             state_name="stopping_return_home",
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
+            on_entry=_respond_to_start_mission_request,
         )
