@@ -2,6 +2,7 @@ from typing import Optional, cast
 
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.state_machine.state_machine import StateMachine
+from robot_interface.models.mission.mission import Mission
 
 
 def test_transition_from_pausing_return_home_to_return_home_paused(
@@ -25,3 +26,77 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
 
     transition()
     assert sync_state_machine.state is sync_state_machine.return_home_paused_state.name  # type: ignore
+
+
+def test_resuming_paused_return_home(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.state = sync_state_machine.return_home_paused_state.name  # type: ignore
+
+    return_home_paused_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.return_home_paused_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        return_home_paused_state.get_event_handler_by_name("resume_return_home_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event(True)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.resume  # type: ignore
+
+    transition()
+    assert sync_state_machine.state is sync_state_machine.resuming_return_home_state.name  # type: ignore
+
+
+def test_transition_from_paused_return_home_to_stopping_paused_return_home_mission(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
+    sync_state_machine.state = sync_state_machine.return_home_paused_state.name  # type: ignore
+    sync_state_machine.shared_state.mission_id.trigger_event("test id")
+
+    return_home_paused_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.return_home_paused_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        return_home_paused_state.get_event_handler_by_name("start_mission_event")
+    )
+
+    assert event_handler is not None
+
+    example_mission: Mission = Mission(name="Dummy misson", tasks=[])
+
+    event_handler.event.trigger_event(example_mission)
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.stop_return_home  # type: ignore
+
+    transition()
+
+    assert sync_state_machine.events.api_requests.start_mission.response.has_event()
+    assert sync_state_machine.state is sync_state_machine.stopping_paused_return_home_state.name  # type: ignore
+
+
+def test_stop_request_with_wrong_id_in_paused(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.state = sync_state_machine.paused_state.name  # type: ignore
+    sync_state_machine.shared_state.mission_id.trigger_event("test_id")
+
+    paused_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.paused_state
+    )
+    event_handler: Optional[EventHandlerMapping] = (
+        paused_state.get_event_handler_by_name("stop_mission_event")
+    )
+
+    assert event_handler is not None
+
+    event_handler.event.trigger_event("wrong_test_id")
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is None
+    assert sync_state_machine.events.api_requests.stop_mission.response.has_event()

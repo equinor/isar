@@ -24,7 +24,7 @@ def test_stopping_paused_mission_fails(
     )
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.stopping_paused_mission_failed  # type: ignore
+    assert transition is sync_state_machine.mission_stopping_failed  # type: ignore
     assert sync_state_machine.events.mqtt_queue.empty()
 
     transition()
