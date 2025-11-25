@@ -1717,3 +1717,29 @@ def test_intervention_needed_transitions_does_not_transition_if_status_is_not_ho
         transition = event_handler.handler(event_handler.event)
 
         assert transition is None  # type: ignore
+
+
+def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_available(
+    sync_state_machine: StateMachine, mocker
+) -> None:
+    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Available)
+    # Make sure that we have not changed robot status
+    sync_state_machine.events.robot_service_events.robot_status_changed.consume_event()
+
+    mocker.patch.object(EventHandlerBase, "_run", return_value=None)
+    sync_state_machine.state = sync_state_machine.unknown_status_state.name  # type: ignore
+
+    unknown_status_state: EventHandlerBase = cast(
+        EventHandlerBase, sync_state_machine.unknown_status_state
+    )
+    unknown_status_state.start()
+    event_handler: Optional[EventHandlerMapping] = (
+        unknown_status_state.get_event_handler_by_name("robot_status_event")
+    )
+    assert event_handler is not None
+
+    transition = event_handler.handler(event_handler.event)
+
+    assert transition is sync_state_machine.robot_status_available  # type: ignore
+    transition()
+    assert sync_state_machine.state is sync_state_machine.await_next_mission_state.name  # type: ignore
