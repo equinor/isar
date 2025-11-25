@@ -118,13 +118,14 @@ def failed_stop_return_home_event_handler(
     mission: Mission = (
         state_machine.events.api_requests.start_mission.request.consume_event()
     )
-    state_machine.events.api_requests.start_mission.response.trigger_event(
-        MissionStartResponse(
-            mission_id=mission.id,
-            mission_started=False,
-            mission_not_started_reason="Failed to cancel return home mission",
+    if mission:
+        state_machine.events.api_requests.start_mission.response.trigger_event(
+            MissionStartResponse(
+                mission_id=mission.id,
+                mission_started=False,
+                mission_not_started_reason="Failed to cancel return home mission",
+            )
         )
-    )
     return state_machine.return_home_mission_stopping_failed  # type: ignore
 
 
