@@ -45,6 +45,7 @@ from isar.state_machine.states.stopping_paused_mission import StoppingPausedMiss
 from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
+from isar.state_machine.stopping_paused_return_home import StoppingPausedReturnHome
 from isar.state_machine.transitions.mission import get_mission_transitions
 from isar.state_machine.transitions.return_home import get_return_home_transitions
 from isar.state_machine.transitions.robot_status import get_robot_status_transitions
@@ -108,6 +109,7 @@ class StateMachine(object):
         self.going_to_recharging_state: State = GoingToRecharging(self)
         self.stopping_due_to_maintenance_state: State = StoppingDueToMaintenance(self)
         self.stopping_paused_mission_state: State = StoppingPausedMission(self)
+        self.stopping_paused_return_home_state: State = StoppingPausedReturnHome(self)
 
         # States Waiting for mission
         self.await_next_mission_state: State = AwaitNextMission(self)
@@ -150,6 +152,7 @@ class StateMachine(object):
             self.stopping_due_to_maintenance_state,
             self.maintenance_state,
             self.stopping_paused_mission_state,
+            self.stopping_paused_return_home_state,
         ]
 
         if settings.PERSISTENT_STORAGE_CONNECTION_STRING == "":
@@ -322,6 +325,7 @@ class StateMachine(object):
             States.StoppingGoToLockdown,
             States.StoppingGoToRecharge,
             States.StoppingPausedMission,
+            States.StoppingPausedReturnHome,
         ]:
             return IsarStatus.Stopping
         elif self.current_state == States.StoppingReturnHome:
