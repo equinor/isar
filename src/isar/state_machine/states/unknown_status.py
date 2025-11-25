@@ -43,6 +43,10 @@ class UnknownStatus(EventHandlerBase):
                 return state_machine.robot_status_blocked_protective_stop  # type: ignore
             return None
 
+        def _reset_status_check():
+            # Ensures that we will check the status immediately instead of waiting for it to change
+            self.events.robot_service_events.robot_status_changed.trigger_event(True)
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="stop_mission_event",
@@ -64,4 +68,5 @@ class UnknownStatus(EventHandlerBase):
             state_name="unknown_status",
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
+            on_entry=_reset_status_check,
         )
