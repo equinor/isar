@@ -237,9 +237,8 @@ class StateMachine(object):
 
         if self.shared_state.mission_id.check() is None:
             self.logger.warning(
-                "Could not publish mission aborted message. No ongoing mission."
+                "Publishing mission aborted message with no ongoing mission."
             )
-            return
 
         payload: MissionAbortedPayload = MissionAbortedPayload(
             isar_id=settings.ISAR_ID,
