@@ -36,10 +36,10 @@ from tests.test_double.pose import DummyPose
 from tests.test_double.robot_interface import (
     StubRobot,
     StubRobotBlockedProtectiveStopToHomeTest,
-    StubRobotInitiateMissionRaisesException,
     StubRobotMissionStatusRaisesException,
     StubRobotOfflineToHomeTest,
     StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus,
+    StubRobotStartMissionRaisesException,
 )
 from tests.test_double.task import StubTask
 
@@ -108,7 +108,7 @@ def test_state_machine_transitions_when_running_full_mission(
     robot_service_thread.robot_service.robot = (
         StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(
             current_state=robot_service_thread.robot_service.shared_state.state,
-            initiate_mission_delay=1,
+            start_mission_delay=1,
         )
     )
     robot_service_thread.robot_service.robot_status_thread.robot_status_poll_interval = (
@@ -239,7 +239,10 @@ def test_monitor_goes_to_return_home_when_battery_low(
     assert transition is sync_state_machine.stop_go_to_recharge  # type: ignore
 
     transition()
-    assert sync_state_machine.state is sync_state_machine.stopping_go_to_recharge_state.name  # type: ignore
+    assert (
+        sync_state_machine.state  # type: ignore
+        is sync_state_machine.stopping_go_to_recharge_state.name
+    )
 
 
 def test_stopping_to_recharge_goes_to_going_to_recharging(
@@ -452,7 +455,7 @@ def test_state_machine_failed_dependency(
     )
 
 
-def test_state_machine_failed_to_initiate_mission_and_return_home(
+def test_state_machine_failed_to_start_mission_and_return_home(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
@@ -462,7 +465,7 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
         0
     ].timeout_in_seconds = 0.01
 
-    robot_service_thread.robot_service.robot = StubRobotInitiateMissionRaisesException()
+    robot_service_thread.robot_service.robot = StubRobotStartMissionRaisesException()
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
@@ -786,7 +789,9 @@ def test_return_home_cancelled_when_new_mission_received(
 
     assert transition is sync_state_machine.stop_return_home  # type: ignore
     transition()
-    assert sync_state_machine.state is sync_state_machine.stopping_return_home_state.name  # type: ignore
+    assert (
+        sync_state_machine.state is sync_state_machine.stopping_return_home_state.name  # type: ignore
+    )
 
 
 def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
@@ -832,7 +837,10 @@ def test_mission_stopped_when_going_to_lockdown(
 
     assert transition is sync_state_machine.stop_go_to_lockdown  # type: ignore
     transition()
-    assert sync_state_machine.state is sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
+    assert (
+        sync_state_machine.state  # type: ignore
+        is sync_state_machine.stopping_go_to_lockdown_state.name
+    )
 
 
 def test_stopping_lockdown_transitions_to_going_to_lockdown(
@@ -1180,7 +1188,6 @@ def test_state_machine_with_return_home_failure(
     assert event_handler is not None
 
     for i in range(settings.RETURN_HOME_RETRY_LIMIT - 1):
-
         event_handler.event.trigger_event(MissionStatus.Failed)
         transition = event_handler.handler(event_handler.event)
 
@@ -1476,7 +1483,9 @@ def test_transition_from_return_home_paused_to_resuming_return_home(
     assert transition is sync_state_machine.resume  # type: ignore
 
     transition()
-    assert sync_state_machine.state is sync_state_machine.resuming_return_home_state.name  # type: ignore
+    assert (
+        sync_state_machine.state is sync_state_machine.resuming_return_home_state.name  # type: ignore
+    )
 
 
 def test_transition_from_return_home_paused_to_going_to_lockdown(
@@ -1615,7 +1624,6 @@ def test_robot_mission_status_exception_handling(
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
 ) -> None:
-
     mission = Mission(
         name="Dummy mission",
         tasks=[StubTask.take_image()],

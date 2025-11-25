@@ -31,7 +31,7 @@ class RobotStartMissionThread(Thread):
         if self.signal_thread_quitting.wait(0):
             return
         try:
-            self.robot.initiate_mission(self.mission)
+            self.robot.start_mission(self.mission.id)
         except RobotAlreadyHomeException as e:
             self.logger.info(
                 "Robot disregarded return to home mission as its already at home. Return home mission will be assumed successful without running."
@@ -50,7 +50,7 @@ class RobotStartMissionThread(Thread):
             )
         except RobotException as e:
             self.logger.warning(
-                f"Initiating mission failed " f"because: {e.error_description}"
+                f"Initiating mission failed because: {e.error_description}"
             )
             self.error_message = ErrorMessage(
                 error_reason=e.error_reason,

@@ -14,8 +14,8 @@ class RobotInterface(metaclass=ABCMeta):
     """Interface to communicate with robots."""
 
     @abstractmethod
-    def initiate_mission(self, mission: Mission) -> None:
-        """Send a mission to the robot and initiate execution of the mission
+    def prepare_mission(self, mission: Mission) -> None:
+        """Prepare a mission for execution on the robot
 
         Parameters
         ----------
@@ -30,6 +30,30 @@ class RobotInterface(metaclass=ABCMeta):
         RobotAlreadyHomeException
             If the mission is a return home mission and the robot wish to disregard the
             mission as it is already at home
+        RobotInfeasibleMissionException
+            If the mission input is infeasible and the mission fails to be prepared in
+            a way that means attempting to schedule again is not necessary
+        RobotException
+            Will catch all RobotExceptions not previously listed and retry preparation of
+            the mission until the number of allowed retries is exceeded
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def start_mission(self, mission_id: str) -> None:
+        """Start a prerpared mission on the robot
+
+        Parameters
+        ----------
+        mission_id: str
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
         RobotInfeasibleMissionException
             If the mission input is infeasible and the mission fails to be scheduled in
             a way that means attempting to schedule again is not necessary
