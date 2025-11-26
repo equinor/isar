@@ -16,12 +16,12 @@ from isar.services.service_connections.persistent_memory import (
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
-from tests.isar.state_machine.test_state_machine import (
+from tests.test_mocks.mission_definition import DummyMissionDefinition
+from tests.test_mocks.robot_interface import StubRobot
+from tests.test_mocks.state_machine_mocks import (
     RobotServiceThreadMock,
     StateMachineThreadMock,
 )
-from tests.test_mocks.mission_definition import DummyMissionDefinition
-from tests.test_mocks.robot_interface import StubRobot
 
 
 def test_persistent_storage_schema() -> None:
