@@ -532,7 +532,6 @@ def test_state_machine_with_successful_collection(
             States.Home,
             States.Monitor,
             States.AwaitNextMission,
-            States.ReturningHome,
             States.Home,
         ]
     )
@@ -578,7 +577,6 @@ def test_state_machine_with_unsuccessful_collection(
             States.Home,
             States.Monitor,
             States.AwaitNextMission,
-            States.ReturningHome,
             States.Home,
         ]
     )
