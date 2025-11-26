@@ -13,6 +13,7 @@ from isar.state_machine.utils.common_event_handlers import (
     start_mission_event_handler,
     stop_mission_event_handler,
 )
+from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -60,6 +61,12 @@ class AwaitNextMission(EventHandlerBase):
             return None
 
         def _start_return_home():
+            if (
+                shared_state.robot_status.queue
+                and shared_state.robot_status.queue[-1] == RobotStatus.Home
+            ):
+                return state_machine.stay_home_after_await_next_mission  # type: ignore
+
             state_machine.start_return_home_mission()
             return state_machine.start_return_home_monitoring  # type: ignore
 

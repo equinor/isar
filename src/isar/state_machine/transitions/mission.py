@@ -182,6 +182,11 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.maintenance_state,
         },
         {
+            "trigger": "stay_home_after_await_next_mission",
+            "source": state_machine.await_next_mission_state,
+            "dest": state_machine.home_state,
+        },
+        {
             "trigger": "release_from_maintenance",
             "source": [
                 state_machine.maintenance_state,
