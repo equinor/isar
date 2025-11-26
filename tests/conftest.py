@@ -26,13 +26,13 @@ from isar.services.service_connections.persistent_memory import Base
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.monitor import Monitor
 from isar.storage.uploader import Uploader
-from tests.isar.state_machine.test_state_machine import (
+from tests.test_mocks.blob_storage import StorageFake
+from tests.test_mocks.robot_interface import StubRobot
+from tests.test_mocks.state_machine_mocks import (
     RobotServiceThreadMock,
     StateMachineThreadMock,
     UploaderThreadMock,
 )
-from tests.test_mocks.blob_storage import StorageFake
-from tests.test_mocks.robot_interface import StubRobot
 
 
 @pytest.fixture(autouse=True)

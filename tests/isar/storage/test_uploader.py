@@ -13,9 +13,9 @@ from robot_interface.models.inspection.inspection import (
 )
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TakeImage
-from tests.isar.state_machine.test_state_machine import UploaderThreadMock
 from tests.test_mocks.blob_storage import StorageEmptyBlobPathsFake, StorageFake
 from tests.test_mocks.mqtt_client import MqttPublisherFake
+from tests.test_mocks.state_machine_mocks import UploaderThreadMock
 
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(

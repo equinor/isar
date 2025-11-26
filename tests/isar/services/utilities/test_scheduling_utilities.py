@@ -5,8 +5,11 @@ import pytest
 from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
+from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import APIEvent, Event, EventTimeoutError
+from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states_enum import States
 from tests.test_mocks.mission_definition import DummyMissionDefinition
 
@@ -122,3 +125,21 @@ def test_return_home_twice_causes_conflict(
         scheduling_utilities.return_home()
     return_home_thread.join()
     assert err.value.status_code == HTTPStatus.CONFLICT
+
+
+def test_api_with_unsuccessful_return_home_stop(
+    container: ApplicationContainer,
+    sync_state_machine: StateMachine,
+) -> None:
+    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
+    stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
+        success=False, failure_reason="ISAR failed to stop mission"
+    )
+    sync_state_machine.events.api_requests.stop_mission.response.trigger_event(
+        stopped_mission_response
+    )
+
+    with pytest.raises(HTTPException) as exception_details:
+        scheduling_utilities.stop_mission()
+
+    assert exception_details.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
