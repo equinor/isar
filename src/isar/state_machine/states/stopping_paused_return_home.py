@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class StoppingReturnHome(EventHandlerBase):
+class StoppingPausedReturnHome(EventHandlerBase):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
@@ -32,7 +32,7 @@ class StoppingReturnHome(EventHandlerBase):
             ),
         ]
         super().__init__(
-            state_name="stopping_return_home",
+            state_name="stopping_paused_return_home",
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )

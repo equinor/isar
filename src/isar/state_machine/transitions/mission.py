@@ -117,7 +117,10 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
         },
         {
             "trigger": "mission_stopped",
-            "source": state_machine.stopping_state,
+            "source": [
+                state_machine.stopping_state,
+                state_machine.stopping_paused_mission_state,
+            ],
             "dest": state_machine.await_next_mission_state,
         },
         {
@@ -141,6 +144,11 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
         },
         {
             "trigger": "mission_stopping_failed",
+            "source": state_machine.stopping_paused_mission_state,
+            "dest": state_machine.paused_state,
+        },
+        {
+            "trigger": "mission_stopping_failed",
             "source": state_machine.stopping_due_to_maintenance_state,
             "dest": state_machine.unknown_status_state,  # We do not know if we need to go to monitor or return_home state
         },
@@ -150,11 +158,17 @@ def get_mission_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.returning_home_state,
         },
         {
+            "trigger": "return_home_mission_stopping_failed",
+            "source": state_machine.stopping_paused_return_home_state,
+            "dest": state_machine.return_home_paused_state,
+        },
+        {
             "trigger": "start_mission_monitoring",
             "source": [
                 state_machine.await_next_mission_state,
                 state_machine.home_state,
                 state_machine.stopping_return_home_state,
+                state_machine.stopping_paused_return_home_state,
             ],
             "dest": state_machine.monitor_state,
         },
