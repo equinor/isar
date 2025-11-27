@@ -70,7 +70,7 @@ dacite==1.9.2
     #   isar (pyproject.toml)
 dependency-injector==4.48.2
     # via isar (pyproject.toml)
-fastapi==0.121.3
+fastapi==0.122.0
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
@@ -80,6 +80,8 @@ googleapis-common-protos==1.72.0
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
+greenlet==3.2.4
+    # via sqlalchemy
 grpcio==1.76.0
     # via opentelemetry-exporter-otlp-proto-grpc
 h11==0.16.0
@@ -237,7 +239,7 @@ psycopg2-binary==2.9.11
     # via isar (pyproject.toml)
 pycparser==2.23
     # via cffi
-pydantic==2.12.4
+pydantic==2.12.5
     # via
     #   fastapi
     #   isar (pyproject.toml)
