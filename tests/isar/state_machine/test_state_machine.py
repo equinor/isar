@@ -629,6 +629,9 @@ def test_state_machine_with_successful_mission_stop(
             States.AwaitNextMission,
         ]
     )
+    assert (
+        not state_machine_thread.state_machine.events.robot_service_events.mission_status_updated.has_event()
+    )
 
 
 def _mock_robot_exception_with_message() -> RobotException:
@@ -1850,7 +1853,8 @@ def test_mqtt_message_not_sent_on_mission_stopped(
     )
 
     assert transition is sync_state_machine.mission_stopped  # type: ignore
+    assert sync_state_machine.events.mqtt_queue.empty() is True
+
     transition()
 
-    assert sync_state_machine.events.mqtt_queue.empty() is True
     assert sync_state_machine.state is sync_state_machine.await_next_mission_state.name  # type: ignore
