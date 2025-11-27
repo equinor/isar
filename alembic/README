@@ -1,13 +1,42 @@
 Alembic is used to migrate the databases. [link](https://alembic.sqlalchemy.org/en/latest/front.html#installation)
 
-# Creating new migrations
-Requires setting the correct environment variable connection string `ISAR_PERSISTENT_STORAGE_CONNECTION_STRING` for the database. 
-```
+# How to
+
+Requirements:
+1. Set the correct environment variable connection string `ISAR_PERSISTENT_STORAGE_CONNECTION_STRING` for the database.
+
+<details>
+<summary>
+Creating new migrations
+</summary>
+
+```bash
 alembic revision --autogenerate -m "Migration name"
 ```
-This will compare what is in the metadata of sqlalchemy Base with what is in the database and create a migration for it. 
 
-# Run migration
+This will compare what is in the metadata of sqlalchemy Base with what is in the database and create a migration for it. 
+</details>
+
+<details open>
+<summary>
+Checking if database is up-to-date
+</summary>
+
+```bash
+alembic check
 ```
+</details>
+
+<details>
+<summary>
+Run migrations
+</summary>
+
+```bash
 alembic upgrade head
 ```
+</details>
+
+
+# Notes:
+1. The model files are located [here](../src/isar/services/service_connections/persistent_memory.py). 
