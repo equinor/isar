@@ -76,6 +76,22 @@ def test_mission_succeeds_to_schedule(mocked_robot_service: Robot, mocker) -> No
 def test_mission_fails_to_stop(mocked_robot_service: Robot, mocker) -> None:
     r_service = mocked_robot_service
     mocker.patch.object(RobotStopMissionThread, "is_alive", return_value=False)
+    mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=False)
+
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
+
+    r_service.monitor_mission_thread = RobotMonitorMissionThread(
+        r_service.robot_service_events,
+        r_service.shared_state,
+        r_service.robot,
+        r_service.mqtt_publisher,
+        r_service.signal_thread_quitting,
+        r_service.signal_mission_stopped,
+        mission,
+    )
 
     r_service.stop_mission_thread = RobotStopMissionThread(
         r_service.robot, r_service.signal_thread_quitting
@@ -101,18 +117,21 @@ def test_mission_fails_to_stop(mocked_robot_service: Robot, mocker) -> None:
     assert not r_service.signal_mission_stopped.is_set()
 
 
-def test_mission_succeeds_to_stop(mocked_robot_service: Robot, mocker) -> None:
+def test_stop_mission_waits_for_monitor_mission(
+    mocked_robot_service: Robot, mocker
+) -> None:
     r_service = mocked_robot_service
     mocker.patch.object(RobotStopMissionThread, "is_alive", return_value=False)
+    mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=True)
+    mock_join_monitor_thread = mocker.patch(
+        "isar.robot.robot.RobotMonitorMissionThread.join"
+    )
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
-    r_service.stop_mission_thread = RobotStopMissionThread(
-        r_service.robot, r_service.signal_thread_quitting
-    )
     r_service.monitor_mission_thread = RobotMonitorMissionThread(
         r_service.robot_service_events,
         r_service.shared_state,
@@ -123,12 +142,39 @@ def test_mission_succeeds_to_stop(mocked_robot_service: Robot, mocker) -> None:
         mission,
     )
 
+    r_service.stop_mission_thread = RobotStopMissionThread(
+        r_service.robot, r_service.signal_thread_quitting
+    )
+
+    r_service._stop_mission_done_handler()
+
+    assert r_service.robot_service_events.mission_successfully_stopped.has_event()
+    mission_successfully_stopped_event = (
+        r_service.robot_service_events.mission_successfully_stopped.get()
+    )
+    assert mission_successfully_stopped_event
+
+    assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
+    assert not r_service.robot_service_events.mission_status_updated.has_event()
+
+    assert r_service.signal_mission_stopped.is_set()
+    mock_join_monitor_thread.assert_called_once()
+
+
+def test_mission_succeeds_to_stop(mocked_robot_service: Robot, mocker) -> None:
+    r_service = mocked_robot_service
+    mocker.patch.object(RobotStopMissionThread, "is_alive", return_value=False)
+
+    r_service.stop_mission_thread = RobotStopMissionThread(
+        r_service.robot, r_service.signal_thread_quitting
+    )
+
     r_service._stop_mission_done_handler()
 
     assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
     assert r_service.robot_service_events.mission_successfully_stopped.has_event()
 
-    assert r_service.signal_mission_stopped.is_set()
+    assert not r_service.robot_service_events.mission_status_updated.has_event()
 
     assert r_service.monitor_mission_thread is None
 
