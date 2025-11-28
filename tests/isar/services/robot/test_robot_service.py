@@ -148,6 +148,11 @@ def test_stop_mission_waits_for_monitor_mission(
 
     r_service._stop_mission_done_handler()
 
+    assert not r_service.robot_service_events.mission_successfully_stopped.has_event()
+
+    mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=False)
+    r_service._stop_mission_done_handler()
+
     assert r_service.robot_service_events.mission_successfully_stopped.has_event()
     mission_successfully_stopped_event = (
         r_service.robot_service_events.mission_successfully_stopped.get()
