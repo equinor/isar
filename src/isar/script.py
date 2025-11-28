@@ -58,6 +58,7 @@ def print_startup_info():
     )
 
     print_setting("ISAR settings")
+    print_setting("ISAR ID", settings.ISAR_ID)
     print_setting("Robot package", settings.ROBOT_PACKAGE)
     print_setting("Robot name", settings.ROBOT_NAME)
     print_setting("Running on port", settings.API_PORT)
