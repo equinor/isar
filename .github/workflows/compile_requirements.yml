@@ -1,5 +1,8 @@
 name: Compile Requirements
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
