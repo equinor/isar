@@ -76,7 +76,7 @@ def test_mission_succeeds_to_schedule(mocked_robot_service: Robot, mocker) -> No
 def test_mission_fails_to_stop(mocked_robot_service: Robot, mocker) -> None:
     r_service = mocked_robot_service
     mocker.patch.object(RobotStopMissionThread, "is_alive", return_value=False)
-    mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=False)
+    mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=True)
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
@@ -111,6 +111,9 @@ def test_mission_fails_to_stop(mocked_robot_service: Robot, mocker) -> None:
         mission_failed_to_stop_event.error_reason
         == ErrorReason.RobotUnknownErrorException
     )
+
+    assert not r_service.signal_mission_stopped.is_set()
+    assert r_service.monitor_mission_thread is not None
 
     assert not r_service.robot_service_events.mission_successfully_stopped.has_event()
 
