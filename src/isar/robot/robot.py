@@ -140,21 +140,23 @@ class Robot(object):
             self.stop_mission_thread is not None
             and not self.stop_mission_thread.is_alive()
         ):
-            if self.monitor_mission_thread is not None:
-                if self.monitor_mission_thread.is_alive():
-                    self.signal_mission_stopped.set()
-                    return
-                self.monitor_mission_thread.join()
-                self.monitor_mission_thread = None
             self.stop_mission_thread.join()
             error_message = self.stop_mission_thread.error_message
-            self.stop_mission_thread = None
 
             if error_message:
                 self.robot_service_events.mission_failed_to_stop.trigger_event(
                     error_message
                 )
+                self.stop_mission_thread = None
             else:
+                if self.monitor_mission_thread is not None:
+                    if self.monitor_mission_thread.is_alive():
+                        self.signal_mission_stopped.set()
+                        return
+                    self.monitor_mission_thread.join()
+                    self.monitor_mission_thread = None
+
+                self.stop_mission_thread = None
                 # The mission status will already be reported on MQTT, the state machine does not need the event
                 self.robot_service_events.mission_status_updated.clear_event()
                 self.robot_service_events.mission_successfully_stopped.trigger_event(
