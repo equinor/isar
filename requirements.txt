@@ -33,7 +33,7 @@ azure-identity==1.25.1
     #   isar (pyproject.toml)
 azure-keyvault-secrets==4.10.0
     # via isar (pyproject.toml)
-azure-monitor-opentelemetry==1.8.2
+azure-monitor-opentelemetry==1.8.1
     # via isar (pyproject.toml)
 azure-monitor-opentelemetry-exporter==1.0.0b45
     # via
