@@ -75,11 +75,19 @@ class ReturnHomePaused(EventHandlerBase):
                 return state_machine.stop_due_to_maintenance  # type: ignore
             return None
 
+        def _resume_mission_event_handler(event: Event[bool]):
+            if event.consume_event():
+                state_machine.events.state_machine_events.resume_mission.trigger_event(
+                    True
+                )
+                return state_machine.resume  # type: ignore
+            return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="resume_return_home_event",
                 event=events.api_requests.resume_mission.request,
-                handler=lambda event: state_machine.resume if event.consume_event() else None,  # type: ignore
+                handler=_resume_mission_event_handler,
             ),
             EventHandlerMapping(
                 name="robot_battery_update_event",
