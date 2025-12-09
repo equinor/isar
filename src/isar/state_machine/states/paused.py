@@ -61,7 +61,7 @@ class Paused(EventHandlerBase):
                 return state_machine.stop_due_to_maintenance  # type: ignore
             return None
 
-        def _resume_misison_event_handler(event: Event[bool]):
+        def _resume_mission_event_handler(event: Event[bool]):
             if event.consume_event():
                 state_machine.events.state_machine_events.resume_mission.trigger_event(
                     True
@@ -78,7 +78,7 @@ class Paused(EventHandlerBase):
             EventHandlerMapping(
                 name="resume_mission_event",
                 event=events.api_requests.resume_mission.request,
-                handler=_resume_misison_event_handler,
+                handler=_resume_mission_event_handler,
             ),
             EventHandlerMapping(
                 name="robot_battery_update_event",
