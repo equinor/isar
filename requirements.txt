@@ -16,7 +16,7 @@ anyio==4.12.0
     #   starlette
 asgiref==3.11.0
     # via opentelemetry-instrumentation-asgi
-azure-core==1.36.0
+azure-core==1.37.0
     # via
     #   azure-core-tracing-opentelemetry
     #   azure-identity
@@ -70,7 +70,7 @@ dacite==1.9.2
     #   isar (pyproject.toml)
 dependency-injector==4.48.3
     # via isar (pyproject.toml)
-fastapi==0.124.0
+fastapi==0.124.2
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
@@ -278,7 +278,7 @@ scipy==1.16.3
     # via alitra
 six==1.17.0
     # via transitions
-sqlalchemy==2.0.44
+sqlalchemy==2.0.45
     # via isar (pyproject.toml)
 starlette==0.50.0
     # via
@@ -307,7 +307,7 @@ typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
-urllib3==2.6.1
+urllib3==2.6.2
     # via requests
 uvicorn==0.38.0
     # via isar (pyproject.toml)
