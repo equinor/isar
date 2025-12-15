@@ -20,7 +20,7 @@ from isar.apis.security.authentication import Authenticator
 from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
-from robot_interface.telemetry.payloads import StartUpMessagePayload
+from robot_interface.telemetry.payloads import MissionAbortedPayload, StartUpMessagePayload
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
@@ -368,15 +368,40 @@ class API:
         if not self.mqtt_publisher:
             return
 
-        payload: StartUpMessagePayload = StartUpMessagePayload(
+        # payload: StartUpMessagePayload = StartUpMessagePayload(
+        #     isar_id=settings.ISAR_ID,
+        #     timestamp=datetime.now(timezone.utc),
+        # )
+
+        # self.logger.info("Publishing startup message to MQTT broker")
+
+        # self.mqtt_publisher.publish(
+        #     topic=settings.TOPIC_ISAR_STARTUP,
+        #     payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+        #     qos=1,
+        #     retain=True,
+        # )
+        self._publish_mission_aborted(can_be_continued=True)
+
+    def _publish_mission_aborted(self, can_be_continued: bool) -> None:
+        if not self.mqtt_publisher:
+            return
+
+        self.logger.warning(
+            "Publishing mission aborted message with no ongoing mission due to isar restart."
+        )
+
+        payload: MissionAbortedPayload = MissionAbortedPayload(
             isar_id=settings.ISAR_ID,
+            robot_name=settings.ROBOT_NAME,
+            mission_id="",
+            reason="Isar restarted",
+            can_be_continued=can_be_continued,
             timestamp=datetime.now(timezone.utc),
         )
 
-        self.logger.info("Publishing startup message to MQTT broker")
-
         self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_STARTUP,
+            topic=settings.TOPIC_ISAR_MISSION_ABORTED,
             payload=json.dumps(payload, cls=EnhancedJSONEncoder),
             qos=1,
             retain=True,
