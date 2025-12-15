@@ -505,10 +505,23 @@ class SchedulingUtilities:
             )
 
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
-        if api_event.request.has_event():
+        if not api_event.lock.acquire(blocking=False):
             raise EventConflictError("API event has already been sent")
 
         try:
+            if api_event.request.has_event():
+                self.logger.error(
+                    "API request already had pending request before sending request"
+                )
+
+            if api_event.response.has_event():
+                self.logger.error(
+                    "API request already had response before sending request"
+                )
+
+            api_event.request.clear_event()
+            api_event.response.clear_event()
+
             api_event.request.trigger_event(input, timeout=1)
             return api_event.response.consume_event(timeout=self.queue_timeout)
         except EventTimeoutError as e:
@@ -519,3 +532,4 @@ class SchedulingUtilities:
         finally:
             api_event.request.clear_event()
             api_event.response.clear_event()
+            api_event.lock.release()
