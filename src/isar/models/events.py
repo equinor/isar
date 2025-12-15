@@ -1,5 +1,6 @@
 from collections import deque
 from queue import Empty, Queue
+from threading import Lock
 from typing import Generic, Optional, Tuple, TypeVar
 
 from transitions import State
@@ -94,6 +95,7 @@ class APIEvent(Generic[T1, T2]):
     def __init__(self, name: str):
         self.request: Event[T1] = Event("api-" + name + "-request")
         self.response: Event[T2] = Event("api-" + name + "-request")
+        self.lock: Lock = Lock()
 
 
 class APIRequests:
