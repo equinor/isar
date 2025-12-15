@@ -42,6 +42,9 @@ class UnknownStatus(EventHandlerBase):
             elif robot_status == RobotStatus.BlockedProtectiveStop:
                 return state_machine.robot_status_blocked_protective_stop  # type: ignore
             elif robot_status == RobotStatus.Busy:
+                state_machine.events.state_machine_events.stop_mission.trigger_event(
+                    True
+                )
                 return state_machine.robot_status_busy  # type: ignore
             return None
 
