@@ -30,6 +30,9 @@ class Recharging(EventHandlerBase):
                 return None
 
             if robot_status == RobotStatus.Offline:
+                self.logger.info(
+                    "Got robot status offline while in recharging state. Leaving recharging state."
+                )
                 return state_machine.robot_status_offline  # type: ignore
 
         def _send_to_lockdown_event_handler(event: Event[bool]):

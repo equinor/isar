@@ -45,6 +45,9 @@ class InterventionNeeded(EventHandlerBase):
                 return None
             robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
             if robot_status == RobotStatus.Home:
+                self.logger.info(
+                    "Got robot status home while in intervention needed state. Leaving intervention needed state."
+                )
                 return state_machine.go_to_home  # type: ignore
             return None
 
