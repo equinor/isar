@@ -193,6 +193,8 @@ class Robot(object):
                 )
                 self.start_mission_thread.join()
 
+            start_mission.status = MissionStatus.NotStarted
+            publish_mission_status(self.mqtt_publisher, start_mission)
             self.start_mission_thread = RobotStartMissionThread(
                 self.robot,
                 self.signal_thread_quitting,
