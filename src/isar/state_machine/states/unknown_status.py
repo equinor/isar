@@ -34,16 +34,31 @@ class UnknownStatus(EventHandlerBase):
             robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
 
             if robot_status == RobotStatus.Home:
+                self.logger.info(
+                    "Got robot status home while in unknown status state. Leaving unknown status state."
+                )
                 return state_machine.robot_status_home  # type: ignore
             elif robot_status == RobotStatus.Available:
+                self.logger.info(
+                    "Got robot status available while in unknown status state. Leaving unknown status state."
+                )
                 return state_machine.robot_status_available  # type: ignore
             elif robot_status == RobotStatus.Offline:
+                self.logger.info(
+                    "Got robot status offline while in unknown status state. Leaving unknown status state."
+                )
                 return state_machine.robot_status_offline  # type: ignore
             elif robot_status == RobotStatus.BlockedProtectiveStop:
+                self.logger.info(
+                    "Got robot status blocked protective stop while in unknown status state. Leaving unknown status state."
+                )
                 return state_machine.robot_status_blocked_protective_stop  # type: ignore
             elif robot_status == RobotStatus.Busy:
                 state_machine.events.state_machine_events.stop_mission.trigger_event(
                     True
+                )
+                self.logger.info(
+                    "Got robot status busy while in unknown status state. Leaving unknown status state."
                 )
                 return state_machine.robot_status_busy  # type: ignore
             return None

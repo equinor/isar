@@ -64,6 +64,9 @@ class Home(EventHandlerBase):
                     "Got robot status blocked protective stop while in home state. Leaving home state."
                 )
                 return state_machine.robot_status_blocked_protective_stop  # type: ignore
+            self.logger.info(
+                f"Got unexpected status {robot_status} while in home state. Leaving home state."
+            )
             return state_machine.robot_status_unknown  # type: ignore
 
         def _robot_battery_level_updated_handler(

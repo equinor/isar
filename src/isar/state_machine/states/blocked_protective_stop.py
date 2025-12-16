@@ -34,11 +34,23 @@ class BlockedProtectiveStop(EventHandlerBase):
             if robot_status == RobotStatus.BlockedProtectiveStop:
                 return None
             elif robot_status == RobotStatus.Home:
+                self.logger.info(
+                    "Got robot status home while in blocked protective stop state. Leaving blocked protective stop state."
+                )
                 return state_machine.robot_status_home  # type: ignore
             elif robot_status == RobotStatus.Available:
+                self.logger.info(
+                    "Got robot status available while in blocked protective stop state. Leaving blocked protective stop state."
+                )
                 return state_machine.robot_status_available  # type: ignore
             elif robot_status == RobotStatus.Offline:
+                self.logger.info(
+                    "Got robot status offline while in blocked protective stop state. Leaving blocked protective stop state."
+                )
                 return state_machine.robot_status_offline  # type: ignore
+            self.logger.info(
+                f"Got unexpected status {robot_status} while in blocked protective stop state. Leaving blocked protective stop state."
+            )
             return state_machine.robot_status_unknown  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
