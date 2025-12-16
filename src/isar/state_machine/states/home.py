@@ -50,10 +50,19 @@ class Home(EventHandlerBase):
             if robot_status == RobotStatus.Home:
                 return None
             elif robot_status == RobotStatus.Available:
+                self.logger.info(
+                    "Got robot status available while in home state. Leaving home state."
+                )
                 return state_machine.robot_status_available  # type: ignore
             elif robot_status == RobotStatus.Offline:
+                self.logger.info(
+                    "Got robot status offline while in home state. Leaving home state."
+                )
                 return state_machine.robot_status_offline  # type: ignore
             elif robot_status == RobotStatus.BlockedProtectiveStop:
+                self.logger.info(
+                    "Got robot status blocked protective stop while in home state. Leaving home state."
+                )
                 return state_machine.robot_status_blocked_protective_stop  # type: ignore
             return state_machine.robot_status_unknown  # type: ignore
 
