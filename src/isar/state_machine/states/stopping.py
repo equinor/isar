@@ -37,13 +37,6 @@ class Stopping(EventHandlerBase):
                 ControlMissionResponse(success=True)
             )
 
-            if state_machine.shared_state.mission_id.check() is None:
-                reason: str = (
-                    "Robot was busy and mission stopped but no ongoing mission found in shared state."
-                )
-                state_machine.logger.warning(reason)
-                state_machine.publish_mission_aborted(reason, False)
-
             state_machine.print_transitions()
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 state_machine.start_return_home_mission()
