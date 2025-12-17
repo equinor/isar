@@ -128,6 +128,7 @@ def test_return_home_twice_causes_conflict(
 
 
 def test_api_with_unsuccessful_return_home_stop(
+    mocker,
     container: ApplicationContainer,
     sync_state_machine: StateMachine,
 ) -> None:
@@ -135,8 +136,10 @@ def test_api_with_unsuccessful_return_home_stop(
     stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
         success=False, failure_reason="ISAR failed to stop mission"
     )
-    sync_state_machine.events.api_requests.stop_mission.response.trigger_event(
-        stopped_mission_response
+    mocker.patch.object(
+        Event,
+        "consume_event",
+        return_value=stopped_mission_response,
     )
 
     with pytest.raises(HTTPException) as exception_details:
