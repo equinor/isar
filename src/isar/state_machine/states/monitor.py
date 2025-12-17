@@ -9,7 +9,7 @@ from isar.state_machine.utils.common_event_handlers import (
     stop_mission_event_handler,
 )
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -102,6 +102,20 @@ class Monitor(EventHandlerBase):
             )
             return state_machine.mission_failed_to_start  # type: ignore
 
+        def _robot_status_event_handler(
+            status_changed_event: Event[bool],
+        ) -> Optional[Callable]:
+            has_changed = status_changed_event.consume_event()
+            if not has_changed:
+                return None
+            robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
+            if robot_status == RobotStatus.Paused:
+                self.logger.info(
+                    "Got robot status paused while in monitor state. Leaving monitor state."
+                )
+                return state_machine.robot_status_paused  # type: ignore
+            return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="stop_mission_event",
@@ -144,6 +158,11 @@ class Monitor(EventHandlerBase):
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,
+            ),
+            EventHandlerMapping(
+                name="robot_status_event",
+                event=events.robot_service_events.robot_status_changed,
+                handler=_robot_status_event_handler,
             ),
         ]
         super().__init__(
