@@ -89,19 +89,29 @@ def start() -> None:
 
     threads: List[Thread] = []
 
+    api: API = injector.api()
+    api_thread: Thread = Thread(target=api.server.run, name="ISAR API", daemon=True)
+    api_thread.start()
+    threads.append(api_thread)
+
+    api.wait_for_api_server_ready()
+
     state_machine_thread: Thread = Thread(
         target=main, name="ISAR State Machine", args=[state_machine], daemon=True
     )
+    state_machine_thread.start()
     threads.append(state_machine_thread)
 
     uploader_thread: Thread = Thread(
         target=uploader.run, name="ISAR Uploader", daemon=True
     )
+    uploader_thread.start()
     threads.append(uploader_thread)
 
     robot_service_thread: Thread = Thread(
         target=robot.run, name="Robot service", daemon=True
     )
+    robot_service_thread.start()
     threads.append(robot_service_thread)
 
     if settings.UPLOAD_INSPECTIONS_ASYNC:
@@ -121,6 +131,7 @@ def start() -> None:
         mqtt_thread: Thread = Thread(
             target=mqtt_client.run, name="ISAR MQTT Client", daemon=True
         )
+        mqtt_thread.start()
         threads.append(mqtt_thread)
 
         robot_info_publisher: RobotInfoPublisher = RobotInfoPublisher(
@@ -131,6 +142,7 @@ def start() -> None:
             name="ISAR Robot Info Publisher",
             daemon=True,
         )
+        robot_info_thread.start()
         threads.append(robot_info_thread)
 
         robot_heartbeat_publisher: RobotHeartbeatPublisher = RobotHeartbeatPublisher(
@@ -142,6 +154,7 @@ def start() -> None:
             name="ISAR Robot Heartbeat Publisher",
             daemon=True,
         )
+        robot_heartbeat_thread.start()
         threads.append(robot_heartbeat_thread)
 
         publishers: List[Thread] = robot_interface.get_telemetry_publishers(
@@ -149,19 +162,9 @@ def start() -> None:
             robot_name=settings.ROBOT_NAME,
             isar_id=settings.ISAR_ID,
         )
-
-        if publishers:
-            threads.extend(publishers)
-
-    api: API = injector.api()
-    api_thread: Thread = Thread(target=api.server.run, name="ISAR API", daemon=True)
-    threads.append(api_thread)
-
-    for thread in threads:
-        thread.start()
-        logger.info("Started thread: %s", thread.name)
-
-    api.wait_for_api_server_ready()
+        for publisher in publishers:
+            publisher.start()
+            threads.append(publisher)
 
     while True:
         for thread in threads:
