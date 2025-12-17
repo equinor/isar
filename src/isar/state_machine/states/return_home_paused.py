@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING, Callable, List, Optional
 
-from isar.apis.models.models import LockdownResponse, MissionStartResponse
+from isar.apis.models.models import (
+    ControlMissionResponse,
+    LockdownResponse,
+    MissionStartResponse,
+)
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
 from isar.models.events import Event
@@ -77,6 +81,9 @@ class ReturnHomePaused(EventHandlerBase):
 
         def _resume_mission_event_handler(event: Event[bool]):
             if event.consume_event():
+                state_machine.events.api_requests.resume_mission.response.trigger_event(
+                    ControlMissionResponse(success=True)
+                )
                 state_machine.events.state_machine_events.resume_mission.trigger_event(
                     True
                 )
