@@ -189,7 +189,7 @@ class SchedulingUtilities:
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
         self.log_mission_overview(mission)
-        self.logger.info("OK - Mission started in ISAR")
+        self.logger.info("OK - Mission start successfully initiated")
 
     def return_home(
         self,
@@ -224,7 +224,7 @@ class SchedulingUtilities:
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
-        self.logger.info("OK - Return home mission started in ISAR")
+        self.logger.info("OK - Return home mission start successfully initiated")
 
     def pause_mission(self) -> ControlMissionResponse:
         """Pause mission
@@ -246,7 +246,7 @@ class SchedulingUtilities:
                     status_code=HTTPStatus.CONFLICT,
                     detail=response.failure_reason,
                 )
-            self.logger.info("OK - Mission successfully paused")
+            self.logger.info("OK - Pause mission successfully initiated")
             return response
         except EventConflictError:
             error_message = "Previous pause mission request is still being processed"
@@ -279,7 +279,7 @@ class SchedulingUtilities:
         """
         try:
             response = self._send_command(True, self.api_events.resume_mission)
-            self.logger.info("OK - Mission successfully resumed")
+            self.logger.info("OK - Resume mission successfully initiated")
             return response
         except EventConflictError:
             error_message = "Previous resume mission request is still being processed"
@@ -345,7 +345,7 @@ class SchedulingUtilities:
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
-        self.logger.info("OK - Mission successfully stopped")
+        self.logger.info("OK - Stop mission successfully initiated")
         return stop_mission_response
 
     def release_intervention_needed(self) -> None:
