@@ -85,7 +85,6 @@ def test_mission_fails_to_stop(mocked_robot_service: Robot, mocker) -> None:
 
     r_service.monitor_mission_thread = RobotMonitorMissionThread(
         r_service.robot_service_events,
-        r_service.shared_state,
         r_service.robot,
         r_service.mqtt_publisher,
         r_service.signal_thread_quitting,
@@ -137,7 +136,6 @@ def test_stop_mission_waits_for_monitor_mission(
 
     r_service.monitor_mission_thread = RobotMonitorMissionThread(
         r_service.robot_service_events,
-        r_service.shared_state,
         r_service.robot,
         r_service.mqtt_publisher,
         r_service.signal_thread_quitting,

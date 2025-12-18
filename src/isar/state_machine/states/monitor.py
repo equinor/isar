@@ -74,6 +74,7 @@ class Monitor(EventHandlerBase):
                         f"Mission completed with status {mission_status}"
                     )
                     state_machine.print_transitions()
+                    shared_state.mission_id.clear_event()
                     return state_machine.mission_finished  # type: ignore
             return None
 
@@ -100,6 +101,7 @@ class Monitor(EventHandlerBase):
                 f"Failed to initiate mission because: "
                 f"{mission_failed.error_description}"
             )
+            state_machine.shared_state.mission_id.clear_event()
             return state_machine.mission_failed_to_start  # type: ignore
 
         event_handlers: List[EventHandlerMapping] = [
