@@ -18,9 +18,7 @@ def get_robot_status_transitions(state_machine: "StateMachine") -> List[dict]:
         },
         {
             "trigger": "robot_status_available",
-            "source": [
-                state_machine.unknown_status_state,
-            ],
+            "source": [state_machine.unknown_status_state, state_machine.home_state],
             "dest": state_machine.await_next_mission_state,
         },
         {
@@ -28,7 +26,6 @@ def get_robot_status_transitions(state_machine: "StateMachine") -> List[dict]:
             "source": [
                 state_machine.offline_state,
                 state_machine.blocked_protective_stopping_state,
-                state_machine.home_state,
             ],
             "dest": state_machine.intervention_needed_state,
         },
