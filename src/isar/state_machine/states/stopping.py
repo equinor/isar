@@ -38,6 +38,7 @@ class Stopping(EventHandlerBase):
             )
 
             state_machine.print_transitions()
+            state_machine.shared_state.mission_id.clear_event()
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 state_machine.start_return_home_mission()
                 return state_machine.start_return_home_monitoring  # type: ignore

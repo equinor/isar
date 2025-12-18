@@ -126,7 +126,6 @@ class Robot(object):
             self.signal_mission_stopped.clear()
             self.monitor_mission_thread = RobotMonitorMissionThread(
                 self.robot_service_events,
-                self.shared_state,
                 self.robot,
                 self.mqtt_publisher,
                 self.signal_thread_quitting,
@@ -194,6 +193,7 @@ class Robot(object):
                 self.start_mission_thread.join()
 
             start_mission.status = MissionStatus.NotStarted
+            self.shared_state.mission_id.trigger_event(start_mission.id)
             publish_mission_status(self.mqtt_publisher, start_mission)
             self.start_mission_thread = RobotStartMissionThread(
                 self.robot,

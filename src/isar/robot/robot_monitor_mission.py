@@ -4,7 +4,7 @@ from threading import Event, Thread
 from typing import Iterator, Optional
 
 from isar.config.settings import settings
-from isar.models.events import RobotServiceEvents, SharedState
+from isar.models.events import RobotServiceEvents
 from isar.services.utilities.mqtt_utilities import (
     publish_mission_status,
     publish_task_status,
@@ -54,7 +54,6 @@ class RobotMonitorMissionThread(Thread):
     def __init__(
         self,
         robot_service_events: RobotServiceEvents,
-        shared_state: SharedState,
         robot: RobotInterface,
         mqtt_publisher: MqttClientInterface,
         signal_thread_quitting: Event,
@@ -68,8 +67,6 @@ class RobotMonitorMissionThread(Thread):
         self.signal_mission_stopped: Event = signal_mission_stopped
         self.mqtt_publisher = mqtt_publisher
         self.current_mission: Optional[Mission] = mission
-        self.shared_state: SharedState = shared_state
-        self.shared_state.mission_id.trigger_event(mission.id)
 
         Thread.__init__(self, name="Robot mission monitoring thread")
 
@@ -339,7 +336,6 @@ class RobotMonitorMissionThread(Thread):
                 break
 
             time.sleep(settings.FSM_SLEEP_TIME)
-        self.shared_state.mission_id.trigger_event(None)
 
         mission_stopped = self.signal_mission_stopped.wait(0)
 
