@@ -11,7 +11,7 @@ from isar.models.events import Event
 from isar.state_machine.utils.common_event_handlers import mission_started_event_handler
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus
 from robot_interface.models.mission.task import ReturnToHome
 
 if TYPE_CHECKING:
@@ -156,6 +156,20 @@ class ReturningHome(EventHandlerBase):
 
             return state_machine.go_to_recharging  # type: ignore
 
+        def _robot_status_event_handler(
+            status_changed_event: Event[bool],
+        ) -> Optional[Callable]:
+            has_changed = status_changed_event.consume_event()
+            if not has_changed:
+                return None
+            robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
+            if robot_status == RobotStatus.Paused:
+                self.logger.info(
+                    "Got robot status paused while in returning home state. Leaving returning home state."
+                )
+                return state_machine.robot_status_paused  # type: ignore
+            return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="pause_mission_event",
@@ -203,6 +217,11 @@ class ReturningHome(EventHandlerBase):
                 name="robot_already_home",
                 event=events.robot_service_events.robot_already_home,
                 handler=_robot_already_home_event_handler,
+            ),
+            EventHandlerMapping(
+                name="robot_status_event",
+                event=events.robot_service_events.robot_status_changed,
+                handler=_robot_status_event_handler,
             ),
         ]
         super().__init__(
