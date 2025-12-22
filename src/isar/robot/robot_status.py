@@ -58,4 +58,9 @@ class RobotStatusThread(Thread):
             except RobotException as e:
                 self.logger.error(f"Failed to retrieve robot status: {e}")
                 continue
+            except Exception as e:
+                self.logger.error(
+                    f"Unhandled exception in robot status service: {str(e)}"
+                )
+                continue
         self.logger.info("Exiting robot status thread")

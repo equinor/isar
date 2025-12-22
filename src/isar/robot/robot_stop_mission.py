@@ -52,7 +52,14 @@ class RobotStopMissionThread(Thread):
                 )
                 time.sleep(settings.FSM_SLEEP_TIME)
                 continue
-
+            except Exception as e:
+                self.logger.error(
+                    f"Unhandled exception in robot stop mission service: {str(e)}"
+                )
+                error = ErrorMessage(
+                    error_reason=ErrorReason.RobotUnknownErrorException,
+                    error_description=str(e),
+                )
             return
 
         error_description = (
