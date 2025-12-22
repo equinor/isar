@@ -57,9 +57,12 @@ class EventHandlerBase(State):
 
     def start(self) -> None:
         self.state_machine.update_state()
-        if self.on_entry:
-            self.on_entry()
-        self._run()
+        try:
+            if self.on_entry:
+                self.on_entry()
+            self._run()
+        except Exception as e:
+            self.logger.error(f"Unhandled exception in state machine: {str(e)}")
 
     def stop(self) -> None:
         return
