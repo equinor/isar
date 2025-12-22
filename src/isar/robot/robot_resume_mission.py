@@ -6,6 +6,7 @@ from typing import Optional
 from isar.config.settings import settings
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
+    ErrorReason,
     RobotActionException,
     RobotException,
     RobotNoMissionRunningException,
@@ -51,6 +52,15 @@ class RobotResumeMissionThread(Thread):
                 )
                 error = ErrorMessage(
                     error_reason=e.error_reason, error_description=e.error_description
+                )
+                break
+            except Exception as e:
+                self.logger.error(
+                    f"Unhandled exception in robot resume mission service: {str(e)}"
+                )
+                error = ErrorMessage(
+                    error_reason=ErrorReason.RobotUnknownErrorException,
+                    error_description=str(e),
                 )
                 break
 

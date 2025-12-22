@@ -52,7 +52,7 @@ class RobotPauseMissionThread(Thread):
                 continue
             except Exception as e:
                 self.logger.error(
-                    f"\nAn unexpected error occurred while pausing the robot: {e}"
+                    f"\nAn unexpected error occurred while pausing the robot: {str(e)}"
                 )
                 error = ErrorMessage(
                     error_reason=ErrorReason.RobotUnknownErrorException,
