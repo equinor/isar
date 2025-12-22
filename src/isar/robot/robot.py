@@ -354,32 +354,40 @@ class Robot(object):
         )
         self.robot_battery_thread.start()
 
-        while not self.signal_thread_quitting.wait(0):
-            self._start_mission_event_handler(self.state_machine_events.start_mission)
+        try:
+            while not self.signal_thread_quitting.wait(0):
+                self._start_mission_event_handler(
+                    self.state_machine_events.start_mission
+                )
 
-            self._pause_mission_request_handler(self.state_machine_events.pause_mission)
+                self._pause_mission_request_handler(
+                    self.state_machine_events.pause_mission
+                )
 
-            self._resume_mission_request_handler(
-                self.state_machine_events.resume_mission
-            )
+                self._resume_mission_request_handler(
+                    self.state_machine_events.resume_mission
+                )
 
-            self._stop_mission_request_handler(self.state_machine_events.stop_mission)
+                self._stop_mission_request_handler(
+                    self.state_machine_events.stop_mission
+                )
 
-            self._upload_inspection_event_handler(
-                self.robot_service_events.request_inspection_upload
-            )
+                self._upload_inspection_event_handler(
+                    self.robot_service_events.request_inspection_upload
+                )
 
-            self._start_mission_done_handler()
+                self._start_mission_done_handler()
 
-            self._stop_mission_done_handler()
+                self._stop_mission_done_handler()
 
-            self._pause_mission_done_handler()
+                self._pause_mission_done_handler()
 
-            self._upload_inspection_done_handler()
+                self._upload_inspection_done_handler()
 
-            self._resume_mission_done_handler()
+                self._resume_mission_done_handler()
 
-            if settings.UPLOAD_INSPECTIONS_ASYNC:
-                self._monitor_inspection_callback_thread()
-
+                if settings.UPLOAD_INSPECTIONS_ASYNC:
+                    self._monitor_inspection_callback_thread()
+        except Exception as e:
+            self.logger.error(f"Unhandled exception in robot service: {str(e)}")
         self.logger.info("Exiting robot service main thread")
