@@ -1,7 +1,7 @@
 from typing import Optional, cast
 
 from isar.config.settings import settings
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
@@ -14,15 +14,15 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
 ) -> None:
     sync_state_machine.state = sync_state_machine.return_home_paused_state.name  # type: ignore
 
-    return_home_paused_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.return_home_paused_state
+    return_home_paused_state: State = cast(
+        State, sync_state_machine.return_home_paused_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         return_home_paused_state.get_event_handler_by_name("send_to_lockdown_event")
     )
 
-    going_to_lockdown_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.going_to_lockdown_state
+    going_to_lockdown_state: State = cast(
+        State, sync_state_machine.going_to_lockdown_state
     )
     lockdown_event_handler: Optional[EventHandlerMapping] = (
         going_to_lockdown_state.get_event_handler_by_name("mission_failed_to_resume")
@@ -64,8 +64,8 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
 
-    stopping_go_to_lockdown_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.stopping_go_to_lockdown_state
+    stopping_go_to_lockdown_state: State = cast(
+        State, sync_state_machine.stopping_go_to_lockdown_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         stopping_go_to_lockdown_state.get_event_handler_by_name("successful_stop_event")
@@ -97,9 +97,7 @@ def test_return_home_transitions_to_going_to_lockdown(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
 
-    returning_home_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.returning_home_state
-    )
+    returning_home_state: State = cast(State, sync_state_machine.returning_home_state)
     event_handler: Optional[EventHandlerMapping] = (
         returning_home_state.get_event_handler_by_name("send_to_lockdown_event")
     )
@@ -120,8 +118,8 @@ def test_recharging_transitions_to_going_to_lockdown(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.going_to_recharging_state.name  # type: ignore
 
-    going_to_recharging_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.going_to_recharging_state
+    going_to_recharging_state: State = cast(
+        State, sync_state_machine.going_to_recharging_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         going_to_recharging_state.get_event_handler_by_name("send_to_lockdown_event")
@@ -143,8 +141,8 @@ def test_await_next_mission_transitions_to_going_to_lockdown(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.await_next_mission_state.name  # type: ignore
 
-    await_next_mission_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.await_next_mission_state
+    await_next_mission_state: State = cast(
+        State, sync_state_machine.await_next_mission_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         await_next_mission_state.get_event_handler_by_name("send_to_lockdown_event")

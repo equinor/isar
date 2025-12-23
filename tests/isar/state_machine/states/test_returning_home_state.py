@@ -1,8 +1,8 @@
 from typing import Optional, cast
 
 from isar.eventhandlers.eventhandler import (
-    EventHandlerBase,
     EventHandlerMapping,
+    State,
     TimeoutHandlerMapping,
 )
 from isar.state_machine.state_machine import StateMachine
@@ -16,9 +16,7 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
     sync_state_machine.state = sync_state_machine.stopping_return_home_state.name  # type: ignore
 
-    stopping_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.stopping_return_home_state
-    )
+    stopping_state: State = cast(State, sync_state_machine.stopping_return_home_state)
     event_handler: Optional[EventHandlerMapping] = (
         stopping_state.get_event_handler_by_name("successful_stop_event")
     )
@@ -38,8 +36,8 @@ def test_transition_from_pausing_return_home_to_returning_home(
 ) -> None:
     sync_state_machine.state = sync_state_machine.pausing_return_home_state.name  # type: ignore
 
-    pausing_return_home_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.pausing_return_home_state
+    pausing_return_home_state: State = cast(
+        State, sync_state_machine.pausing_return_home_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         pausing_return_home_state.get_event_handler_by_name("failed_pause_event")
@@ -64,8 +62,8 @@ def test_transition_from_resuming_return_home_to_returning_home_state(
 ) -> None:
     sync_state_machine.state = sync_state_machine.resuming_return_home_state.name  # type: ignore
 
-    resuming_return_home_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.resuming_return_home_state
+    resuming_return_home_state: State = cast(
+        State, sync_state_machine.resuming_return_home_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         resuming_return_home_state.get_event_handler_by_name("successful_resume_event")
@@ -89,9 +87,7 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
     sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
     sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
 
-    returning_home_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.returning_home_state
-    )
+    returning_home_state: State = cast(State, sync_state_machine.returning_home_state)
     event_handler: Optional[EventHandlerMapping] = (
         returning_home_state.get_event_handler_by_name("mission_status_event")
     )
@@ -109,7 +105,7 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
         not sync_state_machine.events.robot_service_events.robot_status_changed.check()
     )
 
-    home_state: EventHandlerBase = cast(EventHandlerBase, sync_state_machine.home_state)
+    home_state: State = cast(State, sync_state_machine.home_state)
     event_handler_robot_status: Optional[EventHandlerMapping] = (
         home_state.get_event_handler_by_name("robot_status_event")
     )
@@ -131,9 +127,7 @@ def test_return_home_not_cancelled_when_battery_is_low(
 
     events = sync_state_machine.events
 
-    returning_home_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.returning_home_state
-    )
+    returning_home_state: State = cast(State, sync_state_machine.returning_home_state)
     event_handler: Optional[EventHandlerMapping] = (
         returning_home_state.get_event_handler_by_name("start_mission_event")
     )
@@ -154,8 +148,8 @@ def test_return_home_starts_when_battery_is_low(
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
 
-    await_next_mission_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.await_next_mission_state
+    await_next_mission_state: State = cast(
+        State, sync_state_machine.await_next_mission_state
     )
     timer: Optional[TimeoutHandlerMapping] = (
         await_next_mission_state.get_event_timer_by_name("should_return_home_timer")

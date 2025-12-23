@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
@@ -45,8 +45,8 @@ def test_stopping_to_recharge_goes_to_monitor(
 ) -> None:
     sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
     sync_state_machine.state = sync_state_machine.stopping_go_to_recharge_state.name  # type: ignore
-    stopping_go_to_recharge_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.stopping_go_to_recharge_state
+    stopping_go_to_recharge_state: State = cast(
+        State, sync_state_machine.stopping_go_to_recharge_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         stopping_go_to_recharge_state.get_event_handler_by_name("failed_stop_event")
@@ -76,9 +76,7 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     )
     sync_state_machine.state = sync_state_machine.stopping_return_home_state.name  # type: ignore
 
-    stopping_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.stopping_return_home_state
-    )
+    stopping_state: State = cast(State, sync_state_machine.stopping_return_home_state)
     event_handler: Optional[EventHandlerMapping] = (
         stopping_state.get_event_handler_by_name("successful_stop_event")
     )
@@ -100,8 +98,8 @@ def test_stopping_lockdown_failing_to_monitor(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.stopping_go_to_lockdown_state.name  # type: ignore
 
-    stopping_go_to_lockdown_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.stopping_go_to_lockdown_state
+    stopping_go_to_lockdown_state: State = cast(
+        State, sync_state_machine.stopping_go_to_lockdown_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         stopping_go_to_lockdown_state.get_event_handler_by_name("failed_stop_event")
@@ -128,9 +126,7 @@ def test_transition_from_pausing_to_monitor(
 ) -> None:
     sync_state_machine.state = sync_state_machine.pausing_state.name  # type: ignore
 
-    pausing_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.pausing_state
-    )
+    pausing_state: State = cast(State, sync_state_machine.pausing_state)
     event_handler: Optional[EventHandlerMapping] = (
         pausing_state.get_event_handler_by_name("failed_pause_event")
     )
@@ -154,9 +150,7 @@ def test_transition_from_resuming_to_monitor(
 ) -> None:
     sync_state_machine.state = sync_state_machine.resuming_state.name  # type: ignore
 
-    resuming_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.resuming_state
-    )
+    resuming_state: State = cast(State, sync_state_machine.resuming_state)
     event_handler: Optional[EventHandlerMapping] = (
         resuming_state.get_event_handler_by_name("successful_resume_event")
     )

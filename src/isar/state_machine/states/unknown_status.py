@@ -1,8 +1,15 @@
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from isar.apis.models.models import MaintenanceResponse
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
+from isar.state_machine.states.await_next_mission import AwaitNextMission
+from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
+from isar.state_machine.states.home import Home
+from isar.state_machine.states.maintenance import Maintenance
+from isar.state_machine.states.offline import Offline
+from isar.state_machine.states.stopping import Stopping
+from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import stop_mission_event_handler
 from robot_interface.models.mission.status import RobotStatus
 
@@ -10,24 +17,43 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class UnknownStatus(EventHandlerBase):
+class UnknownStatus(State):
+
+    @staticmethod
+    def transition() -> Transition["UnknownStatus"]:
+        def _transition(state_machine: "StateMachine"):
+            return UnknownStatus(state_machine)
+
+        return _transition
 
     def __init__(self, state_machine: "StateMachine"):
+        # Ensures that we will check the status immediately instead of waiting for it to change
+        self.events.robot_service_events.robot_status_changed.trigger_event(True)
         events = state_machine.events
         shared_state = state_machine.shared_state
 
-        def _set_maintenance_mode_event_handler(event: Event[bool]):
+        def _set_maintenance_mode_event_handler(
+            event: Event[bool],
+        ) -> Optional[Transition[Maintenance]]:
             should_set_maintenande_mode: bool = event.consume_event()
             if should_set_maintenande_mode:
                 events.api_requests.set_maintenance_mode.response.trigger_event(
                     MaintenanceResponse(is_maintenance_mode=True)
                 )
-                return state_machine.set_maintenance_mode  # type: ignore
+                return Maintenance.transition()
             return None
 
         def _robot_status_event_handler(
             status_changed_event: Event[bool],
-        ) -> Optional[Callable]:
+        ) -> Optional[
+            Union[
+                Transition[Home],
+                Transition[AwaitNextMission],
+                Transition[Offline],
+                Transition[BlockedProtectiveStop],
+                Transition[Stopping],
+            ]
+        ]:
             has_changed = status_changed_event.consume_event()
             if not has_changed:
                 return None
@@ -37,22 +63,22 @@ class UnknownStatus(EventHandlerBase):
                 self.logger.info(
                     "Got robot status home while in unknown status state. Leaving unknown status state."
                 )
-                return state_machine.robot_status_home  # type: ignore
+                return Home.transition()
             elif robot_status == RobotStatus.Available:
                 self.logger.info(
                     "Got robot status available while in unknown status state. Leaving unknown status state."
                 )
-                return state_machine.robot_status_available  # type: ignore
+                return AwaitNextMission.transition()
             elif robot_status == RobotStatus.Offline:
                 self.logger.info(
                     "Got robot status offline while in unknown status state. Leaving unknown status state."
                 )
-                return state_machine.robot_status_offline  # type: ignore
+                return Offline.transition()
             elif robot_status == RobotStatus.BlockedProtectiveStop:
                 self.logger.info(
                     "Got robot status blocked protective stop while in unknown status state. Leaving unknown status state."
                 )
-                return state_machine.robot_status_blocked_protective_stop  # type: ignore
+                return BlockedProtectiveStop.transition()
             elif robot_status == RobotStatus.Busy:
                 state_machine.events.state_machine_events.stop_mission.trigger_event(
                     True
@@ -60,18 +86,16 @@ class UnknownStatus(EventHandlerBase):
                 self.logger.info(
                     "Got robot status busy while in unknown status state. Leaving unknown status state."
                 )
-                return state_machine.robot_status_busy  # type: ignore
+                return Stopping.transition("")
             return None
-
-        def _reset_status_check():
-            # Ensures that we will check the status immediately instead of waiting for it to change
-            self.events.robot_service_events.robot_status_changed.trigger_event(True)
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
-                handler=lambda event: stop_mission_event_handler(state_machine, event),
+                handler=lambda event: stop_mission_event_handler(
+                    state_machine, event, None
+                ),
             ),
             EventHandlerMapping(
                 name="robot_status_event",
@@ -85,8 +109,7 @@ class UnknownStatus(EventHandlerBase):
             ),
         ]
         super().__init__(
-            state_name="unknown_status",
+            state_name=States.UnknownStatus,
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
-            on_entry=_reset_status_check,
         )

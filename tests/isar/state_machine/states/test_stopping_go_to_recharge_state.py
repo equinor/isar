@@ -1,6 +1,6 @@
 from typing import Optional, cast
 
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
 
 
@@ -8,9 +8,7 @@ def test_monitor_goes_to_return_home_when_battery_low(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.state = sync_state_machine.monitor_state.name  # type: ignore
-    monitor_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.monitor_state
-    )
+    monitor_state: State = cast(State, sync_state_machine.monitor_state)
     event_handler: Optional[EventHandlerMapping] = (
         monitor_state.get_event_handler_by_name("robot_battery_update_event")
     )

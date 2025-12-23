@@ -10,7 +10,7 @@ from testcontainers.mysql import MySqlContainer
 
 from isar.apis.security.authentication import Authenticator
 from isar.config.settings import settings
-from isar.eventhandlers.eventhandler import EventHandlerBase
+from isar.eventhandlers.eventhandler import State
 from isar.models.events import Events
 from isar.modules import ApplicationContainer
 from isar.robot.robot import Robot
@@ -124,7 +124,7 @@ def state_machine(container: ApplicationContainer, robot):
 @pytest.fixture()
 def sync_state_machine(container: ApplicationContainer, robot, mocker: MockerFixture):
     """Fixture to provide the StateMachine instance without running the state loops."""
-    mocker.patch.object(EventHandlerBase, "_run", return_value=lambda: None)
+    mocker.patch.object(State, "_run", return_value=lambda: None)
     return StateMachine(
         events=container.events(),
         shared_state=container.shared_state(),

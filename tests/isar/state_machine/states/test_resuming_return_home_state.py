@@ -1,6 +1,6 @@
 from typing import Optional, cast
 
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
 
 
@@ -9,8 +9,8 @@ def test_transition_from_return_home_paused_to_resuming_return_home(
 ) -> None:
     sync_state_machine.state = sync_state_machine.return_home_paused_state.name  # type: ignore
 
-    return_home_paused_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.return_home_paused_state
+    return_home_paused_state: State = cast(
+        State, sync_state_machine.return_home_paused_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         return_home_paused_state.get_event_handler_by_name("resume_return_home_event")

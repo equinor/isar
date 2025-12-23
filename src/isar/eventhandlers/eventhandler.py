@@ -1,23 +1,26 @@
 import logging
 import time
+from abc import ABC
 from copy import deepcopy
 from dataclasses import dataclass
 from threading import Event as ThreadEvent
 from typing import TYPE_CHECKING, Callable, Generic, List, Optional, TypeVar
 
-from transitions import State
-
 from isar.config.settings import settings
 from isar.models.events import Event
+from isar.state_machine.states_enum import States
 
 T = TypeVar("T")
+
+T_state = TypeVar("T_state", bound="State", covariant=True)
+Transition = Callable[["StateMachine"], T_state]
 
 
 @dataclass
 class EventHandlerMapping(Generic[T]):
     name: str
     event: Event[T]
-    handler: Callable[[Event[T]], Optional[Callable]]
+    handler: Callable[[Event[T]], Optional[Transition]]
 
 
 @dataclass
@@ -31,18 +34,15 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class EventHandlerBase(State):
+class State(ABC):
     def __init__(
         self,
         state_machine: "StateMachine",
-        state_name: str,
+        state_name: States,
         event_handler_mappings: List[EventHandlerMapping],
         timers: List[TimeoutHandlerMapping] = [],
-        on_entry: Optional[Callable[[], None]] = None,
-        on_transition: Optional[Callable[[], None]] = None,
     ) -> None:
-
-        super().__init__(name=state_name, on_enter=self.start)
+        self.name = state_name
         self.state_machine: "StateMachine" = state_machine
         self.logger = logging.getLogger("state_machine")
         self.events = state_machine.events
@@ -50,22 +50,7 @@ class EventHandlerBase(State):
             state_machine.signal_state_machine_to_stop
         )
         self.event_handler_mappings = event_handler_mappings
-        self.state_name: str = state_name
         self.timers = timers
-        self.on_entry = on_entry
-        self.on_transition = on_transition
-
-    def start(self) -> None:
-        self.state_machine.update_state()
-        try:
-            if self.on_entry:
-                self.on_entry()
-            self._run()
-        except Exception as e:
-            self.logger.error(f"Unhandled exception in state machine: {str(e)}")
-
-    def stop(self) -> None:
-        return
 
     def get_event_handler_by_name(
         self, event_handler_name: str
@@ -89,38 +74,31 @@ class EventHandlerBase(State):
         )
         return filtered_timers[0] if len(filtered_timers) > 0 else None
 
-    def _run(self) -> None:
+    def run(self) -> Optional["State"]:
         should_exit_state: bool = False
         timers = deepcopy(self.timers)
         entered_time = time.time()
         while True:
             if self.signal_state_machine_to_stop.is_set():
-                self.logger.info(
-                    "Stopping state machine from %s state", self.state_name
-                )
+                self.logger.info("Stopping state machine from %s state", self.name)
                 break
 
             for timer in timers:
                 if time.time() - entered_time > timer.timeout_in_seconds:
-                    transition_func = timer.handler()
+                    transition = timer.handler()
                     timers.remove(timer)
-                    if transition_func is not None:
-                        transition_func()
-                        should_exit_state = True
-                        break
+                    if transition is not None:
+                        return transition(self.state_machine)
 
             if should_exit_state:
                 break
 
             for handler_mapping in self.event_handler_mappings:
-                transition_func = handler_mapping.handler(handler_mapping.event)
-                if transition_func is not None:
-                    transition_func()
-                    should_exit_state = True
-                    break
+                transition = handler_mapping.handler(handler_mapping.event)
+                if transition is not None:
+                    return transition(self.state_machine)
 
             if should_exit_state:
                 break
             time.sleep(settings.FSM_SLEEP_TIME)
-        if self.on_transition:
-            self.on_transition()
+        return None
