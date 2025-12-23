@@ -1,9 +1,17 @@
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from isar.apis.models.models import LockdownResponse, MaintenanceResponse
 from isar.config.settings import settings
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
+from isar.state_machine.states.await_next_mission import AwaitNextMission
+from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
+from isar.state_machine.states.lockdown import Lockdown
+from isar.state_machine.states.maintenance import Maintenance
+from isar.state_machine.states.offline import Offline
+from isar.state_machine.states.recharging import Recharging
+from isar.state_machine.states.unknown_status import UnknownStatus
+from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import (
     return_home_event_handler,
     start_mission_event_handler,
@@ -15,13 +23,25 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class Home(EventHandlerBase):
+class Home(State):
+
+    @staticmethod
+    def transition() -> Transition["Home"]:
+        def _transition(state_machine: "StateMachine"):
+            return Home(state_machine)
+
+        return _transition
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
-        def _send_to_lockdown_event_handler(event: Event[bool]):
+        # This clears the current robot status value, so we don't read an outdated value
+        events.robot_service_events.robot_status_changed.clear_event()
+
+        def _send_to_lockdown_event_handler(
+            event: Event[bool],
+        ) -> Optional[Transition[Lockdown]]:
             should_send_robot_home: bool = event.consume_event()
             if not should_send_robot_home:
                 return None
@@ -29,20 +49,29 @@ class Home(EventHandlerBase):
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
-            return state_machine.reached_lockdown  # type: ignore
+            return Lockdown.transition()
 
-        def _set_maintenance_mode_event_handler(event: Event[bool]):
+        def _set_maintenance_mode_event_handler(
+            event: Event[bool],
+        ) -> Optional[Transition[Maintenance]]:
             should_set_maintenande_mode: bool = event.consume_event()
             if should_set_maintenande_mode:
                 events.api_requests.set_maintenance_mode.response.trigger_event(
                     MaintenanceResponse(is_maintenance_mode=True)
                 )
-                return state_machine.set_maintenance_mode  # type: ignore
+                return Maintenance.transition()
             return None
 
         def _robot_status_event_handler(
             status_changed_event: Event[bool],
-        ) -> Optional[Callable]:
+        ) -> Optional[
+            Union[
+                Transition[AwaitNextMission],
+                Transition[Offline],
+                Transition[BlockedProtectiveStop],
+                Transition[UnknownStatus],
+            ]
+        ]:
             has_changed = status_changed_event.consume_event()
             if not has_changed:
                 return None
@@ -53,25 +82,25 @@ class Home(EventHandlerBase):
                 self.logger.info(
                     "Got robot status available while in home state. Leaving home state."
                 )
-                return state_machine.robot_status_available  # type: ignore
+                return AwaitNextMission.transition()
             elif robot_status == RobotStatus.Offline:
                 self.logger.info(
                     "Got robot status offline while in home state. Leaving home state."
                 )
-                return state_machine.robot_status_offline  # type: ignore
+                return Offline.transition()
             elif robot_status == RobotStatus.BlockedProtectiveStop:
                 self.logger.info(
                     "Got robot status blocked protective stop while in home state. Leaving home state."
                 )
-                return state_machine.robot_status_blocked_protective_stop  # type: ignore
+                return BlockedProtectiveStop.transition()
             self.logger.info(
                 f"Got unexpected status {robot_status} while in home state. Leaving home state."
             )
-            return state_machine.robot_status_unknown  # type: ignore
+            return UnknownStatus.transition()
 
         def _robot_battery_level_updated_handler(
             event: Event[float],
-        ) -> Optional[Callable]:
+        ) -> Optional[Transition[Recharging]]:
             battery_level: float = event.check()
             if (
                 battery_level is None
@@ -79,7 +108,7 @@ class Home(EventHandlerBase):
             ):
                 return None
 
-            return state_machine.starting_recharging  # type: ignore
+            return Recharging.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -97,7 +126,9 @@ class Home(EventHandlerBase):
             EventHandlerMapping(
                 name="stop_mission_event",
                 event=events.api_requests.return_home.request,
-                handler=lambda event: stop_mission_event_handler(state_machine, event),
+                handler=lambda event: stop_mission_event_handler(
+                    state_machine, event, None
+                ),
             ),
             EventHandlerMapping(
                 name="robot_status_event",
@@ -121,7 +152,7 @@ class Home(EventHandlerBase):
             ),
         ]
         super().__init__(
-            state_name="home",
+            state_name=States.Home,
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )

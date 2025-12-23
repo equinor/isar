@@ -3,8 +3,6 @@ from queue import Empty, Queue
 from threading import Lock
 from typing import Generic, Optional, Tuple, TypeVar
 
-from transitions import State
-
 from isar.apis.models.models import (
     ControlMissionResponse,
     LockdownResponse,
@@ -12,6 +10,7 @@ from isar.apis.models.models import (
     MissionStartResponse,
 )
 from isar.config.settings import settings
+from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
@@ -172,10 +171,9 @@ class RobotServiceEvents:
 
 class SharedState:
     def __init__(self) -> None:
-        self.state: Event[State] = Event("state")
+        self.state: Event[States] = Event("state")
         self.robot_status: Event[RobotStatus] = Event("robot_status")
         self.robot_battery_level: Event[float] = Event("robot_battery_level")
-        self.mission_id: Event[Optional[str]] = Event("mission_id")
 
 
 class EventTimeoutError(Exception):

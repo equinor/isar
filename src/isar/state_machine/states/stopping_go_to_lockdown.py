@@ -1,22 +1,32 @@
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from isar.apis.models.models import LockdownResponse
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
+from isar.state_machine.states.going_to_lockdown import GoingToLockdown
+from isar.state_machine.states.monitor import Monitor
+from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class StoppingGoToLockdown(EventHandlerBase):
+class StoppingGoToLockdown(State):
 
-    def __init__(self, state_machine: "StateMachine"):
+    @staticmethod
+    def transition(mission_id: str) -> Transition["StoppingGoToLockdown"]:
+        def _transition(state_machine: "StateMachine"):
+            return StoppingGoToLockdown(state_machine, mission_id)
+
+        return _transition
+
+    def __init__(self, state_machine: "StateMachine", mission_id: str):
         events = state_machine.events
 
         def _failed_stop_event_handler(
             event: Event[ErrorMessage],
-        ) -> Optional[Callable]:
+        ) -> Optional[Transition[Monitor]]:
             error_message: Optional[ErrorMessage] = event.consume_event()
             if error_message is None:
                 return None
@@ -27,20 +37,23 @@ class StoppingGoToLockdown(EventHandlerBase):
                     failure_reason="Failed to stop ongoing mission",
                 )
             )
-            return state_machine.mission_stopping_failed  # type: ignore
+            return Monitor.transition(mission_id)
 
-        def _successful_stop_event_handler(event: Event[bool]) -> Optional[Callable]:
+        def _successful_stop_event_handler(
+            event: Event[bool],
+        ) -> Optional[Transition[GoingToLockdown]]:
             if not event.consume_event():
                 return None
 
-            state_machine.publish_mission_aborted("Robot being sent to lockdown", True)
+            state_machine.publish_mission_aborted(
+                mission_id, "Robot being sent to lockdown", True
+            )
 
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
             state_machine.start_return_home_mission()
-            state_machine.shared_state.mission_id.clear_event()
-            return state_machine.start_lockdown_mission_monitoring  # type: ignore
+            return GoingToLockdown.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -55,7 +68,7 @@ class StoppingGoToLockdown(EventHandlerBase):
             ),
         ]
         super().__init__(
-            state_name="stopping_go_to_lockdown",
+            state_name=States.StoppingGoToLockdown,
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )

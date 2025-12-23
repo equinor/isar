@@ -1,8 +1,12 @@
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from isar.apis.models.models import LockdownResponse
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
+from isar.state_machine.states.going_to_lockdown import GoingToLockdown
+from isar.state_machine.states.intervention_needed import InterventionNeeded
+from isar.state_machine.states.recharging import Recharging
+from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus
 
@@ -10,14 +14,21 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class GoingToRecharging(EventHandlerBase):
+class GoingToRecharging(State):
+
+    @staticmethod
+    def transition() -> Transition["GoingToRecharging"]:
+        def _transition(state_machine: "StateMachine"):
+            return GoingToRecharging(state_machine)
+
+        return _transition
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
         def _mission_failed_event_handler(
             event: Event[Optional[ErrorMessage]],
-        ) -> Optional[Callable]:
+        ) -> Optional[Transition[InterventionNeeded]]:
             mission_failed: Optional[ErrorMessage] = event.consume_event()
             if mission_failed is None:
                 return None
@@ -30,11 +41,11 @@ class GoingToRecharging(EventHandlerBase):
                 error_message="Return home to recharge failed."
             )
             state_machine.print_transitions()
-            return state_machine.return_home_failed  # type: ignore
+            return InterventionNeeded.transition()
 
         def _mission_status_event_handler(
             event: Event[MissionStatus],
-        ) -> Optional[Callable]:
+        ) -> Optional[Union[Transition[InterventionNeeded], Transition[Recharging]]]:
             mission_status: Optional[MissionStatus] = event.consume_event()
 
             if not mission_status or mission_status in [
@@ -52,13 +63,13 @@ class GoingToRecharging(EventHandlerBase):
                     error_message="Return home to recharge failed."
                 )
                 state_machine.print_transitions()
-                return state_machine.return_home_failed  # type: ignore
+                return InterventionNeeded.transition()
 
-            return state_machine.starting_recharging  # type: ignore
+            return Recharging.transition()
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
-        ) -> Optional[Callable]:
+        ) -> Optional[Transition[GoingToLockdown]]:
             should_lockdown: bool = event.consume_event()
             if not should_lockdown:
                 return None
@@ -66,7 +77,7 @@ class GoingToRecharging(EventHandlerBase):
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
-            return state_machine.go_to_lockdown  # type: ignore
+            return GoingToLockdown.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -86,7 +97,7 @@ class GoingToRecharging(EventHandlerBase):
             ),
         ]
         super().__init__(
-            state_name="going_to_recharging",
+            state_name=States.GoingToRecharging,
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )

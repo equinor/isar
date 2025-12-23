@@ -1,6 +1,6 @@
 from typing import Optional, cast
 
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
 
 
@@ -9,9 +9,7 @@ def test_transition_from_pausing_to_paused(
 ) -> None:
     sync_state_machine.state = sync_state_machine.pausing_state.name  # type: ignore
 
-    pausing_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.pausing_state
-    )
+    pausing_state: State = cast(State, sync_state_machine.pausing_state)
     event_handler: Optional[EventHandlerMapping] = (
         pausing_state.get_event_handler_by_name("successful_pause_event")
     )
@@ -33,9 +31,7 @@ def test_transition_from_paused_to_stopping_paused_mission(
     sync_state_machine.state = sync_state_machine.paused_state.name  # type: ignore
     sync_state_machine.shared_state.mission_id.trigger_event("test_id")
 
-    paused_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.paused_state
-    )
+    paused_state: State = cast(State, sync_state_machine.paused_state)
     event_handler: Optional[EventHandlerMapping] = (
         paused_state.get_event_handler_by_name("stop_mission_event")
     )
@@ -59,9 +55,7 @@ def test_stop_request_with_wrong_id_in_paused(
     sync_state_machine.state = sync_state_machine.paused_state.name  # type: ignore
     sync_state_machine.shared_state.mission_id.trigger_event("test_id")
 
-    paused_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.paused_state
-    )
+    paused_state: State = cast(State, sync_state_machine.paused_state)
     event_handler: Optional[EventHandlerMapping] = (
         paused_state.get_event_handler_by_name("stop_mission_event")
     )

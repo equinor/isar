@@ -1,6 +1,6 @@
 from typing import Optional, cast
 
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 
@@ -10,8 +10,8 @@ def test_stopping_paused_mission_fails(
 ) -> None:
     sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
     sync_state_machine.state = sync_state_machine.stopping_paused_mission_state.name  # type: ignore
-    stopping_paused_mission_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.stopping_paused_mission_state
+    stopping_paused_mission_state: State = cast(
+        State, sync_state_machine.stopping_paused_mission_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         stopping_paused_mission_state.get_event_handler_by_name("failed_stop_event")
@@ -37,8 +37,8 @@ def test_stopping_paused_mission_succeeds(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
     sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
     sync_state_machine.state = sync_state_machine.stopping_paused_mission_state.name  # type: ignore
-    stopping_paused_mission_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.stopping_paused_mission_state
+    stopping_paused_mission_state: State = cast(
+        State, sync_state_machine.stopping_paused_mission_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         stopping_paused_mission_state.get_event_handler_by_name("successful_stop_event")
@@ -62,8 +62,8 @@ def test_stopping_paused_mission_succeeds_with_low_battery(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
     sync_state_machine.state = sync_state_machine.stopping_paused_mission_state.name  # type: ignore
-    stopping_paused_mission_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.stopping_paused_mission_state
+    stopping_paused_mission_state: State = cast(
+        State, sync_state_machine.stopping_paused_mission_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         stopping_paused_mission_state.get_event_handler_by_name("successful_stop_event")

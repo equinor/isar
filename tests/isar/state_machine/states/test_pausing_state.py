@@ -1,6 +1,6 @@
 from typing import Optional, cast
 
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
 
 
@@ -9,9 +9,7 @@ def test_transition_from_monitor_to_pausing(
 ) -> None:
     sync_state_machine.state = sync_state_machine.monitor_state.name  # type: ignore
 
-    monitor_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.monitor_state
-    )
+    monitor_state: State = cast(State, sync_state_machine.monitor_state)
     event_handler: Optional[EventHandlerMapping] = (
         monitor_state.get_event_handler_by_name("pause_mission_event")
     )

@@ -1,6 +1,6 @@
 from typing import Optional, cast
 
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
 from robot_interface.models.mission.status import MissionStatus
 
@@ -9,8 +9,8 @@ def test_going_to_recharging_goes_to_recharge(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.state = sync_state_machine.going_to_recharging_state.name  # type: ignore
-    going_to_recharging_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.going_to_recharging_state
+    going_to_recharging_state: State = cast(
+        State, sync_state_machine.going_to_recharging_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         going_to_recharging_state.get_event_handler_by_name("mission_status_event")
@@ -30,7 +30,7 @@ def test_home_goes_to_recharging_when_battery_low(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.state = sync_state_machine.home_state.name  # type: ignore
-    home_state: EventHandlerBase = cast(EventHandlerBase, sync_state_machine.home_state)
+    home_state: State = cast(State, sync_state_machine.home_state)
     event_handler: Optional[EventHandlerMapping] = home_state.get_event_handler_by_name(
         "robot_battery_update_event"
     )
@@ -51,9 +51,7 @@ def test_lockdown_transitions_to_recharing_if_battery_low(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.lockdown_state.name  # type: ignore
 
-    lockdown_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.lockdown_state
-    )
+    lockdown_state: State = cast(State, sync_state_machine.lockdown_state)
     event_handler: Optional[EventHandlerMapping] = (
         lockdown_state.get_event_handler_by_name("release_from_lockdown")
     )
@@ -72,9 +70,7 @@ def test_lockdown_transitions_to_recharing_if_battery_low(
 def test_recharging_continues_when_battery_low(
     sync_state_machine: StateMachine,
 ) -> None:
-    recharging_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.recharging_state
-    )
+    recharging_state: State = cast(State, sync_state_machine.recharging_state)
     event_handler: Optional[EventHandlerMapping] = (
         recharging_state.get_event_handler_by_name("robot_battery_update_event")
     )

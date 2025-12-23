@@ -1,6 +1,6 @@
 from typing import Optional, cast
 
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
 from robot_interface.models.mission.status import MissionStatus
 
@@ -11,9 +11,7 @@ def test_mission_stopped_when_going_to_lockdown(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.monitor_state.name  # type: ignore
 
-    monitor_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.monitor_state
-    )
+    monitor_state: State = cast(State, sync_state_machine.monitor_state)
     event_handler: Optional[EventHandlerMapping] = (
         monitor_state.get_event_handler_by_name("send_to_lockdown_event")
     )
@@ -34,8 +32,8 @@ def test_going_to_lockdown_transitions_to_lockdown(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.state = sync_state_machine.going_to_lockdown_state.name  # type: ignore
 
-    going_to_lockdown_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.going_to_lockdown_state
+    going_to_lockdown_state: State = cast(
+        State, sync_state_machine.going_to_lockdown_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         going_to_lockdown_state.get_event_handler_by_name("mission_status_event")

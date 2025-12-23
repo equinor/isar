@@ -2,7 +2,7 @@ import time
 from collections import deque
 from typing import Optional, cast
 
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.modules import ApplicationContainer
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -71,9 +71,7 @@ def test_transition_from_resuming_to_await_next_mission(
 ) -> None:
     sync_state_machine.state = sync_state_machine.resuming_state.name  # type: ignore
 
-    resuming_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.resuming_state
-    )
+    resuming_state: State = cast(State, sync_state_machine.resuming_state)
     event_handler: Optional[EventHandlerMapping] = (
         resuming_state.get_event_handler_by_name("failed_resume_event")
     )
@@ -96,12 +94,10 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
     # Make sure that we have not changed robot status
     sync_state_machine.events.robot_service_events.robot_status_changed.consume_event()
 
-    mocker.patch.object(EventHandlerBase, "_run", return_value=None)
+    mocker.patch.object(State, "_run", return_value=None)
     sync_state_machine.state = sync_state_machine.unknown_status_state.name  # type: ignore
 
-    unknown_status_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.unknown_status_state
-    )
+    unknown_status_state: State = cast(State, sync_state_machine.unknown_status_state)
     unknown_status_state.start()
     event_handler: Optional[EventHandlerMapping] = (
         unknown_status_state.get_event_handler_by_name("robot_status_event")
@@ -120,8 +116,8 @@ def test_transition_from_resuming_return_home_to_await_next_mission(
 ) -> None:
     sync_state_machine.state = sync_state_machine.resuming_return_home_state.name  # type: ignore
 
-    resuming_return_home_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.resuming_return_home_state
+    resuming_return_home_state: State = cast(
+        State, sync_state_machine.resuming_return_home_state
     )
     event_handler: Optional[EventHandlerMapping] = (
         resuming_return_home_state.get_event_handler_by_name("failed_resume_event")

@@ -1,32 +1,54 @@
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from isar.apis.models.models import MaintenanceResponse
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
+from isar.state_machine.states.home import Home
+from isar.state_machine.states.intervention_needed import InterventionNeeded
+from isar.state_machine.states.maintenance import Maintenance
+from isar.state_machine.states.offline import Offline
+from isar.state_machine.states.unknown_status import UnknownStatus
+from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class BlockedProtectiveStop(EventHandlerBase):
+class BlockedProtectiveStop(State):
+
+    @staticmethod
+    def transition() -> Transition["BlockedProtectiveStop"]:
+        def _transition(state_machine: "StateMachine"):
+            return BlockedProtectiveStop(state_machine)
+
+        return _transition
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
-        def _set_maintenance_mode_event_handler(event: Event[bool]):
+        def _set_maintenance_mode_event_handler(
+            event: Event[bool],
+        ) -> Optional[Transition[Maintenance]]:
             should_set_maintenande_mode: bool = event.consume_event()
             if should_set_maintenande_mode:
                 events.api_requests.set_maintenance_mode.response.trigger_event(
                     MaintenanceResponse(is_maintenance_mode=True)
                 )
-                return state_machine.set_maintenance_mode  # type: ignore
+                return Maintenance.transition()
             return None
 
         def _robot_status_event_handler(
             status_changed_event: Event[bool],
-        ) -> Optional[Callable]:
+        ) -> Optional[
+            Union[
+                Transition[Home],
+                Transition[InterventionNeeded],
+                Transition[Offline],
+                Transition[UnknownStatus],
+            ]
+        ]:
             has_changed = status_changed_event.consume_event()
             if not has_changed:
                 return None
@@ -37,21 +59,21 @@ class BlockedProtectiveStop(EventHandlerBase):
                 self.logger.info(
                     "Got robot status home while in blocked protective stop state. Leaving blocked protective stop state."
                 )
-                return state_machine.robot_status_home  # type: ignore
+                return Home.transition()
             elif robot_status == RobotStatus.Available:
                 self.logger.info(
                     "Got robot status available while in blocked protective stop state. Leaving blocked protective stop state."
                 )
-                return state_machine.robot_status_available  # type: ignore
+                return InterventionNeeded.transition()
             elif robot_status == RobotStatus.Offline:
                 self.logger.info(
                     "Got robot status offline while in blocked protective stop state. Leaving blocked protective stop state."
                 )
-                return state_machine.robot_status_offline  # type: ignore
+                return Offline.transition()
             self.logger.info(
                 f"Got unexpected status {robot_status} while in blocked protective stop state. Leaving blocked protective stop state."
             )
-            return state_machine.robot_status_unknown  # type: ignore
+            return UnknownStatus.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -66,7 +88,7 @@ class BlockedProtectiveStop(EventHandlerBase):
             ),
         ]
         super().__init__(
-            state_name="blocked_protective_stop",
+            state_name=States.BlockedProtectiveStop,
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )

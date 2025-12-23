@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from isar.apis.models.models import (
     ControlMissionResponse,
@@ -6,8 +6,18 @@ from isar.apis.models.models import (
     MissionStartResponse,
 )
 from isar.config.settings import settings
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
+from isar.state_machine.states.going_to_lockdown import GoingToLockdown
+from isar.state_machine.states.going_to_recharging import GoingToRecharging
+from isar.state_machine.states.home import Home
+from isar.state_machine.states.intervention_needed import InterventionNeeded
+from isar.state_machine.states.pausing_return_home import PausingReturnHome
+from isar.state_machine.states.stopping_due_to_maintenance import (
+    StoppingDueToMaintenance,
+)
+from isar.state_machine.states.stopping_return_home import StoppingReturnHome
+from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import mission_started_event_handler
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
@@ -18,14 +28,23 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class ReturningHome(EventHandlerBase):
+class ReturningHome(State):
+
+    @staticmethod
+    def transition() -> Transition["ReturningHome"]:
+        def _transition(state_machine: "StateMachine"):
+            return ReturningHome(state_machine)
+
+        return _transition
 
     def __init__(self, state_machine: "StateMachine"):
         self.failed_return_home_attempts: int = 0
         events = state_machine.events
         shared_state = state_machine.shared_state
 
-        def _pause_mission_event_handler(event: Event[bool]) -> Optional[Callable]:
+        def _pause_mission_event_handler(
+            event: Event[bool],
+        ) -> Optional[Transition[PausingReturnHome]]:
             if not event.consume_event():
                 return None
 
@@ -33,16 +52,17 @@ class ReturningHome(EventHandlerBase):
                 ControlMissionResponse(success=True)
             )
             state_machine.events.state_machine_events.pause_mission.trigger_event(True)
-            return state_machine.pause_return_home  # type: ignore
+            return PausingReturnHome.transition()
 
         def _start_mission_event_handler(
             event: Event[Mission],
-        ) -> Optional[Callable]:
-            if not event.has_event():
+        ) -> Optional[Transition[StoppingReturnHome]]:
+            mission = event.consume_event()
+            if not mission:
                 return None
 
+            # The check below is arguably not needed due to the battery eventhandler
             if not state_machine.battery_level_is_above_mission_start_threshold():
-                state_machine.events.api_requests.start_mission.request.consume_event()
                 response = MissionStartResponse(
                     mission_id=None,
                     mission_started=False,
@@ -54,11 +74,11 @@ class ReturningHome(EventHandlerBase):
                 return None
 
             state_machine.events.state_machine_events.stop_mission.trigger_event(True)
-            return state_machine.stop_return_home  # type: ignore
+            return StoppingReturnHome.transition(mission)
 
         def _mission_status_event_handler(
             event: Event[MissionStatus],
-        ) -> Optional[Callable]:
+        ) -> Optional[Union[Transition[InterventionNeeded], Transition[Home]]]:
             mission_status: Optional[MissionStatus] = event.consume_event()
 
             if mission_status and mission_status not in [
@@ -79,7 +99,7 @@ class ReturningHome(EventHandlerBase):
                             error_message=f"Return home failed after {self.failed_return_home_attempts} attempts."
                         )
                         state_machine.print_transitions()
-                        return state_machine.return_home_failed  # type: ignore
+                        return InterventionNeeded.transition()
                     else:
                         state_machine.start_mission(
                             Mission(
@@ -89,14 +109,12 @@ class ReturningHome(EventHandlerBase):
                         )
                         return None
 
-                # This clears the current robot status value, so we don't read an outdated value
-                state_machine.events.robot_service_events.robot_status_changed.clear_event()
-                return state_machine.returned_home  # type: ignore
+                return Home.transition()
             return None
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
-        ) -> Optional[Callable]:
+        ) -> Optional[Transition[GoingToLockdown]]:
             should_lockdown: bool = event.consume_event()
             if not should_lockdown:
                 return None
@@ -104,11 +122,11 @@ class ReturningHome(EventHandlerBase):
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
-            return state_machine.go_to_lockdown  # type: ignore
+            return GoingToLockdown.transition()
 
         def _mission_failed_event_handler(
             event: Event[Optional[ErrorMessage]],
-        ) -> Optional[Callable]:
+        ) -> Optional[Transition[InterventionNeeded]]:
             mission_failed: Optional[ErrorMessage] = event.consume_event()
             if mission_failed is not None:
                 state_machine.logger.warning(
@@ -119,10 +137,12 @@ class ReturningHome(EventHandlerBase):
                     error_message="Return home failed to initiate."
                 )
                 state_machine.print_transitions()
-                return state_machine.return_home_failed  # type: ignore
+                return InterventionNeeded.transition()
             return None
 
-        def _set_maintenance_mode_event_handler(event: Event[bool]):
+        def _set_maintenance_mode_event_handler(
+            event: Event[bool],
+        ) -> Optional[Transition[StoppingDueToMaintenance]]:
             should_set_maintenande_mode: bool = event.consume_event()
             if should_set_maintenande_mode:
                 state_machine.logger.warning(
@@ -131,22 +151,24 @@ class ReturningHome(EventHandlerBase):
                 state_machine.events.state_machine_events.stop_mission.trigger_event(
                     True
                 )
-                return state_machine.stop_due_to_maintenance  # type: ignore
+                return StoppingDueToMaintenance.transition("")
             return None
 
-        def _robot_already_home_event_handler(event: Event[bool]):
+        def _robot_already_home_event_handler(
+            event: Event[bool],
+        ) -> Optional[Transition[Home]]:
             already_home: bool = event.consume_event()
             if already_home:
                 state_machine.logger.info(
                     "Robot reported that it is already home. "
                     "Assuming return home mission successful without running."
                 )
-                return state_machine.returned_home  # type: ignore
+                return Home.transition()
             return None
 
         def _robot_battery_level_updated_handler(
             event: Event[float],
-        ) -> Optional[Callable]:
+        ) -> Optional[Transition[GoingToRecharging]]:
             battery_level: float = event.check()
             if (
                 battery_level is None
@@ -154,7 +176,7 @@ class ReturningHome(EventHandlerBase):
             ):
                 return None
 
-            return state_machine.go_to_recharging  # type: ignore
+            return GoingToRecharging.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -206,12 +228,7 @@ class ReturningHome(EventHandlerBase):
             ),
         ]
         super().__init__(
-            state_name="returning_home",
+            state_name=States.ReturningHome,
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
-            on_transition=self._reset_failure_counter,
-            on_entry=self._reset_failure_counter,
         )
-
-    def _reset_failure_counter(self):
-        self.failed_return_home_attempts = 0
