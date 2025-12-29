@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING, List, Optional, Union
 
+import isar.state_machine.states.home as Home
+import isar.state_machine.states.intervention_needed as InterventionNeeded
+import isar.state_machine.states.maintenance as Maintenance
+import isar.state_machine.states.offline as Offline
+import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.home import Home
-from isar.state_machine.states.intervention_needed import InterventionNeeded
-from isar.state_machine.states.maintenance import Maintenance
-from isar.state_machine.states.offline import Offline
-from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
@@ -17,20 +17,13 @@ if TYPE_CHECKING:
 
 class BlockedProtectiveStop(State):
 
-    @staticmethod
-    def transition() -> Transition["BlockedProtectiveStop"]:
-        def _transition(state_machine: "StateMachine"):
-            return BlockedProtectiveStop(state_machine)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
         def _set_maintenance_mode_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[Maintenance]]:
+        ) -> Optional[Transition[Maintenance.Maintenance]]:
             should_set_maintenande_mode: bool = event.consume_event()
             if should_set_maintenande_mode:
                 events.api_requests.set_maintenance_mode.response.trigger_event(
@@ -43,10 +36,10 @@ class BlockedProtectiveStop(State):
             status_changed_event: Event[bool],
         ) -> Optional[
             Union[
-                Transition[Home],
-                Transition[InterventionNeeded],
-                Transition[Offline],
-                Transition[UnknownStatus],
+                Transition[Home.Home],
+                Transition[InterventionNeeded.InterventionNeeded],
+                Transition[Offline.Offline],
+                Transition[UnknownStatus.UnknownStatus],
             ]
         ]:
             has_changed = status_changed_event.consume_event()
@@ -92,3 +85,10 @@ class BlockedProtectiveStop(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition() -> Transition[BlockedProtectiveStop]:
+    def _transition(state_machine: "StateMachine"):
+        return BlockedProtectiveStop(state_machine)
+
+    return _transition

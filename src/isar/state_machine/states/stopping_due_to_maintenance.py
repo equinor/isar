@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING, List, Optional, Union
 
+import isar.state_machine.states.maintenance as Maintenance
+import isar.state_machine.states.monitor as Monitor
+import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.maintenance import Maintenance
-from isar.state_machine.states.monitor import Monitor
-from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -15,19 +15,14 @@ if TYPE_CHECKING:
 
 class StoppingDueToMaintenance(State):
 
-    @staticmethod
-    def transition(mission_id: str) -> Transition["StoppingDueToMaintenance"]:
-        def _transition(state_machine: "StateMachine"):
-            return StoppingDueToMaintenance(state_machine, mission_id)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine", mission_id: str):
         events = state_machine.events
 
         def _failed_stop_event_handler(
             event: Event[ErrorMessage],
-        ) -> Optional[Union[Transition[ReturningHome], Transition[Monitor]]]:
+        ) -> Optional[
+            Union[Transition[ReturningHome.ReturningHome], Transition[Monitor.Monitor]]
+        ]:
             error_message: Optional[ErrorMessage] = event.consume_event()
             if error_message is not None:
                 events.api_requests.set_maintenance_mode.response.trigger_event(
@@ -47,7 +42,7 @@ class StoppingDueToMaintenance(State):
 
         def _successful_stop_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[Maintenance]]:
+        ) -> Optional[Transition[Maintenance.Maintenance]]:
             if event.consume_event():
                 state_machine.publish_mission_aborted(
                     mission_id, "Mission aborted, robot being sent to maintenance", True
@@ -75,3 +70,10 @@ class StoppingDueToMaintenance(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition(mission_id: str) -> Transition[StoppingDueToMaintenance]:
+    def _transition(state_machine: "StateMachine"):
+        return StoppingDueToMaintenance(state_machine, mission_id)
+
+    return _transition

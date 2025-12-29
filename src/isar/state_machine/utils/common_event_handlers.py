@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING, Optional, Union
 
+import isar.state_machine.states.monitor as Monitor
+import isar.state_machine.states.returning_home as ReturningHome
+import isar.state_machine.states.stopping as Stopping
 from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
 from isar.eventhandlers.eventhandler import Transition
 from isar.models.events import Event
-from isar.state_machine.states.monitor import Monitor
-from isar.state_machine.states.returning_home import ReturningHome
-from isar.state_machine.states.stopping import Stopping
 from robot_interface.models.mission.mission import Mission
 
 if TYPE_CHECKING:
@@ -16,7 +16,7 @@ def start_mission_event_handler(
     state_machine: "StateMachine",
     event: Event[Mission],
     response: Event[MissionStartResponse],
-) -> Optional[Transition[Monitor]]:
+) -> Optional[Transition["Monitor.Monitor"]]:
     mission: Optional[Mission] = event.consume_event()
     if not mission:
         return None
@@ -37,7 +37,7 @@ def start_mission_event_handler(
 
 def return_home_event_handler(
     state_machine: "StateMachine", event: Event[bool]
-) -> Optional[Transition[ReturningHome]]:
+) -> Optional[Transition["ReturningHome.ReturningHome"]]:
     if not event.consume_event():
         return None
 
@@ -48,7 +48,7 @@ def return_home_event_handler(
 
 def stop_mission_event_handler(
     state_machine: "StateMachine", event: Event[str], current_mission_id: Optional[str]
-) -> Optional[Transition[Stopping]]:
+) -> Optional[Transition["Stopping.Stopping"]]:
     mission_id: str = event.consume_event()
     if mission_id is None:
         return None
@@ -79,7 +79,9 @@ def mission_started_event_handler(
 
 def successful_stop_return_home_event_handler(
     state_machine: "StateMachine", event: Event[bool], mission: Optional[Mission]
-) -> Optional[Union[Transition[Monitor], Transition[ReturningHome]]]:
+) -> Optional[
+    Union[Transition["Monitor.Monitor"], Transition["ReturningHome.ReturningHome"]]
+]:
     if not event.consume_event():
         return None
 

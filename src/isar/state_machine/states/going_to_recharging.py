@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING, List, Optional, Union
 
+import isar.state_machine.states.going_to_lockdown as GoingToLockdown
+import isar.state_machine.states.intervention_needed as InterventionNeeded
+import isar.state_machine.states.recharging as Recharging
 from isar.apis.models.models import LockdownResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.going_to_lockdown import GoingToLockdown
-from isar.state_machine.states.intervention_needed import InterventionNeeded
-from isar.state_machine.states.recharging import Recharging
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus
@@ -16,19 +16,12 @@ if TYPE_CHECKING:
 
 class GoingToRecharging(State):
 
-    @staticmethod
-    def transition() -> Transition["GoingToRecharging"]:
-        def _transition(state_machine: "StateMachine"):
-            return GoingToRecharging(state_machine)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
         def _mission_failed_event_handler(
             event: Event[Optional[ErrorMessage]],
-        ) -> Optional[Transition[InterventionNeeded]]:
+        ) -> Optional[Transition[InterventionNeeded.InterventionNeeded]]:
             mission_failed: Optional[ErrorMessage] = event.consume_event()
             if mission_failed is None:
                 return None
@@ -45,7 +38,12 @@ class GoingToRecharging(State):
 
         def _mission_status_event_handler(
             event: Event[MissionStatus],
-        ) -> Optional[Union[Transition[InterventionNeeded], Transition[Recharging]]]:
+        ) -> Optional[
+            Union[
+                Transition[InterventionNeeded.InterventionNeeded],
+                Transition[Recharging.Recharging],
+            ]
+        ]:
             mission_status: Optional[MissionStatus] = event.consume_event()
 
             if not mission_status or mission_status in [
@@ -69,7 +67,7 @@ class GoingToRecharging(State):
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[GoingToLockdown]]:
+        ) -> Optional[Transition[GoingToLockdown.GoingToLockdown]]:
             should_lockdown: bool = event.consume_event()
             if not should_lockdown:
                 return None
@@ -101,3 +99,10 @@ class GoingToRecharging(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition() -> Transition[GoingToRecharging]:
+    def _transition(state_machine: "StateMachine"):
+        return GoingToRecharging(state_machine)
+
+    return _transition

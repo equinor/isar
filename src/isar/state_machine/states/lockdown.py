@@ -1,9 +1,9 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional, Union
 
+import isar.state_machine.states.home as Home
+import isar.state_machine.states.recharging as Recharging
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.home import Home
-from isar.state_machine.states.recharging import Recharging
 from isar.state_machine.states_enum import States
 
 if TYPE_CHECKING:
@@ -12,17 +12,12 @@ if TYPE_CHECKING:
 
 class Lockdown(State):
 
-    @staticmethod
-    def transition() -> Transition["Lockdown"]:
-        def _transition(state_machine: "StateMachine"):
-            return Lockdown(state_machine)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
-        def _release_from_lockdown_handler(event: Event[bool]):
+        def _release_from_lockdown_handler(
+            event: Event[bool],
+        ) -> Optional[Union[Transition[Home.Home], Transition[Recharging.Recharging]]]:
             should_release_from_lockdown: bool = event.consume_event()
             if not should_release_from_lockdown:
                 return None
@@ -46,3 +41,10 @@ class Lockdown(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition() -> Transition[Lockdown]:
+    def _transition(state_machine: "StateMachine"):
+        return Lockdown(state_machine)
+
+    return _transition
