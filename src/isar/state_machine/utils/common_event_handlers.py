@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional
 
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
@@ -79,19 +79,12 @@ def mission_started_event_handler(
 
 def successful_stop_return_home_event_handler(
     state_machine: "StateMachine", event: Event[bool], mission: Optional[Mission]
-) -> Optional[
-    Union[Transition["Monitor.Monitor"], Transition["ReturningHome.ReturningHome"]]
-]:
+) -> Optional[Transition["Monitor.Monitor"]]:
     if not event.consume_event():
         return None
 
-    if mission:
-        state_machine.start_mission(mission=mission)
-        state_machine.events.api_requests.start_mission.response.trigger_event(
-            MissionStartResponse(mission_started=True)
-        )
-        return Monitor.transition(mission.id)
-
-    state_machine.logger.error("Stopped return home without a new mission to start")
-    state_machine.start_return_home_mission()
-    return ReturningHome.transition()
+    state_machine.start_mission(mission=mission)
+    state_machine.events.api_requests.start_mission.response.trigger_event(
+        MissionStartResponse(mission_started=True)
+    )
+    return Monitor.transition(mission.id)
