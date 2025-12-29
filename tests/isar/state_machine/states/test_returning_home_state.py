@@ -6,17 +6,31 @@ from isar.eventhandlers.eventhandler import (
     TimeoutHandlerMapping,
 )
 from isar.state_machine.state_machine import StateMachine
+from isar.state_machine.states.await_next_mission import AwaitNextMission
+from isar.state_machine.states.home import Home
+from isar.state_machine.states.monitor import Monitor
+from isar.state_machine.states.pausing_return_home import PausingReturnHome
+from isar.state_machine.states.resuming_return_home import ResumingReturnHome
+from isar.state_machine.states.returning_home import ReturningHome
+from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
+from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
+from robot_interface.models.mission.task import ReturnToHome
 
 
 def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
-    sync_state_machine.state = sync_state_machine.stopping_return_home_state.name  # type: ignore
+    example_mission: Mission = Mission(
+        name="Dummy return home misson", tasks=[ReturnToHome()]
+    )
+    sync_state_machine.current_state = StoppingReturnHome(
+        sync_state_machine, example_mission
+    )
 
-    stopping_state: State = cast(State, sync_state_machine.stopping_return_home_state)
+    stopping_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         stopping_state.get_event_handler_by_name("successful_stop_event")
     )
@@ -25,20 +39,17 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
 
     event_handler.event.trigger_event(True)
     transition = event_handler.handler(event_handler.event)
-    transition()
+    sync_state_machine.current_state = transition(sync_state_machine)
 
-    assert transition is sync_state_machine.start_return_home_monitoring  # type: ignore
-    assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
+    assert type(sync_state_machine.current_state) is Monitor
 
 
 def test_transition_from_pausing_return_home_to_returning_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.state = sync_state_machine.pausing_return_home_state.name  # type: ignore
+    sync_state_machine.current_state = PausingReturnHome(sync_state_machine)
 
-    pausing_return_home_state: State = cast(
-        State, sync_state_machine.pausing_return_home_state
-    )
+    pausing_return_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         pausing_return_home_state.get_event_handler_by_name("failed_pause_event")
     )
@@ -51,20 +62,16 @@ def test_transition_from_pausing_return_home_to_returning_home(
     event_handler.event.trigger_event(error_event)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.return_home_mission_pausing_failed  # type: ignore
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is ReturningHome
 
 
 def test_transition_from_resuming_return_home_to_returning_home_state(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.state = sync_state_machine.resuming_return_home_state.name  # type: ignore
+    sync_state_machine.current_state = ResumingReturnHome(sync_state_machine)
 
-    resuming_return_home_state: State = cast(
-        State, sync_state_machine.resuming_return_home_state
-    )
+    resuming_return_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         resuming_return_home_state.get_event_handler_by_name("successful_resume_event")
     )
@@ -74,20 +81,17 @@ def test_transition_from_resuming_return_home_to_returning_home_state(
     event_handler.event.trigger_event(True)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.return_home_mission_resumed  # type: ignore
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is ReturningHome
 
 
 def test_transition_from_returning_home_to_home_robot_status_not_updated(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
-    sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
-    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
+    sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
-    returning_home_state: State = cast(State, sync_state_machine.returning_home_state)
+    returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         returning_home_state.get_event_handler_by_name("mission_status_event")
     )
@@ -97,15 +101,13 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
     event_handler.event.trigger_event(MissionStatus.Successful)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.returned_home  # type: ignore
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.home_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is Home
     assert (
         not sync_state_machine.events.robot_service_events.robot_status_changed.check()
     )
 
-    home_state: State = cast(State, sync_state_machine.home_state)
+    home_state: State = cast(State, sync_state_machine.current_state)
     event_handler_robot_status: Optional[EventHandlerMapping] = (
         home_state.get_event_handler_by_name("robot_status_event")
     )
@@ -124,10 +126,10 @@ def test_return_home_not_cancelled_when_battery_is_low(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
-
     events = sync_state_machine.events
+    sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
-    returning_home_state: State = cast(State, sync_state_machine.returning_home_state)
+    returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         returning_home_state.get_event_handler_by_name("start_mission_event")
     )
@@ -147,10 +149,9 @@ def test_return_home_starts_when_battery_is_low(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
+    sync_state_machine.current_state = AwaitNextMission(sync_state_machine)
 
-    await_next_mission_state: State = cast(
-        State, sync_state_machine.await_next_mission_state
-    )
+    await_next_mission_state: State = cast(State, sync_state_machine.current_state)
     timer: Optional[TimeoutHandlerMapping] = (
         await_next_mission_state.get_event_timer_by_name("should_return_home_timer")
     )
@@ -159,4 +160,6 @@ def test_return_home_starts_when_battery_is_low(
 
     transition = timer.handler()
 
-    assert transition is sync_state_machine.start_return_home_monitoring  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+
+    assert type(sync_state_machine.current_state) is ReturningHome

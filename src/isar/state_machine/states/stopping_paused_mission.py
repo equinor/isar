@@ -50,7 +50,6 @@ class StoppingPausedMission(State):
             state_machine.events.api_requests.stop_mission.response.trigger_event(
                 ControlMissionResponse(success=True)
             )
-            state_machine.print_transitions()
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 state_machine.start_return_home_mission()
                 return ReturningHome.transition()

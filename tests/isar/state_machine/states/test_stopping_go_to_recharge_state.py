@@ -2,13 +2,15 @@ from typing import Optional, cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
+from isar.state_machine.states.monitor import Monitor
+from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRecharge
 
 
 def test_monitor_goes_to_return_home_when_battery_low(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.state = sync_state_machine.monitor_state.name  # type: ignore
-    monitor_state: State = cast(State, sync_state_machine.monitor_state)
+    sync_state_machine.current_state = Monitor(sync_state_machine, "mission_id")
+    monitor_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         monitor_state.get_event_handler_by_name("robot_battery_update_event")
     )
@@ -18,7 +20,5 @@ def test_monitor_goes_to_return_home_when_battery_low(
     event_handler.event.trigger_event(10.0)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.stop_go_to_recharge  # type: ignore
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.stopping_go_to_recharge_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is StoppingGoToRecharge

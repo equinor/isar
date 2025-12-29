@@ -93,7 +93,6 @@ class ReturningHome(State):
                         state_machine.publish_intervention_needed(
                             error_message=f"Return home failed after {self.failed_return_home_attempts} attempts."
                         )
-                        state_machine.print_transitions()
                         return InterventionNeeded.transition()
                     else:
                         state_machine.start_mission(
@@ -131,7 +130,6 @@ class ReturningHome(State):
                 state_machine.publish_intervention_needed(
                     error_message="Return home failed to initiate."
                 )
-                state_machine.print_transitions()
                 return InterventionNeeded.transition()
             return None
 

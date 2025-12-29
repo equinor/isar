@@ -24,7 +24,6 @@ from isar.robot.robot_stop_mission import RobotStopMissionThread
 from isar.robot.robot_upload_inspection import RobotUploadInspectionThread
 from isar.services.service_connections.persistent_memory import Base
 from isar.state_machine.state_machine import StateMachine
-from isar.state_machine.states.monitor import Monitor
 from isar.storage.uploader import Uploader
 from tests.test_mocks.blob_storage import StorageFake
 from tests.test_mocks.robot_interface import StubRobot
@@ -124,19 +123,13 @@ def state_machine(container: ApplicationContainer, robot):
 @pytest.fixture()
 def sync_state_machine(container: ApplicationContainer, robot, mocker: MockerFixture):
     """Fixture to provide the StateMachine instance without running the state loops."""
-    mocker.patch.object(State, "_run", return_value=lambda: None)
+    mocker.patch.object(State, "run", return_value=lambda: None)
     return StateMachine(
         events=container.events(),
         shared_state=container.shared_state(),
         robot=robot,
         mqtt_publisher=container.mqtt_client(),
     )
-
-
-@pytest.fixture()
-def monitor(state_machine):
-    """Fixture to provide the Monitor state."""
-    return Monitor(state_machine=state_machine)
 
 
 @pytest.fixture()
