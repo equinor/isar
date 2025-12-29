@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, List, Optional
 
+import isar.state_machine.states.going_to_recharging as GoingToRecharging
+import isar.state_machine.states.monitor as Monitor
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.going_to_recharging import GoingToRecharging
-from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -13,19 +13,12 @@ if TYPE_CHECKING:
 
 class StoppingGoToRecharge(State):
 
-    @staticmethod
-    def transition(mission_id: str) -> Transition["StoppingGoToRecharge"]:
-        def _transition(state_machine: "StateMachine"):
-            return StoppingGoToRecharge(state_machine, mission_id=mission_id)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine", mission_id: str):
         events = state_machine.events
 
         def _failed_stop_event_handler(
             event: Event[ErrorMessage],
-        ) -> Optional[Transition[Monitor]]:
+        ) -> Optional[Transition[Monitor.Monitor]]:
             error_message: Optional[ErrorMessage] = event.consume_event()
             if error_message is None:
                 return None
@@ -34,7 +27,7 @@ class StoppingGoToRecharge(State):
 
         def _successful_stop_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[GoingToRecharging]]:
+        ) -> Optional[Transition[GoingToRecharging.GoingToRecharging]]:
             if not event.consume_event():
                 return None
 
@@ -61,3 +54,10 @@ class StoppingGoToRecharge(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition(mission_id: str) -> Transition[StoppingGoToRecharge]:
+    def _transition(state_machine: "StateMachine"):
+        return StoppingGoToRecharge(state_machine, mission_id=mission_id)
+
+    return _transition

@@ -1,16 +1,14 @@
 from typing import TYPE_CHECKING, List, Optional
 
+import isar.state_machine.states.await_next_mission as AwaitNextMission
+import isar.state_machine.states.pausing as Pausing
+import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
+import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
+import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.await_next_mission import AwaitNextMission
-from isar.state_machine.states.pausing import Pausing
-from isar.state_machine.states.stopping_due_to_maintenance import (
-    StoppingDueToMaintenance,
-)
-from isar.state_machine.states.stopping_go_to_lockdown import StoppingGoToLockdown
-from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRecharge
 from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import (
     mission_started_event_handler,
@@ -25,22 +23,13 @@ if TYPE_CHECKING:
 
 class Monitor(State):
 
-    @staticmethod
-    def transition(mission_id: str) -> Transition["Monitor"]:
-        # TODO: ideally we would ensure that the mission has been started here
-        # TODO: consider how we can method overload, or maybe just call them transition_and_start and transition_to_existing_mission
-        def _transition(state_machine: "StateMachine"):
-            return Monitor(state_machine, mission_id=mission_id)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine", mission_id: str):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
         def _pause_mission_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[Pausing]]:
+        ) -> Optional[Transition[Pausing.Pausing]]:
             if not event.consume_event():
                 return None
 
@@ -52,7 +41,7 @@ class Monitor(State):
 
         def _robot_battery_level_updated_handler(
             event: Event[float],
-        ) -> Optional[Transition[StoppingGoToRecharge]]:
+        ) -> Optional[Transition[StoppingGoToRecharge.StoppingGoToRecharge]]:
             battery_level: float = event.check()
             if (
                 battery_level is None
@@ -68,7 +57,7 @@ class Monitor(State):
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[StoppingGoToLockdown]]:
+        ) -> Optional[Transition[StoppingGoToLockdown.StoppingGoToLockdown]]:
             should_lockdown: bool = event.consume_event()
             if not should_lockdown:
                 return None
@@ -81,7 +70,7 @@ class Monitor(State):
 
         def _mission_status_event_handler(
             event: Event[MissionStatus],
-        ) -> Optional[Transition[AwaitNextMission]]:
+        ) -> Optional[Transition[AwaitNextMission.AwaitNextMission]]:
             mission_status: Optional[MissionStatus] = event.consume_event()
             if mission_status:
                 if mission_status not in [
@@ -98,7 +87,7 @@ class Monitor(State):
 
         def _set_maintenance_mode_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[StoppingDueToMaintenance]]:
+        ) -> Optional[Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]]:
             should_set_maintenande_mode: bool = event.consume_event()
             if should_set_maintenande_mode:
                 state_machine.logger.warning(
@@ -112,7 +101,7 @@ class Monitor(State):
 
         def _mission_failed_event_handler(
             event: Event[Optional[ErrorMessage]],
-        ) -> Optional[Transition[AwaitNextMission]]:
+        ) -> Optional[Transition[AwaitNextMission.AwaitNextMission]]:
             mission_failed: Optional[ErrorMessage] = event.consume_event()
             if mission_failed is None:
                 return None
@@ -174,3 +163,10 @@ class Monitor(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition(mission_id: str) -> Transition[Monitor]:
+    def _transition(state_machine: "StateMachine"):
+        return Monitor(state_machine, mission_id=mission_id)
+
+    return _transition

@@ -1,5 +1,9 @@
 from typing import TYPE_CHECKING, List, Optional
 
+import isar.state_machine.states.going_to_lockdown as GoingToLockdown
+import isar.state_machine.states.returning_home as ReturningHome
+import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
+import isar.state_machine.states.stopping_paused_return_home as StoppingPausedReturnHome
 from isar.apis.models.models import (
     ControlMissionResponse,
     LockdownResponse,
@@ -8,14 +12,6 @@ from isar.apis.models.models import (
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.going_to_lockdown import GoingToLockdown
-from isar.state_machine.states.returning_home import ReturningHome
-from isar.state_machine.states.stopping_due_to_maintenance import (
-    StoppingDueToMaintenance,
-)
-from isar.state_machine.states.stopping_paused_return_home import (
-    StoppingPausedReturnHome,
-)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
@@ -25,20 +21,13 @@ if TYPE_CHECKING:
 
 class ReturnHomePaused(State):
 
-    @staticmethod
-    def transition() -> Transition["ReturnHomePaused"]:
-        def _transition(state_machine: "StateMachine"):
-            return ReturnHomePaused(state_machine)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
         def _robot_battery_level_updated_handler(
             event: Event[float],
-        ) -> Optional[Transition[ReturningHome]]:
+        ) -> Optional[Transition[ReturningHome.ReturningHome]]:
             battery_level: float = event.check()
 
             if (
@@ -52,7 +41,7 @@ class ReturnHomePaused(State):
 
         def _start_mission_event_handler(
             event: Event[Mission],
-        ) -> Optional[Transition[StoppingPausedReturnHome]]:
+        ) -> Optional[Transition[StoppingPausedReturnHome.StoppingPausedReturnHome]]:
             mission = event.consume_event()
             if not mission:
                 return None
@@ -72,7 +61,7 @@ class ReturnHomePaused(State):
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[GoingToLockdown]]:
+        ) -> Optional[Transition[GoingToLockdown.GoingToLockdown]]:
             should_lockdown: bool = event.consume_event()
             if not should_lockdown:
                 return None
@@ -86,7 +75,7 @@ class ReturnHomePaused(State):
 
         def _set_maintenance_mode_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[StoppingDueToMaintenance]]:
+        ) -> Optional[Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]]:
             should_set_maintenande_mode: bool = event.consume_event()
             if should_set_maintenande_mode:
                 state_machine.logger.warning(
@@ -100,7 +89,7 @@ class ReturnHomePaused(State):
 
         def _resume_mission_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[ReturningHome]]:
+        ) -> Optional[Transition[ReturningHome.ReturningHome]]:
             if event.consume_event():
                 state_machine.events.api_requests.resume_mission.response.trigger_event(
                     ControlMissionResponse(success=True)
@@ -143,3 +132,10 @@ class ReturnHomePaused(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition() -> Transition[ReturnHomePaused]:
+    def _transition(state_machine: "StateMachine"):
+        return ReturnHomePaused(state_machine)
+
+    return _transition

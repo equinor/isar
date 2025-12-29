@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, List, Optional
 
+import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import MissionStartResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import (
     successful_stop_return_home_event_handler,
@@ -17,13 +17,6 @@ if TYPE_CHECKING:
 
 class StoppingReturnHome(State):
 
-    @staticmethod
-    def transition(mission: Mission) -> Transition["StoppingReturnHome"]:
-        def _transition(state_machine: "StateMachine"):
-            return StoppingReturnHome(state_machine, mission)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine", mission: Mission):
         events = state_machine.events
 
@@ -35,7 +28,7 @@ class StoppingReturnHome(State):
 
         def _failed_stop_return_home_event_handler(
             event: Event[ErrorMessage],
-        ) -> Optional[Transition[ReturningHome]]:
+        ) -> Optional[Transition[ReturningHome.ReturningHome]]:
             error_message: Optional[ErrorMessage] = event.consume_event()
             if error_message is None:
                 return None
@@ -64,3 +57,10 @@ class StoppingReturnHome(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition(mission: Mission) -> Transition[StoppingReturnHome]:
+    def _transition(state_machine: "StateMachine"):
+        return StoppingReturnHome(state_machine, mission)
+
+    return _transition

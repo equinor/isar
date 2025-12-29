@@ -1,16 +1,16 @@
 from typing import TYPE_CHECKING, List, Optional, Union
 
+import isar.state_machine.states.await_next_mission as AwaitNextMission
+import isar.state_machine.states.blocked_protective_stop as BlockedProtectiveStop
+import isar.state_machine.states.lockdown as Lockdown
+import isar.state_machine.states.maintenance as Maintenance
+import isar.state_machine.states.offline as Offline
+import isar.state_machine.states.recharging as Recharging
+import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import LockdownResponse, MaintenanceResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.await_next_mission import AwaitNextMission
-from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
-from isar.state_machine.states.lockdown import Lockdown
-from isar.state_machine.states.maintenance import Maintenance
-from isar.state_machine.states.offline import Offline
-from isar.state_machine.states.recharging import Recharging
-from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import (
     return_home_event_handler,
@@ -25,13 +25,6 @@ if TYPE_CHECKING:
 
 class Home(State):
 
-    @staticmethod
-    def transition() -> Transition["Home"]:
-        def _transition(state_machine: "StateMachine"):
-            return Home(state_machine)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
@@ -41,7 +34,7 @@ class Home(State):
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[Lockdown]]:
+        ) -> Optional[Transition[Lockdown.Lockdown]]:
             should_send_robot_home: bool = event.consume_event()
             if not should_send_robot_home:
                 return None
@@ -53,7 +46,7 @@ class Home(State):
 
         def _set_maintenance_mode_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[Maintenance]]:
+        ) -> Optional[Transition[Maintenance.Maintenance]]:
             should_set_maintenande_mode: bool = event.consume_event()
             if should_set_maintenande_mode:
                 events.api_requests.set_maintenance_mode.response.trigger_event(
@@ -66,10 +59,10 @@ class Home(State):
             status_changed_event: Event[bool],
         ) -> Optional[
             Union[
-                Transition[AwaitNextMission],
-                Transition[Offline],
-                Transition[BlockedProtectiveStop],
-                Transition[UnknownStatus],
+                Transition[AwaitNextMission.AwaitNextMission],
+                Transition[Offline.Offline],
+                Transition[BlockedProtectiveStop.BlockedProtectiveStop],
+                Transition[UnknownStatus.UnknownStatus],
             ]
         ]:
             has_changed = status_changed_event.consume_event()
@@ -100,7 +93,7 @@ class Home(State):
 
         def _robot_battery_level_updated_handler(
             event: Event[float],
-        ) -> Optional[Transition[Recharging]]:
+        ) -> Optional[Transition[Recharging.Recharging]]:
             battery_level: float = event.check()
             if (
                 battery_level is None
@@ -156,3 +149,10 @@ class Home(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition() -> Transition["Home"]:
+    def _transition(state_machine: "StateMachine"):
+        return Home(state_machine)
+
+    return _transition
