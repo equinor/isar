@@ -81,7 +81,6 @@ class Monitor(State):
                     state_machine.logger.info(
                         f"Mission completed with status {mission_status}"
                     )
-                    state_machine.print_transitions()
                     return AwaitNextMission.transition()
             return None
 

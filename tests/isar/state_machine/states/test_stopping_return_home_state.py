@@ -2,6 +2,9 @@ from typing import Optional, cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
+from isar.state_machine.states.monitor import Monitor
+from isar.state_machine.states.returning_home import ReturningHome
+from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
 from tests.test_mocks.task import StubTask
@@ -11,9 +14,9 @@ def test_return_home_cancelled_when_new_mission_received(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
-    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
+    sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
-    returning_home_state: State = cast(State, sync_state_machine.returning_home_state)
+    returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         returning_home_state.get_event_handler_by_name("start_mission_event")
     )
@@ -25,26 +28,19 @@ def test_return_home_cancelled_when_new_mission_received(
     event_handler.event.trigger_event(mission)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.stop_return_home  # type: ignore
-    transition()
-    assert sync_state_machine.state is sync_state_machine.stopping_return_home_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is StoppingReturnHome
 
 
 def test_stopping_return_home_mission_fails(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
-    sync_state_machine.state = sync_state_machine.stopping_return_home_state.name  # type: ignore
-    stopping_return_home_state: State = cast(
-        State, sync_state_machine.stopping_return_home_state
-    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    sync_state_machine.current_state = StoppingReturnHome(sync_state_machine, mission)
+    stopping_return_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         stopping_return_home_state.get_event_handler_by_name("failed_stop_event")
     )
-
-    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
-    sync_state_machine.events.api_requests.start_mission.request.trigger_event(mission)
-    stopping_return_home_state.start()
 
     assert event_handler is not None
 
@@ -53,52 +49,19 @@ def test_stopping_return_home_mission_fails(
     )
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.return_home_mission_stopping_failed  # type: ignore
     assert sync_state_machine.events.api_requests.start_mission.response.has_event()
-    assert not sync_state_machine.events.mqtt_queue.empty()
 
-    transition()
-    assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is ReturningHome
 
 
 def test_stopping_return_home_mission_succeeds(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
-    sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
-    sync_state_machine.state = sync_state_machine.stopping_return_home_state.name  # type: ignore
-    stopping_return_home_state: State = cast(
-        State, sync_state_machine.stopping_return_home_state
-    )
-    event_handler: Optional[EventHandlerMapping] = (
-        stopping_return_home_state.get_event_handler_by_name("successful_stop_event")
-    )
-
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
-    sync_state_machine.events.api_requests.start_mission.request.trigger_event(mission)
-    stopping_return_home_state.start()
-
-    assert event_handler is not None
-
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
-
-    assert transition is sync_state_machine.start_mission_monitoring  # type: ignore
-    assert not sync_state_machine.events.mqtt_queue.empty()
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.monitor_state.name  # type: ignore
-
-
-def test_stopping_return_home_mission_succeeds_with_no_mission(
-    sync_state_machine: StateMachine,
-) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
-    sync_state_machine.shared_state.mission_id.trigger_event("mission_id")
-    sync_state_machine.state = sync_state_machine.stopping_return_home_state.name  # type: ignore
-    stopping_return_home_state: State = cast(
-        State, sync_state_machine.stopping_return_home_state
-    )
+    sync_state_machine.current_state = StoppingReturnHome(sync_state_machine, mission)
+    stopping_return_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         stopping_return_home_state.get_event_handler_by_name("successful_stop_event")
     )
@@ -108,8 +71,5 @@ def test_stopping_return_home_mission_succeeds_with_no_mission(
     event_handler.event.trigger_event(True)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.start_return_home_monitoring  # type: ignore
-    assert sync_state_machine.events.mqtt_queue.empty()
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.returning_home_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is Monitor

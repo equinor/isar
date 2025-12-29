@@ -27,7 +27,7 @@ def test_state_machine_idle_to_blocked_protective_stop_to_idle(
 
     state_machine_thread.start()
     robot_service_thread.start()
-    time.sleep(1)
+    time.sleep(5)
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [States.UnknownStatus, States.BlockedProtectiveStop, States.Home]

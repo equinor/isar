@@ -3,20 +3,19 @@ from typing import Optional, cast
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
+from isar.state_machine.states.going_to_lockdown import GoingToLockdown
+from isar.state_machine.states.going_to_recharging import GoingToRecharging
+from isar.state_machine.states.intervention_needed import InterventionNeeded
+from isar.state_machine.states.returning_home import ReturningHome
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
-from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
-from robot_interface.models.mission.task import TakeImage, Task
-from tests.test_mocks.pose import DummyPose
 
 
 def test_going_to_recharging_goes_to_intervention_needed(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.state = sync_state_machine.going_to_recharging_state.name  # type: ignore
-    going_to_recharging_state: State = cast(
-        State, sync_state_machine.going_to_recharging_state
-    )
+    sync_state_machine.current_state = GoingToRecharging(sync_state_machine)
+    going_to_recharging_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         going_to_recharging_state.get_event_handler_by_name("mission_status_event")
     )
@@ -26,20 +25,17 @@ def test_going_to_recharging_goes_to_intervention_needed(
     event_handler.event.trigger_event(MissionStatus.Failed)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.return_home_failed  # type: ignore
-    transition()
-    assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is InterventionNeeded
 
 
 def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
-    sync_state_machine.state = sync_state_machine.going_to_lockdown_state.name  # type: ignore
+    sync_state_machine.current_state = GoingToLockdown(sync_state_machine)
 
-    going_to_lockdown_state: State = cast(
-        State, sync_state_machine.going_to_lockdown_state
-    )
+    going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         going_to_lockdown_state.get_event_handler_by_name("mission_status_event")
     )
@@ -49,26 +45,17 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
     event_handler.event.trigger_event(MissionStatus.Failed)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.lockdown_mission_failed  # type: ignore
-    transition()
-    assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is InterventionNeeded
 
 
 def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
     sync_state_machine: StateMachine,
 ) -> None:
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    sync_state_machine.shared_state.mission_id.trigger_event(
-        Mission(name="Dummy misson", tasks=[task_1])
-    )
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
-    sync_state_machine.state = sync_state_machine.going_to_lockdown_state.name  # type: ignore
+    sync_state_machine.current_state = GoingToLockdown(sync_state_machine)
 
-    going_to_lockdown_state: State = cast(
-        State, sync_state_machine.going_to_lockdown_state
-    )
+    going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         going_to_lockdown_state.get_event_handler_by_name("mission_failed_event")
     )
@@ -81,18 +68,17 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
     )
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.lockdown_mission_failed  # type: ignore
-    transition()
-    assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is InterventionNeeded
 
 
 def test_state_machine_with_return_home_failure(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
-    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
+    sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
-    returning_home_state: State = cast(State, sync_state_machine.returning_home_state)
+    returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         returning_home_state.get_event_handler_by_name("mission_status_event")
     )
@@ -108,25 +94,21 @@ def test_state_machine_with_return_home_failure(
         transition = event_handler.handler(event_handler.event)
 
         assert transition is None  # type: ignore
-        assert (
-            sync_state_machine.returning_home_state.failed_return_home_attempts == i + 1
-        )
+        assert sync_state_machine.current_state.failed_return_home_attempts == i + 1
 
     event_handler.event.trigger_event(MissionStatus.Failed)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.return_home_failed  # type: ignore
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is InterventionNeeded
 
 
 def test_return_home_mission_failed_transitions_to_intervention_needed(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.state = sync_state_machine.returning_home_state.name  # type: ignore
+    sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
-    returning_home_state: State = cast(State, sync_state_machine.returning_home_state)
+    returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         returning_home_state.get_event_handler_by_name("mission_failed_event")
     )
@@ -140,19 +122,16 @@ def test_return_home_mission_failed_transitions_to_intervention_needed(
     )
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.return_home_failed  # type: ignore
-    transition()
-    assert sync_state_machine.state is sync_state_machine.intervention_needed_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is InterventionNeeded
 
 
 def test_intervention_needed_transitions_does_not_transition_if_status_is_not_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.state = sync_state_machine.intervention_needed_state.name  # type: ignore
+    sync_state_machine.current_state = InterventionNeeded(sync_state_machine)
 
-    intervention_needed_state: State = cast(
-        State, sync_state_machine.intervention_needed_state
-    )
+    intervention_needed_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         intervention_needed_state.get_event_handler_by_name("robot_status_event")
     )
