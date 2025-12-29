@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING, List, Optional
 
+import isar.state_machine.states.home as Home
+import isar.state_machine.states.lockdown as Lockdown
+import isar.state_machine.states.maintenance as Maintenance
+import isar.state_machine.states.offline as Offline
 from isar.apis.models.models import LockdownResponse, MaintenanceResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.home import Home
-from isar.state_machine.states.lockdown import Lockdown
-from isar.state_machine.states.maintenance import Maintenance
-from isar.state_machine.states.offline import Offline
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
@@ -16,13 +16,6 @@ if TYPE_CHECKING:
 
 
 class Recharging(State):
-
-    @staticmethod
-    def transition() -> Transition["Recharging"]:
-        def _transition(state_machine: "StateMachine"):
-            return Recharging(state_machine)
-
-        return _transition
 
     def __init__(self, state_machine: "StateMachine"):
         shared_state = state_machine.shared_state
@@ -35,7 +28,9 @@ class Recharging(State):
 
             return Home.transition()
 
-        def robot_offline_handler(event: Event[RobotStatus]):
+        def robot_offline_handler(
+            event: Event[RobotStatus],
+        ) -> Optional[Transition[Offline.Offline]]:
             robot_status: Optional[RobotStatus] = event.check()
 
             if robot_status is None:
@@ -48,7 +43,9 @@ class Recharging(State):
                 return Offline.transition()
             return None
 
-        def _send_to_lockdown_event_handler(event: Event[bool]):
+        def _send_to_lockdown_event_handler(
+            event: Event[bool],
+        ) -> Optional[Transition[Lockdown.Lockdown]]:
             should_lockdown: bool = event.consume_event()
             if not should_lockdown:
                 return None
@@ -58,7 +55,9 @@ class Recharging(State):
             )
             return Lockdown.transition()
 
-        def _set_maintenance_mode_event_handler(event: Event[bool]):
+        def _set_maintenance_mode_event_handler(
+            event: Event[bool],
+        ) -> Optional[Transition[Maintenance.Maintenance]]:
             should_set_maintenande_mode: bool = event.consume_event()
             if should_set_maintenande_mode:
                 events.api_requests.set_maintenance_mode.response.trigger_event(
@@ -94,3 +93,10 @@ class Recharging(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition() -> Transition[Recharging]:
+    def _transition(state_machine: "StateMachine"):
+        return Recharging(state_machine)
+
+    return _transition

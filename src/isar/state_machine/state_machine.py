@@ -116,11 +116,11 @@ class StateMachine(object):
             < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
         )
 
-    def update_state(self, new_state: State):
+    def update_state(self):
         """Updates the current state of the state machine."""
         self.shared_state.state.update(self.current_state.name)
         self.transitions_list.append(self.current_state.name)
-        self.logger.info("State: %s", self.current_state)
+        self.logger.info("State: %s", self.current_state.name)
         self.publish_status()
 
     def start_mission(self, mission: Mission):

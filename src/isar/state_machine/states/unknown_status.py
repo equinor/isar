@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING, List, Optional, Union
 
+import isar.state_machine.states.await_next_mission as AwaitNextMission
+import isar.state_machine.states.blocked_protective_stop as BlockedProtectiveStop
+import isar.state_machine.states.home as Home
+import isar.state_machine.states.maintenance as Maintenance
+import isar.state_machine.states.offline as Offline
+import isar.state_machine.states.stopping as Stopping
 from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.await_next_mission import AwaitNextMission
-from isar.state_machine.states.blocked_protective_stop import BlockedProtectiveStop
-from isar.state_machine.states.home import Home
-from isar.state_machine.states.maintenance import Maintenance
-from isar.state_machine.states.offline import Offline
-from isar.state_machine.states.stopping import Stopping
 from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import stop_mission_event_handler
 from robot_interface.models.mission.status import RobotStatus
@@ -19,22 +19,15 @@ if TYPE_CHECKING:
 
 class UnknownStatus(State):
 
-    @staticmethod
-    def transition() -> Transition["UnknownStatus"]:
-        def _transition(state_machine: "StateMachine"):
-            return UnknownStatus(state_machine)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine"):
         # Ensures that we will check the status immediately instead of waiting for it to change
-        self.events.robot_service_events.robot_status_changed.trigger_event(True)
         events = state_machine.events
         shared_state = state_machine.shared_state
+        events.robot_service_events.robot_status_changed.trigger_event(True)
 
         def _set_maintenance_mode_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[Maintenance]]:
+        ) -> Optional[Transition[Maintenance.Maintenance]]:
             should_set_maintenande_mode: bool = event.consume_event()
             if should_set_maintenande_mode:
                 events.api_requests.set_maintenance_mode.response.trigger_event(
@@ -47,11 +40,11 @@ class UnknownStatus(State):
             status_changed_event: Event[bool],
         ) -> Optional[
             Union[
-                Transition[Home],
-                Transition[AwaitNextMission],
-                Transition[Offline],
-                Transition[BlockedProtectiveStop],
-                Transition[Stopping],
+                Transition[Home.Home],
+                Transition[AwaitNextMission.AwaitNextMission],
+                Transition[Offline.Offline],
+                Transition[BlockedProtectiveStop.BlockedProtectiveStop],
+                Transition[Stopping.Stopping],
             ]
         ]:
             has_changed = status_changed_event.consume_event()
@@ -113,3 +106,10 @@ class UnknownStatus(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition() -> Transition[UnknownStatus]:
+    def _transition(state_machine: "StateMachine"):
+        return UnknownStatus(state_machine)
+
+    return _transition

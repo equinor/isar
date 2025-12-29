@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING, List, Optional, Union
 
+import isar.state_machine.states.await_next_mission as AwaitNextMission
+import isar.state_machine.states.monitor as Monitor
+import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
-from isar.state_machine.states.await_next_mission import AwaitNextMission
-from isar.state_machine.states.monitor import Monitor
-from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -15,19 +15,12 @@ if TYPE_CHECKING:
 
 class Stopping(State):
 
-    @staticmethod
-    def transition(mission_id: str) -> Transition["Stopping"]:
-        def _transition(state_machine: "StateMachine"):
-            return Stopping(state_machine, mission_id)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine", mission_id: str):
         events = state_machine.events
 
         def _failed_stop_event_handler(
             event: Event[ErrorMessage],
-        ) -> Optional[Transition[Monitor]]:
+        ) -> Optional[Transition[Monitor.Monitor]]:
             error_message: Optional[ErrorMessage] = event.consume_event()
             if error_message is None:
                 return None
@@ -42,7 +35,12 @@ class Stopping(State):
 
         def _successful_stop_event_handler(
             event: Event[bool],
-        ) -> Optional[Union[Transition[AwaitNextMission], Transition[ReturningHome]]]:
+        ) -> Optional[
+            Union[
+                Transition[AwaitNextMission.AwaitNextMission],
+                Transition[ReturningHome.ReturningHome],
+            ]
+        ]:
             if not event.consume_event():
                 return None
 
@@ -73,3 +71,10 @@ class Stopping(State):
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition(mission_id: str) -> Transition[Stopping]:
+    def _transition(state_machine: "StateMachine"):
+        return Stopping(state_machine, mission_id)
+
+    return _transition

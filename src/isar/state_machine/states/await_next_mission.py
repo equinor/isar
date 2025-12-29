@@ -1,5 +1,9 @@
 from typing import TYPE_CHECKING, List, Optional
 
+import isar.state_machine.states.going_to_lockdown as GoingToLockdown
+import isar.state_machine.states.going_to_recharging as GoingToRecharging
+import isar.state_machine.states.maintenance as Maintenance
+import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import LockdownResponse, MaintenanceResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import (
@@ -9,10 +13,6 @@ from isar.eventhandlers.eventhandler import (
     Transition,
 )
 from isar.models.events import Event
-from isar.state_machine.states.going_to_lockdown import GoingToLockdown
-from isar.state_machine.states.going_to_recharging import GoingToRecharging
-from isar.state_machine.states.maintenance import Maintenance
-from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import (
     return_home_event_handler,
@@ -26,20 +26,13 @@ if TYPE_CHECKING:
 
 class AwaitNextMission(State):
 
-    @staticmethod
-    def transition() -> Transition["AwaitNextMission"]:
-        def _transition(state_machine: "StateMachine"):
-            return AwaitNextMission(state_machine)
-
-        return _transition
-
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
         def _send_to_lockdown_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[GoingToLockdown]]:
+        ) -> Optional[Transition[GoingToLockdown.GoingToLockdown]]:
             should_lockdown: bool = event.consume_event()
             if not should_lockdown:
                 return None
@@ -54,7 +47,7 @@ class AwaitNextMission(State):
 
         def _robot_battery_level_updated_handler(
             event: Event[float],
-        ) -> Optional[Transition[GoingToRecharging]]:
+        ) -> Optional[Transition[GoingToRecharging.GoingToRecharging]]:
             battery_level: float = event.check()
             if (
                 battery_level is None
@@ -67,7 +60,7 @@ class AwaitNextMission(State):
 
         def _set_maintenance_mode_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[Maintenance]]:
+        ) -> Optional[Transition[Maintenance.Maintenance]]:
             should_set_maintenande_mode: bool = event.consume_event()
             if should_set_maintenande_mode:
                 events.api_requests.set_maintenance_mode.response.trigger_event(
@@ -76,7 +69,7 @@ class AwaitNextMission(State):
                 return Maintenance.transition()
             return None
 
-        def _start_return_home() -> Transition[ReturningHome]:
+        def _start_return_home() -> Transition[ReturningHome.ReturningHome]:
             state_machine.start_return_home_mission()
             return ReturningHome.transition()
 
@@ -131,3 +124,10 @@ class AwaitNextMission(State):
             event_handler_mappings=event_handlers,
             timers=timers,
         )
+
+
+def transition() -> Transition[AwaitNextMission]:
+    def _transition(state_machine: "StateMachine"):
+        return AwaitNextMission(state_machine)
+
+    return _transition
