@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional
 
-import isar.state_machine.states.monitor as Monitor
+import isar.state_machine.states.resuming as Resuming
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_paused_mission as StoppingPausedMission
@@ -9,7 +9,6 @@ from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import Event
 from isar.state_machine.states_enum import States
-from isar.state_machine.utils.common_event_handlers import stop_mission_event_handler
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -20,6 +19,29 @@ class Paused(State):
     def __init__(self, state_machine: "StateMachine", mission_id: str):
         events = state_machine.events
         shared_state = state_machine.shared_state
+
+        def _stop_mission_event_handler(
+            event: Event[str],
+        ) -> Optional[Transition[StoppingPausedMission.StoppingPausedMission]]:
+            stop_mission_id: str = event.consume_event()
+            if mission_id is None:
+                return None
+
+            if mission_id == stop_mission_id or stop_mission_id == "":
+                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                    ControlMissionResponse(success=True)
+                )
+                state_machine.events.state_machine_events.stop_mission.trigger_event(
+                    True
+                )
+                return StoppingPausedMission.transition(mission_id)
+            else:
+                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                    ControlMissionResponse(
+                        success=False, failure_reason="Mission not found"
+                    )
+                )
+                return None
 
         def _robot_battery_level_updated_handler(
             event: Event[float],
@@ -34,7 +56,6 @@ class Paused(State):
             state_machine.publish_mission_aborted(
                 mission_id, "Robot battery too low to continue mission", True
             )
-            state_machine.print_transitions()
             state_machine.logger.warning(
                 "Cancelling current mission due to low battery"
             )
@@ -48,7 +69,6 @@ class Paused(State):
             if not should_lockdown:
                 return None
 
-            state_machine.print_transitions()
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to lockdown"
             )
@@ -71,7 +91,7 @@ class Paused(State):
 
         def _resume_mission_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[Monitor.Monitor]]:
+        ) -> Optional[Transition[Resuming.Resuming]]:
             if event.consume_event():
                 state_machine.events.api_requests.resume_mission.response.trigger_event(
                     ControlMissionResponse(success=True)
@@ -79,16 +99,14 @@ class Paused(State):
                 state_machine.events.state_machine_events.resume_mission.trigger_event(
                     True
                 )
-                return Monitor.transition(mission_id)
+                return Resuming.transition(mission_id)
             return None
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
-                handler=lambda event: stop_mission_event_handler(
-                    state_machine, event, mission_id
-                ),
+                handler=_stop_mission_event_handler,
             ),
             EventHandlerMapping(
                 name="resume_mission_event",

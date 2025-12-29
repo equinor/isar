@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, List, Optional
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
+import isar.state_machine.states.resuming_return_home as ResumingReturnHome
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_paused_return_home as StoppingPausedReturnHome
@@ -89,7 +90,7 @@ class ReturnHomePaused(State):
 
         def _resume_mission_event_handler(
             event: Event[bool],
-        ) -> Optional[Transition[ReturningHome.ReturningHome]]:
+        ) -> Optional[Transition[ResumingReturnHome.ResumingReturnHome]]:
             if event.consume_event():
                 state_machine.events.api_requests.resume_mission.response.trigger_event(
                     ControlMissionResponse(success=True)
@@ -97,7 +98,7 @@ class ReturnHomePaused(State):
                 state_machine.events.state_machine_events.resume_mission.trigger_event(
                     True
                 )
-                return ReturningHome.transition()
+                return ResumingReturnHome.transition()
             return None
 
         event_handlers: List[EventHandlerMapping] = [
