@@ -2,11 +2,18 @@ import time
 from collections import deque
 from typing import Optional, cast
 
+from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.modules import ApplicationContainer
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
+from isar.state_machine.states.await_next_mission import AwaitNextMission
+from isar.state_machine.states.paused import Paused
+from isar.state_machine.states.resuming import Resuming
+from isar.state_machine.states.resuming_return_home import ResumingReturnHome
+from isar.state_machine.states.return_home_paused import ReturnHomePaused
+from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
@@ -35,10 +42,7 @@ def test_state_machine_with_successful_mission_stop(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
 
-    # Set the return home delay to a higher value than the test needs to run
-    state_machine_thread.state_machine.await_next_mission_state.timers[
-        0
-    ].timeout_in_seconds = 15
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 15)
 
     mission: Mission = Mission(
         name="Dummy misson", tasks=[StubTask.take_image() for _ in range(0, 20)]
@@ -66,12 +70,12 @@ def test_state_machine_with_successful_mission_stop(
     )
 
 
-def test_transition_from_resuming_to_await_next_mission(
+def test_transition_from_resuming_to_paused(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.state = sync_state_machine.resuming_state.name  # type: ignore
+    sync_state_machine.current_state = Resuming(sync_state_machine, "mission_id")
 
-    resuming_state: State = cast(State, sync_state_machine.resuming_state)
+    resuming_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         resuming_state.get_event_handler_by_name("failed_resume_event")
     )
@@ -81,24 +85,21 @@ def test_transition_from_resuming_to_await_next_mission(
     event_handler.event.trigger_event(True)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.mission_resuming_failed  # type: ignore
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.await_next_mission_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is Paused
 
 
 def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_available(
-    sync_state_machine: StateMachine, mocker
+    sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Available)
     # Make sure that we have not changed robot status
     sync_state_machine.events.robot_service_events.robot_status_changed.consume_event()
 
-    mocker.patch.object(State, "_run", return_value=None)
-    sync_state_machine.state = sync_state_machine.unknown_status_state.name  # type: ignore
+    sync_state_machine.current_state = UnknownStatus(sync_state_machine)
 
-    unknown_status_state: State = cast(State, sync_state_machine.unknown_status_state)
-    unknown_status_state.start()
+    unknown_status_state: State = cast(State, sync_state_machine.current_state)
+
     event_handler: Optional[EventHandlerMapping] = (
         unknown_status_state.get_event_handler_by_name("robot_status_event")
     )
@@ -106,19 +107,16 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
 
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.robot_status_available  # type: ignore
-    transition()
-    assert sync_state_machine.state is sync_state_machine.await_next_mission_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is AwaitNextMission
 
 
 def test_transition_from_resuming_return_home_to_await_next_mission(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.state = sync_state_machine.resuming_return_home_state.name  # type: ignore
+    sync_state_machine.current_state = ResumingReturnHome(sync_state_machine)
 
-    resuming_return_home_state: State = cast(
-        State, sync_state_machine.resuming_return_home_state
-    )
+    resuming_return_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         resuming_return_home_state.get_event_handler_by_name("failed_resume_event")
     )
@@ -128,7 +126,5 @@ def test_transition_from_resuming_return_home_to_await_next_mission(
     event_handler.event.trigger_event(True)
     transition = event_handler.handler(event_handler.event)
 
-    assert transition is sync_state_machine.return_home_mission_resuming_failed  # type: ignore
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.await_next_mission_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is ReturnHomePaused

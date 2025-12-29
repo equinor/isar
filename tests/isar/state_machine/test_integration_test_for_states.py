@@ -33,12 +33,9 @@ def test_state_machine_transitions_when_running_full_mission(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
+    mocker,
 ) -> None:
-    state_machine_thread.state_machine.await_next_mission_state.timers[
-        0
-    ].timeout_in_seconds = 0.01
-
-    # mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
 
     state_machine_thread.start()
     robot_service_thread.start()
@@ -86,9 +83,7 @@ def test_state_machine_failed_dependency(
     robot_service_thread: RobotServiceThreadMock,
     mocker,
 ) -> None:
-    state_machine_thread.state_machine.await_next_mission_state.timers[
-        0
-    ].timeout_in_seconds = 0.01
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
@@ -139,9 +134,7 @@ def test_state_machine_with_successful_collection(
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
 
-    state_machine_thread.state_machine.await_next_mission_state.timers[
-        0
-    ].timeout_in_seconds = 0.01
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
     state_machine_thread.start()
     uploader_thread.start()
 
@@ -183,9 +176,7 @@ def test_state_machine_with_unsuccessful_collection(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
 
-    state_machine_thread.state_machine.await_next_mission_state.timers[
-        0
-    ].timeout_in_seconds = 0.01
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
     state_machine_thread.start()
     robot_service_thread.start()
     uploader_thread.start()
@@ -250,10 +241,9 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
+    mocker,
 ) -> None:
-    state_machine_thread.state_machine.await_next_mission_state.timers[
-        0
-    ].timeout_in_seconds = 0.01
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
 
     robot_service_thread.robot_service.robot = StubRobotInitiateMissionRaisesException()
 
@@ -292,9 +282,7 @@ def test_state_machine_battery_too_low_to_start_mission(
     robot_service_thread: RobotServiceThreadMock,
     mocker,
 ) -> None:
-    state_machine_thread.state_machine.await_next_mission_state.timers[
-        0
-    ].timeout_in_seconds = 0.01
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
     state_machine_thread.start()
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     mocker.patch.object(StubRobot, "get_battery_level", return_value=10.0)

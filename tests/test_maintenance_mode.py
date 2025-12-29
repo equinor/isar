@@ -61,7 +61,7 @@ def test_maintenance_mode(
     state_machine_thread.start()
     robot_service_thread.start()
 
-    assert state_machine_thread.state_machine.current_state == States.Maintenance
+    assert state_machine_thread.state_machine.current_state.name == States.Maintenance
 
     # The robot should have started in maintenance mode since the robot id is not found in the database.
     response = client.post(
@@ -86,7 +86,7 @@ def test_maintenance_mode(
 
     response = client.post(url="/schedule/release-maintenance-mode")
     assert response.status_code == HTTPStatus.OK
-    assert state_machine_thread.state_machine.current_state == States.Home
+    assert state_machine_thread.state_machine.current_state.name == States.Home
 
     mocker.patch.object(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
@@ -101,7 +101,7 @@ def test_maintenance_mode(
     )
     assert response.status_code == HTTPStatus.OK
 
-    assert state_machine_thread.state_machine.current_state == States.Monitor
+    assert state_machine_thread.state_machine.current_state.name == States.Monitor
     response = client.post(url="/schedule/maintenance-mode")
     assert response.status_code == HTTPStatus.OK
 
