@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.paused as Paused
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -17,21 +16,13 @@ class Resuming(State):
         events = state_machine.events
 
         def _failed_resume_event_handler(
-            event: Event[ErrorMessage],
-        ) -> Optional[Transition[Paused.Paused]]:
-            error_message: Optional[ErrorMessage] = event.consume_event()
-
-            if error_message is None:
-                return None
-
+            error_message: ErrorMessage,
+        ) -> Transition[Paused.Paused]:
             return Paused.transition(mission_id)
 
         def _successful_resume_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[Monitor.Monitor]]:
-            if not event.consume_event():
-                return None
-
+            successful_resume: bool,
+        ) -> Transition[Monitor.Monitor]:
             return Monitor.transition(mission_id)
 
         event_handlers: List[EventHandlerMapping] = [

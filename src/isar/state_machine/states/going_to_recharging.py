@@ -5,7 +5,6 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging as Recharging
 from isar.apis.models.models import LockdownResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus
@@ -20,12 +19,8 @@ class GoingToRecharging(State):
         events = state_machine.events
 
         def _mission_failed_event_handler(
-            event: Event[Optional[ErrorMessage]],
-        ) -> Optional[Transition[InterventionNeeded.InterventionNeeded]]:
-            mission_failed: Optional[ErrorMessage] = event.consume_event()
-            if mission_failed is None:
-                return None
-
+            mission_failed: ErrorMessage,
+        ) -> Transition[InterventionNeeded.InterventionNeeded]:
             state_machine.logger.warning(
                 f"Failed to go to recharging because: "
                 f"{mission_failed.error_description}"
@@ -37,15 +32,13 @@ class GoingToRecharging(State):
             return InterventionNeeded.transition()
 
         def _mission_status_event_handler(
-            event: Event[MissionStatus],
+            mission_status: MissionStatus,
         ) -> Optional[
             Union[
                 Transition[InterventionNeeded.InterventionNeeded],
                 Transition[Recharging.Recharging],
             ]
         ]:
-            mission_status: Optional[MissionStatus] = event.consume_event()
-
             if not mission_status or mission_status in [
                 MissionStatus.InProgress,
                 MissionStatus.NotStarted,
@@ -66,12 +59,8 @@ class GoingToRecharging(State):
             return Recharging.transition()
 
         def _send_to_lockdown_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[GoingToLockdown.GoingToLockdown]]:
-            should_lockdown: bool = event.consume_event()
-            if not should_lockdown:
-                return None
-
+            should_lockdown: bool,
+        ) -> Transition[GoingToLockdown.GoingToLockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )

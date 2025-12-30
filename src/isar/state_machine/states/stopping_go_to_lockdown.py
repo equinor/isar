@@ -1,10 +1,9 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -18,12 +17,8 @@ class StoppingGoToLockdown(State):
         events = state_machine.events
 
         def _failed_stop_event_handler(
-            event: Event[ErrorMessage],
-        ) -> Optional[Transition[Monitor.Monitor]]:
-            error_message: Optional[ErrorMessage] = event.consume_event()
-            if error_message is None:
-                return None
-
+            error_message: ErrorMessage,
+        ) -> Transition[Monitor.Monitor]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(
                     lockdown_started=False,
@@ -33,11 +28,8 @@ class StoppingGoToLockdown(State):
             return Monitor.transition(mission_id)
 
         def _successful_stop_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[GoingToLockdown.GoingToLockdown]]:
-            if not event.consume_event():
-                return None
-
+            successful_stop: bool,
+        ) -> Transition[GoingToLockdown.GoingToLockdown]:
             state_machine.publish_mission_aborted(
                 mission_id, "Robot being sent to lockdown", True
             )
