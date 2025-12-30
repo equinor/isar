@@ -17,8 +17,7 @@ def test_monitor_goes_to_return_home_when_battery_low(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(10.0)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(10.0)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is StoppingGoToRecharge

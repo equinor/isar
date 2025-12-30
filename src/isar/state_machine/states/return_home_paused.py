@@ -12,7 +12,6 @@ from isar.apis.models.models import (
 )
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
@@ -27,10 +26,8 @@ class ReturnHomePaused(State):
         shared_state = state_machine.shared_state
 
         def _robot_battery_level_updated_handler(
-            event: Event[float],
+            battery_level: float,
         ) -> Optional[Transition[ReturningHome.ReturningHome]]:
-            battery_level: float = event.check()
-
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
@@ -41,12 +38,8 @@ class ReturnHomePaused(State):
             return ReturningHome.transition()
 
         def _start_mission_event_handler(
-            event: Event[Mission],
+            mission: Mission,
         ) -> Optional[Transition[StoppingPausedReturnHome.StoppingPausedReturnHome]]:
-            mission = event.consume_event()
-            if not mission:
-                return None
-
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 response = MissionStartResponse(
                     mission_id=None,
@@ -61,12 +54,8 @@ class ReturnHomePaused(State):
             return StoppingPausedReturnHome.transition(mission)
 
         def _send_to_lockdown_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[GoingToLockdown.GoingToLockdown]]:
-            should_lockdown: bool = event.consume_event()
-            if not should_lockdown:
-                return None
-
+            should_lockdown: bool,
+        ) -> Transition[GoingToLockdown.GoingToLockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
@@ -75,31 +64,22 @@ class ReturnHomePaused(State):
             return GoingToLockdown.transition()
 
         def _set_maintenance_mode_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]]:
-            should_set_maintenande_mode: bool = event.consume_event()
-            if should_set_maintenande_mode:
-                state_machine.logger.warning(
-                    "Cancelling current mission due to robot going to maintenance mode"
-                )
-                state_machine.events.state_machine_events.stop_mission.trigger_event(
-                    True
-                )
-                return StoppingDueToMaintenance.transition("")
-            return None
+            should_set_maintenande_mode: bool,
+        ) -> Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]:
+            state_machine.logger.warning(
+                "Cancelling current mission due to robot going to maintenance mode"
+            )
+            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            return StoppingDueToMaintenance.transition("")
 
         def _resume_mission_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[ResumingReturnHome.ResumingReturnHome]]:
-            if event.consume_event():
-                state_machine.events.api_requests.resume_mission.response.trigger_event(
-                    ControlMissionResponse(success=True)
-                )
-                state_machine.events.state_machine_events.resume_mission.trigger_event(
-                    True
-                )
-                return ResumingReturnHome.transition()
-            return None
+            should_resume: bool,
+        ) -> Transition[ResumingReturnHome.ResumingReturnHome]:
+            state_machine.events.api_requests.resume_mission.response.trigger_event(
+                ControlMissionResponse(success=True)
+            )
+            state_machine.events.state_machine_events.resume_mission.trigger_event(True)
+            return ResumingReturnHome.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -111,6 +91,7 @@ class ReturnHomePaused(State):
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
+                should_not_consume=True,
             ),
             EventHandlerMapping(
                 name="start_mission_event",

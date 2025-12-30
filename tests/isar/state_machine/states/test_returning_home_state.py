@@ -15,7 +15,7 @@ from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, RobotStatus
+from robot_interface.models.mission.status import MissionStatus
 from robot_interface.models.mission.task import ReturnToHome
 
 
@@ -37,8 +37,7 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
     sync_state_machine.current_state = transition(sync_state_machine)
 
     assert type(sync_state_machine.current_state) is Monitor
@@ -59,8 +58,7 @@ def test_transition_from_pausing_return_home_to_returning_home(
     error_event = ErrorMessage(
         error_reason=ErrorReason.RobotUnknownErrorException, error_description=""
     )
-    event_handler.event.trigger_event(error_event)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(error_event)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is ReturningHome
@@ -78,8 +76,7 @@ def test_transition_from_resuming_return_home_to_returning_home_state(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is ReturningHome
@@ -98,8 +95,7 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(MissionStatus.Successful)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(MissionStatus.Successful)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Home
@@ -114,12 +110,7 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
 
     assert event_handler_robot_status is not None
 
-    # This status should not be used, if the event handler is working correctly
-    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Busy)
-
-    transition = event_handler_robot_status.handler(event_handler_robot_status.event)
-
-    assert transition is None
+    assert not event_handler_robot_status.event.has_event()
 
 
 def test_return_home_not_cancelled_when_battery_is_low(
@@ -136,8 +127,7 @@ def test_return_home_not_cancelled_when_battery_is_low(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert transition is None
     assert events.api_requests.start_mission.response.has_event()

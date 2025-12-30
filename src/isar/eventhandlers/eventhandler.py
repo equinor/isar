@@ -4,7 +4,7 @@ from abc import ABC
 from copy import deepcopy
 from dataclasses import dataclass
 from threading import Event as ThreadEvent
-from typing import TYPE_CHECKING, Callable, Generic, List, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, List, Optional, TypeVar
 
 from isar.config.settings import settings
 from isar.models.events import Event
@@ -20,7 +20,8 @@ Transition = Callable[["StateMachine"], T_state]
 class EventHandlerMapping(Generic[T]):
     name: str
     event: Event[T]
-    handler: Callable[[Event[T]], Optional[Transition]]
+    handler: Callable[[T], Optional[Transition]]
+    should_not_consume: bool = False
 
 
 @dataclass
@@ -94,9 +95,15 @@ class State(ABC):
                 break
 
             for handler_mapping in self.event_handler_mappings:
-                transition = handler_mapping.handler(handler_mapping.event)
-                if transition is not None:
-                    return transition(self.state_machine)
+                event_value: Optional[Any]
+                if handler_mapping.should_not_consume:
+                    event_value = handler_mapping.event.check()
+                else:
+                    event_value = handler_mapping.event.consume_event()
+                if event_value is not None:
+                    transition = handler_mapping.handler(event_value)
+                    if transition is not None:
+                        return transition(self.state_machine)
 
             if should_exit_state:
                 break

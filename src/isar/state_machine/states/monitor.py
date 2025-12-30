@@ -8,7 +8,6 @@ import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import (
     mission_started_event_handler,
@@ -28,11 +27,8 @@ class Monitor(State):
         shared_state = state_machine.shared_state
 
         def _pause_mission_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[Pausing.Pausing]]:
-            if not event.consume_event():
-                return None
-
+            should_pause: bool,
+        ) -> Transition[Pausing.Pausing]:
             state_machine.events.api_requests.pause_mission.response.trigger_event(
                 ControlMissionResponse(success=True)
             )
@@ -40,9 +36,8 @@ class Monitor(State):
             return Pausing.transition(mission_id)
 
         def _robot_battery_level_updated_handler(
-            event: Event[float],
+            battery_level: float,
         ) -> Optional[Transition[StoppingGoToRecharge.StoppingGoToRecharge]]:
-            battery_level: float = event.check()
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
@@ -56,12 +51,8 @@ class Monitor(State):
             return StoppingGoToRecharge.transition(mission_id)
 
         def _send_to_lockdown_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[StoppingGoToLockdown.StoppingGoToLockdown]]:
-            should_lockdown: bool = event.consume_event()
-            if not should_lockdown:
-                return None
-
+            should_lockdown: bool,
+        ) -> Transition[StoppingGoToLockdown.StoppingGoToLockdown]:
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to lockdown"
             )
@@ -69,42 +60,31 @@ class Monitor(State):
             return StoppingGoToLockdown.transition(mission_id)
 
         def _mission_status_event_handler(
-            event: Event[MissionStatus],
+            mission_status: MissionStatus,
         ) -> Optional[Transition[AwaitNextMission.AwaitNextMission]]:
-            mission_status: Optional[MissionStatus] = event.consume_event()
-            if mission_status:
-                if mission_status not in [
-                    MissionStatus.InProgress,
-                    MissionStatus.NotStarted,
-                    MissionStatus.Paused,
-                ]:
-                    state_machine.logger.info(
-                        f"Mission completed with status {mission_status}"
-                    )
-                    return AwaitNextMission.transition()
+            if mission_status not in [
+                MissionStatus.InProgress,
+                MissionStatus.NotStarted,
+                MissionStatus.Paused,
+            ]:
+                state_machine.logger.info(
+                    f"Mission completed with status {mission_status}"
+                )
+                return AwaitNextMission.transition()
             return None
 
         def _set_maintenance_mode_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]]:
-            should_set_maintenande_mode: bool = event.consume_event()
-            if should_set_maintenande_mode:
-                state_machine.logger.warning(
-                    "Cancelling current mission due to robot going to maintenance mode"
-                )
-                state_machine.events.state_machine_events.stop_mission.trigger_event(
-                    True
-                )
-                return StoppingDueToMaintenance.transition(mission_id)
-            return None
+            should_set_maintenande_mode: bool,
+        ) -> Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]:
+            state_machine.logger.warning(
+                "Cancelling current mission due to robot going to maintenance mode"
+            )
+            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            return StoppingDueToMaintenance.transition(mission_id)
 
         def _mission_failed_event_handler(
-            event: Event[Optional[ErrorMessage]],
-        ) -> Optional[Transition[AwaitNextMission.AwaitNextMission]]:
-            mission_failed: Optional[ErrorMessage] = event.consume_event()
-            if mission_failed is None:
-                return None
-
+            mission_failed: ErrorMessage,
+        ) -> Transition[AwaitNextMission.AwaitNextMission]:
             state_machine.logger.warning(
                 f"Failed to initiate mission because: "
                 f"{mission_failed.error_description}"
@@ -145,6 +125,7 @@ class Monitor(State):
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
+                should_not_consume=True,
             ),
             EventHandlerMapping(
                 name="send_to_lockdown_event",

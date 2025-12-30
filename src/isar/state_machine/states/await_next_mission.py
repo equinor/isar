@@ -12,7 +12,6 @@ from isar.eventhandlers.eventhandler import (
     TimeoutHandlerMapping,
     Transition,
 )
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import (
     return_home_event_handler,
@@ -31,24 +30,18 @@ class AwaitNextMission(State):
         shared_state = state_machine.shared_state
 
         def _send_to_lockdown_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[GoingToLockdown.GoingToLockdown]]:
-            should_lockdown: bool = event.consume_event()
-            if not should_lockdown:
-                return None
-
+            should_lockdown: bool,
+        ) -> Transition[GoingToLockdown.GoingToLockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
 
-            # TODO: this could potentially be done inside the transition function
             state_machine.start_return_home_mission()
             return GoingToLockdown.transition()
 
         def _robot_battery_level_updated_handler(
-            event: Event[float],
+            battery_level: float,
         ) -> Optional[Transition[GoingToRecharging.GoingToRecharging]]:
-            battery_level: float = event.check()
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
@@ -59,15 +52,12 @@ class AwaitNextMission(State):
             return GoingToRecharging.transition()
 
         def _set_maintenance_mode_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[Maintenance.Maintenance]]:
-            should_set_maintenande_mode: bool = event.consume_event()
-            if should_set_maintenande_mode:
-                events.api_requests.set_maintenance_mode.response.trigger_event(
-                    MaintenanceResponse(is_maintenance_mode=True)
-                )
-                return Maintenance.transition()
-            return None
+            should_set_maintenande_mode: bool,
+        ) -> Transition[Maintenance.Maintenance]:
+            events.api_requests.set_maintenance_mode.response.trigger_event(
+                MaintenanceResponse(is_maintenance_mode=True)
+            )
+            return Maintenance.transition()
 
         def _start_return_home() -> Transition[ReturningHome.ReturningHome]:
             state_machine.start_return_home_mission()
@@ -102,6 +92,7 @@ class AwaitNextMission(State):
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
+                should_not_consume=True,
             ),
             EventHandlerMapping(
                 name="set_maintenance_mode",

@@ -22,8 +22,7 @@ def test_mission_stopped_when_going_to_lockdown(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is StoppingGoToLockdown
@@ -42,8 +41,7 @@ def test_going_to_lockdown_transitions_to_lockdown(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(MissionStatus.Successful)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(MissionStatus.Successful)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Lockdown

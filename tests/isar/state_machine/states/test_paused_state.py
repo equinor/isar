@@ -19,8 +19,7 @@ def test_transition_from_pausing_to_paused(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Paused
@@ -38,8 +37,7 @@ def test_transition_from_paused_to_stopping_paused_mission(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event("test_id")
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler("test_id")
 
     assert sync_state_machine.events.api_requests.stop_mission.response.has_event()
 
@@ -60,8 +58,7 @@ def test_stop_request_with_wrong_id_in_paused(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event("wrong_test_id")
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler("wrong_test_id")
 
     assert transition is None
     assert sync_state_machine.events.api_requests.stop_mission.response.has_event()

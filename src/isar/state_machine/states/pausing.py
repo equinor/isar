@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.paused as Paused
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -17,21 +16,13 @@ class Pausing(State):
         events = state_machine.events
 
         def _failed_pause_event_handler(
-            event: Event[ErrorMessage],
-        ) -> Optional[Transition[Monitor.Monitor]]:
-            error_message: Optional[ErrorMessage] = event.consume_event()
-
-            if error_message is None:
-                return None
-
+            error_message: ErrorMessage,
+        ) -> Transition[Monitor.Monitor]:
             return Monitor.transition(mission_id)
 
         def _successful_pause_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[Paused.Paused]]:
-            if not event.consume_event():
-                return None
-
+            successful_pause: bool,
+        ) -> Transition[Paused.Paused]:
             return Paused.transition(mission_id)
 
         event_handlers: List[EventHandlerMapping] = [

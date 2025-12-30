@@ -23,13 +23,7 @@ def test_mqtt_message_not_sent_on_mission_stopped(
     )
     assert stopping_state_event_handler is not None
 
-    sync_state_machine.events.robot_service_events.mission_successfully_stopped.trigger_event(
-        True
-    )
-
-    transition = stopping_state_event_handler.handler(
-        stopping_state_event_handler.event
-    )
+    transition = stopping_state_event_handler.handler(True)
 
     assert sync_state_machine.events.mqtt_queue.empty() is True
 
@@ -50,11 +44,8 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(
     assert event_handler is not None
 
     sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Busy)
-    sync_state_machine.events.robot_service_events.robot_status_changed.trigger_event(
-        True
-    )
 
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert transition is not None
 
@@ -69,13 +60,8 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(
     assert stopping_state_event_handler is not None
 
     sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
-    sync_state_machine.events.robot_service_events.mission_successfully_stopped.trigger_event(
-        True
-    )
 
-    transition = stopping_state_event_handler.handler(
-        stopping_state_event_handler.event
-    )
+    transition = stopping_state_event_handler.handler(True)
 
     sync_state_machine.current_state = transition(sync_state_machine)
 
@@ -93,10 +79,9 @@ def test_stopping_mission_fails(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(
+    transition = event_handler.handler(
         ErrorMessage(error_description="", error_reason=ErrorReason.RobotAPIException)
     )
-    transition = event_handler.handler(event_handler.event)
 
     assert sync_state_machine.events.mqtt_queue.empty()
 
@@ -116,8 +101,7 @@ def test_stopping_mission_succeeds(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert sync_state_machine.events.mqtt_queue.empty()
 
@@ -137,8 +121,7 @@ def test_stopping_mission_succeeds_with_low_battery(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert sync_state_machine.events.mqtt_queue.empty()
 

@@ -20,8 +20,7 @@ def test_going_to_recharging_goes_to_recharge(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(MissionStatus.Successful)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(MissionStatus.Successful)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Recharging
@@ -38,8 +37,7 @@ def test_home_goes_to_recharging_when_battery_low(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(10.0)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(10.0)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Recharging
@@ -58,8 +56,7 @@ def test_lockdown_transitions_to_recharing_if_battery_low(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert sync_state_machine.events.api_requests.release_from_lockdown.response.check()
     sync_state_machine.current_state = transition(sync_state_machine)
@@ -77,7 +74,6 @@ def test_recharging_continues_when_battery_low(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(10.0)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(10.0)
 
     assert transition is None

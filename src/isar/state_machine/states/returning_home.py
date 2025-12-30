@@ -14,7 +14,6 @@ from isar.apis.models.models import (
 )
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import mission_started_event_handler
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
@@ -34,11 +33,8 @@ class ReturningHome(State):
         shared_state = state_machine.shared_state
 
         def _pause_mission_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[PausingReturnHome.PausingReturnHome]]:
-            if not event.consume_event():
-                return None
-
+            should_pause: bool,
+        ) -> Transition[PausingReturnHome.PausingReturnHome]:
             state_machine.events.api_requests.pause_mission.response.trigger_event(
                 ControlMissionResponse(success=True)
             )
@@ -46,12 +42,8 @@ class ReturningHome(State):
             return PausingReturnHome.transition()
 
         def _start_mission_event_handler(
-            event: Event[Mission],
+            mission: Mission,
         ) -> Optional[Transition[StoppingReturnHome.StoppingReturnHome]]:
-            mission = event.consume_event()
-            if not mission:
-                return None
-
             # The check below is arguably not needed due to the battery eventhandler
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 response = MissionStartResponse(
@@ -68,14 +60,12 @@ class ReturningHome(State):
             return StoppingReturnHome.transition(mission)
 
         def _mission_status_event_handler(
-            event: Event[MissionStatus],
+            mission_status: MissionStatus,
         ) -> Optional[
             Union[
                 Transition[InterventionNeeded.InterventionNeeded], Transition[Home.Home]
             ]
         ]:
-            mission_status: Optional[MissionStatus] = event.consume_event()
-
             if mission_status and mission_status not in [
                 MissionStatus.InProgress,
                 MissionStatus.NotStarted,
@@ -107,62 +97,46 @@ class ReturningHome(State):
             return None
 
         def _send_to_lockdown_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[GoingToLockdown.GoingToLockdown]]:
-            should_lockdown: bool = event.consume_event()
-            if not should_lockdown:
-                return None
-
+            should_lockdown: bool,
+        ) -> Transition[GoingToLockdown.GoingToLockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
             return GoingToLockdown.transition()
 
         def _mission_failed_event_handler(
-            event: Event[Optional[ErrorMessage]],
-        ) -> Optional[Transition[InterventionNeeded.InterventionNeeded]]:
-            mission_failed: Optional[ErrorMessage] = event.consume_event()
-            if mission_failed is not None:
-                state_machine.logger.warning(
-                    f"Failed to initiate return home because: "
-                    f"{mission_failed.error_description}"
-                )
-                state_machine.publish_intervention_needed(
-                    error_message="Return home failed to initiate."
-                )
-                return InterventionNeeded.transition()
-            return None
+            mission_failed: ErrorMessage,
+        ) -> Transition[InterventionNeeded.InterventionNeeded]:
+            state_machine.logger.warning(
+                f"Failed to initiate return home because: "
+                f"{mission_failed.error_description}"
+            )
+            state_machine.publish_intervention_needed(
+                error_message="Return home failed to initiate."
+            )
+            return InterventionNeeded.transition()
 
         def _set_maintenance_mode_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]]:
-            should_set_maintenande_mode: bool = event.consume_event()
-            if should_set_maintenande_mode:
-                state_machine.logger.warning(
-                    "Cancelling current mission due to robot going to maintenance mode"
-                )
-                state_machine.events.state_machine_events.stop_mission.trigger_event(
-                    True
-                )
-                return StoppingDueToMaintenance.transition("")
-            return None
+            should_set_maintenande_mode: bool,
+        ) -> Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]:
+            state_machine.logger.warning(
+                "Cancelling current mission due to robot going to maintenance mode"
+            )
+            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            return StoppingDueToMaintenance.transition("")
 
         def _robot_already_home_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[Home.Home]]:
-            already_home: bool = event.consume_event()
-            if already_home:
-                state_machine.logger.info(
-                    "Robot reported that it is already home. "
-                    "Assuming return home mission successful without running."
-                )
-                return Home.transition()
-            return None
+            already_home: bool,
+        ) -> Transition[Home.Home]:
+            state_machine.logger.info(
+                "Robot reported that it is already home. "
+                "Assuming return home mission successful without running."
+            )
+            return Home.transition()
 
         def _robot_battery_level_updated_handler(
-            event: Event[float],
+            battery_level: float,
         ) -> Optional[Transition[GoingToRecharging.GoingToRecharging]]:
-            battery_level: float = event.check()
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
@@ -203,6 +177,7 @@ class ReturningHome(State):
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
+                should_not_consume=True,
             ),
             EventHandlerMapping(
                 name="send_to_lockdown_event",

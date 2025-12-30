@@ -28,10 +28,9 @@ def test_stopping_paused_return_home_mission_fails(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(
+    transition = event_handler.handler(
         ErrorMessage(error_description="", error_reason=ErrorReason.RobotAPIException)
     )
-    transition = event_handler.handler(event_handler.event)
 
     assert sync_state_machine.events.api_requests.start_mission.response.has_event()
 
@@ -58,8 +57,7 @@ def test_stopping_paused_return_home_mission_succeeds(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Monitor

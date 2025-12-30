@@ -21,8 +21,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert not sync_state_machine.events.mqtt_queue.empty()
 
@@ -46,8 +45,7 @@ def test_return_home_goes_to_recharging_when_battery_low(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(10.0)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(10.0)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is GoingToRecharging

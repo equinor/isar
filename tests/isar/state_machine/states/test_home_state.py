@@ -23,8 +23,7 @@ def test_lockdown_transitions_to_home(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert sync_state_machine.events.api_requests.release_from_lockdown.response.check()
     sync_state_machine.current_state = transition(sync_state_machine)
@@ -47,14 +46,12 @@ def test_state_machine_with_return_home_failure_successful_retries(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(MissionStatus.Failed)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(MissionStatus.Failed)
 
     assert transition is None  # type: ignore
     assert sync_state_machine.current_state.failed_return_home_attempts == 1
 
-    event_handler.event.trigger_event(MissionStatus.Successful)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(MissionStatus.Successful)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Home
@@ -73,8 +70,7 @@ def test_intervention_needed_transitions_to_home_if_robot_is_home(
 
     sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Home)
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert transition is not None
 
@@ -94,8 +90,7 @@ def test_recharging_goes_to_home_when_battery_high(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(99.9)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(99.9)
 
     sync_state_machine.current_state = transition(sync_state_machine)
 

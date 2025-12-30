@@ -59,8 +59,7 @@ def test_stopping_to_recharge_goes_to_monitor(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert sync_state_machine.events.mqtt_queue.empty()
 
@@ -86,8 +85,7 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
     sync_state_machine.current_state = transition(sync_state_machine)
 
     assert type(sync_state_machine.current_state) is Monitor
@@ -108,8 +106,7 @@ def test_stopping_lockdown_failing_to_monitor(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert (
         not sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
@@ -136,8 +133,7 @@ def test_transition_from_pausing_to_monitor(
     error_event = ErrorMessage(
         error_reason=ErrorReason.RobotUnknownErrorException, error_description=""
     )
-    event_handler.event.trigger_event(error_event)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(error_event)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Monitor
@@ -155,8 +151,7 @@ def test_transition_from_resuming_to_monitor(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Monitor
@@ -168,6 +163,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
 ) -> None:
+    mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
@@ -177,8 +173,6 @@ def test_state_machine_with_unsuccessful_mission_stop(
     mocker.patch.object(
         StubRobot, "stop", side_effect=_mock_robot_exception_with_message
     )
-
-    settings.FSM_SLEEP_TIME = 0
 
     state_machine_thread.start()
     robot_service_thread.start()

@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List, Union
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.recharging as Recharging
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 
 if TYPE_CHECKING:
@@ -16,12 +15,8 @@ class Lockdown(State):
         events = state_machine.events
 
         def _release_from_lockdown_handler(
-            event: Event[bool],
-        ) -> Optional[Union[Transition[Home.Home], Transition[Recharging.Recharging]]]:
-            should_release_from_lockdown: bool = event.consume_event()
-            if not should_release_from_lockdown:
-                return None
-
+            should_release_from_lockdown: bool,
+        ) -> Union[Transition[Home.Home], Transition[Recharging.Recharging]]:
             events.api_requests.release_from_lockdown.response.trigger_event(True)
             if state_machine.battery_level_is_above_mission_start_threshold():
                 return Home.transition()

@@ -24,8 +24,7 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is ReturnHomePaused
@@ -43,8 +42,7 @@ def test_resuming_paused_return_home(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is ResumingReturnHome
@@ -65,8 +63,7 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
 
     example_mission: Mission = Mission(name="Dummy misson", tasks=[])
 
-    event_handler.event.trigger_event(example_mission)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(example_mission)
 
     sync_state_machine.current_state = transition(sync_state_machine)
 
@@ -86,8 +83,7 @@ def test_stop_request_with_wrong_id_in_paused(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event("wrong_test_id")
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler("wrong_test_id")
 
     assert transition is None
     assert sync_state_machine.events.api_requests.stop_mission.response.has_event()

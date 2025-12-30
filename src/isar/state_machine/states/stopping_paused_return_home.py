@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.return_home_paused as ReturnHomePaused
 from isar.apis.models.models import MissionStartResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import (
     successful_stop_return_home_event_handler,
@@ -27,12 +26,8 @@ class StoppingPausedReturnHome(State):
         state_machine.events.api_requests.start_mission.response.trigger_event(response)
 
         def _failed_stop_return_home_event_handler(
-            event: Event[ErrorMessage],
-        ) -> Optional[Transition[ReturnHomePaused.ReturnHomePaused]]:
-            error_message: Optional[ErrorMessage] = event.consume_event()
-            if error_message is None:
-                return None
-
+            error_message: ErrorMessage,
+        ) -> Transition[ReturnHomePaused.ReturnHomePaused]:
             state_machine.logger.warning(
                 f"Failed to stop return home mission {error_message.error_description}"
             )
