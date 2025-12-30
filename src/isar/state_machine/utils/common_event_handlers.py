@@ -1,8 +1,11 @@
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Optional
 
+import isar.state_machine.states.monitor as Monitor
+import isar.state_machine.states.returning_home as ReturningHome
+import isar.state_machine.states.stopping as Stopping
 from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
+from isar.eventhandlers.eventhandler import Transition
 from isar.models.events import Event
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 
 if TYPE_CHECKING:
@@ -11,13 +14,9 @@ if TYPE_CHECKING:
 
 def start_mission_event_handler(
     state_machine: "StateMachine",
-    event: Event[Mission],
+    mission: Mission,
     response: Event[MissionStartResponse],
-) -> Optional[Callable]:
-    mission: Optional[Mission] = event.consume_event()
-    if not mission:
-        return None
-
+) -> Optional[Transition["Monitor.Monitor"]]:
     if not state_machine.battery_level_is_above_mission_start_threshold():
         response.trigger_event(
             MissionStartResponse(
@@ -29,33 +28,26 @@ def start_mission_event_handler(
         return None
     state_machine.start_mission(mission=mission)
     response.trigger_event(MissionStartResponse(mission_started=True))
-    return state_machine.start_mission_monitoring  # type: ignore
+    return Monitor.transition(mission.id)
 
 
 def return_home_event_handler(
-    state_machine: "StateMachine", event: Event[bool]
-) -> Optional[Callable]:
-    if not event.consume_event():
-        return None
-
+    state_machine: "StateMachine", should_return_home: bool
+) -> Optional[Transition["ReturningHome.ReturningHome"]]:
     state_machine.events.api_requests.return_home.response.trigger_event(True)
     state_machine.start_return_home_mission()
-    return state_machine.start_return_home_monitoring  # type: ignore
+    return ReturningHome.transition()
 
 
 def stop_mission_event_handler(
-    state_machine: "StateMachine", event: Event[str]
-) -> Optional[Callable]:
-    mission_id: str = event.consume_event()
-    if mission_id is None:
-        return None
-
-    if state_machine.shared_state.mission_id.check() == mission_id or mission_id == "":
+    state_machine: "StateMachine", mission_id: str, current_mission_id: Optional[str]
+) -> Optional[Transition["Stopping.Stopping"]]:
+    if current_mission_id == mission_id or mission_id == "":
         state_machine.events.api_requests.stop_mission.response.trigger_event(
             ControlMissionResponse(success=True)
         )
         state_machine.events.state_machine_events.stop_mission.trigger_event(True)
-        return state_machine.stop  # type: ignore
+        return Stopping.transition(current_mission_id)
     else:
         state_machine.events.api_requests.stop_mission.response.trigger_event(
             ControlMissionResponse(success=False, failure_reason="Mission not found")
@@ -65,74 +57,17 @@ def stop_mission_event_handler(
 
 def mission_started_event_handler(
     state_machine: "StateMachine",
-    event: Event[bool],
-) -> Optional[Callable]:
-    if not event.consume_event():
-        return None
-
+    mission_has_started: bool,
+) -> None:
     state_machine.logger.info("Received confirmation that mission has started")
     return None
 
 
-def failed_stop_event_handler(
-    state_machine: "StateMachine",
-    event: Event[ErrorMessage],
-) -> Optional[Callable]:
-    error_message: Optional[ErrorMessage] = event.consume_event()
-    if error_message is None:
-        return None
-
-    stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
-        success=False, failure_reason="ISAR failed to stop mission"
-    )
-    state_machine.events.api_requests.stop_mission.response.trigger_event(
-        stopped_mission_response
-    )
-    return state_machine.mission_stopping_failed  # type: ignore
-
-
-def successful_stop_event_handler(
-    state_machine: "StateMachine", event: Event[bool]
-) -> Optional[Callable]:
-    if not event.consume_event():
-        return None
-
-    state_machine.events.api_requests.stop_mission.response.trigger_event(
-        ControlMissionResponse(success=True)
-    )
-    state_machine.print_transitions()
-    if not state_machine.battery_level_is_above_mission_start_threshold():
-        state_machine.start_return_home_mission()
-        return state_machine.start_return_home_monitoring  # type: ignore
-    return state_machine.mission_stopped  # type: ignore
-
-
-def failed_stop_return_home_event_handler(
-    state_machine: "StateMachine", event: Event[ErrorMessage]
-) -> Optional[Callable]:
-    error_message: Optional[ErrorMessage] = event.consume_event()
-    if error_message is None:
-        return None
-
-    state_machine.logger.warning(
-        f"Failed to stop return home mission {error_message.error_description}"
-    )
-    return state_machine.return_home_mission_stopping_failed  # type: ignore
-
-
 def successful_stop_return_home_event_handler(
-    state_machine: "StateMachine", event: Event[bool], mission: Optional[Mission]
-) -> Optional[Callable]:
-    if not event.consume_event():
-        return None
-
-    if mission:
-        state_machine.start_mission(mission=mission)
-        state_machine.events.api_requests.start_mission.response.trigger_event(
-            MissionStartResponse(mission_started=True)
-        )
-        return state_machine.start_mission_monitoring  # type: ignore
-
-    state_machine.logger.error("Stopped return home without a new mission to start")
-    state_machine.start_return_home_mission()
-    return state_machine.start_return_home_monitoring  # type: ignore
+    state_machine: "StateMachine", has_stopped: bool, mission: Optional[Mission]
+) -> Transition["Monitor.Monitor"]:
+    state_machine.start_mission(mission=mission)
+    state_machine.events.api_requests.start_mission.response.trigger_event(
+        MissionStartResponse(mission_started=True)
+    )
+    return Monitor.transition(mission.id)

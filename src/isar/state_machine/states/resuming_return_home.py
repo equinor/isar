@@ -1,33 +1,29 @@
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING, List
 
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
-from isar.models.events import Event
+import isar.state_machine.states.return_home_paused as ReturnHomePaused
+import isar.state_machine.states.returning_home as ReturningHome
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class ResumingReturnHome(EventHandlerBase):
+class ResumingReturnHome(State):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
         def _failed_resume_event_handler(
-            event: Event[ErrorMessage],
-        ) -> Optional[Callable]:
-            error_message: Optional[ErrorMessage] = event.consume_event()
+            error_message: ErrorMessage,
+        ) -> Transition[ReturnHomePaused.ReturnHomePaused]:
+            return ReturnHomePaused.transition()
 
-            if error_message is None:
-                return None
-
-            return state_machine.return_home_mission_resuming_failed  # type: ignore
-
-        def _successful_resume_event_handler(event: Event[bool]) -> Optional[Callable]:
-            if not event.consume_event():
-                return None
-
-            return state_machine.return_home_mission_resumed  # type: ignore
+        def _successful_resume_event_handler(
+            successful_resume: bool,
+        ) -> Transition[ReturningHome.ReturningHome]:
+            return ReturningHome.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -42,7 +38,14 @@ class ResumingReturnHome(EventHandlerBase):
             ),
         ]
         super().__init__(
-            state_name="resuming_return_home",
+            state_name=States.ResumingReturnHome,
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition() -> Transition[ResumingReturnHome]:
+    def _transition(state_machine: "StateMachine"):
+        return ResumingReturnHome(state_machine)
+
+    return _transition

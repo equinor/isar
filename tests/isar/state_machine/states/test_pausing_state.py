@@ -1,27 +1,24 @@
 from typing import Optional, cast
 
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
+from isar.state_machine.states.monitor import Monitor
+from isar.state_machine.states.pausing import Pausing
 
 
 def test_transition_from_monitor_to_pausing(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.state = sync_state_machine.monitor_state.name  # type: ignore
+    sync_state_machine.current_state = Monitor(sync_state_machine, "mission_id")
 
-    monitor_state: EventHandlerBase = cast(
-        EventHandlerBase, sync_state_machine.monitor_state
-    )
+    monitor_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
         monitor_state.get_event_handler_by_name("pause_mission_event")
     )
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
-    assert transition is sync_state_machine.pause  # type: ignore
-
-    transition()
-    assert sync_state_machine.state is sync_state_machine.pausing_state.name  # type: ignore
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is Pausing

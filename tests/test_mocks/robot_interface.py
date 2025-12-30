@@ -7,6 +7,7 @@ from typing import Callable, List, Optional
 from alitra import Frame, Orientation, Pose, Position
 
 from isar.models.events import Event
+from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotCommunicationException,
     RobotMissionStatusException,
@@ -145,15 +146,15 @@ class StubRobotOfflineToAvailableTest(StubRobot):
 
 
 class StubRobotBlockedProtectiveStopToHomeTest(StubRobot):
-    def __init__(self, current_state: Event):
+    def __init__(self, current_state_event: Event[States]):
         self.entered_blocked_p_stop = False
-        self.current_state = current_state
+        self.current_state_event = current_state_event
 
     def robot_status(self) -> RobotStatus:
-        current_state = self.current_state.check()
+        current_state: States = self.current_state_event.check()
         if current_state is None:
             raise RobotCommunicationException("Could not read state machine state")
-        if current_state == "blocked_protective_stop":
+        if current_state == States.BlockedProtectiveStop:
             self.entered_blocked_p_stop = True
             return RobotStatus.Home
         if not self.entered_blocked_p_stop:
@@ -199,9 +200,9 @@ class StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(StubRobot):
         current_state = self.current_state.check()
         if current_state is None:
             raise RobotCommunicationException("Could not read state machine state")
-        if current_state == "home":
+        if current_state == States.Home:
             return RobotStatus.Home
-        elif current_state == "unknown_status":
+        elif current_state == States.UnknownStatus:
             return RobotStatus.Home
         elif self.return_home_mission_just_finished_successfully:
             return RobotStatus.Home

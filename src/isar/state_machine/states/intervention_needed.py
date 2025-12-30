@@ -1,9 +1,11 @@
-from collections.abc import Callable
 from typing import TYPE_CHECKING, List, Optional
 
+import isar.state_machine.states.home as Home
+import isar.state_machine.states.maintenance as Maintenance
+import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import MaintenanceResponse
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
-from isar.models.events import Event
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import return_home_event_handler
 from robot_interface.models.mission.status import RobotStatus
 
@@ -11,44 +13,37 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class InterventionNeeded(EventHandlerBase):
+class InterventionNeeded(State):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
-        def _set_maintenance_mode_event_handler(event: Event[bool]):
-            should_set_maintenande_mode: bool = event.consume_event()
-            if should_set_maintenande_mode:
-                events.api_requests.set_maintenance_mode.response.trigger_event(
-                    MaintenanceResponse(is_maintenance_mode=True)
-                )
-                return state_machine.set_maintenance_mode  # type: ignore
-            return None
+        def _set_maintenance_mode_event_handler(
+            should_set_maintenande_mode: bool,
+        ) -> Transition[Maintenance.Maintenance]:
+            events.api_requests.set_maintenance_mode.response.trigger_event(
+                MaintenanceResponse(is_maintenance_mode=True)
+            )
+            return Maintenance.transition()
 
         def release_intervention_needed_handler(
-            event: Event[bool],
-        ) -> Optional[Callable]:
-            if not event.consume_event():
-                return None
-
+            should_release: bool,
+        ) -> Transition[UnknownStatus.UnknownStatus]:
             state_machine.events.api_requests.release_intervention_needed.response.trigger_event(
                 True
             )
-            return state_machine.release_intervention_needed  # type: ignore
+            return UnknownStatus.transition()
 
         def _robot_status_event_handler(
-            status_changed_event: Event[bool],
-        ) -> Optional[Callable]:
-            has_changed = status_changed_event.consume_event()
-            if not has_changed:
-                return None
+            has_changed: bool,
+        ) -> Optional[Transition[Home.Home]]:
             robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
             if robot_status == RobotStatus.Home:
                 self.logger.info(
                     "Got robot status home while in intervention needed state. Leaving intervention needed state."
                 )
-                return state_machine.go_to_home  # type: ignore
+                return Home.transition()
             return None
 
         event_handlers: List[EventHandlerMapping] = [
@@ -74,7 +69,14 @@ class InterventionNeeded(EventHandlerBase):
             ),
         ]
         super().__init__(
-            state_name="intervention_needed",
+            state_name=States.InterventionNeeded,
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition() -> Transition[InterventionNeeded]:
+    def _transition(state_machine: "StateMachine"):
+        return InterventionNeeded(state_machine)
+
+    return _transition

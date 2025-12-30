@@ -1,9 +1,16 @@
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
+import isar.state_machine.states.await_next_mission as AwaitNextMission
+import isar.state_machine.states.blocked_protective_stop as BlockedProtectiveStop
+import isar.state_machine.states.lockdown as Lockdown
+import isar.state_machine.states.maintenance as Maintenance
+import isar.state_machine.states.offline as Offline
+import isar.state_machine.states.recharging as Recharging
+import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import LockdownResponse, MaintenanceResponse
 from isar.config.settings import settings
-from isar.eventhandlers.eventhandler import EventHandlerBase, EventHandlerMapping
-from isar.models.events import Event
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import (
     return_home_event_handler,
     start_mission_event_handler,
@@ -15,37 +22,41 @@ if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
 
 
-class Home(EventHandlerBase):
+class Home(State):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
-        def _send_to_lockdown_event_handler(event: Event[bool]):
-            should_send_robot_home: bool = event.consume_event()
-            if not should_send_robot_home:
-                return None
+        # This clears the current robot status value, so we don't read an outdated value
+        events.robot_service_events.robot_status_changed.clear_event()
 
+        def _send_to_lockdown_event_handler(
+            should_send_robot_home: bool,
+        ) -> Transition[Lockdown.Lockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
-            return state_machine.reached_lockdown  # type: ignore
+            return Lockdown.transition()
 
-        def _set_maintenance_mode_event_handler(event: Event[bool]):
-            should_set_maintenande_mode: bool = event.consume_event()
-            if should_set_maintenande_mode:
-                events.api_requests.set_maintenance_mode.response.trigger_event(
-                    MaintenanceResponse(is_maintenance_mode=True)
-                )
-                return state_machine.set_maintenance_mode  # type: ignore
-            return None
+        def _set_maintenance_mode_event_handler(
+            should_set_maintenande_mode: bool,
+        ) -> Optional[Transition[Maintenance.Maintenance]]:
+            events.api_requests.set_maintenance_mode.response.trigger_event(
+                MaintenanceResponse(is_maintenance_mode=True)
+            )
+            return Maintenance.transition()
 
         def _robot_status_event_handler(
-            status_changed_event: Event[bool],
-        ) -> Optional[Callable]:
-            has_changed = status_changed_event.consume_event()
-            if not has_changed:
-                return None
+            has_changed: bool,
+        ) -> Optional[
+            Union[
+                Transition[AwaitNextMission.AwaitNextMission],
+                Transition[Offline.Offline],
+                Transition[BlockedProtectiveStop.BlockedProtectiveStop],
+                Transition[UnknownStatus.UnknownStatus],
+            ]
+        ]:
             robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
             if robot_status == RobotStatus.Home:
                 return None
@@ -53,33 +64,32 @@ class Home(EventHandlerBase):
                 self.logger.info(
                     "Got robot status available while in home state. Leaving home state."
                 )
-                return state_machine.robot_status_available  # type: ignore
+                return AwaitNextMission.transition()
             elif robot_status == RobotStatus.Offline:
                 self.logger.info(
                     "Got robot status offline while in home state. Leaving home state."
                 )
-                return state_machine.robot_status_offline  # type: ignore
+                return Offline.transition()
             elif robot_status == RobotStatus.BlockedProtectiveStop:
                 self.logger.info(
                     "Got robot status blocked protective stop while in home state. Leaving home state."
                 )
-                return state_machine.robot_status_blocked_protective_stop  # type: ignore
+                return BlockedProtectiveStop.transition()
             self.logger.info(
                 f"Got unexpected status {robot_status} while in home state. Leaving home state."
             )
-            return state_machine.robot_status_unknown  # type: ignore
+            return UnknownStatus.transition()
 
         def _robot_battery_level_updated_handler(
-            event: Event[float],
-        ) -> Optional[Callable]:
-            battery_level: float = event.check()
+            battery_level: float,
+        ) -> Optional[Transition[Recharging.Recharging]]:
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
             ):
                 return None
 
-            return state_machine.starting_recharging  # type: ignore
+            return Recharging.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
@@ -97,7 +107,9 @@ class Home(EventHandlerBase):
             EventHandlerMapping(
                 name="stop_mission_event",
                 event=events.api_requests.return_home.request,
-                handler=lambda event: stop_mission_event_handler(state_machine, event),
+                handler=lambda event: stop_mission_event_handler(
+                    state_machine, event, None
+                ),
             ),
             EventHandlerMapping(
                 name="robot_status_event",
@@ -113,6 +125,7 @@ class Home(EventHandlerBase):
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
+                should_not_consume=True,
             ),
             EventHandlerMapping(
                 name="set_maintenance_mode",
@@ -121,7 +134,16 @@ class Home(EventHandlerBase):
             ),
         ]
         super().__init__(
-            state_name="home",
+            state_name=States.Home,
             state_machine=state_machine,
             event_handler_mappings=event_handlers,
         )
+
+
+def transition() -> Transition["Home"]:
+    def _transition(state_machine: "StateMachine"):
+        from .home import Home
+
+        return Home(state_machine)
+
+    return _transition
