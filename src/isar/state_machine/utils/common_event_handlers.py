@@ -14,13 +14,9 @@ if TYPE_CHECKING:
 
 def start_mission_event_handler(
     state_machine: "StateMachine",
-    event: Event[Mission],
+    mission: Mission,
     response: Event[MissionStartResponse],
 ) -> Optional[Transition["Monitor.Monitor"]]:
-    mission: Optional[Mission] = event.consume_event()
-    if not mission:
-        return None
-
     if not state_machine.battery_level_is_above_mission_start_threshold():
         response.trigger_event(
             MissionStartResponse(
@@ -36,23 +32,16 @@ def start_mission_event_handler(
 
 
 def return_home_event_handler(
-    state_machine: "StateMachine", event: Event[bool]
+    state_machine: "StateMachine", should_return_home: bool
 ) -> Optional[Transition["ReturningHome.ReturningHome"]]:
-    if not event.consume_event():
-        return None
-
     state_machine.events.api_requests.return_home.response.trigger_event(True)
     state_machine.start_return_home_mission()
     return ReturningHome.transition()
 
 
 def stop_mission_event_handler(
-    state_machine: "StateMachine", event: Event[str], current_mission_id: Optional[str]
+    state_machine: "StateMachine", mission_id: str, current_mission_id: Optional[str]
 ) -> Optional[Transition["Stopping.Stopping"]]:
-    mission_id: str = event.consume_event()
-    if mission_id is None:
-        return None
-
     if current_mission_id == mission_id or mission_id == "":
         state_machine.events.api_requests.stop_mission.response.trigger_event(
             ControlMissionResponse(success=True)
@@ -68,21 +57,15 @@ def stop_mission_event_handler(
 
 def mission_started_event_handler(
     state_machine: "StateMachine",
-    event: Event[bool],
+    mission_has_started: bool,
 ) -> None:
-    if not event.consume_event():
-        return None
-
     state_machine.logger.info("Received confirmation that mission has started")
     return None
 
 
 def successful_stop_return_home_event_handler(
-    state_machine: "StateMachine", event: Event[bool], mission: Optional[Mission]
-) -> Optional[Transition["Monitor.Monitor"]]:
-    if not event.consume_event():
-        return None
-
+    state_machine: "StateMachine", has_stopped: bool, mission: Mission
+) -> Transition["Monitor.Monitor"]:
     state_machine.start_mission(mission=mission)
     state_machine.events.api_requests.start_mission.response.trigger_event(
         MissionStartResponse(mission_started=True)

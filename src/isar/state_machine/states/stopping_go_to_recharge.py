@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.monitor as Monitor
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -17,20 +16,13 @@ class StoppingGoToRecharge(State):
         events = state_machine.events
 
         def _failed_stop_event_handler(
-            event: Event[ErrorMessage],
-        ) -> Optional[Transition[Monitor.Monitor]]:
-            error_message: Optional[ErrorMessage] = event.consume_event()
-            if error_message is None:
-                return None
-
+            error_message: ErrorMessage,
+        ) -> Transition[Monitor.Monitor]:
             return Monitor.transition(mission_id)
 
         def _successful_stop_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[GoingToRecharging.GoingToRecharging]]:
-            if not event.consume_event():
-                return None
-
+            successful_stop: bool,
+        ) -> Transition[GoingToRecharging.GoingToRecharging]:
             state_machine.publish_mission_aborted(
                 mission_id, "Robot battery too low to continue mission", True
             )

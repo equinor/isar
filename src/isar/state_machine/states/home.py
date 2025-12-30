@@ -10,7 +10,6 @@ import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import LockdownResponse, MaintenanceResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import (
     return_home_event_handler,
@@ -33,30 +32,23 @@ class Home(State):
         events.robot_service_events.robot_status_changed.clear_event()
 
         def _send_to_lockdown_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[Lockdown.Lockdown]]:
-            should_send_robot_home: bool = event.consume_event()
-            if not should_send_robot_home:
-                return None
-
+            should_send_robot_home: bool,
+        ) -> Transition[Lockdown.Lockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
             return Lockdown.transition()
 
         def _set_maintenance_mode_event_handler(
-            event: Event[bool],
+            should_set_maintenande_mode: bool,
         ) -> Optional[Transition[Maintenance.Maintenance]]:
-            should_set_maintenande_mode: bool = event.consume_event()
-            if should_set_maintenande_mode:
-                events.api_requests.set_maintenance_mode.response.trigger_event(
-                    MaintenanceResponse(is_maintenance_mode=True)
-                )
-                return Maintenance.transition()
-            return None
+            events.api_requests.set_maintenance_mode.response.trigger_event(
+                MaintenanceResponse(is_maintenance_mode=True)
+            )
+            return Maintenance.transition()
 
         def _robot_status_event_handler(
-            status_changed_event: Event[bool],
+            has_changed: bool,
         ) -> Optional[
             Union[
                 Transition[AwaitNextMission.AwaitNextMission],
@@ -65,9 +57,6 @@ class Home(State):
                 Transition[UnknownStatus.UnknownStatus],
             ]
         ]:
-            has_changed = status_changed_event.consume_event()
-            if not has_changed:
-                return None
             robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
             if robot_status == RobotStatus.Home:
                 return None
@@ -92,9 +81,8 @@ class Home(State):
             return UnknownStatus.transition()
 
         def _robot_battery_level_updated_handler(
-            event: Event[float],
+            battery_level: float,
         ) -> Optional[Transition[Recharging.Recharging]]:
-            battery_level: float = event.check()
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
@@ -137,6 +125,7 @@ class Home(State):
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
+                should_not_consume=True,
             ),
             EventHandlerMapping(
                 name="set_maintenance_mode",

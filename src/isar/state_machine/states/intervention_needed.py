@@ -5,7 +5,6 @@ import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from isar.state_machine.utils.common_event_handlers import return_home_event_handler
 from robot_interface.models.mission.status import RobotStatus
@@ -21,33 +20,24 @@ class InterventionNeeded(State):
         shared_state = state_machine.shared_state
 
         def _set_maintenance_mode_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[Maintenance.Maintenance]]:
-            should_set_maintenande_mode: bool = event.consume_event()
-            if should_set_maintenande_mode:
-                events.api_requests.set_maintenance_mode.response.trigger_event(
-                    MaintenanceResponse(is_maintenance_mode=True)
-                )
-                return Maintenance.transition()
-            return None
+            should_set_maintenande_mode: bool,
+        ) -> Transition[Maintenance.Maintenance]:
+            events.api_requests.set_maintenance_mode.response.trigger_event(
+                MaintenanceResponse(is_maintenance_mode=True)
+            )
+            return Maintenance.transition()
 
         def release_intervention_needed_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[UnknownStatus.UnknownStatus]]:
-            if not event.consume_event():
-                return None
-
+            should_release: bool,
+        ) -> Transition[UnknownStatus.UnknownStatus]:
             state_machine.events.api_requests.release_intervention_needed.response.trigger_event(
                 True
             )
             return UnknownStatus.transition()
 
         def _robot_status_event_handler(
-            status_changed_event: Event[bool],
+            has_changed: bool,
         ) -> Optional[Transition[Home.Home]]:
-            has_changed = status_changed_event.consume_event()
-            if not has_changed:
-                return None
             robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
             if robot_status == RobotStatus.Home:
                 self.logger.info(

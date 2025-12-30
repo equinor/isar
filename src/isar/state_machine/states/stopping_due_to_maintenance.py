@@ -1,11 +1,10 @@
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List, Union
 
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -19,39 +18,34 @@ class StoppingDueToMaintenance(State):
         events = state_machine.events
 
         def _failed_stop_event_handler(
-            event: Event[ErrorMessage],
-        ) -> Optional[
-            Union[Transition[ReturningHome.ReturningHome], Transition[Monitor.Monitor]]
+            error_message: ErrorMessage,
+        ) -> Union[
+            Transition[ReturningHome.ReturningHome], Transition[Monitor.Monitor]
         ]:
-            error_message: Optional[ErrorMessage] = event.consume_event()
-            if error_message is not None:
-                events.api_requests.set_maintenance_mode.response.trigger_event(
-                    MaintenanceResponse(
-                        is_maintenance_mode=False,
-                        failure_reason="Failed to stop ongoing mission",
-                    )
+            events.api_requests.set_maintenance_mode.response.trigger_event(
+                MaintenanceResponse(
+                    is_maintenance_mode=False,
+                    failure_reason="Failed to stop ongoing mission",
                 )
-                state_machine.logger.error(
-                    f"Failed to stop mission in StoppingDueToMaintenance. Message: {error_message.error_description}"
-                )
-                # TODO: see https://github.com/equinor/isar/issues/1047
-                if mission_id == "":
-                    return ReturningHome.transition()
-                return Monitor.transition(mission_id)
-            return None
+            )
+            state_machine.logger.error(
+                f"Failed to stop mission in StoppingDueToMaintenance. Message: {error_message.error_description}"
+            )
+            # TODO: see https://github.com/equinor/isar/issues/1047
+            if mission_id == "":
+                return ReturningHome.transition()
+            return Monitor.transition(mission_id)
 
         def _successful_stop_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[Maintenance.Maintenance]]:
-            if event.consume_event():
-                state_machine.publish_mission_aborted(
-                    mission_id, "Mission aborted, robot being sent to maintenance", True
-                )
-                events.api_requests.set_maintenance_mode.response.trigger_event(
-                    MaintenanceResponse(is_maintenance_mode=True)
-                )
-                return Maintenance.transition()
-            return None
+            successful_stop: bool,
+        ) -> Transition[Maintenance.Maintenance]:
+            state_machine.publish_mission_aborted(
+                mission_id, "Mission aborted, robot being sent to maintenance", True
+            )
+            events.api_requests.set_maintenance_mode.response.trigger_event(
+                MaintenanceResponse(is_maintenance_mode=True)
+            )
+            return Maintenance.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(

@@ -22,10 +22,9 @@ def test_stopping_paused_mission_fails(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(
+    transition = event_handler.handler(
         ErrorMessage(error_description="", error_reason=ErrorReason.RobotAPIException)
     )
-    transition = event_handler.handler(event_handler.event)
 
     assert sync_state_machine.events.mqtt_queue.empty()
 
@@ -47,8 +46,7 @@ def test_stopping_paused_mission_succeeds(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert sync_state_machine.events.mqtt_queue.empty()
 
@@ -70,8 +68,7 @@ def test_stopping_paused_mission_succeeds_with_low_battery(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(True)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(True)
 
     assert sync_state_machine.events.mqtt_queue.empty()
 

@@ -22,8 +22,7 @@ def test_going_to_recharging_goes_to_intervention_needed(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(MissionStatus.Failed)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(MissionStatus.Failed)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is InterventionNeeded
@@ -42,8 +41,7 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
 
     assert event_handler is not None
 
-    event_handler.event.trigger_event(MissionStatus.Failed)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(MissionStatus.Failed)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is InterventionNeeded
@@ -63,10 +61,9 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
     assert event_handler is not None
 
     # The type of error reason is not important for this test
-    event_handler.event.trigger_event(
+    transition = event_handler.handler(
         ErrorMessage(error_description="", error_reason=ErrorReason.RobotAPIException)
     )
-    transition = event_handler.handler(event_handler.event)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is InterventionNeeded
@@ -90,14 +87,12 @@ def test_state_machine_with_return_home_failure(
 
     for i in range(settings.RETURN_HOME_RETRY_LIMIT - 1):
 
-        event_handler.event.trigger_event(MissionStatus.Failed)
-        transition = event_handler.handler(event_handler.event)
+        transition = event_handler.handler(MissionStatus.Failed)
 
         assert transition is None  # type: ignore
         assert sync_state_machine.current_state.failed_return_home_attempts == i + 1
 
-    event_handler.event.trigger_event(MissionStatus.Failed)
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(MissionStatus.Failed)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is InterventionNeeded
@@ -114,13 +109,12 @@ def test_return_home_mission_failed_transitions_to_intervention_needed(
     )
     assert event_handler is not None
 
-    event_handler.event.trigger_event(
+    transition = event_handler.handler(
         ErrorMessage(
             error_description="Test return to home mission failed",
             error_reason=ErrorReason.RobotMissionStatusException,
         )
     )
-    transition = event_handler.handler(event_handler.event)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is InterventionNeeded
@@ -147,7 +141,6 @@ def test_intervention_needed_transitions_does_not_transition_if_status_is_not_ho
     for status in statuses:
         sync_state_machine.shared_state.robot_status.update(status)
 
-        event_handler.event.trigger_event(True)
-        transition = event_handler.handler(event_handler.event)
+        transition = event_handler.handler(True)
 
         assert transition is None  # type: ignore

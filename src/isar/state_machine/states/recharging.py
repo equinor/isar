@@ -7,7 +7,6 @@ import isar.state_machine.states.offline as Offline
 from isar.apis.models.models import LockdownResponse, MaintenanceResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import Event
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
@@ -21,21 +20,17 @@ class Recharging(State):
         shared_state = state_machine.shared_state
         events = state_machine.events
 
-        def robot_battery_level_updated_handler(event: Event[float]):
-            battery_level: float = event.check()
+        def robot_battery_level_updated_handler(
+            battery_level: float,
+        ) -> Optional[Transition[Home.Home]]:
             if battery_level < settings.ROBOT_BATTERY_RECHARGE_THRESHOLD:
                 return None
 
             return Home.transition()
 
         def robot_offline_handler(
-            event: Event[RobotStatus],
+            robot_status: RobotStatus,
         ) -> Optional[Transition[Offline.Offline]]:
-            robot_status: Optional[RobotStatus] = event.check()
-
-            if robot_status is None:
-                return None
-
             if robot_status == RobotStatus.Offline:
                 self.logger.info(
                     "Got robot status offline while in recharging state. Leaving recharging state."
@@ -44,33 +39,27 @@ class Recharging(State):
             return None
 
         def _send_to_lockdown_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[Lockdown.Lockdown]]:
-            should_lockdown: bool = event.consume_event()
-            if not should_lockdown:
-                return None
-
+            should_lockdown: bool,
+        ) -> Transition[Lockdown.Lockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
             return Lockdown.transition()
 
         def _set_maintenance_mode_event_handler(
-            event: Event[bool],
-        ) -> Optional[Transition[Maintenance.Maintenance]]:
-            should_set_maintenande_mode: bool = event.consume_event()
-            if should_set_maintenande_mode:
-                events.api_requests.set_maintenance_mode.response.trigger_event(
-                    MaintenanceResponse(is_maintenance_mode=True)
-                )
-                return Maintenance.transition()
-            return None
+            should_set_maintenande_mode: bool,
+        ) -> Transition[Maintenance.Maintenance]:
+            events.api_requests.set_maintenance_mode.response.trigger_event(
+                MaintenanceResponse(is_maintenance_mode=True)
+            )
+            return Maintenance.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping(
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=robot_battery_level_updated_handler,
+                should_not_consume=True,
             ),
             EventHandlerMapping(
                 name="robot_offline_event",
