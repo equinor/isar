@@ -106,7 +106,7 @@ class Home(State):
             ),
             EventHandlerMapping(
                 name="stop_mission_event",
-                event=events.api_requests.return_home.request,
+                event=events.api_requests.stop_mission.request,
                 handler=lambda event: stop_mission_event_handler(
                     state_machine, event, None
                 ),
