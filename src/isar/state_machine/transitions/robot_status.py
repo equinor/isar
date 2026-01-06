@@ -76,6 +76,16 @@ def get_robot_status_transitions(state_machine: "StateMachine") -> List[dict]:
             "dest": state_machine.stopping_state,
         },
         {
+            "trigger": "robot_status_paused",
+            "source": state_machine.monitor_state,
+            "dest": state_machine.paused_state,
+        },
+        {
+            "trigger": "robot_status_paused",
+            "source": state_machine.returning_home_state,
+            "dest": state_machine.return_home_paused_state,
+        },
+        {
             "trigger": "robot_recharged",
             "source": state_machine.recharging_state,
             "dest": state_machine.home_state,
