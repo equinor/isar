@@ -111,8 +111,8 @@ class Robot(object):
                 publish_mission_status(self.mqtt_publisher, mission)
                 self.robot_service_events.mission_failed.trigger_event(error_message)
                 return
-            else:
-                self.robot_service_events.mission_started.trigger_event(True)
+
+            self.logger.info("Received confirmation that mission has started")
 
             if (
                 self.monitor_mission_thread is not None

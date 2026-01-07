@@ -142,7 +142,6 @@ class RobotServiceEvents:
         self.mission_status_updated: Event[MissionStatus] = Event(
             "mission_status_updated"
         )
-        self.mission_started: Event[bool] = Event("mission_started")
         self.mission_failed: Event[ErrorMessage] = Event("mission_failed")
         self.robot_status_changed: Event[bool] = Event("robot_status_changed")
         self.mission_failed_to_stop: Event[ErrorMessage] = Event(
