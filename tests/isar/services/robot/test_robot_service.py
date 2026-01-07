@@ -64,7 +64,6 @@ def test_mission_succeeds_to_schedule(mocked_robot_service: Robot, mocker) -> No
 
     r_service._start_mission_done_handler()
 
-    assert r_service.robot_service_events.mission_started.has_event()
     assert not r_service.signal_mission_stopped.is_set()
     assert r_service.monitor_mission_thread is not None
     assert r_service.monitor_mission_thread.current_mission.id == mission.id

@@ -88,12 +88,6 @@ class Monitor(State):
             )
             return AwaitNextMission.transition()
 
-        def _mission_started_event_handler(
-            has_started: bool,
-        ) -> None:
-            state_machine.logger.info("Received confirmation that mission has started")
-            return None
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[str](
                 name="stop_mission_event",
@@ -106,11 +100,6 @@ class Monitor(State):
                 name="pause_mission_event",
                 event=events.api_requests.pause_mission.request,
                 handler=_pause_mission_event_handler,
-            ),
-            EventHandlerMapping[bool](
-                name="mission_started_event",
-                event=events.robot_service_events.mission_started,
-                handler=_mission_started_event_handler,
             ),
             EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
