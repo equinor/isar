@@ -91,7 +91,9 @@ class BlobStorage(StorageInterface):
             )
             raise StorageException from e
         except Exception as e:
-            self.logger.error("An unexpected error occurred while uploading blob")
+            self.logger.error(
+                "An unexpected error occurred while uploading blob: %s", e
+            )
             raise StorageException from e
 
         return BlobStoragePath(
