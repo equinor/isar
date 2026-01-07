@@ -26,12 +26,12 @@ class Pausing(State):
             return Paused.transition(mission_id)
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping(
+            EventHandlerMapping[ErrorMessage](
                 name="failed_pause_event",
                 event=events.robot_service_events.mission_failed_to_pause,
                 handler=_failed_pause_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="successful_pause_event",
                 event=events.robot_service_events.mission_successfully_paused,
                 handler=_successful_pause_event_handler,

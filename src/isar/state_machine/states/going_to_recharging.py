@@ -67,17 +67,17 @@ class GoingToRecharging(State):
             return GoingToLockdown.transition()
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping(
+            EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[MissionStatus](
                 name="mission_status_event",
                 event=events.robot_service_events.mission_status_updated,
                 handler=_mission_status_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,

@@ -41,12 +41,12 @@ class StoppingGoToLockdown(State):
             return GoingToLockdown.transition()
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping(
+            EventHandlerMapping[ErrorMessage](
                 name="failed_stop_event",
                 event=events.robot_service_events.mission_failed_to_stop,
                 handler=_failed_stop_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="successful_stop_event",
                 event=events.robot_service_events.mission_successfully_stopped,
                 handler=_successful_stop_event_handler,

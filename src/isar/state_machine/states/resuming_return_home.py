@@ -26,12 +26,12 @@ class ResumingReturnHome(State):
             return ReturningHome.transition()
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping(
+            EventHandlerMapping[ErrorMessage](
                 name="failed_resume_event",
                 event=events.robot_service_events.mission_failed_to_resume,
                 handler=_failed_resume_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="successful_resume_event",
                 event=events.robot_service_events.mission_successfully_resumed,
                 handler=_successful_resume_event_handler,

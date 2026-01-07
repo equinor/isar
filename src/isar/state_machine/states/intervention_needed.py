@@ -47,22 +47,22 @@ class InterventionNeeded(State):
             return None
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="return_home_event",
                 event=events.api_requests.return_home.request,
                 handler=lambda event: return_home_event_handler(state_machine, event),
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="release_intervention_needed_event",
                 event=events.api_requests.release_intervention_needed.request,
                 handler=release_intervention_needed_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="robot_status_event",
                 event=events.robot_service_events.robot_status_changed,
                 handler=_robot_status_event_handler,

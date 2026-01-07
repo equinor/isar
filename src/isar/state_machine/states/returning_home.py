@@ -146,50 +146,50 @@ class ReturningHome(State):
             return GoingToRecharging.transition()
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="pause_mission_event",
                 event=events.api_requests.pause_mission.request,
                 handler=_pause_mission_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="mission_started_event",
                 event=events.robot_service_events.mission_started,
                 handler=lambda event: mission_started_event_handler(
                     state_machine, event
                 ),
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[Mission](
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,
                 handler=_start_mission_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[MissionStatus](
                 name="mission_status_event",
                 event=events.robot_service_events.mission_status_updated,
                 handler=_mission_status_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[float](
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
                 should_not_consume=True,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="robot_already_home",
                 event=events.robot_service_events.robot_already_home,
                 handler=_robot_already_home_event_handler,
