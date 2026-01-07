@@ -84,28 +84,28 @@ class Paused(State):
             return Resuming.transition(mission_id)
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping(
+            EventHandlerMapping[str](
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
                 handler=_stop_mission_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="resume_mission_event",
                 event=events.api_requests.resume_mission.request,
                 handler=_resume_mission_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[float](
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
                 should_not_consume=True,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,

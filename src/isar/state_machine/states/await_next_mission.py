@@ -18,6 +18,7 @@ from isar.state_machine.utils.common_event_handlers import (
     start_mission_event_handler,
     stop_mission_event_handler,
 )
+from robot_interface.models.mission.mission import Mission
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -64,37 +65,37 @@ class AwaitNextMission(State):
             return ReturningHome.transition()
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping(
+            EventHandlerMapping[Mission](
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,
                 handler=lambda event: start_mission_event_handler(
                     state_machine, event, events.api_requests.start_mission.response
                 ),
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="return_home_event",
                 event=events.api_requests.return_home.request,
                 handler=lambda event: return_home_event_handler(state_machine, event),
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="stop_mission_event",
                 event=events.api_requests.return_home.request,
                 handler=lambda event: stop_mission_event_handler(
-                    state_machine, event, None
+                    state_machine, "", None
                 ),
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[float](
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=_robot_battery_level_updated_handler,
                 should_not_consume=True,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,

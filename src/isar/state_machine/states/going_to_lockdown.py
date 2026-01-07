@@ -62,24 +62,24 @@ class GoingToLockdown(State):
             return None
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="mission_started_event",
                 event=events.robot_service_events.mission_started,
                 handler=lambda event: mission_started_event_handler(
                     state_machine, event
                 ),
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[ErrorMessage](
                 name="mission_failed_to_resume",
                 event=events.robot_service_events.mission_failed_to_resume,
                 handler=_mission_failed_to_resume_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[MissionStatus](
                 name="mission_status_event",
                 event=events.robot_service_events.mission_status_updated,
                 handler=_mission_status_event_handler,

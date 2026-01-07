@@ -55,23 +55,23 @@ class Recharging(State):
             return Maintenance.transition()
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping(
+            EventHandlerMapping[float](
                 name="robot_battery_update_event",
                 event=shared_state.robot_battery_level,
                 handler=robot_battery_level_updated_handler,
                 should_not_consume=True,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[RobotStatus](
                 name="robot_offline_event",
                 event=shared_state.robot_status,
                 handler=robot_offline_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
             ),
-            EventHandlerMapping(
+            EventHandlerMapping[bool](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,

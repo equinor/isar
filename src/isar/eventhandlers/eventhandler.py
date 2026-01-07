@@ -28,7 +28,7 @@ class EventHandlerMapping(Generic[T]):
 class TimeoutHandlerMapping:
     name: str
     timeout_in_seconds: float
-    handler: Callable[[], Optional[Callable]]
+    handler: Callable[[], Optional[Transition]]
 
 
 if TYPE_CHECKING:
