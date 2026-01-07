@@ -33,8 +33,8 @@ class StoppingDueToMaintenance(State):
             )
             # TODO: see https://github.com/equinor/isar/issues/1047
             if mission_id == "":
-                return ReturningHome.transition()
-            return Monitor.transition(mission_id)
+                return ReturningHome.transition_to_existing_mission()
+            return Monitor.transition_with_existing_mission(mission_id)
 
         def _successful_stop_event_handler(
             successful_stop: bool,

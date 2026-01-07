@@ -23,7 +23,7 @@ class ResumingReturnHome(State):
         def _successful_resume_event_handler(
             successful_resume: bool,
         ) -> Transition[ReturningHome.ReturningHome]:
-            return ReturningHome.transition()
+            return ReturningHome.transition_to_existing_mission()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](

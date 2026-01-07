@@ -20,12 +20,6 @@ class StoppingPausedMission(State):
         def _failed_stop_event_handler(
             error_message: ErrorMessage,
         ) -> Transition[Paused.Paused]:
-            stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
-                success=False, failure_reason="ISAR failed to stop mission"
-            )
-            state_machine.events.api_requests.stop_mission.response.trigger_event(
-                stopped_mission_response
-            )
             state_machine.logger.error(
                 f"Failed to stop mission in StoppingPausedMission. Message: {error_message.error_description}"
             )
@@ -37,12 +31,8 @@ class StoppingPausedMission(State):
             Transition[ReturningHome.ReturningHome],
             Transition[AwaitNextMission.AwaitNextMission],
         ]:
-            state_machine.events.api_requests.stop_mission.response.trigger_event(
-                ControlMissionResponse(success=True)
-            )
             if not state_machine.battery_level_is_above_mission_start_threshold():
-                state_machine.start_return_home_mission()
-                return ReturningHome.transition()
+                return ReturningHome.transition_and_start_mission()
             return AwaitNextMission.transition()
 
         event_handlers: List[EventHandlerMapping] = [
@@ -64,8 +54,15 @@ class StoppingPausedMission(State):
         )
 
 
-def transition(mission_id: str) -> Transition[StoppingPausedMission]:
+def transition_and_trigger_stop(
+    mission_id: str, should_respond_to_API_request: bool = False
+) -> Transition[StoppingPausedMission]:
     def _transition(state_machine: "StateMachine"):
+        state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+        if should_respond_to_API_request:
+            state_machine.events.api_requests.stop_mission.response.trigger_event(
+                ControlMissionResponse(success=True)
+            )
         return StoppingPausedMission(state_machine, mission_id)
 
     return _transition

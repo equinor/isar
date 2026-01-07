@@ -25,7 +25,7 @@ class StoppingGoToLockdown(State):
                     failure_reason="Failed to stop ongoing mission",
                 )
             )
-            return Monitor.transition(mission_id)
+            return Monitor.transition_with_existing_mission(mission_id)
 
         def _successful_stop_event_handler(
             successful_stop: bool,

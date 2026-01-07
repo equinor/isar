@@ -2,15 +2,16 @@ from typing import TYPE_CHECKING, List, Optional
 
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.pausing as Pausing
+import isar.state_machine.states.stopping as Stopping
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
-from isar.apis.models.models import ControlMissionResponse
+from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-from isar.state_machine.utils.common_event_handlers import stop_mission_event_handler
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
@@ -88,13 +89,24 @@ class Monitor(State):
             )
             return AwaitNextMission.transition()
 
+        def _stop_mission_event_handler(
+            stop_mission_id: str,
+        ) -> Optional[Transition[Stopping.Stopping]]:
+            if mission_id == stop_mission_id or stop_mission_id == "":
+                return Stopping.transition_and_trigger_stop(mission_id, True)
+            else:
+                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                    ControlMissionResponse(
+                        success=False, failure_reason="Mission not found"
+                    )
+                )
+                return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[str](
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
-                handler=lambda event: stop_mission_event_handler(
-                    state_machine, event, mission_id
-                ),
+                handler=_stop_mission_event_handler,
             ),
             EventHandlerMapping[bool](
                 name="pause_mission_event",
@@ -135,7 +147,21 @@ class Monitor(State):
         )
 
 
-def transition(mission_id: str) -> Transition[Monitor]:
+def transition_and_start_mission(
+    mission: Mission, should_respond_to_API_request: bool = False
+) -> Transition[Monitor]:
+    def _transition(state_machine: "StateMachine"):
+        state_machine.start_mission(mission=mission)
+        if should_respond_to_API_request:
+            state_machine.events.api_requests.start_mission.response.trigger_event(
+                MissionStartResponse(mission_started=True)
+            )
+        return Monitor(state_machine, mission_id=mission.id)
+
+    return _transition
+
+
+def transition_with_existing_mission(mission_id: str) -> Transition[Monitor]:
     def _transition(state_machine: "StateMachine"):
         return Monitor(state_machine, mission_id=mission_id)
 

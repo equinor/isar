@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING, List, Optional
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.maintenance as Maintenance
+import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-from isar.state_machine.utils.common_event_handlers import return_home_event_handler
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
@@ -50,7 +50,7 @@ class InterventionNeeded(State):
             EventHandlerMapping[bool](
                 name="return_home_event",
                 event=events.api_requests.return_home.request,
-                handler=lambda event: return_home_event_handler(state_machine, event),
+                handler=lambda event: ReturningHome.transition_and_start_mission(True),
             ),
             EventHandlerMapping[bool](
                 name="release_intervention_needed_event",
