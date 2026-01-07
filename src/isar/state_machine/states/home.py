@@ -6,16 +6,14 @@ import isar.state_machine.states.lockdown as Lockdown
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.recharging as Recharging
+import isar.state_machine.states.returning_home as ReturningHome
+import isar.state_machine.states.stopping as Stopping
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import LockdownResponse, MaintenanceResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-from isar.state_machine.utils.common_event_handlers import (
-    return_home_event_handler,
-    start_mission_event_handler,
-    stop_mission_event_handler,
-)
+from isar.state_machine.utils.common_event_handlers import start_mission_event_handler
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus
 
@@ -84,13 +82,15 @@ class Home(State):
         def _robot_battery_level_updated_handler(
             battery_level: float,
         ) -> Optional[Transition[Recharging.Recharging]]:
-            if (
-                battery_level is None
-                or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
-            ):
+            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
                 return None
 
             return Recharging.transition()
+
+        def _stop_mission_event_handler(
+            mission_id: str,
+        ) -> Transition[Stopping.Stopping]:
+            return Stopping.transition_and_trigger_stop(mission_id, True)
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[Mission](
@@ -103,14 +103,12 @@ class Home(State):
             EventHandlerMapping[bool](
                 name="return_home_event",
                 event=events.api_requests.return_home.request,
-                handler=lambda event: return_home_event_handler(state_machine, event),
+                handler=lambda event: ReturningHome.transition_and_start_mission(True),
             ),
             EventHandlerMapping[str](
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
-                handler=lambda event: stop_mission_event_handler(
-                    state_machine, event, None
-                ),
+                handler=_stop_mission_event_handler,
             ),
             EventHandlerMapping[bool](
                 name="robot_status_event",

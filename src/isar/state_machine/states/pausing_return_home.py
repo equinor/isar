@@ -18,7 +18,7 @@ class PausingReturnHome(State):
         def _failed_pause_event_handler(
             error_message: ErrorMessage,
         ) -> Transition[ReturningHome.ReturningHome]:
-            return ReturningHome.transition()
+            return ReturningHome.transition_to_existing_mission()
 
         def _successful_pause_event_handler(
             successful_pause: bool,

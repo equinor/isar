@@ -18,7 +18,7 @@ class Pausing(State):
         def _failed_pause_event_handler(
             error_message: ErrorMessage,
         ) -> Transition[Monitor.Monitor]:
-            return Monitor.transition(mission_id)
+            return Monitor.transition_with_existing_mission(mission_id)
 
         def _successful_pause_event_handler(
             successful_pause: bool,

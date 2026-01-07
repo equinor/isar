@@ -1,12 +1,10 @@
 from typing import TYPE_CHECKING, List
 
+import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.return_home_paused as ReturnHomePaused
 from isar.apis.models.models import MissionStartResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-from isar.state_machine.utils.common_event_handlers import (
-    successful_stop_return_home_event_handler,
-)
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 
@@ -42,8 +40,8 @@ class StoppingPausedReturnHome(State):
             EventHandlerMapping[bool](
                 name="successful_stop_event",
                 event=events.robot_service_events.mission_successfully_stopped,
-                handler=lambda event: successful_stop_return_home_event_handler(
-                    state_machine, event, mission
+                handler=lambda event: Monitor.transition_and_start_mission(
+                    mission, True
                 ),
             ),
         ]

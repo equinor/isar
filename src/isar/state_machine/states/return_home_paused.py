@@ -35,7 +35,7 @@ class ReturnHomePaused(State):
                 return None
 
             state_machine.events.state_machine_events.resume_mission.trigger_event(True)
-            return ReturningHome.transition()
+            return ReturningHome.transition_to_existing_mission()
 
         def _start_mission_event_handler(
             mission: Mission,

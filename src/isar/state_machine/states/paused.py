@@ -23,13 +23,9 @@ class Paused(State):
             stop_mission_id: str,
         ) -> Optional[Transition[StoppingPausedMission.StoppingPausedMission]]:
             if mission_id == stop_mission_id or stop_mission_id == "":
-                state_machine.events.api_requests.stop_mission.response.trigger_event(
-                    ControlMissionResponse(success=True)
+                return StoppingPausedMission.transition_and_trigger_stop(
+                    mission_id, True
                 )
-                state_machine.events.state_machine_events.stop_mission.trigger_event(
-                    True
-                )
-                return StoppingPausedMission.transition(mission_id)
             else:
                 state_machine.events.api_requests.stop_mission.response.trigger_event(
                     ControlMissionResponse(
@@ -53,8 +49,7 @@ class Paused(State):
             state_machine.logger.warning(
                 "Cancelling current mission due to low battery"
             )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
-            return StoppingPausedMission.transition(mission_id)
+            return StoppingPausedMission.transition_and_trigger_stop(mission_id)
 
         def _send_to_lockdown_event_handler(
             should_lockdown: bool,

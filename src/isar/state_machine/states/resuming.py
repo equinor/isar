@@ -23,7 +23,7 @@ class Resuming(State):
         def _successful_resume_event_handler(
             successful_resume: bool,
         ) -> Transition[Monitor.Monitor]:
-            return Monitor.transition(mission_id)
+            return Monitor.transition_with_existing_mission(mission_id)
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](

@@ -4,6 +4,7 @@ import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.returning_home as ReturningHome
+import isar.state_machine.states.stopping as Stopping
 from isar.apis.models.models import LockdownResponse, MaintenanceResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import (
@@ -13,11 +14,7 @@ from isar.eventhandlers.eventhandler import (
     Transition,
 )
 from isar.state_machine.states_enum import States
-from isar.state_machine.utils.common_event_handlers import (
-    return_home_event_handler,
-    start_mission_event_handler,
-    stop_mission_event_handler,
-)
+from isar.state_machine.utils.common_event_handlers import start_mission_event_handler
 from robot_interface.models.mission.mission import Mission
 
 if TYPE_CHECKING:
@@ -60,9 +57,10 @@ class AwaitNextMission(State):
             )
             return Maintenance.transition()
 
-        def _start_return_home() -> Transition[ReturningHome.ReturningHome]:
-            state_machine.start_return_home_mission()
-            return ReturningHome.transition()
+        def _stop_mission_event_handler(
+            mission_id: str,
+        ) -> Transition[Stopping.Stopping]:
+            return Stopping.transition_and_trigger_stop(mission_id, True)
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[Mission](
@@ -75,14 +73,12 @@ class AwaitNextMission(State):
             EventHandlerMapping[bool](
                 name="return_home_event",
                 event=events.api_requests.return_home.request,
-                handler=lambda event: return_home_event_handler(state_machine, event),
+                handler=lambda event: ReturningHome.transition_and_start_mission(True),
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[str](
                 name="stop_mission_event",
-                event=events.api_requests.return_home.request,
-                handler=lambda event: stop_mission_event_handler(
-                    state_machine, "", None
-                ),
+                event=events.api_requests.stop_mission.request,
+                handler=_stop_mission_event_handler,
             ),
             EventHandlerMapping[bool](
                 name="send_to_lockdown_event",
@@ -106,7 +102,7 @@ class AwaitNextMission(State):
             TimeoutHandlerMapping(
                 name="should_return_home_timer",
                 timeout_in_seconds=settings.RETURN_HOME_DELAY,
-                handler=_start_return_home,
+                handler=lambda: ReturningHome.transition_and_start_mission(),
             )
         ]
 

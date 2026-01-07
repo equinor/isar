@@ -39,11 +39,10 @@ def test_transition_from_paused_to_stopping_paused_mission(
 
     transition = event_handler.handler("test_id")
 
-    assert sync_state_machine.events.api_requests.stop_mission.response.has_event()
-
     sync_state_machine.current_state = transition(sync_state_machine)
 
     assert type(sync_state_machine.current_state) is StoppingPausedMission
+    assert sync_state_machine.events.api_requests.stop_mission.response.has_event()
 
 
 def test_stop_request_with_wrong_id_in_paused(

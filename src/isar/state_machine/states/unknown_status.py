@@ -9,7 +9,6 @@ import isar.state_machine.states.stopping as Stopping
 from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-from isar.state_machine.utils.common_event_handlers import stop_mission_event_handler
 from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
@@ -66,22 +65,22 @@ class UnknownStatus(State):
                 )
                 return BlockedProtectiveStop.transition()
             elif robot_status == RobotStatus.Busy:
-                state_machine.events.state_machine_events.stop_mission.trigger_event(
-                    True
-                )
                 self.logger.info(
                     "Got robot status busy while in unknown status state. Leaving unknown status state."
                 )
-                return Stopping.transition("")
+                return Stopping.transition_and_trigger_stop("")
             return None
+
+        def _stop_mission_event_handler(
+            mission_id: str,
+        ) -> Transition[Stopping.Stopping]:
+            return Stopping.transition_and_trigger_stop(mission_id, True)
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[str](
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
-                handler=lambda event: stop_mission_event_handler(
-                    state_machine, event, None
-                ),
+                handler=_stop_mission_event_handler,
             ),
             EventHandlerMapping[bool](
                 name="robot_status_event",
