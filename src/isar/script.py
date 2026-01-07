@@ -64,7 +64,10 @@ def print_startup_info():
     print_setting("Running on port", settings.API_PORT)
     print_setting("Using local storage", settings.STORAGE_LOCAL_ENABLED)
     print_setting("Using blob storage", settings.STORAGE_BLOB_ENABLED)
-    print_setting("Blob storage account", settings.BLOB_STORAGE_ACCOUNT)
+    print_setting("Blob storage account data", settings.BLOB_STORAGE_ACCOUNT_DATA)
+    print_setting(
+        "Blob storage account metadata", settings.BLOB_STORAGE_ACCOUNT_METADATA
+    )
     print_setting("Using async inspection uploading", settings.UPLOAD_INSPECTIONS_ASYNC)
     print_setting("Plant code", settings.PLANT_CODE)
     print_setting("Plant name", settings.PLANT_NAME)

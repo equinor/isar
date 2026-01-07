@@ -143,7 +143,8 @@ class Settings(BaseSettings):
     UPLOAD_INSPECTIONS_ASYNC: bool = Field(default=False)
 
     # URL to storage account for Azure Blob Storage
-    BLOB_STORAGE_ACCOUNT: str = Field(default="")
+    BLOB_STORAGE_ACCOUNT_DATA: str = Field(default="")
+    BLOB_STORAGE_ACCOUNT_METADATA: str = Field(default="")
 
     # Name of blob container in Azure Blob Storage [slimm test]
     BLOB_CONTAINER: str = Field(default="test")

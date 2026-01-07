@@ -22,13 +22,19 @@ class BlobStorage(StorageInterface):
         self.logger = logging.getLogger("uploader")
 
         self.container_client_data = self._get_container_client(
-            keyvault, "AZURE-STORAGE-CONNECTION-STRING-DATA"
+            keyvault,
+            settings.BLOB_STORAGE_ACCOUNT_DATA,
+            "AZURE-STORAGE-CONNECTION-STRING-DATA",
         )
         self.container_client_metadata = self._get_container_client(
-            keyvault, "AZURE-STORAGE-CONNECTION-STRING-METADATA"
+            keyvault,
+            settings.BLOB_STORAGE_ACCOUNT_METADATA,
+            "AZURE-STORAGE-CONNECTION-STRING-METADATA",
         )
 
-    def _get_container_client(self, keyvault: Keyvault, secret_name: str):
+    def _get_container_client(
+        self, keyvault: Keyvault, account_name: str, secret_name: str
+    ):
         storage_connection_string = keyvault.get_secret(secret_name).value
 
         if storage_connection_string is None:
@@ -38,6 +44,10 @@ class BlobStorage(StorageInterface):
             blob_service_client = BlobServiceClient.from_connection_string(
                 storage_connection_string
             )
+            if blob_service_client.account_name != account_name:
+                raise Exception(
+                    f"The blob storage in the connection string does not match the settings for blob storage account {account_name}"
+                )
         except Exception as e:
             self.logger.error("Unable to retrieve blob service client. Error: %s", e)
             raise e
@@ -71,16 +81,22 @@ class BlobStorage(StorageInterface):
             filename=data_filename,
             data=inspection.data,
             container_client=self.container_client_data,
+            account_name=settings.BLOB_STORAGE_ACCOUNT_DATA,
         )
         metadata_path = self._upload_file(
             filename=metadata_filename,
             data=metadata_bytes,
             container_client=self.container_client_metadata,
+            account_name=settings.BLOB_STORAGE_ACCOUNT_METADATA,
         )
         return StoragePaths(data_path=data_path, metadata_path=metadata_path)
 
     def _upload_file(
-        self, filename: Path, data: bytes, container_client: ContainerClient
+        self,
+        filename: Path,
+        data: bytes,
+        container_client: ContainerClient,
+        account_name: str,
     ) -> BlobStoragePath:
         blob_client = container_client.get_blob_client(filename.as_posix())
         try:
@@ -97,7 +113,7 @@ class BlobStorage(StorageInterface):
             raise StorageException from e
 
         return BlobStoragePath(
-            storage_account=settings.BLOB_STORAGE_ACCOUNT,
+            storage_account=account_name,
             blob_container=settings.BLOB_CONTAINER,
             blob_name=blob_client.blob_name,
         )
