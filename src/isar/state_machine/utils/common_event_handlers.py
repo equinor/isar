@@ -55,14 +55,6 @@ def stop_mission_event_handler(
         return None
 
 
-def mission_started_event_handler(
-    state_machine: "StateMachine",
-    mission_has_started: bool,
-) -> None:
-    state_machine.logger.info("Received confirmation that mission has started")
-    return None
-
-
 def successful_stop_return_home_event_handler(
     state_machine: "StateMachine", has_stopped: bool, mission: Mission
 ) -> Transition["Monitor.Monitor"]:

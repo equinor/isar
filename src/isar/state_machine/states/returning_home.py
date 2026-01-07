@@ -15,7 +15,6 @@ from isar.apis.models.models import (
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-from isar.state_machine.utils.common_event_handlers import mission_started_event_handler
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
@@ -145,6 +144,12 @@ class ReturningHome(State):
 
             return GoingToRecharging.transition()
 
+        def _mission_started_event_handler(
+            has_started: bool,
+        ) -> None:
+            state_machine.logger.info("Received confirmation that mission has started")
+            return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[bool](
                 name="pause_mission_event",
@@ -154,9 +159,7 @@ class ReturningHome(State):
             EventHandlerMapping[bool](
                 name="mission_started_event",
                 event=events.robot_service_events.mission_started,
-                handler=lambda event: mission_started_event_handler(
-                    state_machine, event
-                ),
+                handler=_mission_started_event_handler,
             ),
             EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",

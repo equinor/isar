@@ -66,7 +66,18 @@ class GoingToRecharging(State):
             )
             return GoingToLockdown.transition()
 
+        def _mission_started_event_handler(
+            has_started: bool,
+        ) -> None:
+            state_machine.logger.info("Received confirmation that mission has started")
+            return None
+
         event_handlers: List[EventHandlerMapping] = [
+            EventHandlerMapping[bool](
+                name="mission_started_event",
+                event=events.robot_service_events.mission_started,
+                handler=_mission_started_event_handler,
+            ),
             EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,

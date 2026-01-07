@@ -9,10 +9,7 @@ from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-from isar.state_machine.utils.common_event_handlers import (
-    mission_started_event_handler,
-    stop_mission_event_handler,
-)
+from isar.state_machine.utils.common_event_handlers import stop_mission_event_handler
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus
 
@@ -91,6 +88,12 @@ class Monitor(State):
             )
             return AwaitNextMission.transition()
 
+        def _mission_started_event_handler(
+            has_started: bool,
+        ) -> None:
+            state_machine.logger.info("Received confirmation that mission has started")
+            return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[str](
                 name="stop_mission_event",
@@ -107,9 +110,7 @@ class Monitor(State):
             EventHandlerMapping[bool](
                 name="mission_started_event",
                 event=events.robot_service_events.mission_started,
-                handler=lambda event: mission_started_event_handler(
-                    state_machine, event
-                ),
+                handler=_mission_started_event_handler,
             ),
             EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
