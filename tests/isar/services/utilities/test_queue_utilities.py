@@ -9,7 +9,7 @@ class TestQueueUtilities:
         [
             (
                 "Test",
-                10,
+                3,
                 "Test",
             ),
             (None, 1, None),

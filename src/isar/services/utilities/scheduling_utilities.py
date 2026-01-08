@@ -36,11 +36,9 @@ class SchedulingUtilities:
         self,
         events: Events,
         shared_state: SharedState,
-        queue_timeout: int = settings.QUEUE_TIMEOUT,
     ):
         self.api_events: APIRequests = events.api_requests
         self.shared_state: SharedState = shared_state
-        self.queue_timeout: int = queue_timeout
         self.logger = logging.getLogger("api")
 
     def get_state(self) -> States:
@@ -530,7 +528,7 @@ class SchedulingUtilities:
             api_event.response.clear_event()
 
             api_event.request.trigger_event(input, timeout=1)
-            return api_event.response.consume_event(timeout=self.queue_timeout)
+            return api_event.response.consume_event(timeout=settings.QUEUE_TIMEOUT)
         except EventTimeoutError as e:
             self.logger.error("Queue timed out")
             api_event.request.clear_event()
