@@ -7,7 +7,6 @@ from isar.state_machine.states.going_to_recharging import GoingToRecharging
 from isar.state_machine.states.home import Home
 from isar.state_machine.states.lockdown import Lockdown
 from isar.state_machine.states.recharging import Recharging
-from robot_interface.models.mission.status import MissionStatus
 
 
 def test_going_to_recharging_goes_to_recharge(
@@ -16,12 +15,12 @@ def test_going_to_recharging_goes_to_recharge(
     sync_state_machine.current_state = GoingToRecharging(sync_state_machine)
     going_to_recharging_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
-        going_to_recharging_state.get_event_handler_by_name("mission_status_event")
+        going_to_recharging_state.get_event_handler_by_name("mission_succeeded_event")
     )
 
     assert event_handler is not None
 
-    transition = event_handler.handler(MissionStatus.Successful)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Recharging

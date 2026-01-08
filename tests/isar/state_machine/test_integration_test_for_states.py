@@ -13,7 +13,7 @@ from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, RobotStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import TakeImage, Task
 from tests.test_mocks.pose import DummyPose
 from tests.test_mocks.robot_interface import (
@@ -84,6 +84,7 @@ def test_state_machine_failed_dependency(
     mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
+    mocker.patch.object(settings, "RETURN_HOME_RETRY_LIMIT", 3)
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
@@ -93,6 +94,7 @@ def test_state_machine_failed_dependency(
     )
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
+    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.Failed)
     mocker.patch.object(StubRobot, "mission_status", return_value=MissionStatus.Failed)
 
     state_machine_thread.start()

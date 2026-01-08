@@ -4,7 +4,7 @@ from threading import Event, Thread
 from typing import Iterator, Optional
 
 from isar.config.settings import settings
-from isar.models.events import RobotServiceEvents
+from isar.models.events import EmptyMessage, RobotServiceEvents
 from isar.services.utilities.mqtt_utilities import (
     publish_mission_status,
     publish_task_status,
@@ -248,6 +248,8 @@ class RobotMonitorMissionThread(Thread):
         current_task: Optional[TASKS] = get_next_task(self.task_iterator)
         current_task.status = TaskStatus.NotStarted
 
+        error_message: Optional[ErrorMessage] = None
+
         last_mission_status: MissionStatus = MissionStatus.NotStarted
 
         while not self.signal_thread_quitting.wait(
@@ -297,20 +299,16 @@ class RobotMonitorMissionThread(Thread):
                 new_mission_status = self._get_mission_status(self.current_mission.id)
             except RobotMissionStatusException as e:
                 self.logger.exception("Failed to collect mission status")
-                self.robot_service_events.mission_failed.trigger_event(
-                    ErrorMessage(
-                        error_reason=e.error_reason,
-                        error_description=e.error_description,
-                    )
+                self.current_mission.status = MissionStatus.Failed
+                error_message = ErrorMessage(
+                    error_reason=e.error_reason,
+                    error_description=e.error_description,
                 )
                 break
             if new_mission_status != last_mission_status:
                 self.current_mission.status = new_mission_status
                 last_mission_status = new_mission_status
                 publish_mission_status(self.mqtt_publisher, self.current_mission)
-                self.robot_service_events.mission_status_updated.trigger_event(
-                    new_mission_status
-                )
 
             if new_mission_status == MissionStatus.Cancelled or (
                 new_mission_status
@@ -346,8 +344,17 @@ class RobotMonitorMissionThread(Thread):
         ]:
             self.current_mission.status = MissionStatus.Cancelled
             publish_mission_status(self.mqtt_publisher, self.current_mission)
-            if not mission_stopped:
-                self.robot_service_events.mission_status_updated.trigger_event(
-                    self.current_mission.status
+
+        if self.current_mission.status in [
+            MissionStatus.PartiallySuccessful,
+            MissionStatus.Successful,
+        ]:
+            self.robot_service_events.mission_succeeded.trigger_event(EmptyMessage())
+        elif not mission_stopped:
+            if not error_message:
+                error_message = ErrorMessage(
+                    error_reason=ErrorReason.RobotMissionStatusException,
+                    error_description="Robot reported mission status failed",
                 )
+            self.robot_service_events.mission_failed.trigger_event(error_message)
         self.logger.info("Stopped monitoring mission")

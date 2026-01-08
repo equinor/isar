@@ -169,7 +169,8 @@ def test_stop_mission_waits_for_monitor_mission(
     assert mission_successfully_stopped_event
 
     assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
-    assert not r_service.robot_service_events.mission_status_updated.has_event()
+    assert not r_service.robot_service_events.mission_failed.has_event()
+    assert not r_service.robot_service_events.mission_succeeded.has_event()
 
     assert r_service.signal_mission_stopped.is_set()
     mock_join_monitor_thread.assert_called_once()
@@ -190,7 +191,8 @@ def test_mission_succeeds_to_stop(
     assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
     assert r_service.robot_service_events.mission_successfully_stopped.has_event()
 
-    assert not r_service.robot_service_events.mission_status_updated.has_event()
+    assert not r_service.robot_service_events.mission_succeeded.has_event()
+    assert not r_service.robot_service_events.mission_failed.has_event()
 
     assert r_service.monitor_mission_thread is None
 
