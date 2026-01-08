@@ -160,7 +160,8 @@ class Robot(object):
 
                 self.stop_mission_thread = None
                 # The mission status will already be reported on MQTT, the state machine does not need the event
-                self.robot_service_events.mission_status_updated.clear_event()
+                self.robot_service_events.mission_succeeded.clear_event()
+                self.robot_service_events.mission_failed.clear_event()
                 self.robot_service_events.mission_successfully_stopped.trigger_event(
                     EmptyMessage()
                 )

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.intervention_needed as InterventionNeeded
@@ -8,7 +8,6 @@ from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transiti
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -32,31 +31,9 @@ class GoingToRecharging(State):
             state_machine.print_transitions()
             return InterventionNeeded.transition()
 
-        def _mission_status_event_handler(
-            mission_status: MissionStatus,
-        ) -> Optional[
-            Union[
-                Transition[InterventionNeeded.InterventionNeeded],
-                Transition[Recharging.Recharging],
-            ]
-        ]:
-            if not mission_status or mission_status in [
-                MissionStatus.InProgress,
-                MissionStatus.NotStarted,
-                MissionStatus.Paused,
-            ]:
-                return None
-
-            if mission_status != MissionStatus.Successful:
-                state_machine.logger.warning(
-                    "Failed to return home. Mission reported as failed."
-                )
-                state_machine.publish_intervention_needed(
-                    error_message="Return home to recharge failed."
-                )
-                state_machine.print_transitions()
-                return InterventionNeeded.transition()
-
+        def _mission_success_event_handler(
+            succcess: EmptyMessage,
+        ) -> Transition[Recharging.Recharging]:
             return Recharging.transition()
 
         def _send_to_lockdown_event_handler(
@@ -73,10 +50,10 @@ class GoingToRecharging(State):
                 event=events.robot_service_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
-            EventHandlerMapping[MissionStatus](
-                name="mission_status_event",
-                event=events.robot_service_events.mission_status_updated,
-                handler=_mission_status_event_handler,
+            EventHandlerMapping[EmptyMessage](
+                name="mission_succeeded_event",
+                event=events.robot_service_events.mission_succeeded,
+                handler=_mission_success_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",

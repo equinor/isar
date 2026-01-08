@@ -12,7 +12,7 @@ from isar.apis.models.models import (
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, RobotStatus
+from robot_interface.models.mission.status import RobotStatus
 from robot_interface.models.mission.task import TASKS
 
 T = TypeVar("T")
@@ -141,9 +141,8 @@ class StateMachineEvents:
 
 class RobotServiceEvents:
     def __init__(self) -> None:
-        self.mission_status_updated: Event[MissionStatus] = Event(
-            "mission_status_updated"
-        )
+        self.mission_succeeded: Event[EmptyMessage] = Event("mission_succeeded")
+        self.mission_started: Event[EmptyMessage] = Event("mission_started")
         self.mission_failed: Event[ErrorMessage] = Event("mission_failed")
         self.robot_status_changed: Event[EmptyMessage] = Event("robot_status_changed")
         self.mission_failed_to_stop: Event[ErrorMessage] = Event(
