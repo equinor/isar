@@ -16,7 +16,6 @@ from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus
 from robot_interface.models.mission.task import ReturnToHome
 
 
@@ -91,12 +90,12 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
-        returning_home_state.get_event_handler_by_name("mission_status_event")
+        returning_home_state.get_event_handler_by_name("mission_succeeded_event")
     )
 
     assert event_handler is not None
 
-    transition = event_handler.handler(MissionStatus.Successful)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Home

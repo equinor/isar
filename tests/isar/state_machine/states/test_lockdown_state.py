@@ -7,7 +7,6 @@ from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.lockdown import Lockdown
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.stopping_go_to_lockdown import StoppingGoToLockdown
-from robot_interface.models.mission.status import MissionStatus
 
 
 def test_mission_stopped_when_going_to_lockdown(
@@ -37,12 +36,12 @@ def test_going_to_lockdown_transitions_to_lockdown(
 
     going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
     event_handler: Optional[EventHandlerMapping] = (
-        going_to_lockdown_state.get_event_handler_by_name("mission_status_event")
+        going_to_lockdown_state.get_event_handler_by_name("mission_succeeded_event")
     )
 
     assert event_handler is not None
 
-    transition = event_handler.handler(MissionStatus.Successful)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Lockdown

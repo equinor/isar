@@ -8,7 +8,8 @@ from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.lockdown import Lockdown
 from isar.state_machine.states.recharging import Recharging
 from isar.state_machine.states.returning_home import ReturningHome
-from robot_interface.models.mission.status import MissionStatus, RobotStatus
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
+from robot_interface.models.mission.status import RobotStatus
 
 
 def test_lockdown_transitions_to_home(
@@ -38,21 +39,30 @@ def test_state_machine_with_return_home_failure_successful_retries(
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
-        returning_home_state.get_event_handler_by_name("mission_status_event")
+    event_handler_success: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("mission_succeeded_event")
+    )
+    event_handler_failure: Optional[EventHandlerMapping] = (
+        returning_home_state.get_event_handler_by_name("mission_failed_event")
     )
 
     # We do not retry return home missions if the robot is not ready for another mission
     sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Available)
 
-    assert event_handler is not None
+    assert event_handler_success is not None
+    assert event_handler_failure is not None
 
-    transition = event_handler.handler(MissionStatus.Failed)
+    transition = event_handler_failure.handler(
+        ErrorMessage(
+            error_reason=ErrorReason.RobotUnknownErrorException,
+            error_description="test",
+        )
+    )
 
     assert transition is None  # type: ignore
     assert sync_state_machine.current_state.failed_return_home_attempts == 1
 
-    transition = event_handler.handler(MissionStatus.Successful)
+    transition = event_handler_success.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Home

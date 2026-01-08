@@ -13,7 +13,6 @@ from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -64,19 +63,11 @@ class Monitor(State):
             )
             return StoppingGoToLockdown.transition(mission_id)
 
-        def _mission_status_event_handler(
-            mission_status: MissionStatus,
-        ) -> Optional[Transition[AwaitNextMission.AwaitNextMission]]:
-            if mission_status not in [
-                MissionStatus.InProgress,
-                MissionStatus.NotStarted,
-                MissionStatus.Paused,
-            ]:
-                state_machine.logger.info(
-                    f"Mission completed with status {mission_status}"
-                )
-                return AwaitNextMission.transition()
-            return None
+        def _mission_success_event_handler(
+            success: EmptyMessage,
+        ) -> Transition[AwaitNextMission.AwaitNextMission]:
+            state_machine.logger.info("Mission succeeded")
+            return AwaitNextMission.transition()
 
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,
@@ -93,8 +84,7 @@ class Monitor(State):
             mission_failed: ErrorMessage,
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
             state_machine.logger.warning(
-                f"Failed to initiate mission because: "
-                f"{mission_failed.error_description}"
+                f"Mission failed because: " f"{mission_failed.error_description}"
             )
             return AwaitNextMission.transition()
 
@@ -127,10 +117,10 @@ class Monitor(State):
                 event=events.robot_service_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
-            EventHandlerMapping[MissionStatus](
-                name="mission_status_event",
-                event=events.robot_service_events.mission_status_updated,
-                handler=_mission_status_event_handler,
+            EventHandlerMapping[EmptyMessage](
+                name="mission_succeeded_event",
+                event=events.robot_service_events.mission_succeeded,
+                handler=_mission_success_event_handler,
             ),
             EventHandlerMapping[float](
                 name="robot_battery_update_event",
