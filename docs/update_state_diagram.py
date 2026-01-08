@@ -1,93 +1,58 @@
+import ast
 import os
-from pathlib import Path
-from typing import List
 
-from injector import Injector
-from transitions import State
-from transitions.extensions import GraphMachine
-
-from isar.modules import get_injector
-from isar.state_machine.state_machine import StateMachine
+from python_to_mermaid import MermaidDiagram
 
 
-def extract_function_name_from_callable(func):
-    try:
-        closure = getattr(func, "__closure__", None)
-        if closure:
-            for cell in closure:
-                obj = cell.cell_contents
-                if callable(obj):
-                    return getattr(obj, "__name__", str(obj))
+def get_imports(source_code):
+    own_class_name = None
+    imported_states = []
+    tree = ast.parse(source_code)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import) and node.names[0].name.startswith(
+            "isar.state_machine.states."
+        ):
+            state_name = node.names[0].asname
+            imported_states.append(state_name)
+        if isinstance(node, ast.ClassDef):
+            own_class_name = node.name
 
-        return getattr(func, "__name__", str(func))
-    except Exception:
-        return "unknown"
-
-
-def embed_conditions_in_trigger(transitions: List[dict]) -> List[dict]:
-    updated = []
-    for t in transitions:
-        trigger = t.get("trigger", "")
-        conditions = t.get("conditions", [])
-
-        if not isinstance(conditions, list):
-            conditions = [conditions]
-
-        condition_names = []
-
-        for cond in conditions:
-            name = extract_function_name_from_callable(cond)
-            condition_names.append(name)
-
-        befores = t.get("before", [])
-        if not isinstance(befores, list):
-            befores = [befores]
-        before_names = [extract_function_name_from_callable(b) for b in befores]
-
-        label_parts = [trigger]
-        if condition_names:
-            label_parts.append(f"[{'; '.join(condition_names)}]")
-        if before_names:
-            label_parts.append(f"/ {'; '.join(before_names)}")
-
-        new_trigger = " ".join(label_parts)
-
-        t_copy = t.copy()
-        t_copy["trigger"] = new_trigger
-        updated.append(t_copy)
-
-    return updated
+    return own_class_name, imported_states
 
 
-def draw_diagram(states: List[State], transitions: List[dict], name: str):
-    transitions_with_conditions = embed_conditions_in_trigger(transitions)
-    machine = GraphMachine(states=states, initial="unknown_status", queued=True)
-    machine.add_transitions(transitions_with_conditions)
-    gp = machine.get_combined_graph()
-
-    state_machine_diagram_file = (
-        Path(__file__).parent.resolve().joinpath(Path(f"{name}.png"))
-    )
-
-    if os.path.isfile(state_machine_diagram_file):
-        os.remove(state_machine_diagram_file)
-
-    gp.draw(str(state_machine_diagram_file), prog="dot", format="png")
+def get_all_state_file_paths():
+    cwd = os.getcwd()
+    states_folder = os.path.join(cwd, "src", "isar", "state_machine", "states")
+    state_files = []
+    for file_or_folder in os.listdir(states_folder):
+        sub_path = os.path.join(states_folder, file_or_folder)
+        if os.path.isfile(sub_path) and not sub_path.endswith("__.py"):
+            state_files.append(sub_path)
+    return state_files
 
 
 if __name__ == "__main__":
-    # This is possible to implement, but is not prioritised
-    injector: Injector = get_injector()
-    state_machine: StateMachine = injector.state_machine()
+    state_files = get_all_state_file_paths()
 
-    """
-    mission_extended_transitions: List[dict] = []
-    state_machine_transitions = [] # Not currently implemented
-    state_machine_states = [] # Not currently implemented
+    state_graph = {}
 
-    draw_diagram(
-        states=state_machine_states,
-        transitions=state_machine_transitions,
-        name="state_machine_diagram",
-    )
-    """
+    for state_file in state_files:
+
+        with open(state_file, "r") as file:
+            source = file.read()
+
+            own_name, imported_states = get_imports(source)
+            state_graph[own_name] = imported_states
+
+    diagram = MermaidDiagram()
+    for state in state_graph:
+        diagram.add_node(state)
+
+    for state_name, transitions in state_graph.items():
+        for transition in transitions:
+            diagram.add_edge(state_name, transition)
+
+    mermaid_diagram = str(diagram)
+
+    with open("diagram.mmd", "w") as file:
+        file.write(mermaid_diagram)
