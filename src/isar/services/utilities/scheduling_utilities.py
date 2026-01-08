@@ -10,6 +10,7 @@ from isar.config.settings import settings
 from isar.models.events import (
     APIEvent,
     APIRequests,
+    EmptyMessage,
     EventConflictError,
     Events,
     EventTimeoutError,
@@ -207,7 +208,7 @@ class SchedulingUtilities:
         """
         try:
             self._send_command(
-                True,
+                EmptyMessage(),
                 self.api_events.return_home,
             )
         except EventConflictError:
@@ -237,7 +238,7 @@ class SchedulingUtilities:
             If the state machine is not in a state which can pause a mission
         """
         try:
-            response = self._send_command(True, self.api_events.pause_mission)
+            response = self._send_command(EmptyMessage(), self.api_events.pause_mission)
             if not response.success:
                 self.logger.warning(
                     f"Mission failed to pause - {response.failure_reason}"
@@ -278,7 +279,9 @@ class SchedulingUtilities:
             If there is an unexpected error while resuming the mission
         """
         try:
-            response = self._send_command(True, self.api_events.resume_mission)
+            response = self._send_command(
+                EmptyMessage(), self.api_events.resume_mission
+            )
             self.logger.info("OK - Resume mission successfully initiated")
             return response
         except EventConflictError:
@@ -361,7 +364,9 @@ class SchedulingUtilities:
             If the intervention needed state could not be released
         """
         try:
-            self._send_command(True, self.api_events.release_intervention_needed)
+            self._send_command(
+                EmptyMessage(), self.api_events.release_intervention_needed
+            )
             self.logger.info("OK - Intervention needed state released")
         except EventConflictError:
             error_message = (
@@ -391,7 +396,7 @@ class SchedulingUtilities:
             If the robot could not be locked down
         """
         try:
-            self._send_command(True, self.api_events.send_to_lockdown)
+            self._send_command(EmptyMessage(), self.api_events.send_to_lockdown)
             self.logger.info("OK - Robot sent into lockdown")
         except EventConflictError:
             error_message = "Previous lockdown request is still being processed"
@@ -419,7 +424,7 @@ class SchedulingUtilities:
             If the robot could not be released from lockdown
         """
         try:
-            self._send_command(True, self.api_events.release_from_lockdown)
+            self._send_command(EmptyMessage(), self.api_events.release_from_lockdown)
             self.logger.info("OK - Robot released form lockdown")
         except EventConflictError:
             error_message = (
@@ -450,7 +455,7 @@ class SchedulingUtilities:
                     value=True,
                 )
             response: MaintenanceResponse = self._send_command(
-                True, self.api_events.set_maintenance_mode
+                EmptyMessage(), self.api_events.set_maintenance_mode
             )
             if response.failure_reason is not None:
                 self.logger.warning(response.failure_reason)
@@ -479,7 +484,9 @@ class SchedulingUtilities:
     def release_maintenance_mode(self) -> None:
         """Release robot from maintenance mode"""
         try:
-            self._send_command(True, self.api_events.release_from_maintenance_mode)
+            self._send_command(
+                EmptyMessage(), self.api_events.release_from_maintenance_mode
+            )
             if settings.PERSISTENT_STORAGE_CONNECTION_STRING != "":
                 change_persistent_robot_state_is_maintenance_mode(
                     settings.PERSISTENT_STORAGE_CONNECTION_STRING,

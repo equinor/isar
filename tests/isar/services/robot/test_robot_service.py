@@ -1,3 +1,4 @@
+from isar.models.events import EmptyMessage
 from isar.robot.robot import Robot
 from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
 from isar.robot.robot_pause_mission import RobotPauseMissionThread
@@ -281,7 +282,7 @@ def test_mission_stop_waits_for_mission_to_start(
     )
     r_service.stop_mission_thread = None
 
-    r_service.state_machine_events.stop_mission.trigger_event(True)
+    r_service.state_machine_events.stop_mission.trigger_event(EmptyMessage())
 
     r_service._stop_mission_request_handler(r_service.state_machine_events.stop_mission)
 
@@ -308,7 +309,7 @@ def test_mission_stop_starts_when_start_is_done(
     )
     r_service.stop_mission_thread = None
 
-    r_service.state_machine_events.stop_mission.trigger_event(True)
+    r_service.state_machine_events.stop_mission.trigger_event(EmptyMessage())
 
     r_service._stop_mission_request_handler(r_service.state_machine_events.stop_mission)
 
@@ -332,7 +333,7 @@ def test_mission_pause_waits_for_mission_to_start(
     )
     r_service.pause_mission_thread = None
 
-    r_service.state_machine_events.pause_mission.trigger_event(True)
+    r_service.state_machine_events.pause_mission.trigger_event(EmptyMessage())
 
     r_service._pause_mission_request_handler(
         r_service.state_machine_events.pause_mission
@@ -361,7 +362,7 @@ def test_mission_paus_starts_when_start_is_done(
     )
     r_service.pause_mission_thread = None
 
-    r_service.state_machine_events.pause_mission.trigger_event(True)
+    r_service.state_machine_events.pause_mission.trigger_event(EmptyMessage())
 
     r_service._pause_mission_request_handler(
         r_service.state_machine_events.pause_mission

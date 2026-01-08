@@ -7,6 +7,7 @@ import isar.state_machine.states.offline as Offline
 from isar.apis.models.models import LockdownResponse, MaintenanceResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
@@ -39,7 +40,7 @@ class Recharging(State):
             return None
 
         def _send_to_lockdown_event_handler(
-            should_lockdown: bool,
+            should_lockdown: EmptyMessage,
         ) -> Transition[Lockdown.Lockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
@@ -47,7 +48,7 @@ class Recharging(State):
             return Lockdown.transition()
 
         def _set_maintenance_mode_event_handler(
-            should_set_maintenande_mode: bool,
+            should_set_maintenance_mode: EmptyMessage,
         ) -> Transition[Maintenance.Maintenance]:
             events.api_requests.set_maintenance_mode.response.trigger_event(
                 MaintenanceResponse(is_maintenance_mode=True)
@@ -66,12 +67,12 @@ class Recharging(State):
                 event=shared_state.robot_status,
                 handler=robot_offline_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,

@@ -5,6 +5,7 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging as Recharging
 from isar.apis.models.models import LockdownResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus
@@ -59,7 +60,7 @@ class GoingToRecharging(State):
             return Recharging.transition()
 
         def _send_to_lockdown_event_handler(
-            should_lockdown: bool,
+            should_lockdown: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
@@ -77,7 +78,7 @@ class GoingToRecharging(State):
                 event=events.robot_service_events.mission_status_updated,
                 handler=_mission_status_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,

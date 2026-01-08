@@ -8,6 +8,7 @@ import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.stopping as Stopping
 from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
@@ -21,10 +22,10 @@ class UnknownStatus(State):
         # Ensures that we will check the status immediately instead of waiting for it to change
         events = state_machine.events
         shared_state = state_machine.shared_state
-        events.robot_service_events.robot_status_changed.trigger_event(True)
+        events.robot_service_events.robot_status_changed.trigger_event(EmptyMessage())
 
         def _set_maintenance_mode_event_handler(
-            should_set_maintenande_mode: bool,
+            should_set_maintenance_mode: EmptyMessage,
         ) -> Transition[Maintenance.Maintenance]:
             events.api_requests.set_maintenance_mode.response.trigger_event(
                 MaintenanceResponse(is_maintenance_mode=True)
@@ -32,7 +33,7 @@ class UnknownStatus(State):
             return Maintenance.transition()
 
         def _robot_status_event_handler(
-            has_changed: bool,
+            has_changed: EmptyMessage,
         ) -> Optional[
             Union[
                 Transition[Home.Home],
@@ -82,12 +83,12 @@ class UnknownStatus(State):
                 event=events.api_requests.stop_mission.request,
                 handler=_stop_mission_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="robot_status_event",
                 event=events.robot_service_events.robot_status_changed,
                 handler=_robot_status_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,

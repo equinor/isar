@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List
 import isar.state_machine.states.return_home_paused as ReturnHomePaused
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -18,10 +19,13 @@ class ResumingReturnHome(State):
         def _failed_resume_event_handler(
             error_message: ErrorMessage,
         ) -> Transition[ReturnHomePaused.ReturnHomePaused]:
+            state_machine.logger.warning(
+                f"Failed to resume return home: {error_message.error_description}"
+            )
             return ReturnHomePaused.transition()
 
         def _successful_resume_event_handler(
-            successful_resume: bool,
+            successful_resume: EmptyMessage,
         ) -> Transition[ReturningHome.ReturningHome]:
             return ReturningHome.transition_to_existing_mission()
 
@@ -31,7 +35,7 @@ class ResumingReturnHome(State):
                 event=events.robot_service_events.mission_failed_to_resume,
                 handler=_failed_resume_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="successful_resume_event",
                 event=events.robot_service_events.mission_successfully_resumed,
                 handler=_successful_resume_event_handler,

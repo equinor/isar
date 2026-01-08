@@ -14,6 +14,7 @@ from isar.apis.models.models import (
 )
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
@@ -32,12 +33,14 @@ class ReturningHome(State):
         shared_state = state_machine.shared_state
 
         def _pause_mission_event_handler(
-            should_pause: bool,
+            should_pause: EmptyMessage,
         ) -> Transition[PausingReturnHome.PausingReturnHome]:
             state_machine.events.api_requests.pause_mission.response.trigger_event(
                 ControlMissionResponse(success=True)
             )
-            state_machine.events.state_machine_events.pause_mission.trigger_event(True)
+            state_machine.events.state_machine_events.pause_mission.trigger_event(
+                EmptyMessage()
+            )
             return PausingReturnHome.transition()
 
         def _start_mission_event_handler(
@@ -55,7 +58,9 @@ class ReturningHome(State):
                 )
                 return None
 
-            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            state_machine.events.state_machine_events.stop_mission.trigger_event(
+                EmptyMessage()
+            )
             return StoppingReturnHome.transition(mission)
 
         def _mission_status_event_handler(
@@ -96,7 +101,7 @@ class ReturningHome(State):
             return None
 
         def _send_to_lockdown_event_handler(
-            should_lockdown: bool,
+            should_lockdown: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
@@ -116,16 +121,18 @@ class ReturningHome(State):
             return InterventionNeeded.transition()
 
         def _set_maintenance_mode_event_handler(
-            should_set_maintenande_mode: bool,
+            should_set_maintenance_mode: EmptyMessage,
         ) -> Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]:
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to maintenance mode"
             )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            state_machine.events.state_machine_events.stop_mission.trigger_event(
+                EmptyMessage()
+            )
             return StoppingDueToMaintenance.transition("")
 
         def _robot_already_home_event_handler(
-            already_home: bool,
+            already_home: EmptyMessage,
         ) -> Transition[Home.Home]:
             state_machine.logger.info(
                 "Robot reported that it is already home. "
@@ -145,7 +152,7 @@ class ReturningHome(State):
             return GoingToRecharging.transition()
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="pause_mission_event",
                 event=events.api_requests.pause_mission.request,
                 handler=_pause_mission_event_handler,
@@ -171,17 +178,17 @@ class ReturningHome(State):
                 handler=_robot_battery_level_updated_handler,
                 should_not_consume=True,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="robot_already_home",
                 event=events.robot_service_events.robot_already_home,
                 handler=_robot_already_home_event_handler,
@@ -200,7 +207,9 @@ def transition_and_start_mission(
     def _transition(state_machine: "StateMachine"):
         state_machine.start_return_home_mission()
         if should_respond_to_API_request:
-            state_machine.events.api_requests.return_home.response.trigger_event(True)
+            state_machine.events.api_requests.return_home.response.trigger_event(
+                EmptyMessage()
+            )
         return ReturningHome(state_machine)
 
     return _transition

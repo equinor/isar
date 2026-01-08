@@ -4,6 +4,7 @@ import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -28,7 +29,7 @@ class StoppingGoToLockdown(State):
             return Monitor.transition_with_existing_mission(mission_id)
 
         def _successful_stop_event_handler(
-            successful_stop: bool,
+            successful_stop: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
             state_machine.publish_mission_aborted(
                 mission_id, "Robot being sent to lockdown", True
@@ -46,7 +47,7 @@ class StoppingGoToLockdown(State):
                 event=events.robot_service_events.mission_failed_to_stop,
                 handler=_failed_stop_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="successful_stop_event",
                 event=events.robot_service_events.mission_successfully_stopped,
                 handler=_successful_stop_event_handler,

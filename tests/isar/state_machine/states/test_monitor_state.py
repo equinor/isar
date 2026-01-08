@@ -10,6 +10,7 @@ from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
+from isar.models.events import EmptyMessage
 from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
@@ -59,7 +60,7 @@ def test_stopping_to_recharge_goes_to_monitor(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     assert sync_state_machine.events.mqtt_queue.empty()
 
@@ -85,7 +86,7 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
     sync_state_machine.current_state = transition(sync_state_machine)
 
     assert type(sync_state_machine.current_state) is Monitor
@@ -106,7 +107,7 @@ def test_stopping_lockdown_failing_to_monitor(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     assert (
         not sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
@@ -151,7 +152,7 @@ def test_transition_from_resuming_to_monitor(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Monitor

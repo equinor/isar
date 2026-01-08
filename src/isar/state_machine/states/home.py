@@ -17,6 +17,7 @@ from isar.apis.models.models import (
 )
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus
@@ -35,7 +36,7 @@ class Home(State):
         events.robot_service_events.robot_status_changed.clear_event()
 
         def _send_to_lockdown_event_handler(
-            should_send_robot_home: bool,
+            should_send_robot_home: EmptyMessage,
         ) -> Transition[Lockdown.Lockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
@@ -43,7 +44,7 @@ class Home(State):
             return Lockdown.transition()
 
         def _set_maintenance_mode_event_handler(
-            should_set_maintenande_mode: bool,
+            should_set_maintenance_mode: EmptyMessage,
         ) -> Optional[Transition[Maintenance.Maintenance]]:
             events.api_requests.set_maintenance_mode.response.trigger_event(
                 MaintenanceResponse(is_maintenance_mode=True)
@@ -51,7 +52,7 @@ class Home(State):
             return Maintenance.transition()
 
         def _robot_status_event_handler(
-            has_changed: bool,
+            has_changed: EmptyMessage,
         ) -> Optional[
             Union[
                 Transition[AwaitNextMission.AwaitNextMission],
@@ -116,7 +117,7 @@ class Home(State):
                 event=events.api_requests.start_mission.request,
                 handler=_start_mission_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="return_home_event",
                 event=events.api_requests.return_home.request,
                 handler=lambda event: ReturningHome.transition_and_start_mission(True),
@@ -126,12 +127,12 @@ class Home(State):
                 event=events.api_requests.stop_mission.request,
                 handler=_stop_mission_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="robot_status_event",
                 event=events.robot_service_events.robot_status_changed,
                 handler=_robot_status_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
@@ -142,7 +143,7 @@ class Home(State):
                 handler=_robot_battery_level_updated_handler,
                 should_not_consume=True,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,

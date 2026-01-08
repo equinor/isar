@@ -21,6 +21,10 @@ T1 = TypeVar("T1")
 T2 = TypeVar("T2")
 
 
+class EmptyMessage:
+    pass
+
+
 class Event(Queue[T]):
     def __init__(self, name: str) -> None:
         super().__init__(maxsize=1)
@@ -105,36 +109,36 @@ class APIRequests:
         self.stop_mission: APIEvent[str, ControlMissionResponse] = APIEvent(
             "stop_mission"
         )
-        self.pause_mission: APIEvent[bool, ControlMissionResponse] = APIEvent(
+        self.pause_mission: APIEvent[EmptyMessage, ControlMissionResponse] = APIEvent(
             "pause_mission"
         )
-        self.resume_mission: APIEvent[bool, ControlMissionResponse] = APIEvent(
+        self.resume_mission: APIEvent[EmptyMessage, ControlMissionResponse] = APIEvent(
             "resume_mission"
         )
-        self.return_home: APIEvent[bool, bool] = APIEvent("return_home")
-        self.release_intervention_needed: APIEvent[bool, bool] = APIEvent(
-            "release_intervention_needed"
+        self.return_home: APIEvent[EmptyMessage, EmptyMessage] = APIEvent("return_home")
+        self.release_intervention_needed: APIEvent[EmptyMessage, EmptyMessage] = (
+            APIEvent("release_intervention_needed")
         )
-        self.send_to_lockdown: APIEvent[bool, LockdownResponse] = APIEvent(
+        self.send_to_lockdown: APIEvent[EmptyMessage, LockdownResponse] = APIEvent(
             "send_to_lockdown"
         )
-        self.release_from_lockdown: APIEvent[bool, bool] = APIEvent(
+        self.release_from_lockdown: APIEvent[EmptyMessage, EmptyMessage] = APIEvent(
             "release_from_lockdown"
         )
-        self.set_maintenance_mode: APIEvent[bool, MaintenanceResponse] = APIEvent(
-            "set_maintenance_mode"
+        self.set_maintenance_mode: APIEvent[EmptyMessage, MaintenanceResponse] = (
+            APIEvent("set_maintenance_mode")
         )
-        self.release_from_maintenance_mode: APIEvent[bool, bool] = APIEvent(
-            "release_from_maintenance_mode"
+        self.release_from_maintenance_mode: APIEvent[EmptyMessage, EmptyMessage] = (
+            APIEvent("release_from_maintenance_mode")
         )
 
 
 class StateMachineEvents:
     def __init__(self) -> None:
         self.start_mission: Event[Mission] = Event("start_mission")
-        self.stop_mission: Event[bool] = Event("stop_mission")
-        self.pause_mission: Event[bool] = Event("pause_mission")
-        self.resume_mission: Event[bool] = Event("resume_mission")
+        self.stop_mission: Event[EmptyMessage] = Event("stop_mission")
+        self.pause_mission: Event[EmptyMessage] = Event("pause_mission")
+        self.resume_mission: Event[EmptyMessage] = Event("resume_mission")
 
 
 class RobotServiceEvents:
@@ -143,29 +147,29 @@ class RobotServiceEvents:
             "mission_status_updated"
         )
         self.mission_failed: Event[ErrorMessage] = Event("mission_failed")
-        self.robot_status_changed: Event[bool] = Event("robot_status_changed")
+        self.robot_status_changed: Event[EmptyMessage] = Event("robot_status_changed")
         self.mission_failed_to_stop: Event[ErrorMessage] = Event(
             "mission_failed_to_stop"
         )
-        self.mission_successfully_stopped: Event[bool] = Event(
+        self.mission_successfully_stopped: Event[EmptyMessage] = Event(
             "mission_successfully_stopped"
         )
         self.mission_failed_to_pause: Event[ErrorMessage] = Event(
             "mission_failed_to_pause"
         )
-        self.mission_successfully_paused: Event[bool] = Event(
+        self.mission_successfully_paused: Event[EmptyMessage] = Event(
             "mission_successfully_paused"
         )
         self.mission_failed_to_resume: Event[ErrorMessage] = Event(
             "mission_failed_to_resume"
         )
-        self.mission_successfully_resumed: Event[bool] = Event(
+        self.mission_successfully_resumed: Event[EmptyMessage] = Event(
             "mission_successfully_resumed"
         )
         self.request_inspection_upload: Event[Tuple[TASKS, Mission]] = Event(
             "request_inspection_upload"
         )
-        self.robot_already_home: Event[bool] = Event("robot_already_home")
+        self.robot_already_home: Event[EmptyMessage] = Event("robot_already_home")
 
 
 class SharedState:

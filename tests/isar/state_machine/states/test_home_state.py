@@ -1,6 +1,7 @@
 from typing import Optional, cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
+from isar.models.events import EmptyMessage
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.home import Home
 from isar.state_machine.states.intervention_needed import InterventionNeeded
@@ -23,7 +24,7 @@ def test_lockdown_transitions_to_home(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     assert sync_state_machine.events.api_requests.release_from_lockdown.response.check()
     sync_state_machine.current_state = transition(sync_state_machine)
@@ -70,7 +71,7 @@ def test_intervention_needed_transitions_to_home_if_robot_is_home(
 
     sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Home)
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     assert transition is not None
 

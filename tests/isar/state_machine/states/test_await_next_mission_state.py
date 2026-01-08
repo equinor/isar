@@ -15,6 +15,7 @@ from isar.state_machine.states.resuming_return_home import ResumingReturnHome
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
 from tests.test_mocks.robot_interface import StubRobot
@@ -82,7 +83,11 @@ def test_transition_from_resuming_to_paused(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(
+        ErrorMessage(
+            error_reason=ErrorReason.RobotUnknownErrorException, error_description=""
+        )
+    )
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Paused
@@ -122,7 +127,11 @@ def test_transition_from_resuming_return_home_to_await_next_mission(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(
+        ErrorMessage(
+            error_reason=ErrorReason.RobotUnknownErrorException, error_description=""
+        )
+    )
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is ReturnHomePaused

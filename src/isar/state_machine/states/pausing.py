@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.paused as Paused
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -18,10 +19,13 @@ class Pausing(State):
         def _failed_pause_event_handler(
             error_message: ErrorMessage,
         ) -> Transition[Monitor.Monitor]:
+            state_machine.logger.warning(
+                f"Failed to pause mission: {error_message.error_description}"
+            )
             return Monitor.transition_with_existing_mission(mission_id)
 
         def _successful_pause_event_handler(
-            successful_pause: bool,
+            successful_pause: EmptyMessage,
         ) -> Transition[Paused.Paused]:
             return Paused.transition(mission_id)
 
@@ -31,7 +35,7 @@ class Pausing(State):
                 event=events.robot_service_events.mission_failed_to_pause,
                 handler=_failed_pause_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="successful_pause_event",
                 event=events.robot_service_events.mission_successfully_paused,
                 handler=_successful_pause_event_handler,
