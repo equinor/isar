@@ -4,16 +4,20 @@ import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.blocked_protective_stop as BlockedProtectiveStop
 import isar.state_machine.states.lockdown as Lockdown
 import isar.state_machine.states.maintenance as Maintenance
+import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.recharging as Recharging
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
 import isar.state_machine.states.unknown_status as UnknownStatus
-from isar.apis.models.models import LockdownResponse, MaintenanceResponse
+from isar.apis.models.models import (
+    LockdownResponse,
+    MaintenanceResponse,
+    MissionStartResponse,
+)
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-from isar.state_machine.utils.common_event_handlers import start_mission_event_handler
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus
 
@@ -92,13 +96,25 @@ class Home(State):
         ) -> Transition[Stopping.Stopping]:
             return Stopping.transition_and_trigger_stop(mission_id, True)
 
+        def _start_mission_event_handler(
+            mission: Mission,
+        ) -> Optional[Transition[Monitor.Monitor]]:
+            if not state_machine.battery_level_is_above_mission_start_threshold():
+                events.api_requests.start_mission.response.trigger_event(
+                    MissionStartResponse(
+                        mission_id=mission.id,
+                        mission_started=False,
+                        mission_not_started_reason="Robot battery too low",
+                    )
+                )
+                return None
+            return Monitor.transition_and_start_mission(mission, True)
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[Mission](
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,
-                handler=lambda event: start_mission_event_handler(
-                    state_machine, event, events.api_requests.start_mission.response
-                ),
+                handler=_start_mission_event_handler,
             ),
             EventHandlerMapping[bool](
                 name="return_home_event",
