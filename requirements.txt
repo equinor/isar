@@ -307,7 +307,7 @@ typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
-urllib3==2.6.1
+urllib3==2.6.3
     # via requests
 uvicorn==0.38.0
     # via isar (pyproject.toml)
