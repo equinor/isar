@@ -1,13 +1,13 @@
-from dataclasses import dataclass
 from enum import Enum
+
+from pydantic import BaseModel
 
 
 class MediaConnectionType(str, Enum):
     LiveKit = "LiveKit"
 
 
-@dataclass
-class MediaConfig:
+class MediaConfig(BaseModel):
     url: str
     token: str
     media_connection_type: MediaConnectionType
