@@ -4,6 +4,7 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import MissionStartResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
@@ -37,7 +38,7 @@ class StoppingReturnHome(State):
                 event=events.robot_service_events.mission_failed_to_stop,
                 handler=_failed_stop_return_home_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="successful_stop_event",
                 event=events.robot_service_events.mission_successfully_stopped,
                 handler=lambda event: Monitor.transition_and_start_mission(

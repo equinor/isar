@@ -7,6 +7,7 @@ import isar.state_machine.states.stopping_paused_mission as StoppingPausedMissio
 from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 
 if TYPE_CHECKING:
@@ -52,30 +53,36 @@ class Paused(State):
             return StoppingPausedMission.transition_and_trigger_stop(mission_id)
 
         def _send_to_lockdown_event_handler(
-            should_lockdown: bool,
+            should_lockdown: EmptyMessage,
         ) -> Transition[StoppingGoToLockdown.StoppingGoToLockdown]:
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to lockdown"
             )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            state_machine.events.state_machine_events.stop_mission.trigger_event(
+                EmptyMessage()
+            )
             return StoppingGoToLockdown.transition(mission_id)
 
         def _set_maintenance_mode_event_handler(
-            should_set_maintenande_mode: bool,
+            should_set_maintenance_mode: EmptyMessage,
         ) -> Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]:
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to maintenance mode"
             )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            state_machine.events.state_machine_events.stop_mission.trigger_event(
+                EmptyMessage()
+            )
             return StoppingDueToMaintenance.transition(mission_id)
 
         def _resume_mission_event_handler(
-            should_resume: bool,
+            should_resume: EmptyMessage,
         ) -> Optional[Transition[Resuming.Resuming]]:
             state_machine.events.api_requests.resume_mission.response.trigger_event(
                 ControlMissionResponse(success=True)
             )
-            state_machine.events.state_machine_events.resume_mission.trigger_event(True)
+            state_machine.events.state_machine_events.resume_mission.trigger_event(
+                EmptyMessage()
+            )
             return Resuming.transition(mission_id)
 
         event_handlers: List[EventHandlerMapping] = [
@@ -84,7 +91,7 @@ class Paused(State):
                 event=events.api_requests.stop_mission.request,
                 handler=_stop_mission_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="resume_mission_event",
                 event=events.api_requests.resume_mission.request,
                 handler=_resume_mission_event_handler,
@@ -95,12 +102,12 @@ class Paused(State):
                 handler=_robot_battery_level_updated_handler,
                 should_not_consume=True,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,

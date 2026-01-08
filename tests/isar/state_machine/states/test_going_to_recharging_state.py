@@ -2,6 +2,7 @@ from typing import Optional, cast
 
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
+from isar.models.events import EmptyMessage
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.going_to_recharging import GoingToRecharging
 from isar.state_machine.states.returning_home import ReturningHome
@@ -21,7 +22,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     assert not sync_state_machine.events.mqtt_queue.empty()
 

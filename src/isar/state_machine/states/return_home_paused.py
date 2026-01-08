@@ -12,6 +12,7 @@ from isar.apis.models.models import (
 )
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
@@ -34,7 +35,9 @@ class ReturnHomePaused(State):
             ):
                 return None
 
-            state_machine.events.state_machine_events.resume_mission.trigger_event(True)
+            state_machine.events.state_machine_events.resume_mission.trigger_event(
+                EmptyMessage()
+            )
             return ReturningHome.transition_to_existing_mission()
 
         def _start_mission_event_handler(
@@ -50,39 +53,47 @@ class ReturnHomePaused(State):
                     response
                 )
                 return None
-            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            state_machine.events.state_machine_events.stop_mission.trigger_event(
+                EmptyMessage()
+            )
             return StoppingPausedReturnHome.transition(mission)
 
         def _send_to_lockdown_event_handler(
-            should_lockdown: bool,
+            should_lockdown: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
-            state_machine.events.state_machine_events.resume_mission.trigger_event(True)
+            state_machine.events.state_machine_events.resume_mission.trigger_event(
+                EmptyMessage()
+            )
 
             return GoingToLockdown.transition()
 
         def _set_maintenance_mode_event_handler(
-            should_set_maintenande_mode: bool,
+            should_set_maintenance_mode: EmptyMessage,
         ) -> Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]:
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to maintenance mode"
             )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            state_machine.events.state_machine_events.stop_mission.trigger_event(
+                EmptyMessage()
+            )
             return StoppingDueToMaintenance.transition("")
 
         def _resume_mission_event_handler(
-            should_resume: bool,
+            should_resume: EmptyMessage,
         ) -> Transition[ResumingReturnHome.ResumingReturnHome]:
             state_machine.events.api_requests.resume_mission.response.trigger_event(
                 ControlMissionResponse(success=True)
             )
-            state_machine.events.state_machine_events.resume_mission.trigger_event(True)
+            state_machine.events.state_machine_events.resume_mission.trigger_event(
+                EmptyMessage()
+            )
             return ResumingReturnHome.transition()
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="resume_return_home_event",
                 event=events.api_requests.resume_mission.request,
                 handler=_resume_mission_event_handler,
@@ -98,12 +109,12 @@ class ReturnHomePaused(State):
                 event=events.api_requests.start_mission.request,
                 handler=_start_mission_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,

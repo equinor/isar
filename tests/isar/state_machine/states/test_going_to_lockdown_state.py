@@ -2,6 +2,7 @@ from typing import Optional, cast
 
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
+from isar.models.events import EmptyMessage
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
@@ -23,7 +24,7 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
         return_home_paused_state.get_event_handler_by_name("send_to_lockdown_event")
     )
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
 
@@ -62,7 +63,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     assert (
         sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
@@ -91,7 +92,7 @@ def test_return_home_transitions_to_going_to_lockdown(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is GoingToLockdown
@@ -110,7 +111,7 @@ def test_recharging_transitions_to_going_to_lockdown(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is GoingToLockdown
@@ -129,7 +130,7 @@ def test_await_next_mission_transitions_to_going_to_lockdown(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     assert sync_state_machine.events.api_requests.send_to_lockdown.response.check()
     sync_state_machine.current_state = transition(sync_state_machine)

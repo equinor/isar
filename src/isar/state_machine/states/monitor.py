@@ -9,6 +9,7 @@ import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
@@ -25,12 +26,14 @@ class Monitor(State):
         shared_state = state_machine.shared_state
 
         def _pause_mission_event_handler(
-            should_pause: bool,
+            should_pause: EmptyMessage,
         ) -> Transition[Pausing.Pausing]:
             state_machine.events.api_requests.pause_mission.response.trigger_event(
                 ControlMissionResponse(success=True)
             )
-            state_machine.events.state_machine_events.pause_mission.trigger_event(True)
+            state_machine.events.state_machine_events.pause_mission.trigger_event(
+                EmptyMessage()
+            )
             return Pausing.transition(mission_id)
 
         def _robot_battery_level_updated_handler(
@@ -45,16 +48,20 @@ class Monitor(State):
             state_machine.logger.warning(
                 "Cancelling current mission due to low battery"
             )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            state_machine.events.state_machine_events.stop_mission.trigger_event(
+                EmptyMessage()
+            )
             return StoppingGoToRecharge.transition(mission_id)
 
         def _send_to_lockdown_event_handler(
-            should_lockdown: bool,
+            should_lockdown: EmptyMessage,
         ) -> Transition[StoppingGoToLockdown.StoppingGoToLockdown]:
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to lockdown"
             )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            state_machine.events.state_machine_events.stop_mission.trigger_event(
+                EmptyMessage()
+            )
             return StoppingGoToLockdown.transition(mission_id)
 
         def _mission_status_event_handler(
@@ -72,12 +79,14 @@ class Monitor(State):
             return None
 
         def _set_maintenance_mode_event_handler(
-            should_set_maintenande_mode: bool,
+            should_set_maintenance_mode: EmptyMessage,
         ) -> Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]:
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to maintenance mode"
             )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(True)
+            state_machine.events.state_machine_events.stop_mission.trigger_event(
+                EmptyMessage()
+            )
             return StoppingDueToMaintenance.transition(mission_id)
 
         def _mission_failed_event_handler(
@@ -108,7 +117,7 @@ class Monitor(State):
                 event=events.api_requests.stop_mission.request,
                 handler=_stop_mission_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="pause_mission_event",
                 event=events.api_requests.pause_mission.request,
                 handler=_pause_mission_event_handler,
@@ -129,12 +138,12 @@ class Monitor(State):
                 handler=_robot_battery_level_updated_handler,
                 should_not_consume=True,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,

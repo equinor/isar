@@ -3,7 +3,12 @@ import time
 from threading import Event, Thread
 
 from isar.config.settings import settings
-from isar.models.events import RobotServiceEvents, SharedState, StateMachineEvents
+from isar.models.events import (
+    EmptyMessage,
+    RobotServiceEvents,
+    SharedState,
+    StateMachineEvents,
+)
 from robot_interface.models.exceptions.robot_exceptions import RobotException
 from robot_interface.robot_interface import RobotInterface
 
@@ -54,7 +59,9 @@ class RobotStatusThread(Thread):
 
                 if robot_status is not self.shared_state.robot_status.check():
                     self.shared_state.robot_status.update(robot_status)
-                    self.robot_service_events.robot_status_changed.trigger_event(True)
+                    self.robot_service_events.robot_status_changed.trigger_event(
+                        EmptyMessage()
+                    )
             except RobotException as e:
                 self.logger.error(f"Failed to retrieve robot status: {e}")
                 continue

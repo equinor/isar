@@ -5,6 +5,7 @@ from isar.eventhandlers.eventhandler import (
     State,
     TimeoutHandlerMapping,
 )
+from isar.models.events import EmptyMessage
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.home import Home
@@ -37,7 +38,7 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
     sync_state_machine.current_state = transition(sync_state_machine)
 
     assert type(sync_state_machine.current_state) is Monitor
@@ -76,7 +77,7 @@ def test_transition_from_resuming_return_home_to_returning_home_state(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is ReturningHome
@@ -127,7 +128,7 @@ def test_return_home_not_cancelled_when_battery_is_low(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     assert transition is None
     assert events.api_requests.start_mission.response.has_event()

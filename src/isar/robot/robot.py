@@ -6,6 +6,7 @@ from typing import Callable, List, Optional, Tuple
 
 from isar.config.settings import settings
 from isar.models.events import (
+    EmptyMessage,
     Event,
     Events,
     RobotServiceEvents,
@@ -100,7 +101,9 @@ class Robot(object):
                 error_message
                 and error_message.error_reason == ErrorReason.RobotAlreadyHomeException
             ):
-                self.robot_service_events.robot_already_home.trigger_event(True)
+                self.robot_service_events.robot_already_home.trigger_event(
+                    EmptyMessage()
+                )
                 return
             elif error_message:
                 mission.status = MissionStatus.Failed
@@ -159,7 +162,7 @@ class Robot(object):
                 # The mission status will already be reported on MQTT, the state machine does not need the event
                 self.robot_service_events.mission_status_updated.clear_event()
                 self.robot_service_events.mission_successfully_stopped.trigger_event(
-                    True
+                    EmptyMessage()
                 )
 
     def _pause_mission_done_handler(self) -> None:
@@ -177,7 +180,7 @@ class Robot(object):
                 )
             else:
                 self.robot_service_events.mission_successfully_paused.trigger_event(
-                    True
+                    EmptyMessage()
                 )
 
     def _start_mission_event_handler(self, event: Event[Mission]) -> None:
@@ -201,7 +204,7 @@ class Robot(object):
             )
             self.start_mission_thread.start()
 
-    def _stop_mission_request_handler(self, event: Event[bool]) -> None:
+    def _stop_mission_request_handler(self, event: Event[EmptyMessage]) -> None:
         if event.has_event():
             if (
                 self.stop_mission_thread is not None
@@ -222,7 +225,7 @@ class Robot(object):
             )
             self.stop_mission_thread.start()
 
-    def _pause_mission_request_handler(self, event: Event[bool]) -> None:
+    def _pause_mission_request_handler(self, event: Event[EmptyMessage]) -> None:
         if event.has_event():
             if (
                 self.pause_mission_thread is not None
@@ -243,7 +246,7 @@ class Robot(object):
             )
             self.pause_mission_thread.start()
 
-    def _resume_mission_request_handler(self, event: Event[bool]) -> None:
+    def _resume_mission_request_handler(self, event: Event[EmptyMessage]) -> None:
         if event.consume_event():
             if (
                 self.resume_mission_thread is not None
@@ -286,7 +289,7 @@ class Robot(object):
                 )
             else:
                 self.robot_service_events.mission_successfully_resumed.trigger_event(
-                    True
+                    EmptyMessage()
                 )
 
     def _upload_inspection_event_handler(

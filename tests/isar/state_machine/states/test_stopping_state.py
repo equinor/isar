@@ -1,6 +1,7 @@
 from typing import Optional, cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
+from isar.models.events import EmptyMessage
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.monitor import Monitor
@@ -23,7 +24,7 @@ def test_mqtt_message_not_sent_on_mission_stopped(
     )
     assert stopping_state_event_handler is not None
 
-    transition = stopping_state_event_handler.handler(True)
+    transition = stopping_state_event_handler.handler(EmptyMessage())
 
     assert sync_state_machine.events.mqtt_queue.empty() is True
 
@@ -45,7 +46,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(
 
     sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Busy)
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     assert transition is not None
 
@@ -61,7 +62,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(
 
     sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
 
-    transition = stopping_state_event_handler.handler(True)
+    transition = stopping_state_event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
 
@@ -101,7 +102,7 @@ def test_stopping_mission_succeeds(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     assert sync_state_machine.events.mqtt_queue.empty()
 
@@ -121,7 +122,7 @@ def test_stopping_mission_succeeds_with_low_battery(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(True)
+    transition = event_handler.handler(EmptyMessage())
 
     assert sync_state_machine.events.mqtt_queue.empty()
 

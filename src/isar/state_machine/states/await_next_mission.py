@@ -18,6 +18,7 @@ from isar.eventhandlers.eventhandler import (
     TimeoutHandlerMapping,
     Transition,
 )
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
@@ -32,7 +33,7 @@ class AwaitNextMission(State):
         shared_state = state_machine.shared_state
 
         def _send_to_lockdown_event_handler(
-            should_lockdown: bool,
+            should_lockdown: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
@@ -54,7 +55,7 @@ class AwaitNextMission(State):
             return GoingToRecharging.transition()
 
         def _set_maintenance_mode_event_handler(
-            should_set_maintenande_mode: bool,
+            should_set_maintenance_mode: EmptyMessage,
         ) -> Transition[Maintenance.Maintenance]:
             events.api_requests.set_maintenance_mode.response.trigger_event(
                 MaintenanceResponse(is_maintenance_mode=True)
@@ -86,7 +87,7 @@ class AwaitNextMission(State):
                 event=events.api_requests.start_mission.request,
                 handler=_start_mission_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="return_home_event",
                 event=events.api_requests.return_home.request,
                 handler=lambda event: ReturningHome.transition_and_start_mission(True),
@@ -96,7 +97,7 @@ class AwaitNextMission(State):
                 event=events.api_requests.stop_mission.request,
                 handler=_stop_mission_event_handler,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
@@ -107,7 +108,7 @@ class AwaitNextMission(State):
                 handler=_robot_battery_level_updated_handler,
                 should_not_consume=True,
             ),
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,

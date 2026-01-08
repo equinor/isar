@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List, Union
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
@@ -16,12 +17,12 @@ class Maintenance(State):
         events = state_machine.events
 
         def _release_from_maintenance_handler(
-            should_release_from_maintenance: bool,
+            should_release_from_maintenance: EmptyMessage,
         ) -> Union[
             Transition[Home.Home], Transition[InterventionNeeded.InterventionNeeded]
         ]:
             events.api_requests.release_from_maintenance_mode.response.trigger_event(
-                True
+                EmptyMessage()
             )
 
             robot_status = state_machine.shared_state.robot_status.check()
@@ -31,7 +32,7 @@ class Maintenance(State):
                 return InterventionNeeded.transition()
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping[bool](
+            EventHandlerMapping[EmptyMessage](
                 name="release_from_maintenance",
                 event=events.api_requests.release_from_maintenance_mode.request,
                 handler=_release_from_maintenance_handler,
