@@ -2,6 +2,8 @@ import time
 from collections import deque
 from typing import Optional, cast
 
+from pytest_mock import MockerFixture
+
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.modules import ApplicationContainer
@@ -32,7 +34,7 @@ def test_state_machine_with_successful_mission_stop(
     robot_service_thread: RobotServiceThreadMock,
     state_machine_thread: StateMachineThreadMock,
     uploader_thread: UploaderThreadMock,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     mocker.patch.object(

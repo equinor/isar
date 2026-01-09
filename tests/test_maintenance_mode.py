@@ -5,6 +5,7 @@ from http import HTTPStatus
 import sqlalchemy
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
+from pytest_mock import MockerFixture
 from sqlalchemy.orm import Session
 from testcontainers.mysql import MySqlContainer
 
@@ -51,11 +52,11 @@ def test_persistent_storage_schema() -> None:
 
 
 def test_maintenance_mode(
-    setup_db_connection_string,  # The order of the fixtures is important
+    setup_db_connection_string: str,  # The order of the fixtures is important
     client: TestClient,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     # Now running ISAR should put it into maintenance mode
     state_machine_thread.start()

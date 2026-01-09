@@ -99,6 +99,7 @@ no_site_packages = true
 ignore_missing_imports = true
 exclude = ["build"]
 files = ["src", "tests"]
+disallow_untyped_defs = true
 
 [tool.isort]
 include_trailing_comma = true

@@ -5,7 +5,7 @@ from typing import List, Optional
 from python_to_mermaid import MermaidDiagram
 
 
-def get_imports(source_code) -> tuple[Optional[str], list]:
+def get_imports(source_code: str) -> tuple[Optional[str], list]:
     own_class_name = None
     imported_states = []
     tree = ast.parse(source_code)

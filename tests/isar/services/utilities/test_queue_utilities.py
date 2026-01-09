@@ -16,7 +16,7 @@ class TestQueueUtilities:
         ],
     )
     def test_check_queue_with_queue_size_one(
-        self, message, queue_timeout, expected_message
+        self, message: str, queue_timeout: int, expected_message: str
     ) -> None:
         test_event: Event = Event("test")
         if message is not None:

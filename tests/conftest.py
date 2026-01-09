@@ -5,15 +5,19 @@
 import logging
 import shutil
 from pathlib import Path
+from typing import Generator
 
 import pytest
 import sqlalchemy
+from dependency_injector.providers import Singleton
 from dependency_injector.wiring import providers
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 from testcontainers.mysql import MySqlContainer
 
 from isar.apis.security.authentication import Authenticator
+from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import State
 from isar.models.events import Events
@@ -28,8 +32,10 @@ from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import RobotStopMissionThread
 from isar.robot.robot_upload_inspection import RobotUploadInspectionThread
 from isar.services.service_connections.persistent_memory import Base
+from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.storage.uploader import Uploader
+from robot_interface.robot_interface import RobotInterface
 from tests.test_mocks.blob_storage import StorageFake
 from tests.test_mocks.robot_interface import StubRobot
 from tests.test_mocks.state_machine_mocks import (
@@ -40,8 +46,7 @@ from tests.test_mocks.state_machine_mocks import (
 
 
 @pytest.fixture(autouse=True)
-def setup_test_environment():
-
+def setup_test_environment() -> None:
     settings.PERSISTENT_STORAGE_CONNECTION_STRING = ""
 
     logger_names = [
@@ -59,7 +64,7 @@ def setup_test_environment():
 
 
 @pytest.fixture()
-def container():
+def container() -> ApplicationContainer:
     """Fixture to provide the dependency-injector container without auth."""
     container = ApplicationContainer()
     container.events.override(providers.Singleton(Events))
@@ -87,7 +92,7 @@ def container():
 
 
 @pytest.fixture()
-def app(container: ApplicationContainer):
+def app(container: ApplicationContainer) -> FastAPI:
     """Fixture to provide the FastAPI app."""
     container.authenticator.override(
         providers.Singleton(Authenticator, authentication_enabled=False)
@@ -98,14 +103,14 @@ def app(container: ApplicationContainer):
 
 
 @pytest.fixture()
-def client(app):
+def client(app: FastAPI) -> TestClient:
     """Fixture to provide a test client for the FastAPI app."""
     client = TestClient(app)
     return client
 
 
 @pytest.fixture()
-def client_auth(container: ApplicationContainer):
+def client_auth(container: ApplicationContainer) -> TestClient:
     """Fixture to provide a test client for the FastAPI app with auth."""
     container.authenticator.override(
         providers.Singleton(Authenticator, authentication_enabled=True)
@@ -117,19 +122,21 @@ def client_auth(container: ApplicationContainer):
 
 
 @pytest.fixture()
-def access_token():
+def access_token() -> str:
     """Fixture to provide a dummy access token."""
     return "DummyToken"
 
 
 @pytest.fixture()
-def keyvault(container: ApplicationContainer):
+def keyvault(container: ApplicationContainer) -> Singleton[Keyvault]:
     """Fixture to provide the Keyvault instance."""
     return container.keyvault()
 
 
 @pytest.fixture()
-def state_machine(container: ApplicationContainer, robot):
+def state_machine(
+    container: ApplicationContainer, robot: RobotInterface
+) -> StateMachine:
     """Fixture to provide the StateMachine instance."""
     return StateMachine(
         events=container.events(),
@@ -140,7 +147,9 @@ def state_machine(container: ApplicationContainer, robot):
 
 
 @pytest.fixture()
-def sync_state_machine(container: ApplicationContainer, robot, mocker: MockerFixture):
+def sync_state_machine(
+    container: ApplicationContainer, robot: RobotInterface, mocker: MockerFixture
+) -> StateMachine:
     """Fixture to provide the StateMachine instance without running the state loops."""
     mocker.patch.object(State, "run", return_value=lambda: None)
     return StateMachine(
@@ -152,25 +161,23 @@ def sync_state_machine(container: ApplicationContainer, robot, mocker: MockerFix
 
 
 @pytest.fixture()
-def request_handler(container: ApplicationContainer):
-    """Fixture to provide the RequestHandler instance."""
-    return container.request_handler()
-
-
-@pytest.fixture()
-def robot():
+def robot() -> StubRobot:
     """Fixture to provide a mock robot instance."""
     return StubRobot()
 
 
 @pytest.fixture()
-def scheduling_utilities(container: ApplicationContainer):
+def scheduling_utilities(
+    container: ApplicationContainer,
+) -> Singleton[SchedulingUtilities]:
     """Fixture to provide the SchedulingUtilities instance."""
     return container.scheduling_utilities()
 
 
 @pytest.fixture
-def state_machine_thread(container: ApplicationContainer):
+def state_machine_thread(
+    container: ApplicationContainer,
+) -> Generator[StateMachineThreadMock, None, None]:
     state_machine_thread: StateMachineThreadMock = StateMachineThreadMock(
         container=container,
     )
@@ -179,14 +186,18 @@ def state_machine_thread(container: ApplicationContainer):
 
 
 @pytest.fixture
-def uploader_thread(container: ApplicationContainer):
+def uploader_thread(
+    container: ApplicationContainer,
+) -> Generator[UploaderThreadMock, None, None]:
     uploader_thread: UploaderThreadMock = UploaderThreadMock(container=container)
     yield uploader_thread
     uploader_thread.join()
 
 
 @pytest.fixture
-def robot_service_thread(container: ApplicationContainer):
+def robot_service_thread(
+    container: ApplicationContainer,
+) -> Generator[RobotServiceThreadMock, None, None]:
     robot_service: Robot = Robot(
         events=container.events(),
         robot=container.robot_interface(),
@@ -202,7 +213,9 @@ def robot_service_thread(container: ApplicationContainer):
 
 
 @pytest.fixture
-def mocked_robot_service(container: ApplicationContainer, mocker):
+def mocked_robot_service(
+    container: ApplicationContainer, mocker: MockerFixture
+) -> Robot:
     robot_service: Robot = Robot(
         events=container.events(),
         robot=container.robot_interface(),
@@ -243,7 +256,7 @@ def run_before_and_after_tests() -> None:  # type: ignore
 
 
 @pytest.fixture()
-def setup_db_connection_string():
+def setup_db_connection_string() -> Generator[None, None, None]:
     with MySqlContainer("mysql:9.4.0", dialect="pymysql") as mysql:
         connection_url = mysql.get_connection_url()
         settings.PERSISTENT_STORAGE_CONNECTION_STRING = connection_url

@@ -33,7 +33,7 @@ def test_state_machine_transitions_when_running_full_mission(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
 
@@ -81,7 +81,7 @@ def test_state_machine_failed_dependency(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
 
@@ -119,7 +119,7 @@ def test_state_machine_with_successful_collection(
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
     uploader_thread: UploaderThreadMock,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
 
@@ -159,7 +159,7 @@ def test_state_machine_with_successful_collection(
 
 def test_state_machine_with_unsuccessful_collection(
     container: ApplicationContainer,
-    mocker,
+    mocker: MockerFixture,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
     uploader_thread: UploaderThreadMock,
@@ -241,7 +241,7 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
 
@@ -280,7 +280,7 @@ def test_state_machine_battery_too_low_to_start_mission(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
     state_machine_thread.start()
