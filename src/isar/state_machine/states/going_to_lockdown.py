@@ -1,11 +1,11 @@
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown as Lockdown
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -37,28 +37,11 @@ class GoingToLockdown(State):
             )
             return InterventionNeeded.transition()
 
-        def _mission_status_event_handler(
-            mission_status: MissionStatus,
-        ) -> Optional[
-            Union[
-                Transition[InterventionNeeded.InterventionNeeded],
-                Transition[Lockdown.Lockdown],
-            ]
-        ]:
-            if mission_status and mission_status not in [
-                MissionStatus.InProgress,
-                MissionStatus.NotStarted,
-                MissionStatus.Paused,
-            ]:
-                if mission_status != MissionStatus.Successful:
-                    state_machine.publish_intervention_needed(
-                        error_message="Lockdown mission failed."
-                    )
-                    return InterventionNeeded.transition()
-
-                state_machine.print_transitions()
-                return Lockdown.transition()
-            return None
+        def _mission_success_event_handler(
+            success: EmptyMessage,
+        ) -> Transition[Lockdown.Lockdown]:
+            state_machine.print_transitions()
+            return Lockdown.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
@@ -71,10 +54,10 @@ class GoingToLockdown(State):
                 event=events.robot_service_events.mission_failed_to_resume,
                 handler=_mission_failed_to_resume_event_handler,
             ),
-            EventHandlerMapping[MissionStatus](
-                name="mission_status_event",
-                event=events.robot_service_events.mission_status_updated,
-                handler=_mission_status_event_handler,
+            EventHandlerMapping[EmptyMessage](
+                name="mission_succeeded_event",
+                event=events.robot_service_events.mission_succeeded,
+                handler=_mission_success_event_handler,
             ),
         ]
         super().__init__(
