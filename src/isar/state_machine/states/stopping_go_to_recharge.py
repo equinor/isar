@@ -50,7 +50,7 @@ class StoppingGoToRecharge(State):
 
 
 def transition(mission_id: str) -> Transition[StoppingGoToRecharge]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> StoppingGoToRecharge:
         return StoppingGoToRecharge(state_machine, mission_id=mission_id)
 
     return _transition

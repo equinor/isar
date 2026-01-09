@@ -49,7 +49,7 @@ class Pausing(State):
 
 
 def transition(mission_id: str) -> Transition[Pausing]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> Pausing:
         return Pausing(state_machine, mission_id=mission_id)
 
     return _transition

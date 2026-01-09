@@ -121,7 +121,7 @@ class Paused(State):
 
 
 def transition(mission_id: str) -> Transition[Paused]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> Paused:
         return Paused(state_machine, mission_id)
 
     return _transition

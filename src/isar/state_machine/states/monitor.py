@@ -159,7 +159,7 @@ class Monitor(State):
 def transition_and_start_mission(
     mission: Mission, should_respond_to_API_request: bool = False
 ) -> Transition[Monitor]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> Monitor:
         state_machine.start_mission(mission=mission)
         if should_respond_to_API_request:
             state_machine.events.api_requests.start_mission.response.trigger_event(
@@ -171,7 +171,7 @@ def transition_and_start_mission(
 
 
 def transition_with_existing_mission(mission_id: str) -> Transition[Monitor]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> Monitor:
         return Monitor(state_machine, mission_id=mission_id)
 
     return _transition

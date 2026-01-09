@@ -85,7 +85,7 @@ class GoingToLockdown(State):
 
 
 def transition() -> Transition[GoingToLockdown]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> GoingToLockdown:
         return GoingToLockdown(state_machine)
 
     return _transition

@@ -49,7 +49,7 @@ class Resuming(State):
 
 
 def transition(mission_id: str) -> Transition[Resuming]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> Resuming:
         return Resuming(state_machine, mission_id)
 
     return _transition

@@ -47,7 +47,7 @@ class Maintenance(State):
 
 
 def transition() -> Transition[Maintenance]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> Maintenance:
         return Maintenance(state_machine)
 
     return _transition

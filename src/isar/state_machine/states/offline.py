@@ -82,7 +82,7 @@ class Offline(State):
 
 
 def transition() -> Transition[Offline]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> Offline:
         return Offline(state_machine)
 
     return _transition

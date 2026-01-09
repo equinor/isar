@@ -54,7 +54,7 @@ class StoppingPausedReturnHome(State):
 
 
 def transition(mission: Mission) -> Transition[StoppingPausedReturnHome]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> StoppingPausedReturnHome:
         return StoppingPausedReturnHome(state_machine, mission)
 
     return _transition
