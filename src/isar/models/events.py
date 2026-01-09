@@ -70,7 +70,7 @@ class Event(Queue[T]):
             queueList = list(self.queue)
             return queueList.pop()
 
-    def update(self, item: T):
+    def update(self, item: T) -> None:
         with self.mutex:
             self.queue: deque[T] = deque()
             self.queue.append(item)

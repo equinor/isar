@@ -2,7 +2,7 @@ import json
 from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
 from enum import Enum
-from typing import Iterator
+from typing import Any, Iterator
 from uuid import UUID
 
 import numpy as np
@@ -15,7 +15,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
     Custom JSONEncoder with the ability to encode dataclasses.
     """
 
-    def default(self, o):
+    def default(self, o: Any) -> Any:
         if isinstance(o, BaseModel):
             dump = getattr(o, "model_dump", None)
             if callable(dump):

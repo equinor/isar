@@ -70,7 +70,7 @@ def setup_open_telemetry(app: FastAPI) -> None:
     FastAPIInstrumentor.instrument_app(app, tracer_provider=tracer_provider)
 
 
-def attach_loggers_for_open_telemetry(handler: LoggingHandler):
+def attach_loggers_for_open_telemetry(handler: LoggingHandler) -> None:
     log_config = load_log_config()
 
     for logger_name in log_config["loggers"].keys():

@@ -304,7 +304,7 @@ class Robot(object):
             self.upload_inspection_threads.append(upload_inspection_thread)
             upload_inspection_thread.start()
 
-    def _upload_inspection_done_handler(self):
+    def _upload_inspection_done_handler(self) -> None:
         if len(self.upload_inspection_threads) > 0:
 
             def _join_threads(thread: RobotUploadInspectionThread) -> bool:

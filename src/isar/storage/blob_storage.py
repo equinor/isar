@@ -34,7 +34,7 @@ class BlobStorage(StorageInterface):
 
     def _get_container_client(
         self, keyvault: Keyvault, account_name: str, secret_name: str
-    ):
+    ) -> ContainerClient:
         storage_connection_string = keyvault.get_secret(secret_name).value
 
         if storage_connection_string is None:
@@ -52,7 +52,7 @@ class BlobStorage(StorageInterface):
             self.logger.error("Unable to retrieve blob service client. Error: %s", e)
             raise e
 
-        container_client = blob_service_client.get_container_client(
+        container_client: ContainerClient = blob_service_client.get_container_client(
             settings.BLOB_CONTAINER
         )
 

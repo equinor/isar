@@ -41,7 +41,7 @@ class RobotStatusThread(Thread):
         )
         return time_since_last_robot_status_poll > self.robot_status_poll_interval
 
-    def run(self):
+    def run(self) -> None:
         if self.signal_thread_quitting.is_set():
             return
 

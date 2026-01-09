@@ -2,6 +2,7 @@ import logging
 import logging.config
 import os
 from importlib.resources import as_file, files
+from typing import Any
 
 import yaml
 from uvicorn.logging import ColourizedFormatter
@@ -42,7 +43,7 @@ def setup_loggers() -> None:
             root_logger.setLevel(log_config["root"]["level"])
 
 
-def load_log_config():
+def load_log_config() -> dict[str, Any]:
     source = files("isar").joinpath("config").joinpath("logging.conf")
     with as_file(source) as f:
         log_config = yaml.safe_load(open(f))

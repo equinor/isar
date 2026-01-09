@@ -29,5 +29,5 @@ class States(str, Enum):
     StoppingPausedMission = "stopping_paused_mission"
     StoppingPausedReturnHome = "stopping_paused_return_home"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.value

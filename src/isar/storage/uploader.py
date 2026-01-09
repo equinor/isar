@@ -29,7 +29,7 @@ from robot_interface.telemetry.payloads import (
 from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
-def has_empty_blob_storage_path(storage_paths: StoragePaths):
+def has_empty_blob_storage_path(storage_paths: StoragePaths) -> bool:
     for path in (storage_paths.data_path, storage_paths.metadata_path):
         for value in (path.storage_account, path.blob_container, path.blob_name):
             if not (value and value.strip()):
@@ -181,10 +181,10 @@ class Uploader:
         return inspection_paths
 
     def _process_upload_queue(self) -> None:
-        def should_upload(_item):
+        def should_upload(_item: UploaderQueueItem) -> bool:
             if isinstance(_item, ValueItem):
                 return True
-            if _item.is_ready_for_upload():
+            if isinstance(_item, BlobItem) and _item.is_ready_for_upload():
                 return True
             return False
 

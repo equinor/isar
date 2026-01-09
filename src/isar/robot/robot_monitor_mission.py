@@ -70,7 +70,7 @@ class RobotMonitorMissionThread(Thread):
 
         Thread.__init__(self, name="Robot mission monitoring thread")
 
-    def _get_task_status(self, task_id) -> TaskStatus:
+    def _get_task_status(self, task_id: str) -> TaskStatus:
         task_status: TaskStatus = TaskStatus.NotStarted
         failed_task_error: Optional[ErrorMessage] = None
         request_status_failure_counter: int = 0
@@ -137,7 +137,7 @@ class RobotMonitorMissionThread(Thread):
             error_description=failed_task_error.error_description
         )
 
-    def _get_mission_status(self, mission_id) -> MissionStatus:
+    def _get_mission_status(self, mission_id: str) -> MissionStatus:
         mission_status: MissionStatus = MissionStatus.NotStarted
         failed_mission_error: Optional[ErrorMessage] = None
         request_status_failure_counter: int = 0
@@ -218,7 +218,7 @@ class RobotMonitorMissionThread(Thread):
                 f"Task: {str(task.id)[:8]} was reported as {task.status} by the robot"
             )
 
-    def _finalize_mission_status(self):
+    def _finalize_mission_status(self) -> None:
         fail_statuses = [
             TaskStatus.Cancelled,
             TaskStatus.Failed,

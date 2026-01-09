@@ -27,7 +27,7 @@ class RobotStartMissionThread(Thread):
         self.error_message: Optional[ErrorMessage] = None
         Thread.__init__(self, name="Robot start mission thread")
 
-    def run(self):
+    def run(self) -> None:
         if self.signal_thread_quitting.wait(0):
             return
         try:

@@ -39,7 +39,7 @@ class RobotBatteryThread(Thread):
             > settings.ROBOT_API_BATTERY_POLL_INTERVAL
         )
 
-    def run(self):
+    def run(self) -> None:
         if self.signal_thread_quitting.is_set():
             return
 
