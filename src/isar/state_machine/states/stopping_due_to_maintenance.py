@@ -68,7 +68,7 @@ class StoppingDueToMaintenance(State):
 
 
 def transition(mission_id: str) -> Transition[StoppingDueToMaintenance]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> StoppingDueToMaintenance:
         return StoppingDueToMaintenance(state_machine, mission_id)
 
     return _transition

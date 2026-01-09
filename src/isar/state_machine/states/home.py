@@ -157,7 +157,7 @@ class Home(State):
 
 
 def transition() -> Transition["Home"]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> Home:
         return Home(state_machine)
 
     return _transition

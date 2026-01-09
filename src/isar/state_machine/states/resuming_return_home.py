@@ -49,7 +49,7 @@ class ResumingReturnHome(State):
 
 
 def transition() -> Transition[ResumingReturnHome]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> ResumingReturnHome:
         return ResumingReturnHome(state_machine)
 
     return _transition

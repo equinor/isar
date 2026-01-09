@@ -102,7 +102,7 @@ class UnknownStatus(State):
 
 
 def transition() -> Transition[UnknownStatus]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> UnknownStatus:
         return UnknownStatus(state_machine)
 
     return _transition

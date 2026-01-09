@@ -77,7 +77,7 @@ class InterventionNeeded(State):
 
 
 def transition() -> Transition[InterventionNeeded]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> InterventionNeeded:
         return InterventionNeeded(state_machine)
 
     return _transition

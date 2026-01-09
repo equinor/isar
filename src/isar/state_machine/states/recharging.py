@@ -86,7 +86,7 @@ class Recharging(State):
 
 
 def transition() -> Transition[Recharging]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> Recharging:
         return Recharging(state_machine)
 
     return _transition

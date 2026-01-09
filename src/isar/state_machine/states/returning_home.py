@@ -204,7 +204,7 @@ class ReturningHome(State):
 def transition_and_start_mission(
     should_respond_to_API_request: bool = False,
 ) -> Transition[ReturningHome]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> ReturningHome:
         state_machine.start_return_home_mission()
         if should_respond_to_API_request:
             state_machine.events.api_requests.return_home.response.trigger_event(
@@ -216,7 +216,7 @@ def transition_and_start_mission(
 
 
 def transition_to_existing_mission() -> Transition[ReturningHome]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> ReturningHome:
         return ReturningHome(state_machine)
 
     return _transition

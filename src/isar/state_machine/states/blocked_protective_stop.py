@@ -80,7 +80,7 @@ class BlockedProtectiveStop(State):
 
 
 def transition() -> Transition[BlockedProtectiveStop]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> BlockedProtectiveStop:
         return BlockedProtectiveStop(state_machine)
 
     return _transition

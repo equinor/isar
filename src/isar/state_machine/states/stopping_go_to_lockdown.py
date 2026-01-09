@@ -61,7 +61,7 @@ class StoppingGoToLockdown(State):
 
 
 def transition(mission_id: str) -> Transition[StoppingGoToLockdown]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> StoppingGoToLockdown:
         return StoppingGoToLockdown(state_machine, mission_id)
 
     return _transition

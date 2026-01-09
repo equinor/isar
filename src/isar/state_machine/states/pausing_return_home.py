@@ -49,7 +49,7 @@ class PausingReturnHome(State):
 
 
 def transition() -> Transition[PausingReturnHome]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> PausingReturnHome:
         return PausingReturnHome(state_machine)
 
     return _transition

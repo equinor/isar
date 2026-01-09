@@ -90,7 +90,7 @@ class StateMachine(object):
         self.logger.info("State transitions:\n  %s", state_transitions)
         self.transitions_list.clear()
 
-    def run(self):
+    def run(self) -> None:
         """Runs the state machine loop."""
         try:
             while self.current_state is not None:
@@ -103,11 +103,11 @@ class StateMachine(object):
         except Exception as e:
             self.logger.error(f"Unhandled exception in state machine: {str(e)}")
 
-    def terminate(self):
+    def terminate(self) -> None:
         self.logger.info("Stopping state machine")
         self.signal_state_machine_to_stop.set()
 
-    def battery_level_is_above_mission_start_threshold(self):
+    def battery_level_is_above_mission_start_threshold(self) -> bool:
         if not self.shared_state.robot_battery_level.check():
             self.logger.warning("Battery level is None")
             return False
@@ -116,18 +116,18 @@ class StateMachine(object):
             < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
         )
 
-    def update_state(self):
+    def update_state(self) -> None:
         """Updates the current state of the state machine."""
         self.shared_state.state.update(self.current_state.name)
         self.transitions_list.append(self.current_state.name)
         self.logger.info("State: %s", self.current_state.name)
         self.publish_status()
 
-    def start_mission(self, mission: Mission):
+    def start_mission(self, mission: Mission) -> None:
         """Starts a scheduled mission."""
         self.events.state_machine_events.start_mission.trigger_event(mission)
 
-    def start_return_home_mission(self):
+    def start_return_home_mission(self) -> None:
         """Starts a return to home mission."""
         mission = Mission(
             tasks=[ReturnToHome()],
@@ -233,7 +233,7 @@ class StateMachine(object):
             return IsarStatus.Busy
 
 
-def read_or_create_persistent_maintenance_mode():
+def read_or_create_persistent_maintenance_mode() -> bool:
     try:
         is_maintenance_mode = read_persistent_robot_state_is_maintenance_mode(
             settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID
@@ -248,6 +248,6 @@ def read_or_create_persistent_maintenance_mode():
     return is_maintenance_mode
 
 
-def main(state_machine: StateMachine):
+def main(state_machine: StateMachine) -> None:
     """Starts a state machine instance."""
     state_machine.run()

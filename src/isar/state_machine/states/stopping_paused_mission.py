@@ -58,7 +58,7 @@ class StoppingPausedMission(State):
 def transition_and_trigger_stop(
     mission_id: str, should_respond_to_API_request: bool = False
 ) -> Transition[StoppingPausedMission]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> StoppingPausedMission:
         state_machine.events.state_machine_events.stop_mission.trigger_event(
             EmptyMessage()
         )

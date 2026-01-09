@@ -132,7 +132,7 @@ class AwaitNextMission(State):
 
 
 def transition() -> Transition[AwaitNextMission]:
-    def _transition(state_machine: "StateMachine"):
+    def _transition(state_machine: "StateMachine") -> AwaitNextMission:
         return AwaitNextMission(state_machine)
 
     return _transition
