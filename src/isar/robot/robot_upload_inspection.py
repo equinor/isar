@@ -32,7 +32,7 @@ class RobotUploadInspectionThread(Thread):
     def stop(self) -> None:
         return
 
-    def run(self):
+    def run(self) -> None:
         try:
             inspection: Inspection = self.robot.get_inspection(task=self.task)
             if self.task.inspection_id != inspection.id:

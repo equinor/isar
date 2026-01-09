@@ -29,13 +29,13 @@ from robot_interface.robot_interface import RobotInterface
 
 def print_setting(
     setting: str = "", value: Any = "", fillchar: str = " ", width: int = 48
-):
+) -> None:
     separator = ": " if value != "" else ""
     text = setting.ljust(22, fillchar) + separator + str(value)
     print("*", text.ljust(width - 4, fillchar), "*")
 
 
-def print_startup_info():
+def print_startup_info() -> None:
     logger: Logger = logging.getLogger("main")
     logger.info(
         """
@@ -49,7 +49,7 @@ def print_startup_info():
 """
     )
 
-    def print_setting(setting: str = "", value: Any = "", fillchar: str = " "):
+    def print_setting(setting: str = "", value: Any = "", fillchar: str = " ") -> None:
         separator = ": " if value != "" else ""
         logger.info(setting + separator + str(value))
 
@@ -119,7 +119,7 @@ def start() -> None:
 
     if settings.UPLOAD_INSPECTIONS_ASYNC:
 
-        def inspections_callback(inspection: Inspection, mission: Mission):
+        def inspections_callback(inspection: Inspection, mission: Mission) -> None:
             message: Tuple[Inspection, Mission] = (
                 inspection,
                 mission,

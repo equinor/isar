@@ -79,7 +79,7 @@ def run_migrations_online() -> None:
             context.run_migrations()
 
 
-def get_connection_string():
+def get_connection_string() -> str:
     url = os.getenv("ISAR_PERSISTENT_STORAGE_CONNECTION_STRING")
     if url is None or url == "":
         raise Exception(

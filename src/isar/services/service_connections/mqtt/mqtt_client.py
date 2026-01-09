@@ -2,6 +2,7 @@ import logging
 import os
 import time
 from queue import Empty, Queue
+from typing import Any, Tuple
 
 import backoff
 from paho.mqtt import client as mqtt
@@ -105,10 +106,12 @@ class MqttClient(MqttClientInterface):
                 properties=properties,
             )
 
-    def on_connect(self, client, userdata, flags, reason_code, properties):
+    def on_connect(
+        self, client: Any, userdata: Any, flags: Any, reason_code: str, properties: Any
+    ) -> None:
         self.logger.info(f"Connected: {reason_code}")
 
-    def on_disconnect(self, client, userdata, *args):
+    def on_disconnect(self, client: Any, userdata: Any, *args: Tuple[Any]) -> None:
         if not args:
             return
         reason_code = args[0] if len(args) < 3 else args[1]
@@ -135,8 +138,8 @@ class MqttClient(MqttClientInterface):
         payload: str,
         qos: int = 0,
         retain: bool = False,
-        properties=None,
-    ):
+        properties: Properties = None,
+    ) -> None:
         self.logger.debug("Publishing message to topic: %s", topic)
         self.client.publish(
             topic=topic, payload=payload, qos=qos, retain=retain, properties=properties

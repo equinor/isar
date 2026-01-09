@@ -241,7 +241,7 @@ class Settings(BaseSettings):
         "TOPIC_ISAR_MISSION_ABORTED",
     )
     @classmethod
-    def prefix_isar_topics(cls, v: Any, info: ValidationInfo):
+    def prefix_isar_topics(cls, v: Any, info: ValidationInfo) -> str:
         return f"isar/{info.data['ISAR_ID']}/{v}"
 
     model_config = SettingsConfigDict(

@@ -53,7 +53,7 @@ class Keyvault:
 
         return secret
 
-    def set_secret(self, secret_name: str, secret_value) -> None:
+    def set_secret(self, secret_name: str, secret_value: str) -> None:
         secret_client: SecretClient = self.get_secret_client()
         try:
             secret_client.set_secret(name=secret_name, value=secret_value)

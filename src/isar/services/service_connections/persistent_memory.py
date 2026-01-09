@@ -16,7 +16,7 @@ class PersistentRobotState(Base):
     robot_id: Mapped[str] = mapped_column(String(64))
     is_maintenance_mode: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"PersistentRobotState(id={self.id!r}, robot_id={self.robot_id!r}, is_maintenance_mode={self.is_maintenance_mode!r})"
 
 
@@ -26,7 +26,7 @@ class NoSuchRobotException(Exception):
 
 def read_persistent_robot_state_is_maintenance_mode(
     connection_string: str, robot_id: str
-):
+) -> bool:
     engine = sqlalchemy.create_engine(connection_string)
 
     with Session(engine) as session:
@@ -45,7 +45,7 @@ def read_persistent_robot_state_is_maintenance_mode(
 
 def change_persistent_robot_state_is_maintenance_mode(
     connection_string: str, robot_id: str, value: bool
-):
+) -> None:
     engine = sqlalchemy.create_engine(connection_string)
 
     with Session(engine) as session:
@@ -58,7 +58,7 @@ def change_persistent_robot_state_is_maintenance_mode(
         session.commit()
 
 
-def create_persistent_robot_state(connection_string: str, robot_id: str):
+def create_persistent_robot_state(connection_string: str, robot_id: str) -> None:
     engine = sqlalchemy.create_engine(connection_string)
 
     with Session(engine) as session:

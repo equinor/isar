@@ -1,4 +1,5 @@
 import logging
+from typing import Any, Callable, Coroutine, Type, Union
 
 from fastapi import Depends
 from fastapi.security.base import SecurityBase
@@ -53,7 +54,9 @@ class Authenticator:
     def should_authenticate(self) -> bool:
         return self.authentication_enabled
 
-    def get_scheme(self):
+    def get_scheme(
+        self,
+    ) -> Union[Callable[[Any], Coroutine[Any, Any, None]], Type[NoSecurity]]:
         if self.should_authenticate():
             return validate_has_role
         return NoSecurity
