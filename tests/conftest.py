@@ -1,3 +1,8 @@
+# import warnings
+# # This removes the deprecation warning in testcontainers that is not our fault
+# warnings.filterwarnings("ignore", category=DeprecationWarning, module="testcontainers")
+
+import logging
 import shutil
 from pathlib import Path
 
@@ -36,7 +41,21 @@ from tests.test_mocks.state_machine_mocks import (
 
 @pytest.fixture(autouse=True)
 def setup_test_environment():
+
     settings.PERSISTENT_STORAGE_CONNECTION_STRING = ""
+
+    logger_names = [
+        "main",
+        "api",
+        "state_machine",
+        "robot",
+        "mqtt_client",
+        "uploader",
+        "fastapi_azure_auth",
+    ]
+    loggers = [logging.getLogger(name) for name in logger_names]
+    for logger in loggers:
+        logger.propagate = False  # Turn off logging in the command line for testing
 
 
 @pytest.fixture()

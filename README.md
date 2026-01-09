@@ -24,10 +24,8 @@ For local development, please fork the repository. Then, clone and install in th
 ```
 git clone https://github.com/<path_to_parent>/isar
 cd isar
-pip install -e .[dev]
+pip install -r requirements.txt -e ".[dev]"
 ```
-
-For `zsh` you might have to type `".[dev]"`
 
 Verify that you can run the tests:
 
