@@ -9,7 +9,6 @@ from isar.apis.models.models import (
     MaintenanceResponse,
     MissionStartResponse,
 )
-from isar.config.settings import settings
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
@@ -85,8 +84,7 @@ class Events:
 
         self.upload_queue: Queue = Queue(maxsize=10)
 
-        if settings.MQTT_ENABLED:
-            self.mqtt_queue: Queue = Queue()
+        self.mqtt_queue: Queue = Queue()
 
 
 class APIEvent(Generic[T1, T2]):

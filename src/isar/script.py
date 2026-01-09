@@ -128,46 +128,45 @@ def start() -> None:
 
         robot.register_and_monitor_inspection_callback(inspections_callback)
 
-    if settings.MQTT_ENABLED:
-        mqtt_client: MqttClient = MqttClient(mqtt_queue=events.mqtt_queue)
+    mqtt_client: MqttClient = MqttClient(mqtt_queue=events.mqtt_queue)
 
-        mqtt_thread: Thread = Thread(
-            target=mqtt_client.run, name="ISAR MQTT Client", daemon=True
-        )
-        mqtt_thread.start()
-        threads.append(mqtt_thread)
+    mqtt_thread: Thread = Thread(
+        target=mqtt_client.run, name="ISAR MQTT Client", daemon=True
+    )
+    mqtt_thread.start()
+    threads.append(mqtt_thread)
 
-        robot_info_publisher: RobotInfoPublisher = RobotInfoPublisher(
-            mqtt_queue=events.mqtt_queue
-        )
-        robot_info_thread: Thread = Thread(
-            target=robot_info_publisher.run,
-            name="ISAR Robot Info Publisher",
-            daemon=True,
-        )
-        robot_info_thread.start()
-        threads.append(robot_info_thread)
+    robot_info_publisher: RobotInfoPublisher = RobotInfoPublisher(
+        mqtt_queue=events.mqtt_queue
+    )
+    robot_info_thread: Thread = Thread(
+        target=robot_info_publisher.run,
+        name="ISAR Robot Info Publisher",
+        daemon=True,
+    )
+    robot_info_thread.start()
+    threads.append(robot_info_thread)
 
-        robot_heartbeat_publisher: RobotHeartbeatPublisher = RobotHeartbeatPublisher(
-            mqtt_queue=events.mqtt_queue
-        )
+    robot_heartbeat_publisher: RobotHeartbeatPublisher = RobotHeartbeatPublisher(
+        mqtt_queue=events.mqtt_queue
+    )
 
-        robot_heartbeat_thread: Thread = Thread(
-            target=robot_heartbeat_publisher.run,
-            name="ISAR Robot Heartbeat Publisher",
-            daemon=True,
-        )
-        robot_heartbeat_thread.start()
-        threads.append(robot_heartbeat_thread)
+    robot_heartbeat_thread: Thread = Thread(
+        target=robot_heartbeat_publisher.run,
+        name="ISAR Robot Heartbeat Publisher",
+        daemon=True,
+    )
+    robot_heartbeat_thread.start()
+    threads.append(robot_heartbeat_thread)
 
-        publishers: List[Thread] = robot_interface.get_telemetry_publishers(
-            queue=events.mqtt_queue,
-            robot_name=settings.ROBOT_NAME,
-            isar_id=settings.ISAR_ID,
-        )
-        for publisher in publishers:
-            publisher.start()
-            threads.append(publisher)
+    publishers: List[Thread] = robot_interface.get_telemetry_publishers(
+        queue=events.mqtt_queue,
+        robot_name=settings.ROBOT_NAME,
+        isar_id=settings.ISAR_ID,
+    )
+    for publisher in publishers:
+        publisher.start()
+        threads.append(publisher)
 
     while True:
         for thread in threads:

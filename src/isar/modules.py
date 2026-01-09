@@ -43,13 +43,9 @@ class ApplicationContainer(containers.DeclarativeContainer):
     robot_utilities = providers.Singleton(RobotUtilities, robot=robot_interface)
 
     # Mqtt client
-    mqtt_client = (
-        providers.Singleton(
-            MqttPublisher,
-            mqtt_queue=providers.Callable(events.provided.mqtt_queue),
-        )
-        if settings.MQTT_ENABLED
-        else None
+    mqtt_client = providers.Singleton(
+        MqttPublisher,
+        mqtt_queue=providers.Callable(events.provided.mqtt_queue),
     )
 
     # API and controllers
@@ -115,12 +111,7 @@ def get_injector() -> ApplicationContainer:
     container = ApplicationContainer()
     container.init_resources()
     container.wire(modules=[__name__])
-    container.config.from_dict(
-        {
-            "KEYVAULT_NAME": settings.KEYVAULT_NAME,
-            "MQTT_ENABLED": settings.MQTT_ENABLED,
-        }
-    )
+    container.config.from_dict({"KEYVAULT_NAME": settings.KEYVAULT_NAME})
 
     print("Loaded the following module configurations:")
     for provider_name, provider in container.providers.items():

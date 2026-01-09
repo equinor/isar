@@ -95,12 +95,6 @@ class Settings(BaseSettings):
     STORAGE_LOCAL_ENABLED: bool = Field(default=True)
     STORAGE_BLOB_ENABLED: bool = Field(default=False)
 
-    # Determines whether the MQTT publishing module should be enabled or not
-    # The publishing module will attempt to connect to the MQTT broker configured in
-    # "service_connections"
-    # Options: [false true]
-    MQTT_ENABLED: bool = Field(default=False)
-
     # Determines whether certificate based encryption will be used for the MQTT
     # communication.
     MQTT_SSL_ENABLED: bool = Field(default=True)
@@ -129,11 +123,7 @@ class Settings(BaseSettings):
     # The password should be set as an environment variable "MQTT_PASSWORD"
     # If the password is not set in the environment an empty string will be used
     MQTT_USERNAME: str = Field(default="isar")
-
-    # MQTT host
     MQTT_HOST: str = Field(default="localhost")
-
-    # MQTT port
     MQTT_PORT: int = Field(default=1883)
 
     # Keyvault name
