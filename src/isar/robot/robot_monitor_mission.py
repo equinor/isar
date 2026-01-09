@@ -270,10 +270,9 @@ class RobotMonitorMissionThread(Thread):
                 if current_task.status != new_task_status:
                     current_task.status = new_task_status
                     self._report_task_status(current_task)
-                    if settings.MQTT_ENABLED:
-                        publish_task_status(
-                            self.mqtt_publisher, current_task, self.current_mission
-                        )
+                    publish_task_status(
+                        self.mqtt_publisher, current_task, self.current_mission
+                    )
 
                 if is_finished(new_task_status):
                     if should_upload_inspections(current_task):
@@ -285,10 +284,9 @@ class RobotMonitorMissionThread(Thread):
                         # This is not required, but does make reporting more responsive
                         current_task.status = TaskStatus.InProgress
                         self._report_task_status(current_task)
-                        if settings.MQTT_ENABLED:
-                            publish_task_status(
-                                self.mqtt_publisher, current_task, self.current_mission
-                            )
+                        publish_task_status(
+                            self.mqtt_publisher, current_task, self.current_mission
+                        )
 
             if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
                 0
@@ -309,8 +307,7 @@ class RobotMonitorMissionThread(Thread):
             if new_mission_status != last_mission_status:
                 self.current_mission.status = new_mission_status
                 last_mission_status = new_mission_status
-                if settings.MQTT_ENABLED:
-                    publish_mission_status(self.mqtt_publisher, self.current_mission)
+                publish_mission_status(self.mqtt_publisher, self.current_mission)
                 self.robot_service_events.mission_status_updated.trigger_event(
                     new_mission_status
                 )
@@ -323,10 +320,7 @@ class RobotMonitorMissionThread(Thread):
                 # Standardises final mission status report
                 mission_status = self.current_mission.status
                 self._finalize_mission_status()
-                if (
-                    mission_status != self.current_mission.status
-                    and settings.MQTT_ENABLED
-                ):
+                if mission_status != self.current_mission.status:
                     publish_mission_status(self.mqtt_publisher, self.current_mission)
                 break
 
@@ -343,10 +337,7 @@ class RobotMonitorMissionThread(Thread):
             current_task.status = (
                 TaskStatus.Cancelled if mission_stopped else TaskStatus.Failed
             )
-            if settings.MQTT_ENABLED:
-                publish_task_status(
-                    self.mqtt_publisher, current_task, self.current_mission
-                )
+            publish_task_status(self.mqtt_publisher, current_task, self.current_mission)
         if self.current_mission.status not in [
             MissionStatus.Cancelled,
             MissionStatus.PartiallySuccessful,
@@ -354,8 +345,7 @@ class RobotMonitorMissionThread(Thread):
             MissionStatus.Successful,
         ]:
             self.current_mission.status = MissionStatus.Cancelled
-            if settings.MQTT_ENABLED:
-                publish_mission_status(self.mqtt_publisher, self.current_mission)
+            publish_mission_status(self.mqtt_publisher, self.current_mission)
             if not mission_stopped:
                 self.robot_service_events.mission_status_updated.trigger_event(
                     self.current_mission.status

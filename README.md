@@ -310,13 +310,7 @@ ISAR_BLOB_STORAGE_ACCOUNT
 
 ## MQTT communication
 
-ISAR is able to publish parts of its internal state to topics on an MQTT broker whenever they change. This is by default
-turned off but may be activated by setting the environment variable
-
-```
-ISAR_MQTT_ENABLED = true
-```
-
+ISAR is able to publish parts of its internal state to topics on an MQTT broker whenever they change. 
 The connection to the broker will be determined by the following configuration values in `settings.py`
 
 ```
@@ -325,7 +319,7 @@ ISAR_MQTT_HOST
 ISAR_MQTT_PORT
 ```
 
-The default values of these are overwritten by the environment in `settings.env`.
+The default values of these are overwritten by the environment in a file you can create called `.env`.
 
 To specify broker password, add the following environment variable to a .env file in the root of the repository:
 
