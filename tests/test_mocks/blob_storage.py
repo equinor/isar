@@ -16,7 +16,7 @@ class StorageFake(StorageInterface):
     def __init__(self) -> None:
         self.stored_inspections: List[Inspection] = []
 
-    def store(self, inspection: Inspection, mission: Mission):
+    def store(self, inspection: Inspection, mission: Mission) -> None:
         if self.will_fail:
             raise StorageException("Fake failed on purpose")
         self.stored_inspections.append(inspection)

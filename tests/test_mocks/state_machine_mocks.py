@@ -11,10 +11,10 @@ class StateMachineThreadMock(object):
         self.state_machine: StateMachine = container.state_machine()
         self._thread: Thread = Thread(target=main, args=[self.state_machine])
 
-    def start(self):
+    def start(self) -> None:
         self._thread.start()
 
-    def join(self):
+    def join(self) -> None:
         self.state_machine.terminate()
         self._thread.join()
 
@@ -24,10 +24,10 @@ class UploaderThreadMock(object):
         self.uploader: Uploader = container.uploader()
         self._thread: Thread = Thread(target=self.uploader.run)
 
-    def start(self):
+    def start(self) -> None:
         self._thread.start()
 
-    def join(self):
+    def join(self) -> None:
         self.uploader.stop()
         self._thread.join()
 
@@ -40,6 +40,6 @@ class RobotServiceThreadMock(object):
         self._thread: Thread = Thread(target=self.robot_service.run)
         self._thread.start()
 
-    def join(self):
+    def join(self) -> None:
         self.robot_service.stop()
         self._thread.join()

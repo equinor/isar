@@ -37,7 +37,7 @@ class StubRobot(RobotInterface):
         ),
         robot_status: RobotStatus = RobotStatus.Available,
         initiate_mission_delay: float = 0.0,
-    ):
+    ) -> None:
         self.mission_status_return_value: MissionStatus = mission_status
         self.task_status_return_value: TaskStatus = task_status
         self.stop_return_value: bool = stop
@@ -93,7 +93,7 @@ class StubRobot(RobotInterface):
     def robot_status(self) -> RobotStatus:
         return self.robot_status_return_value
 
-    def get_battery_level(self):
+    def get_battery_level(self) -> float:
         return 80.0
 
 
@@ -111,7 +111,7 @@ def stub_image_metadata() -> ImageMetadata:
 
 
 class StubRobotInitiateMissionRaisesException(StubRobot):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def initiate_mission(self, mission: Mission) -> None:
@@ -119,7 +119,7 @@ class StubRobotInitiateMissionRaisesException(StubRobot):
 
 
 class StubRobotMissionStatusRaisesException(StubRobot):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def mission_status(self, mission_id: str) -> MissionStatus:
@@ -127,7 +127,7 @@ class StubRobotMissionStatusRaisesException(StubRobot):
 
 
 class StubRobotOfflineToAvailableTest(StubRobot):
-    def __init__(self, current_state: Event):
+    def __init__(self, current_state: Event) -> None:
         self.entered_offline = False
         self.current_state = current_state
 
@@ -146,7 +146,7 @@ class StubRobotOfflineToAvailableTest(StubRobot):
 
 
 class StubRobotBlockedProtectiveStopToHomeTest(StubRobot):
-    def __init__(self, current_state_event: Event[States]):
+    def __init__(self, current_state_event: Event[States]) -> None:
         self.entered_blocked_p_stop = False
         self.current_state_event = current_state_event
 
@@ -163,7 +163,7 @@ class StubRobotBlockedProtectiveStopToHomeTest(StubRobot):
 
 
 class StubRobotOfflineToHomeTest(StubRobot):
-    def __init__(self, current_state: Event):
+    def __init__(self, current_state: Event) -> None:
         self.entered_offline = False
         self.current_state = current_state
 
@@ -184,7 +184,7 @@ class StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(StubRobot):
         self,
         current_state: Event,
         initiate_mission_delay: float = 0.0,
-    ):
+    ) -> None:
         super().__init__()
         self.current_state = current_state
         self.initiate_mission_delay: float = initiate_mission_delay

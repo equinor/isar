@@ -17,7 +17,7 @@ from tests.test_mocks.mission_definition import DummyMissionDefinition
 
 def test_timeout_send_command(
     mocker: MockerFixture, scheduling_utilities: SchedulingUtilities
-):
+) -> None:
     mocker.patch.object(settings, "QUEUE_TIMEOUT", 2)
     mocker.patch.object(Event, "consume_event", side_effect=EventTimeoutError)
     q: APIEvent = APIEvent("test")
@@ -26,14 +26,16 @@ def test_timeout_send_command(
     assert q.request.empty()
 
 
-def test_robot_capable_of_mission(scheduling_utilities: SchedulingUtilities):
+def test_robot_capable_of_mission(scheduling_utilities: SchedulingUtilities) -> None:
     assert scheduling_utilities.verify_robot_capable_of_mission(
         mission=DummyMissionDefinition.default_mission,
         robot_capabilities=["return_to_home", "take_image"],
     )
 
 
-def test_robot_not_capable_of_mission(scheduling_utilities: SchedulingUtilities):
+def test_robot_not_capable_of_mission(
+    scheduling_utilities: SchedulingUtilities,
+) -> None:
     with pytest.raises(HTTPException) as err:
         scheduling_utilities.verify_robot_capable_of_mission(
             mission=DummyMissionDefinition.default_mission,
@@ -44,7 +46,7 @@ def test_robot_not_capable_of_mission(scheduling_utilities: SchedulingUtilities)
 
 def test_state_machine_ready_to_receive_mission(
     scheduling_utilities: SchedulingUtilities,
-):
+) -> None:
     assert scheduling_utilities.verify_state_machine_ready_to_receive_mission(
         States.Home
     )
@@ -58,7 +60,7 @@ def test_state_machine_ready_to_receive_mission(
 
 def test_state_machine_not_ready_to_receive_mission(
     scheduling_utilities: SchedulingUtilities,
-):
+) -> None:
     with pytest.raises(HTTPException) as err:
         scheduling_utilities.verify_state_machine_ready_to_receive_mission(
             States.Monitor
@@ -69,7 +71,7 @@ def test_state_machine_not_ready_to_receive_mission(
 def test_mission_already_started_causes_conflict(
     scheduling_utilities: SchedulingUtilities,
     mocker: MockerFixture,
-):
+) -> None:
     mocker.patch.object(settings, "QUEUE_TIMEOUT", 2)
     start_mission_thread: Thread = Thread(
         target=scheduling_utilities.start_mission,
@@ -86,7 +88,7 @@ def test_mission_already_started_causes_conflict(
 def test_pause_mission_twice_causes_conflict(
     scheduling_utilities: SchedulingUtilities,
     mocker: MockerFixture,
-):
+) -> None:
     mocker.patch.object(settings, "QUEUE_TIMEOUT", 2)
     pause_mission_thread: Thread = Thread(target=scheduling_utilities.pause_mission)
     pause_mission_thread.start()
@@ -100,7 +102,7 @@ def test_pause_mission_twice_causes_conflict(
 def test_resume_mission_twice_causes_conflict(
     scheduling_utilities: SchedulingUtilities,
     mocker: MockerFixture,
-):
+) -> None:
     mocker.patch.object(settings, "QUEUE_TIMEOUT", 2)
     resume_mission_thread: Thread = Thread(target=scheduling_utilities.resume_mission)
     resume_mission_thread.start()
@@ -114,7 +116,7 @@ def test_resume_mission_twice_causes_conflict(
 def test_stop_mission_twice_causes_conflict(
     scheduling_utilities: SchedulingUtilities,
     mocker: MockerFixture,
-):
+) -> None:
     mocker.patch.object(settings, "QUEUE_TIMEOUT", 2)
     stop_mission_thread: Thread = Thread(target=scheduling_utilities.stop_mission)
     stop_mission_thread.start()
@@ -128,7 +130,7 @@ def test_stop_mission_twice_causes_conflict(
 def test_return_home_twice_causes_conflict(
     scheduling_utilities: SchedulingUtilities,
     mocker: MockerFixture,
-):
+) -> None:
     mocker.patch.object(settings, "QUEUE_TIMEOUT", 2)
     return_home_thread: Thread = Thread(target=scheduling_utilities.return_home)
     return_home_thread.start()
@@ -140,7 +142,7 @@ def test_return_home_twice_causes_conflict(
 
 
 def test_api_with_unsuccessful_return_home_stop(
-    mocker,
+    mocker: MockerFixture,
     container: ApplicationContainer,
     sync_state_machine: StateMachine,
 ) -> None:
