@@ -16,7 +16,7 @@ anyio==4.12.1
     #   starlette
 asgiref==3.11.0
     # via opentelemetry-instrumentation-asgi
-azure-core==1.37.0
+azure-core==1.38.0
     # via
     #   azure-core-tracing-opentelemetry
     #   azure-identity
