@@ -16,7 +16,7 @@ anyio==4.12.1
     #   starlette
 asgiref==3.11.0
     # via opentelemetry-instrumentation-asgi
-azure-core==1.37.0
+azure-core==1.38.0
     # via
     #   azure-core-tracing-opentelemetry
     #   azure-identity
@@ -112,7 +112,7 @@ msal-extensions==1.3.1
     # via azure-identity
 msrest==0.7.1
     # via azure-monitor-opentelemetry-exporter
-numpy==2.4.0
+numpy==2.4.1
     # via
     #   alitra
     #   isar (pyproject.toml)
@@ -229,7 +229,7 @@ packaging==25.0
     #   opentelemetry-instrumentation-flask
 paho-mqtt==2.1.0
     # via isar (pyproject.toml)
-protobuf==6.33.2
+protobuf==6.33.4
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
@@ -274,7 +274,7 @@ requests-oauthlib==2.0.0
     # via msrest
 requests-toolbelt==1.0.0
     # via isar (pyproject.toml)
-scipy==1.16.3
+scipy==1.17.0
     # via alitra
 six==1.17.0
     # via transitions
