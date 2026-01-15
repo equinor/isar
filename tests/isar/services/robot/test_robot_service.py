@@ -73,7 +73,7 @@ def test_mission_succeeds_to_schedule(
 
     assert not r_service.signal_mission_stopped.is_set()
     assert r_service.monitor_mission_thread is not None
-    assert r_service.monitor_mission_thread.current_mission.id == mission.id
+    assert r_service.monitor_mission_thread.mission_id == mission.id
 
     mock_publish_mission_status.assert_not_called()
     mock_monitor_mission_start.assert_called_once()
@@ -92,7 +92,7 @@ def test_mission_fails_to_stop(
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
     r_service.monitor_mission_thread = RobotMonitorMissionThread(
-        r_service.robot_service_events,
+        lambda task: None,
         r_service.robot,
         r_service.mqtt_publisher,
         r_service.signal_thread_quitting,
@@ -133,9 +133,6 @@ def test_stop_mission_waits_for_monitor_mission(
     r_service = mocked_robot_service
     mocker.patch.object(RobotStopMissionThread, "is_alive", return_value=False)
     mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=True)
-    mock_join_monitor_thread = mocker.patch(
-        "isar.robot.robot.RobotMonitorMissionThread.join"
-    )
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
@@ -143,7 +140,7 @@ def test_stop_mission_waits_for_monitor_mission(
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
     r_service.monitor_mission_thread = RobotMonitorMissionThread(
-        r_service.robot_service_events,
+        lambda task: None,
         r_service.robot,
         r_service.mqtt_publisher,
         r_service.signal_thread_quitting,
@@ -158,22 +155,15 @@ def test_stop_mission_waits_for_monitor_mission(
     r_service._stop_mission_done_handler()
 
     assert not r_service.robot_service_events.mission_successfully_stopped.has_event()
+    assert r_service.signal_mission_stopped.is_set()
 
     mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=False)
     r_service._stop_mission_done_handler()
 
     assert r_service.robot_service_events.mission_successfully_stopped.has_event()
-    mission_successfully_stopped_event = (
-        r_service.robot_service_events.mission_successfully_stopped.get()
-    )
-    assert mission_successfully_stopped_event
-
     assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
     assert not r_service.robot_service_events.mission_failed.has_event()
     assert not r_service.robot_service_events.mission_succeeded.has_event()
-
-    assert r_service.signal_mission_stopped.is_set()
-    mock_join_monitor_thread.assert_called_once()
 
 
 def test_mission_succeeds_to_stop(
@@ -192,6 +182,123 @@ def test_mission_succeeds_to_stop(
     assert r_service.robot_service_events.mission_successfully_stopped.has_event()
 
     assert not r_service.robot_service_events.mission_succeeded.has_event()
+    assert not r_service.robot_service_events.mission_failed.has_event()
+
+    assert r_service.monitor_mission_thread is None
+
+
+def test_monitor_mission_handler_waits_for_thread(
+    mocked_robot_service: Robot, mocker: MockerFixture
+) -> None:
+    r_service = mocked_robot_service
+    mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=True)
+
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
+
+    r_service.monitor_mission_thread = RobotMonitorMissionThread(
+        lambda task: None,
+        r_service.robot,
+        r_service.mqtt_publisher,
+        r_service.signal_thread_quitting,
+        r_service.signal_mission_stopped,
+        mission,
+    )
+
+    r_service.signal_mission_stopped.set()
+
+    r_service._monitor_mission_done_handler()
+
+    assert r_service.monitor_mission_thread is not None
+
+
+def test_monitor_mission_reports_nothing_after_mission_stopped(
+    mocked_robot_service: Robot, mocker: MockerFixture
+) -> None:
+    r_service = mocked_robot_service
+    mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=False)
+
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
+
+    r_service.monitor_mission_thread = RobotMonitorMissionThread(
+        lambda task: None,
+        r_service.robot,
+        r_service.mqtt_publisher,
+        r_service.signal_thread_quitting,
+        r_service.signal_mission_stopped,
+        mission,
+    )
+
+    r_service.signal_mission_stopped.set()
+
+    r_service._monitor_mission_done_handler()
+
+    assert not r_service.robot_service_events.mission_succeeded.has_event()
+    assert not r_service.robot_service_events.mission_failed.has_event()
+
+    assert r_service.monitor_mission_thread is None
+
+
+def test_monitor_mission_reports_mission_failed(
+    mocked_robot_service: Robot, mocker: MockerFixture
+) -> None:
+    r_service = mocked_robot_service
+    mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=False)
+
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
+
+    r_service.monitor_mission_thread = RobotMonitorMissionThread(
+        lambda task: None,
+        r_service.robot,
+        r_service.mqtt_publisher,
+        r_service.signal_thread_quitting,
+        r_service.signal_mission_stopped,
+        mission,
+    )
+
+    r_service.monitor_mission_thread.error_message = ErrorMessage(
+        ErrorReason.RobotUnknownErrorException, ""
+    )
+
+    r_service._monitor_mission_done_handler()
+
+    assert not r_service.robot_service_events.mission_succeeded.has_event()
+    assert r_service.robot_service_events.mission_failed.has_event()
+
+    assert r_service.monitor_mission_thread is None
+
+
+def test_monitor_mission_reports_mission_success(
+    mocked_robot_service: Robot, mocker: MockerFixture
+) -> None:
+    r_service = mocked_robot_service
+    mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=False)
+
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
+
+    r_service.monitor_mission_thread = RobotMonitorMissionThread(
+        lambda task: None,
+        r_service.robot,
+        r_service.mqtt_publisher,
+        r_service.signal_thread_quitting,
+        r_service.signal_mission_stopped,
+        mission,
+    )
+
+    r_service._monitor_mission_done_handler()
+
+    assert r_service.robot_service_events.mission_succeeded.has_event()
     assert not r_service.robot_service_events.mission_failed.has_event()
 
     assert r_service.monitor_mission_thread is None

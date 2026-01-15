@@ -111,7 +111,9 @@ class Robot(object):
                     f"Failed to initiate due to: {error_message.error_description}"
                 )
                 mission.error_message = error_message
-                publish_mission_status(self.mqtt_publisher, mission)
+                publish_mission_status(
+                    self.mqtt_publisher, mission.id, mission.status, error_message
+                )
                 self.robot_service_events.mission_failed.trigger_event(error_message)
                 return
 
@@ -128,7 +130,9 @@ class Robot(object):
 
             self.signal_mission_stopped.clear()
             self.monitor_mission_thread = RobotMonitorMissionThread(
-                self.robot_service_events,
+                lambda task: self.robot_service_events.request_inspection_upload.trigger_event(
+                    (task, mission)
+                ),
                 self.robot,
                 self.mqtt_publisher,
                 self.signal_thread_quitting,
@@ -151,12 +155,12 @@ class Robot(object):
                 )
                 self.stop_mission_thread = None
             else:
-                if self.monitor_mission_thread is not None:
-                    if self.monitor_mission_thread.is_alive():
-                        self.signal_mission_stopped.set()
-                        return
-                    self.monitor_mission_thread.join()
-                    self.monitor_mission_thread = None
+                if (
+                    self.monitor_mission_thread is not None
+                    and self.monitor_mission_thread.is_alive()
+                ):
+                    self.signal_mission_stopped.set()
+                    return
 
                 self.stop_mission_thread = None
                 # The mission status will already be reported on MQTT, the state machine does not need the event
@@ -197,7 +201,9 @@ class Robot(object):
                 self.start_mission_thread.join()
 
             start_mission.status = MissionStatus.NotStarted
-            publish_mission_status(self.mqtt_publisher, start_mission)
+            publish_mission_status(
+                self.mqtt_publisher, start_mission.id, start_mission.status, None
+            )
             self.start_mission_thread = RobotStartMissionThread(
                 self.robot,
                 self.signal_thread_quitting,
@@ -342,6 +348,27 @@ class Robot(object):
             self.inspection_callback_thread.join()
             self.inspection_callback_thread.start()
 
+    def _monitor_mission_done_handler(self) -> None:
+        if (
+            self.monitor_mission_thread is not None
+            and not self.monitor_mission_thread.is_alive()
+        ):
+            mission_manually_cancelled = (
+                self.monitor_mission_thread.signal_mission_stopped.is_set()
+            )
+            error_message = self.monitor_mission_thread.error_message
+            if not mission_manually_cancelled:
+                if error_message is not None:
+                    self.robot_service_events.mission_failed.trigger_event(
+                        error_message
+                    )
+                else:
+                    self.robot_service_events.mission_succeeded.trigger_event(
+                        EmptyMessage()
+                    )
+            self.monitor_mission_thread.join()
+            self.monitor_mission_thread = None
+
     def run(self) -> None:
         self.robot_status_thread = RobotStatusThread(
             robot=self.robot,
@@ -388,6 +415,8 @@ class Robot(object):
                 self._upload_inspection_done_handler()
 
                 self._resume_mission_done_handler()
+
+                self._monitor_mission_done_handler()
 
                 if settings.UPLOAD_INSPECTIONS_ASYNC:
                     self._monitor_inspection_callback_thread()
