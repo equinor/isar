@@ -1,10 +1,9 @@
 import logging
 import time
 from threading import Event, Thread
-from typing import Iterator, Optional
+from typing import Callable, Iterator, Optional
 
 from isar.config.settings import settings
-from isar.models.events import EmptyMessage, RobotServiceEvents
 from isar.services.utilities.mqtt_utilities import (
     publish_mission_status,
     publish_task_status,
@@ -53,7 +52,7 @@ def should_upload_inspections(task: TASKS) -> bool:
 class RobotMonitorMissionThread(Thread):
     def __init__(
         self,
-        robot_service_events: RobotServiceEvents,
+        request_inspection_upload: Callable[[TASKS], None],
         robot: RobotInterface,
         mqtt_publisher: MqttClientInterface,
         signal_thread_quitting: Event,
@@ -61,12 +60,17 @@ class RobotMonitorMissionThread(Thread):
         mission: Mission,
     ):
         self.logger = logging.getLogger("robot")
-        self.robot_service_events: RobotServiceEvents = robot_service_events
+        self.request_inspection_upload: Callable[[TASKS], None] = (
+            request_inspection_upload
+        )
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
         self.signal_mission_stopped: Event = signal_mission_stopped
         self.mqtt_publisher = mqtt_publisher
-        self.current_mission: Optional[Mission] = mission
+        self.mission_id: str = mission.id
+        self.tasks = mission.tasks
+
+        self.error_message: Optional[ErrorMessage] = None
 
         Thread.__init__(self, name="Robot mission monitoring thread")
 
@@ -109,13 +113,6 @@ class RobotMonitorMissionThread(Thread):
                     error_description=e.error_description,
                 )
                 continue
-
-            except RobotTaskStatusException as e:
-                failed_task_error = ErrorMessage(
-                    error_reason=e.error_reason,
-                    error_description=e.error_description,
-                )
-                break
 
             except RobotException as e:
                 failed_task_error = ErrorMessage(
@@ -173,13 +170,6 @@ class RobotMonitorMissionThread(Thread):
                 )
                 continue
 
-            except RobotMissionStatusException as e:
-                failed_mission_error = ErrorMessage(
-                    error_reason=e.error_reason,
-                    error_description=e.error_description,
-                )
-                break
-
             except RobotException as e:
                 failed_mission_error = ErrorMessage(
                     error_reason=e.error_reason,
@@ -204,7 +194,7 @@ class RobotMonitorMissionThread(Thread):
             )
         )
 
-    def _report_task_status(self, task: TASKS) -> None:
+    def _log_task_status(self, task: TASKS) -> None:
         if task.status == TaskStatus.Failed:
             self.logger.warning(
                 f"Task: {str(task.id)[:8]} was reported as failed by the robot"
@@ -218,143 +208,128 @@ class RobotMonitorMissionThread(Thread):
                 f"Task: {str(task.id)[:8]} was reported as {task.status} by the robot"
             )
 
-    def _finalize_mission_status(self) -> None:
+    def _get_mission_status_based_on_task_status(self) -> MissionStatus:
         fail_statuses = [
             TaskStatus.Cancelled,
             TaskStatus.Failed,
         ]
         partially_fail_statuses = fail_statuses + [TaskStatus.PartiallySuccessful]
 
-        if len(self.current_mission.tasks) == 0:
-            self.current_mission.status = MissionStatus.Successful
-        elif all(task.status in fail_statuses for task in self.current_mission.tasks):
-            self.current_mission.error_message = ErrorMessage(
-                error_reason=None,
-                error_description="The mission failed because all tasks in the mission "
-                "failed",
-            )
-            self.current_mission.status = MissionStatus.Failed
-        elif any(
-            task.status in partially_fail_statuses
-            for task in self.current_mission.tasks
-        ):
-            self.current_mission.status = MissionStatus.PartiallySuccessful
+        if len(self.tasks) == 0:
+            return MissionStatus.Successful
+        elif all(task.status in fail_statuses for task in self.tasks):
+            return MissionStatus.Failed
+        elif any(task.status in partially_fail_statuses for task in self.tasks):
+            return MissionStatus.PartiallySuccessful
         else:
-            self.current_mission.status = MissionStatus.Successful
+            return MissionStatus.Successful
+
+    def _get_and_handle_task_status(self, current_task: TASKS) -> Optional[TASKS]:
+        try:
+            new_task_status = self._get_task_status(current_task.id)
+        except RobotTaskStatusException as e:
+            self.logger.error(
+                "Failed to collect task status. Error description: %s",
+                e.error_description,
+            )
+            # Currently we only stop mission monitoring after failing to get mission status
+            return current_task
+
+        if current_task.status != new_task_status:
+            current_task.status = new_task_status
+            self._log_task_status(current_task)
+            publish_task_status(self.mqtt_publisher, current_task, self.mission_id)
+
+        if is_finished(new_task_status):
+            if should_upload_inspections(current_task):
+                self.request_inspection_upload(current_task)
+            current_task = get_next_task(self.task_iterator)
+            if current_task is not None:
+                # This is not required, but does make reporting more responsive
+                current_task.status = TaskStatus.InProgress
+                self._log_task_status(current_task)
+                publish_task_status(self.mqtt_publisher, current_task, self.mission_id)
+        return current_task
+
+    def _handle_stopped_mission(self, current_task: TASKS) -> None:
+        current_task.status = TaskStatus.Cancelled
+        publish_task_status(self.mqtt_publisher, current_task, self.mission_id)
+        publish_mission_status(
+            self.mqtt_publisher,
+            self.mission_id,
+            MissionStatus.Cancelled,
+            self.error_message,
+        )
 
     def run(self) -> None:
 
-        self.task_iterator: Iterator[TASKS] = iter(self.current_mission.tasks)
+        self.task_iterator: Iterator[TASKS] = iter(self.tasks)
         current_task: Optional[TASKS] = get_next_task(self.task_iterator)
         current_task.status = TaskStatus.NotStarted
+        current_mission_status = MissionStatus.NotStarted
 
-        error_message: Optional[ErrorMessage] = None
-
-        last_mission_status: MissionStatus = MissionStatus.NotStarted
-
-        while not self.signal_thread_quitting.wait(
-            0
-        ) or self.signal_mission_stopped.wait(0):
+        while True:
+            if self.signal_thread_quitting.wait(0):
+                return
+            if self.signal_mission_stopped.wait(0):
+                self._handle_stopped_mission(current_task)
+                return
 
             if current_task:
-                try:
-                    new_task_status = self._get_task_status(current_task.id)
-                except RobotTaskStatusException as e:
-                    self.logger.error(
-                        "Failed to collect task status. Error description: %s",
-                        e.error_description,
-                    )
-                    break
-                except Exception:
-                    self.logger.exception("Failed to collect task status")
-                    break
+                current_task = self._get_and_handle_task_status(current_task)
 
-                if current_task.status != new_task_status:
-                    current_task.status = new_task_status
-                    self._report_task_status(current_task)
-                    publish_task_status(
-                        self.mqtt_publisher, current_task, self.current_mission
-                    )
-
-                if is_finished(new_task_status):
-                    if should_upload_inspections(current_task):
-                        self.robot_service_events.request_inspection_upload.trigger_event(
-                            (current_task, self.current_mission)
-                        )
-                    current_task = get_next_task(self.task_iterator)
-                    if current_task is not None:
-                        # This is not required, but does make reporting more responsive
-                        current_task.status = TaskStatus.InProgress
-                        self._report_task_status(current_task)
-                        publish_task_status(
-                            self.mqtt_publisher, current_task, self.current_mission
-                        )
-
-            if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
-                0
-            ):
-                break
-
+            new_mission_status: MissionStatus
             try:
-                new_mission_status = self._get_mission_status(self.current_mission.id)
+                new_mission_status = self._get_mission_status(self.mission_id)
             except RobotMissionStatusException as e:
                 self.logger.exception("Failed to collect mission status")
-                self.current_mission.status = MissionStatus.Failed
-                error_message = ErrorMessage(
+                self.error_message = ErrorMessage(
                     error_reason=e.error_reason,
                     error_description=e.error_description,
                 )
+                current_task.status = TaskStatus.Failed
+                publish_task_status(self.mqtt_publisher, current_task, self.mission_id)
+                publish_mission_status(
+                    self.mqtt_publisher,
+                    self.mission_id,
+                    MissionStatus.Failed,
+                    self.error_message,
+                )
                 break
-            if new_mission_status != last_mission_status:
-                self.current_mission.status = new_mission_status
-                last_mission_status = new_mission_status
-                publish_mission_status(self.mqtt_publisher, self.current_mission)
 
-            if new_mission_status == MissionStatus.Cancelled or (
-                new_mission_status
+            current_mission_status = new_mission_status
+
+            if current_mission_status == MissionStatus.Cancelled or (
+                current_mission_status
                 not in [MissionStatus.NotStarted, MissionStatus.InProgress]
-                and current_task is None
+                and current_task is None  # We wait for all task statuses
             ):
                 # Standardises final mission status report
-                mission_status = self.current_mission.status
-                self._finalize_mission_status()
-                if mission_status != self.current_mission.status:
-                    publish_mission_status(self.mqtt_publisher, self.current_mission)
+                current_mission_status = self._get_mission_status_based_on_task_status()
+                if self.error_message is None and current_mission_status in [
+                    MissionStatus.Failed,
+                    MissionStatus.Cancelled,
+                ]:
+                    self.error_message = ErrorMessage(
+                        error_reason=None,
+                        error_description="The mission failed because all tasks in the mission failed",
+                    )
+                publish_mission_status(
+                    self.mqtt_publisher,
+                    self.mission_id,
+                    current_mission_status,
+                    self.error_message,
+                )
                 break
 
-            if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
-                0
-            ):
-                break
+            if new_mission_status != current_mission_status:
+                publish_mission_status(
+                    self.mqtt_publisher,
+                    self.mission_id,
+                    current_mission_status,
+                    self.error_message,
+                )
 
             time.sleep(settings.FSM_SLEEP_TIME)
 
-        mission_stopped = self.signal_mission_stopped.wait(0)
-
-        if current_task:
-            current_task.status = (
-                TaskStatus.Cancelled if mission_stopped else TaskStatus.Failed
-            )
-            publish_task_status(self.mqtt_publisher, current_task, self.current_mission)
-        if self.current_mission.status not in [
-            MissionStatus.Cancelled,
-            MissionStatus.PartiallySuccessful,
-            MissionStatus.Failed,
-            MissionStatus.Successful,
-        ]:
-            self.current_mission.status = MissionStatus.Cancelled
-            publish_mission_status(self.mqtt_publisher, self.current_mission)
-
-        if self.current_mission.status in [
-            MissionStatus.PartiallySuccessful,
-            MissionStatus.Successful,
-        ]:
-            self.robot_service_events.mission_succeeded.trigger_event(EmptyMessage())
-        elif not mission_stopped:
-            if not error_message:
-                error_message = ErrorMessage(
-                    error_reason=ErrorReason.RobotMissionStatusException,
-                    error_description="Robot reported mission status failed",
-                )
-            self.robot_service_events.mission_failed.trigger_event(error_message)
         self.logger.info("Stopped monitoring mission")
