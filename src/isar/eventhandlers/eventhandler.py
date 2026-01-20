@@ -102,6 +102,14 @@ class State(ABC):
                     event_value = handler_mapping.event.consume_event()
                 if event_value is not None:
                     transition = handler_mapping.handler(event_value)
+                    if transition is not None or not handler_mapping.should_not_consume:
+                        self.logger.debug(
+                            f"Event '{handler_mapping.name}' triggered with input: {event_value}. "
+                        )
+                        if transition is not None:
+                            self.logger.debug(
+                                f"Transitioning from {self.name.name} to {transition.__annotations__['return'].__name__}"
+                            )
                     if transition is not None:
                         return transition(self.state_machine)
 

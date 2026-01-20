@@ -21,7 +21,8 @@ T2 = TypeVar("T2")
 
 
 class EmptyMessage:
-    pass
+    def __str__(self) -> str:
+        return "Empty message"
 
 
 class Event(Queue[T]):
