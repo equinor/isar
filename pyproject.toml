@@ -68,7 +68,7 @@ repository = "https://github.com/equinor/isar.git"
 
 [project.optional-dependencies]
 dev = [
-    "black",
+    "black==25.11.0",
     "isort",
     "mypy",
     "pip-tools",
