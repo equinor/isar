@@ -1,4 +1,3 @@
-import os
 from importlib import import_module
 
 from dependency_injector import containers, providers
@@ -7,7 +6,6 @@ from isar.apis.api import API
 from isar.apis.robot_control.robot_controller import RobotController
 from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
-from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 from isar.models.events import Events, SharedState
 from isar.robot.robot import Robot
@@ -22,15 +20,6 @@ from robot_interface.telemetry.mqtt_client import MqttPublisher
 
 class ApplicationContainer(containers.DeclarativeContainer):
     config = providers.Configuration(pydantic_settings=[settings])
-
-    # Core services
-    keyvault = providers.Singleton(
-        Keyvault,
-        keyvault_name=settings.KEYVAULT_NAME,
-        client_id=settings.AZURE_CLIENT_ID,
-        client_secret=os.environ.get("AZURE_CLIENT_SECRET"),
-        tenant_id=settings.AZURE_TENANT_ID,
-    )
 
     # Events and shared state
     events = providers.Singleton(Events)
@@ -66,7 +55,6 @@ class ApplicationContainer(containers.DeclarativeContainer):
         authenticator=authenticator,
         scheduling_controller=scheduling_controller,
         robot_controller=robot_controller,
-        keyvault=keyvault,
         mqtt_publisher=mqtt_client,
     )
 
@@ -76,7 +64,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         local_storage = providers.Singleton(LocalStorage)
         storage_handlers_temp.append(local_storage)
     if settings.STORAGE_BLOB_ENABLED:
-        blob_storage = providers.Singleton(BlobStorage, keyvault=keyvault)
+        blob_storage = providers.Singleton(BlobStorage)
         storage_handlers_temp.append(blob_storage)
     storage_handlers = providers.List(*storage_handlers_temp)
 
@@ -111,7 +99,6 @@ def get_injector() -> ApplicationContainer:
     container = ApplicationContainer()
     container.init_resources()
     container.wire(modules=[__name__])
-    container.config.from_dict({"KEYVAULT_NAME": settings.KEYVAULT_NAME})
 
     print("Loaded the following module configurations:")
     for provider_name, provider in container.providers.items():
