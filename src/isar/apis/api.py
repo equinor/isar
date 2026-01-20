@@ -17,7 +17,6 @@ from isar.apis.models.models import ControlMissionResponse, StartMissionResponse
 from isar.apis.robot_control.robot_controller import RobotController
 from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
-from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import StartUpMessagePayload
@@ -30,14 +29,12 @@ class API:
         authenticator: Authenticator,
         scheduling_controller: SchedulingController,
         robot_controller: RobotController,
-        keyvault: Keyvault,
         mqtt_publisher: MqttClientInterface,
         port: int = settings.API_PORT,
     ) -> None:
         self.authenticator: Authenticator = authenticator
         self.scheduling_controller: SchedulingController = scheduling_controller
         self.robot_controller: RobotController = robot_controller
-        self.keyvault: Keyvault = keyvault
         self.host: str = "0.0.0.0"  # Locking uvicorn to use 0.0.0.0
         self.port: int = port
         self.mqtt_publisher: MqttClientInterface = mqtt_publisher

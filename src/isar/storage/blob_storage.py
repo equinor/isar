@@ -4,7 +4,6 @@ from pathlib import Path
 from azure.core.exceptions import ResourceExistsError
 from azure.storage.blob import BlobServiceClient, ContainerClient
 
-from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 from isar.storage.storage_interface import (
     BlobStoragePath,
@@ -18,27 +17,25 @@ from robot_interface.models.mission.mission import Mission
 
 
 class BlobStorage(StorageInterface):
-    def __init__(self, keyvault: Keyvault) -> None:
+    def __init__(self) -> None:
         self.logger = logging.getLogger("uploader")
 
         self.container_client_data = self._get_container_client(
-            keyvault,
             settings.BLOB_STORAGE_ACCOUNT_DATA,
-            "AZURE-STORAGE-CONNECTION-STRING-DATA",
+            "BLOB_STORAGE_CONNECTION_STRING_DATA",
         )
         self.container_client_metadata = self._get_container_client(
-            keyvault,
             settings.BLOB_STORAGE_ACCOUNT_METADATA,
-            "AZURE-STORAGE-CONNECTION-STRING-METADATA",
+            "BLOB_STORAGE_CONNECTION_STRING_METADATA",
         )
 
     def _get_container_client(
-        self, keyvault: Keyvault, account_name: str, secret_name: str
+        self, account_name: str, setting_secret_name: str
     ) -> ContainerClient:
-        storage_connection_string = keyvault.get_secret(secret_name).value
+        storage_connection_string = settings[setting_secret_name]
 
-        if storage_connection_string is None:
-            raise RuntimeError(f"{secret_name} from keyvault is None")
+        if not storage_connection_string:
+            raise RuntimeError(f"{setting_secret_name} is Empty or None")
 
         try:
             blob_service_client = BlobServiceClient.from_connection_string(

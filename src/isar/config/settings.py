@@ -126,15 +126,16 @@ class Settings(BaseSettings):
     MQTT_HOST: str = Field(default="localhost")
     MQTT_PORT: int = Field(default=1883)
 
-    # Keyvault name
-    KEYVAULT_NAME: str = Field(default="IsarDevKv")
-
     # Determines whether inspections are uploaded asynchronously or get_inspections in robotinterface
     UPLOAD_INSPECTIONS_ASYNC: bool = Field(default=False)
 
     # URL to storage account for Azure Blob Storage
     BLOB_STORAGE_ACCOUNT_DATA: str = Field(default="")
     BLOB_STORAGE_ACCOUNT_METADATA: str = Field(default="")
+
+    # Blob storage connection strings for Azure Blob Storage
+    BLOB_STORAGE_CONNECTION_STRING_DATA: str = Field(default="")
+    BLOB_STORAGE_CONNECTION_STRING_METADATA: str = Field(default="")
 
     # Name of blob container in Azure Blob Storage [slimm test]
     BLOB_CONTAINER: str = Field(default="test")

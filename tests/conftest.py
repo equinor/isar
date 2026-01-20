@@ -17,7 +17,6 @@ from pytest_mock import MockerFixture
 from testcontainers.mysql import MySqlContainer
 
 from isar.apis.security.authentication import Authenticator
-from isar.config.keyvault.keyvault_service import Keyvault
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import State
 from isar.models.events import Events
@@ -125,12 +124,6 @@ def client_auth(container: ApplicationContainer) -> TestClient:
 def access_token() -> str:
     """Fixture to provide a dummy access token."""
     return "DummyToken"
-
-
-@pytest.fixture()
-def keyvault(container: ApplicationContainer) -> Singleton[Keyvault]:
-    """Fixture to provide the Keyvault instance."""
-    return container.keyvault()
 
 
 @pytest.fixture()
