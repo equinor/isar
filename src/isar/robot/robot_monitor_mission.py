@@ -297,16 +297,14 @@ class RobotMonitorMissionThread(Thread):
                 )
                 break
 
-            current_mission_status = new_mission_status
-
-            if current_mission_status == MissionStatus.Cancelled or (
-                current_mission_status
+            if new_mission_status == MissionStatus.Cancelled or (
+                new_mission_status
                 not in [MissionStatus.NotStarted, MissionStatus.InProgress]
                 and current_task is None  # We wait for all task statuses
             ):
                 # Standardises final mission status report
-                current_mission_status = self._get_mission_status_based_on_task_status()
-                if self.error_message is None and current_mission_status in [
+                new_mission_status = self._get_mission_status_based_on_task_status()
+                if self.error_message is None and new_mission_status in [
                     MissionStatus.Failed,
                     MissionStatus.Cancelled,
                 ]:
@@ -317,12 +315,13 @@ class RobotMonitorMissionThread(Thread):
                 publish_mission_status(
                     self.mqtt_publisher,
                     self.mission_id,
-                    current_mission_status,
+                    new_mission_status,
                     self.error_message,
                 )
                 break
 
             if new_mission_status != current_mission_status:
+                current_mission_status = new_mission_status
                 publish_mission_status(
                     self.mqtt_publisher,
                     self.mission_id,
