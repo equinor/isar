@@ -1,4 +1,3 @@
-import json
 import logging
 import time
 from datetime import datetime, timezone
@@ -20,7 +19,6 @@ from isar.apis.security.authentication import Authenticator
 from isar.config.settings import settings
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import StartUpMessagePayload
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 class API:
@@ -374,7 +372,7 @@ class API:
 
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_STARTUP,
-            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+            payload=payload.model_dump_json(),
             qos=1,
             retain=True,
         )

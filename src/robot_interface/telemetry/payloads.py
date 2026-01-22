@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from alitra import Pose
+from pydantic import BaseModel
 
 from isar.models.status import IsarStatus
 from isar.storage.storage_interface import BlobStoragePath
@@ -12,37 +13,31 @@ from robot_interface.models.mission.task import TaskTypes
 from robot_interface.models.robots.battery_state import BatteryState
 
 
-@dataclass
-class TelemetryPayload:
+class TelemetryPayload(BaseModel):
     isar_id: str
     robot_name: str
     timestamp: datetime
 
 
-@dataclass
-class CloudHealthPayload:
+class CloudHealthPayload(BaseModel):
     isar_id: str
     robot_name: str
     timestamp: datetime
 
 
-@dataclass
-class TelemetryPosePayload(TelemetryPayload):
+class TelemetryPosePayload(TelemetryPayload, BaseModel):
     pose: Pose
 
 
-@dataclass
-class TelemetryBatteryPayload(TelemetryPayload):
+class TelemetryBatteryPayload(TelemetryPayload, BaseModel):
     battery_level: float
     battery_state: Optional[BatteryState] = None
 
 
-@dataclass
-class TelemetryObstacleStatusPayload(TelemetryPayload):
+class TelemetryObstacleStatusPayload(TelemetryPayload, BaseModel):
     obstacle_status: bool
 
 
-@dataclass
 class TelemetryPressurePayload(TelemetryPayload):
     pressure_level: float
 
@@ -53,16 +48,14 @@ class DocumentInfo:
     url: str
 
 
-@dataclass
-class IsarStatusPayload:
+class IsarStatusPayload(BaseModel):
     isar_id: str
     robot_name: str
     status: IsarStatus
     timestamp: datetime
 
 
-@dataclass
-class RobotInfoPayload:
+class RobotInfoPayload(BaseModel):
     isar_id: str
     robot_name: str
     robot_model: str
@@ -75,70 +68,64 @@ class RobotInfoPayload:
     timestamp: datetime
 
 
-@dataclass
-class RobotHeartbeatPayload:
+class RobotHeartbeatPayload(BaseModel):
     isar_id: str
     robot_name: str
     timestamp: datetime
 
 
-@dataclass
-class MissionPayload:
+class MissionPayload(BaseModel):
     isar_id: str
     robot_name: str
-    mission_id: Optional[str]
-    status: Optional[MissionStatus]
-    error_reason: Optional[ErrorReason]
-    error_description: Optional[str]
+    mission_id: Optional[str] = None
+    status: Optional[MissionStatus] = None
+    error_reason: Optional[ErrorReason] = None
+    error_description: Optional[str] = None
     timestamp: datetime
 
 
-@dataclass
-class MissionAbortedPayload:
+class MissionAbortedPayload(BaseModel):
     isar_id: str
     robot_name: str
-    mission_id: Optional[str]
+    mission_id: Optional[str] = None
     can_be_continued: bool
     timestamp: datetime
-    reason: Optional[str]
+    reason: Optional[str] = None
 
 
-@dataclass
-class TaskPayload:
+class TaskPayload(BaseModel):
     isar_id: str
     robot_name: str
-    mission_id: Optional[str]
-    task_id: Optional[str]
-    status: Optional[TaskStatus]
-    task_type: Optional[TaskTypes]
-    error_reason: Optional[ErrorReason]
-    error_description: Optional[str]
+    mission_id: Optional[str] = None
+    task_id: Optional[str] = None
+    status: Optional[TaskStatus] = None
+    task_type: Optional[TaskTypes] = None
+    error_reason: Optional[ErrorReason] = None
+    error_description: Optional[str] = None
     timestamp: datetime
 
 
-@dataclass
-class InspectionResultPayload:
+class InspectionResultPayload(BaseModel):
     isar_id: str
     robot_name: str
     inspection_id: str
     blob_storage_data_path: BlobStoragePath
     blob_storage_metadata_path: BlobStoragePath
     installation_code: str
-    tag_id: Optional[str]
-    inspection_type: Optional[str]
-    inspection_description: Optional[str]
+    tag_id: Optional[str] = None
+    inspection_type: Optional[str] = None
+    inspection_description: Optional[str] = None
     timestamp: datetime
 
 
-@dataclass
-class InspectionValuePayload:
+class InspectionValuePayload(BaseModel):
     isar_id: str
     robot_name: str
     inspection_id: str
     installation_code: str
-    tag_id: Optional[str]
-    inspection_type: Optional[str]
-    inspection_description: Optional[str]
+    tag_id: Optional[str] = None
+    inspection_type: Optional[str] = None
+    inspection_description: Optional[str] = None
     value: float
     unit: str
     x: float
@@ -147,14 +134,12 @@ class InspectionValuePayload:
     timestamp: datetime
 
 
-@dataclass
-class StartUpMessagePayload:
+class StartUpMessagePayload(BaseModel):
     isar_id: str
     timestamp: datetime
 
 
-@dataclass
-class InterventionNeededPayload:
+class InterventionNeededPayload(BaseModel):
     isar_id: str
     robot_name: str
     reason: str

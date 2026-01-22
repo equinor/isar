@@ -6,7 +6,6 @@ from typing import Tuple
 from isar.config.settings import settings
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 def construct_paths(inspection: Inspection, mission: Mission) -> Tuple[Path, Path]:
@@ -65,7 +64,7 @@ def construct_metadata_file(
         ],
     }
 
-    return json.dumps(data, cls=EnhancedJSONEncoder, indent=4).encode()
+    return json.dumps(data, indent=4).encode()
 
 
 def get_filename(inspection: Inspection) -> str:

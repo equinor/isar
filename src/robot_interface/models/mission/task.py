@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Literal, Optional, Type, Union
+from uuid import uuid4
 
 from alitra import Pose, Position
 from pydantic import BaseModel, Field
@@ -15,7 +16,6 @@ from robot_interface.models.inspection.inspection import (
     Video,
 )
 from robot_interface.models.mission.status import TaskStatus
-from uuid import uuid4
 
 
 class TaskTypes(str, Enum):
