@@ -22,20 +22,19 @@ class BlobStorage(StorageInterface):
 
         self.container_client_data = self._get_container_client(
             settings.BLOB_STORAGE_ACCOUNT_DATA,
-            "BLOB_STORAGE_CONNECTION_STRING_DATA",
+            settings.BLOB_STORAGE_CONNECTION_STRING_DATA,
         )
         self.container_client_metadata = self._get_container_client(
             settings.BLOB_STORAGE_ACCOUNT_METADATA,
-            "BLOB_STORAGE_CONNECTION_STRING_METADATA",
+            settings.BLOB_STORAGE_CONNECTION_STRING_METADATA,
         )
 
     def _get_container_client(
-        self, account_name: str, setting_secret_name: str
+        self, account_name: str, storage_connection_string: str
     ) -> ContainerClient:
-        storage_connection_string = settings[setting_secret_name]
 
         if not storage_connection_string:
-            raise RuntimeError(f"{setting_secret_name} is Empty or None")
+            raise RuntimeError("BlobStorage connection string is Empty or None")
 
         try:
             blob_service_client = BlobServiceClient.from_connection_string(
