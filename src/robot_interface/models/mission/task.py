@@ -15,7 +15,7 @@ from robot_interface.models.inspection.inspection import (
     Video,
 )
 from robot_interface.models.mission.status import TaskStatus
-from robot_interface.utilities.uuid_string_factory import uuid4_string
+from uuid import uuid4
 
 
 class TaskTypes(str, Enum):
@@ -37,7 +37,7 @@ class Task(BaseModel):
     status: TaskStatus = Field(default=TaskStatus.NotStarted)
     error_message: Optional[ErrorMessage] = Field(default=None)
     tag_id: Optional[str] = Field(default=None)
-    id: str = Field(default_factory=uuid4_string, frozen=True)
+    id: str = Field(default_factory=lambda: str(uuid4()), frozen=True)
 
 
 class InspectionTask(Task):
@@ -45,7 +45,7 @@ class InspectionTask(Task):
     Base class for all inspection tasks which produce results to be uploaded.
     """
 
-    inspection_id: str = Field(default_factory=uuid4_string, frozen=True)
+    inspection_id: str = Field(default_factory=lambda: str(uuid4()), frozen=True)
     robot_pose: Pose = Field(default=None, init=True)
     inspection_description: Optional[str] = Field(default=None)
     zoom: Optional[ZoomDescription] = Field(default=None)

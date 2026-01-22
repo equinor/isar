@@ -18,7 +18,7 @@ from robot_interface.models.mission.task import (
     TakeVideo,
     ZoomDescription,
 )
-from robot_interface.utilities.uuid_string_factory import uuid4_string
+from uuid import uuid4
 
 
 class InspectionTypes(str, Enum):
@@ -88,7 +88,7 @@ def to_isar_mission(
     if start_mission_definition.start_pose:
         start_pose = start_mission_definition.start_pose.to_alitra_pose()
 
-    id = start_mission_definition.id if start_mission_definition.id else uuid4_string()
+    id = start_mission_definition.id if start_mission_definition.id else str(uuid4())
 
     return Mission(
         id=id,
@@ -114,7 +114,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
 
     if inspection_definition.type == InspectionTypes.image:
         return TakeImage(
-            id=task_definition.id if task_definition.id else uuid4_string(),
+            id=task_definition.id if task_definition.id else str(uuid4()),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
             inspection_description=task_definition.inspection.inspection_description,
@@ -123,7 +123,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
         )
     elif inspection_definition.type == InspectionTypes.video:
         return TakeVideo(
-            id=task_definition.id if task_definition.id else uuid4_string(),
+            id=task_definition.id if task_definition.id else str(uuid4()),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
             inspection_description=task_definition.inspection.inspection_description,
@@ -133,7 +133,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
         )
     elif inspection_definition.type == InspectionTypes.thermal_image:
         return TakeThermalImage(
-            id=task_definition.id if task_definition.id else uuid4_string(),
+            id=task_definition.id if task_definition.id else str(uuid4()),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
             inspection_description=task_definition.inspection.inspection_description,
@@ -142,7 +142,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
         )
     elif inspection_definition.type == InspectionTypes.thermal_video:
         return TakeThermalVideo(
-            id=task_definition.id if task_definition.id else uuid4_string(),
+            id=task_definition.id if task_definition.id else str(uuid4()),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
             inspection_description=task_definition.inspection.inspection_description,
@@ -152,7 +152,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
         )
     elif inspection_definition.type == InspectionTypes.audio:
         return RecordAudio(
-            id=task_definition.id if task_definition.id else uuid4_string(),
+            id=task_definition.id if task_definition.id else str(uuid4()),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
             inspection_description=task_definition.inspection.inspection_description,
@@ -161,7 +161,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
         )
     elif inspection_definition.type == InspectionTypes.co2_measurement:
         return TakeCO2Measurement(
-            id=task_definition.id if task_definition.id else uuid4_string(),
+            id=task_definition.id if task_definition.id else str(uuid4()),
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
             inspection_description=task_definition.inspection.inspection_description,
