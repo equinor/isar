@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -14,7 +13,6 @@ from robot_interface.telemetry.payloads import (
     MissionPayload,
     TaskPayload,
 )
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 def publish_task_status(
@@ -41,7 +39,7 @@ def publish_task_status(
 
     mqtt_publisher.publish(
         topic=settings.TOPIC_ISAR_TASK + f"/{task.id}",
-        payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+        payload=payload.model_dump_json(),
         qos=1,
         retain=True,
         properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
@@ -69,7 +67,7 @@ def publish_mission_status(
 
     mqtt_publisher.publish(
         topic=settings.TOPIC_ISAR_MISSION + f"/{mission_id}",
-        payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+        payload=payload.model_dump_json(),
         qos=1,
         retain=True,
         properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
@@ -88,7 +86,7 @@ def publish_isar_status(
 
     mqtt_publisher.publish(
         topic=settings.TOPIC_ISAR_STATUS,
-        payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+        payload=payload.model_dump_json(),
         qos=1,
         retain=True,
     )

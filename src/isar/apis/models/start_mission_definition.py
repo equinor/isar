@@ -1,6 +1,7 @@
 import time
 from enum import Enum
 from typing import List, Optional
+from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
@@ -18,7 +19,6 @@ from robot_interface.models.mission.task import (
     TakeVideo,
     ZoomDescription,
 )
-from uuid import uuid4
 
 
 class InspectionTypes(str, Enum):

@@ -1,4 +1,5 @@
 from typing import List, Optional
+from uuid import uuid4
 
 from alitra import Pose
 from pydantic import BaseModel, Field
@@ -6,8 +7,6 @@ from pydantic import BaseModel, Field
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus
 from robot_interface.models.mission.task import TASKS, TaskTypes
-
-from uuid import uuid4
 
 
 class Mission(BaseModel):

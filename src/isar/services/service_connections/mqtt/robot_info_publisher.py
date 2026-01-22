@@ -1,4 +1,3 @@
-import json
 import time
 from datetime import datetime, timezone
 from queue import Queue
@@ -6,7 +5,6 @@ from queue import Queue
 from isar.config.settings import robot_settings, settings
 from robot_interface.telemetry.mqtt_client import MqttPublisher
 from robot_interface.telemetry.payloads import RobotInfoPayload
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 class RobotInfoPublisher:
@@ -30,7 +28,7 @@ class RobotInfoPublisher:
 
             self.mqtt_publisher.publish(
                 topic=settings.TOPIC_ISAR_ROBOT_INFO,
-                payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+                payload=payload.model_dump_json(),
             )
 
             time.sleep(settings.ROBOT_INFO_PUBLISH_INTERVAL)

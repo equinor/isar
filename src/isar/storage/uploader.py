@@ -1,4 +1,3 @@
-import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -26,7 +25,6 @@ from robot_interface.telemetry.payloads import (
     InspectionResultPayload,
     InspectionValuePayload,
 )
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 def has_empty_blob_storage_path(storage_paths: StoragePaths) -> bool:
@@ -249,7 +247,7 @@ class Uploader:
         )
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_INSPECTION_VALUE,
-            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+            payload=payload.model_dump_json(),
             qos=1,
             retain=True,
         )
@@ -279,7 +277,7 @@ class Uploader:
         )
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_INSPECTION_RESULT,
-            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+            payload=payload.model_dump_json(),
             qos=1,
             retain=True,
         )

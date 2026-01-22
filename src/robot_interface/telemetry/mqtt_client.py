@@ -15,7 +15,6 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotTelemetryPoseException,
 )
 from robot_interface.telemetry.payloads import CloudHealthPayload
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 def props_expiry(seconds: int) -> Properties:
@@ -110,8 +109,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
                 continue
             except RobotTelemetryException:
                 payload = json.dumps(
-                    CloudHealthPayload(isar_id, robot_name, datetime.now(timezone.utc)),
-                    cls=EnhancedJSONEncoder,
+                    CloudHealthPayload(isar_id, robot_name, datetime.now(timezone.utc))
                 )
                 topic = self.cloud_health_topic
 

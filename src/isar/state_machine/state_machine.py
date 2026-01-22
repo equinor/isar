@@ -1,4 +1,3 @@
-import json
 import logging
 from collections import deque
 from datetime import datetime, timezone
@@ -26,7 +25,6 @@ from robot_interface.telemetry.payloads import (
     InterventionNeededPayload,
     MissionAbortedPayload,
 )
-from robot_interface.utilities.json_service import EnhancedJSONEncoder
 
 
 class StateMachine(object):
@@ -157,7 +155,7 @@ class StateMachine(object):
 
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_MISSION_ABORTED,
-            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+            payload=payload.model_dump_json(),
             qos=1,
             retain=True,
         )
@@ -176,7 +174,7 @@ class StateMachine(object):
 
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_INTERVENTION_NEEDED,
-            payload=json.dumps(payload, cls=EnhancedJSONEncoder),
+            payload=payload.model_dump_json(),
             qos=1,
             retain=True,
         )
