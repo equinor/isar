@@ -245,6 +245,10 @@ def read_or_create_persistent_maintenance_mode() -> bool:
         is_maintenance_mode = read_persistent_robot_state_is_maintenance_mode(
             settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID
         )
+        logger = logging.getLogger("state_machine")
+        logger.info(
+            f"Created new persistent robot state for robot id {settings.ISAR_ID}. It is now set to maintenance mode: {is_maintenance_mode}."
+        )
     return is_maintenance_mode
 
 
