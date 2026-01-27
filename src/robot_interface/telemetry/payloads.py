@@ -38,7 +38,7 @@ class TelemetryObstacleStatusPayload(TelemetryPayload, BaseModel):
     obstacle_status: bool
 
 
-class TelemetryPressurePayload(TelemetryPayload):
+class TelemetryPressurePayload(TelemetryPayload, BaseModel):
     pressure_level: float
 
 
