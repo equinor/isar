@@ -251,9 +251,10 @@ class RobotMonitorMissionThread(Thread):
                 publish_task_status(self.mqtt_publisher, current_task, self.mission_id)
         return current_task
 
-    def _handle_stopped_mission(self, current_task: TASKS) -> None:
-        current_task.status = TaskStatus.Cancelled
-        publish_task_status(self.mqtt_publisher, current_task, self.mission_id)
+    def _handle_stopped_mission(self, current_task: Optional[TASKS]) -> None:
+        if current_task is not None:
+            current_task.status = TaskStatus.Cancelled
+            publish_task_status(self.mqtt_publisher, current_task, self.mission_id)
         publish_mission_status(
             self.mqtt_publisher,
             self.mission_id,
