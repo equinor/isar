@@ -303,6 +303,16 @@ class RobotMonitorMissionThread(Thread):
                 not in [MissionStatus.NotStarted, MissionStatus.InProgress]
                 and current_task is None  # We wait for all task statuses
             ):
+                if (
+                    new_mission_status == MissionStatus.Cancelled
+                    and current_task is not None
+                    and current_task.status == TaskStatus.InProgress
+                ):
+                    current_task.status = TaskStatus.Cancelled
+                    publish_task_status(
+                        self.mqtt_publisher, current_task, self.mission_id
+                    )
+
                 # Standardises final mission status report
                 new_mission_status = self._get_mission_status_based_on_task_status()
                 if self.error_message is None and new_mission_status in [
