@@ -35,7 +35,9 @@ def construct_metadata_file(
             "inspection_id": inspection.id,
             "mission_id": mission.id,
             "mission_name": mission.name,
-            "mission_date": datetime.now(timezone.utc).date(),
+            "mission_date": datetime.now(timezone.utc)
+            .date()
+            .strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "plant_name": settings.PLANT_NAME,
             "isar_id": settings.ISAR_ID,
             "robot_name": settings.ROBOT_NAME,
@@ -47,14 +49,18 @@ def construct_metadata_file(
                     "y": inspection.metadata.robot_pose.position.y,
                     "z": inspection.metadata.robot_pose.position.z,
                 },
-                "orientation": inspection.metadata.robot_pose.orientation.to_quat_array(),
+                "orientation": str(
+                    inspection.metadata.robot_pose.orientation.to_quat_array()
+                ),
             },
             "target_position": {
                 "x": inspection.metadata.target_position.x,
                 "y": inspection.metadata.target_position.y,
                 "z": inspection.metadata.target_position.z,
             },
-            "timestamp": inspection.metadata.start_time,
+            "timestamp": inspection.metadata.start_time.strftime(
+                "%Y-%m-%dT%H:%M:%S.%f"
+            ),
         },
         "data_files": [
             {
