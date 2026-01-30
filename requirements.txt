@@ -54,7 +54,7 @@ click==8.3.1
     # via
     #   isar (pyproject.toml)
     #   uvicorn
-cryptography==46.0.3
+cryptography==46.0.4
     # via
     #   azure-identity
     #   azure-storage-blob
@@ -225,11 +225,11 @@ packaging==26.0
     #   opentelemetry-instrumentation-flask
 paho-mqtt==2.1.0
     # via isar (pyproject.toml)
-protobuf==6.33.4
+protobuf==6.33.5
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
-psutil==7.2.1
+psutil==7.2.2
     # via azure-monitor-opentelemetry-exporter
 psycopg2-binary==2.9.11
     # via isar (pyproject.toml)
