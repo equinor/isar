@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List
 
+import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.maintenance as Maintenance
-import isar.state_machine.states.monitor as Monitor
-import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
@@ -20,9 +19,7 @@ class StoppingDueToMaintenance(State):
 
         def _failed_stop_event_handler(
             error_message: ErrorMessage,
-        ) -> Union[
-            Transition[ReturningHome.ReturningHome], Transition[Monitor.Monitor]
-        ]:
+        ) -> Transition[InterventionNeeded.InterventionNeeded]:
             events.api_requests.set_maintenance_mode.response.trigger_event(
                 MaintenanceResponse(
                     is_maintenance_mode=False,
@@ -32,10 +29,7 @@ class StoppingDueToMaintenance(State):
             state_machine.logger.error(
                 f"Failed to stop mission in StoppingDueToMaintenance. Message: {error_message.error_description}"
             )
-            # TODO: see https://github.com/equinor/isar/issues/1047
-            if mission_id == "":
-                return ReturningHome.transition_to_existing_mission()
-            return Monitor.transition_with_existing_mission(mission_id)
+            return InterventionNeeded.transition()
 
         def _successful_stop_event_handler(
             successful_stop: EmptyMessage,
