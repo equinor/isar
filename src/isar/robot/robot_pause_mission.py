@@ -61,6 +61,7 @@ class RobotPauseMissionThread(Thread):
                 break
             return
 
+        assert error is not None
         error_description = (
             f"\nFailed to pause the robot after {retries} attempts because: "
             f"{error.error_description}"

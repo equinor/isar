@@ -31,11 +31,13 @@ class BlockedProtectiveStop(State):
 
         def _robot_status_event_handler(
             status_changed: EmptyMessage,
-        ) -> Union[
-            Transition[Home.Home],
-            Transition[InterventionNeeded.InterventionNeeded],
-            Transition[Offline.Offline],
-            Transition[UnknownStatus.UnknownStatus],
+        ) -> Optional[
+            Union[
+                Transition[Home.Home],
+                Transition[InterventionNeeded.InterventionNeeded],
+                Transition[Offline.Offline],
+                Transition[UnknownStatus.UnknownStatus],
+            ]
         ]:
             robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
             if robot_status == RobotStatus.BlockedProtectiveStop:
