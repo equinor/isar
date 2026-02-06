@@ -41,7 +41,7 @@ def publish_task_status(
         topic=settings.TOPIC_ISAR_TASK + f"/{task.id}",
         payload=payload.model_dump_json(),
         qos=1,
-        retain=True,
+        retain=False,
         properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
     )
 
@@ -69,7 +69,7 @@ def publish_mission_status(
         topic=settings.TOPIC_ISAR_MISSION + f"/{mission_id}",
         payload=payload.model_dump_json(),
         qos=1,
-        retain=True,
+        retain=False,
         properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
     )
 
@@ -88,5 +88,6 @@ def publish_isar_status(
         topic=settings.TOPIC_ISAR_STATUS,
         payload=payload.model_dump_json(),
         qos=1,
-        retain=True,
+        retain=False,
+        properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
     )

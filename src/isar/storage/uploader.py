@@ -7,6 +7,7 @@ from typing import List
 
 from isar.config.settings import settings
 from isar.models.events import Events
+from isar.services.service_connections.mqtt.mqtt_client import props_expiry
 from isar.storage.storage_interface import (
     BlobStoragePath,
     LocalStoragePath,
@@ -249,7 +250,8 @@ class Uploader:
             topic=settings.TOPIC_ISAR_INSPECTION_VALUE,
             payload=payload.model_dump_json(),
             qos=1,
-            retain=True,
+            retain=False,
+            properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
         )
 
     def _publish_inspection_result(
@@ -279,5 +281,6 @@ class Uploader:
             topic=settings.TOPIC_ISAR_INSPECTION_RESULT,
             payload=payload.model_dump_json(),
             qos=1,
-            retain=True,
+            retain=False,
+            properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
         )
