@@ -85,6 +85,7 @@ class Events:
 
         self.upload_queue: Queue = Queue(maxsize=10)
 
+        # TODO: add type hinting to this monstrosity
         self.mqtt_queue: Queue = Queue()
 
 

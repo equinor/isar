@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from fastapi import HTTPException
 from opentelemetry import trace
@@ -21,7 +22,9 @@ class RobotController:
 
     @tracer.start_as_current_span("generate_media_config")
     def generate_media_config(self) -> MediaConfig:
-        media_config: MediaConfig = self.robot_utilities.generate_media_config()
+        media_config: Optional[MediaConfig] = (
+            self.robot_utilities.generate_media_config()
+        )
         if media_config is None:
             raise HTTPException(
                 status_code=204,
