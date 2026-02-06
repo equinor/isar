@@ -8,6 +8,7 @@ from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import State
 from isar.models.events import Events, SharedState
 from isar.models.status import IsarStatus
+from isar.services.service_connections.mqtt.mqtt_client import props_expiry
 from isar.services.service_connections.persistent_memory import (
     NoSuchRobotException,
     create_persistent_robot_state,
@@ -157,7 +158,8 @@ class StateMachine(object):
             topic=settings.TOPIC_ISAR_MISSION_ABORTED,
             payload=payload.model_dump_json(),
             qos=1,
-            retain=True,
+            retain=False,
+            properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
         )
 
     def publish_intervention_needed(self, error_message: str) -> None:
@@ -176,7 +178,8 @@ class StateMachine(object):
             topic=settings.TOPIC_ISAR_INTERVENTION_NEEDED,
             payload=payload.model_dump_json(),
             qos=1,
-            retain=True,
+            retain=False,
+            properties=props_expiry(settings.MQTT_MISSION_AND_TASK_EXPIRY),
         )
 
     def publish_status(self) -> None:
