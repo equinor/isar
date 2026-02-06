@@ -52,7 +52,7 @@ def should_upload_inspections(task: TASKS) -> bool:
 class RobotMonitorMissionThread(Thread):
     def __init__(
         self,
-        request_inspection_upload: Callable[[TASKS], None],
+        request_inspection_upload: Callable[[InspectionTask], None],
         robot: RobotInterface,
         mqtt_publisher: MqttClientInterface,
         signal_thread_quitting: Event,
@@ -60,7 +60,7 @@ class RobotMonitorMissionThread(Thread):
         mission: Mission,
     ):
         self.logger = logging.getLogger("robot")
-        self.request_inspection_upload: Callable[[TASKS], None] = (
+        self.request_inspection_upload: Callable[[InspectionTask], None] = (
             request_inspection_upload
         )
         self.robot: RobotInterface = robot
@@ -130,6 +130,7 @@ class RobotMonitorMissionThread(Thread):
 
             return task_status
 
+        assert failed_task_error is not None
         raise RobotTaskStatusException(
             error_description=failed_task_error.error_description
         )
@@ -242,13 +243,14 @@ class RobotMonitorMissionThread(Thread):
 
         if is_finished(new_task_status):
             if should_upload_inspections(current_task):
-                self.request_inspection_upload(current_task)
-            current_task = get_next_task(self.task_iterator)
-            if current_task is not None:
+                self.request_inspection_upload(current_task)  # type: ignore
+            next_task = get_next_task(self.task_iterator)
+            if next_task is not None:
                 # This is not required, but does make reporting more responsive
-                current_task.status = TaskStatus.InProgress
-                self._log_task_status(current_task)
-                publish_task_status(self.mqtt_publisher, current_task, self.mission_id)
+                next_task.status = TaskStatus.InProgress
+                self._log_task_status(next_task)
+                publish_task_status(self.mqtt_publisher, next_task, self.mission_id)
+            return next_task
         return current_task
 
     def _handle_stopped_mission(self, current_task: Optional[TASKS]) -> None:
@@ -266,7 +268,7 @@ class RobotMonitorMissionThread(Thread):
 
         self.task_iterator: Iterator[TASKS] = iter(self.tasks)
         current_task: Optional[TASKS] = get_next_task(self.task_iterator)
-        current_task.status = TaskStatus.NotStarted
+        current_task.status = TaskStatus.NotStarted  # type: ignore
         current_mission_status = MissionStatus.NotStarted
 
         while True:
@@ -288,8 +290,11 @@ class RobotMonitorMissionThread(Thread):
                     error_reason=e.error_reason,
                     error_description=e.error_description,
                 )
-                current_task.status = TaskStatus.Failed
-                publish_task_status(self.mqtt_publisher, current_task, self.mission_id)
+                if current_task:
+                    current_task.status = TaskStatus.Failed
+                    publish_task_status(
+                        self.mqtt_publisher, current_task, self.mission_id
+                    )
                 publish_mission_status(
                     self.mqtt_publisher,
                     self.mission_id,

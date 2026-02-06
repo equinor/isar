@@ -160,7 +160,9 @@ class SchedulingController:
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
         stop_mission_response: ControlMissionResponse = (
-            self.scheduling_utilities.stop_mission(mission_id.mission_id)
+            self.scheduling_utilities.stop_mission(
+                mission_id.mission_id if mission_id.mission_id else ""
+            )
         )
         return stop_mission_response
 

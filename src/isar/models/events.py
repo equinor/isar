@@ -13,7 +13,7 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus
-from robot_interface.models.mission.task import TASKS
+from robot_interface.models.mission.task import InspectionTask
 
 T = TypeVar("T")
 T1 = TypeVar("T1")
@@ -30,7 +30,7 @@ class Event(Queue[T]):
         super().__init__(maxsize=1)
         self.name = name
 
-    def trigger_event(self, data: T, timeout: int = None) -> None:
+    def trigger_event(self, data: T, timeout: Optional[int] = None) -> None:
         try:
             # We always want a timeout when blocking for results, so that
             # the thread will never get stuck waiting for a result
@@ -40,7 +40,7 @@ class Event(Queue[T]):
                 raise EventTimeoutError
             return None
 
-    def consume_event(self, timeout: int = None) -> Optional[T]:
+    def consume_event(self, timeout: Optional[int] = None) -> Optional[T]:
         try:
             return self.get(block=timeout is not None, timeout=timeout)
         except Empty:
@@ -164,7 +164,7 @@ class RobotServiceEvents:
         self.mission_successfully_resumed: Event[EmptyMessage] = Event(
             "mission_successfully_resumed"
         )
-        self.request_inspection_upload: Event[Tuple[TASKS, Mission]] = Event(
+        self.request_inspection_upload: Event[Tuple[InspectionTask, Mission]] = Event(
             "request_inspection_upload"
         )
         self.robot_already_home: Event[EmptyMessage] = Event("robot_already_home")

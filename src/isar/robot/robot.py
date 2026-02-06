@@ -25,7 +25,7 @@ from isar.services.utilities.mqtt_utilities import publish_mission_status
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
-from robot_interface.models.mission.task import TASKS
+from robot_interface.models.mission.task import InspectionTask
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
@@ -300,7 +300,7 @@ class Robot(object):
                 )
 
     def _upload_inspection_event_handler(
-        self, event: Event[Tuple[TASKS, Mission]]
+        self, event: Event[Tuple[InspectionTask, Mission]]
     ) -> None:
         upload_request = event.consume_event()
         if upload_request:

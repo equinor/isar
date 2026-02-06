@@ -10,7 +10,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import TASKS
+from robot_interface.models.mission.task import InspectionTask
 from robot_interface.robot_interface import RobotInterface
 
 
@@ -19,12 +19,12 @@ class RobotUploadInspectionThread(Thread):
         self,
         upload_queue: Queue,
         robot: RobotInterface,
-        task: TASKS,
+        task: InspectionTask,
         mission: Mission,
     ):
         self.logger = logging.getLogger("robot")
         self.robot: RobotInterface = robot
-        self.task: TASKS = task
+        self.task: InspectionTask = task
         self.upload_queue = upload_queue
         self.mission: Mission = mission
         Thread.__init__(self, name=f"Robot inspection upload thread - {task.id}")
