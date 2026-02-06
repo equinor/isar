@@ -2,13 +2,16 @@ import logging
 import os
 import time
 from queue import Empty, Queue
-from typing import Any, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 import backoff
+from backoff.types import Details
 from paho.mqtt import client as mqtt
 from paho.mqtt.client import Client
+from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.properties import Properties
+from paho.mqtt.reasoncodes import ReasonCode
 
 from isar.config.settings import settings
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
@@ -20,20 +23,21 @@ def props_expiry(seconds: int) -> Properties:
     return p
 
 
-def _on_success(data: dict) -> None:
+def _on_success(data: Details) -> None:
     logging.getLogger("mqtt_client").info("Connected to MQTT Broker")
     logging.getLogger("mqtt_client").debug(
         f"Elapsed time: {data['elapsed']}, Tries: {data['tries']}"
     )
 
 
-def _on_backoff(data: dict) -> None:
-    logging.getLogger("mqtt_client").warning(
-        f"Failed to connect, retrying in {data['wait']} seconds"
-    )
+def _on_backoff(data: Details) -> None:
+    if "wait" in data:
+        logging.getLogger("mqtt_client").warning(
+            f"Failed to connect, retrying in {data['wait']} seconds"
+        )
 
 
-def _on_giveup(data: dict) -> None:
+def _on_giveup(data: Details) -> None:
     logging.getLogger("mqtt_client").error(
         "Failed to connect to MQTT Broker within set backoff strategy."
     )
@@ -64,7 +68,7 @@ class MqttClient(MqttClientInterface):
         self.port: int = settings.MQTT_PORT
 
         self.client: Client = Client(
-            protocol=mqtt.MQTTv5, callback_api_version=mqtt.CallbackAPIVersion.VERSION2
+            protocol=mqtt.MQTTv5, callback_api_version=CallbackAPIVersion.VERSION2
         )
 
         self.client.enable_logger(logger=self.logger)
@@ -89,7 +93,9 @@ class MqttClient(MqttClientInterface):
                 time.sleep(0)  # avoid CPU spin
                 continue
             try:
-                item = self.mqtt_queue.get(timeout=1)
+                item: Tuple[str, str, int, bool, Optional[Properties]] = (
+                    self.mqtt_queue.get(timeout=1)
+                )
                 if len(item) == 4:
                     topic, payload, qos, retain = item
                     properties = None
@@ -107,17 +113,24 @@ class MqttClient(MqttClientInterface):
             )
 
     def on_connect(
-        self, client: Any, userdata: Any, flags: Any, reason_code: str, properties: Any
+        self,
+        client: Any,
+        userdata: Any,
+        flags: Dict[str, Any],
+        reason_code: ReasonCode,
+        properties: Union[Properties, None],
     ) -> None:
         self.logger.info(f"Connected: {reason_code}")
 
-    def on_disconnect(self, client: Any, userdata: Any, *args: Tuple[Any]) -> None:
-        if not args:
-            return
-        reason_code = args[0] if len(args) < 3 else args[1]
-        rc = getattr(reason_code, "value", reason_code)
-        if rc != 0:
-            self.logger.warning(f"Unexpected disconnect: {reason_code}.")
+    def on_disconnect(
+        self,
+        client: Client,
+        ignored: Any,
+        disconnectFlags: mqtt.DisconnectFlags,
+        reasonCode: ReasonCode,
+        properties: Union[Properties, None],
+    ) -> None:
+        self.logger.warning(f"Unexpected disconnect: {reasonCode}.")
 
     @backoff.on_exception(
         backoff.expo,
@@ -138,7 +151,7 @@ class MqttClient(MqttClientInterface):
         payload: str,
         qos: int = 0,
         retain: bool = False,
-        properties: Properties = None,
+        properties: Optional[Properties] = None,
     ) -> None:
         self.logger.debug("Publishing message to topic: %s", topic)
         self.client.publish(

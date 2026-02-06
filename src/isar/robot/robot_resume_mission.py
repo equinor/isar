@@ -35,6 +35,14 @@ class RobotResumeMissionThread(Thread):
             try:
                 self.robot.resume()
                 return
+            except RobotNoMissionRunningException as e:
+                self.logger.error(
+                    f"Failed to resume mission: {e.error_reason}. {e.error_description}"
+                )
+                error = ErrorMessage(
+                    error_reason=e.error_reason, error_description=e.error_description
+                )
+                break
             except (RobotActionException, RobotException) as e:
                 self.logger.warning(
                     f"Attempt {retries + 1} to resume mission failed: {e.error_description}"
@@ -46,14 +54,6 @@ class RobotResumeMissionThread(Thread):
                 time.sleep(settings.FSM_SLEEP_TIME)
                 retries += 1
                 continue
-            except RobotNoMissionRunningException as e:
-                self.logger.error(
-                    f"Failed to resume mission: {e.error_reason}. {e.error_description}"
-                )
-                error = ErrorMessage(
-                    error_reason=e.error_reason, error_description=e.error_description
-                )
-                break
             except Exception as e:
                 self.logger.error(
                     f"Unhandled exception in robot resume mission service: {str(e)}"
@@ -64,6 +64,7 @@ class RobotResumeMissionThread(Thread):
                 )
                 break
 
+        assert error is not None
         error_description = (
             f"\nFailed to resume the robot after {retries + 1} attempts because: "
             f"{error.error_description}"

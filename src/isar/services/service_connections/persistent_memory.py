@@ -1,5 +1,7 @@
 # This file uses SQLAlchemy to interface the persistent database storage.
 
+from typing import Any
+
 import sqlalchemy
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
@@ -52,7 +54,7 @@ def change_persistent_robot_state_is_maintenance_mode(
         statement = sqlalchemy.select(PersistentRobotState).where(
             PersistentRobotState.robot_id == robot_id
         )
-        read_persistent_state = session.scalar(statement)
+        read_persistent_state: Any = session.scalar(statement)
 
         read_persistent_state.is_maintenance_mode = value
         session.commit()

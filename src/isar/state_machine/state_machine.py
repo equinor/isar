@@ -91,13 +91,16 @@ class StateMachine(object):
     def run(self) -> None:
         """Runs the state machine loop."""
         try:
-            while self.current_state is not None:
+            while True:
                 self.update_state()
-                self.current_state = self.current_state.run()
-                if self.current_state is None:
+                next_state: Optional[State] = self.current_state.run()
+
+                if next_state is None:
                     self.logger.warning(
                         "Exiting state machine as current state is None"
                     )
+                    break
+                self.current_state = next_state
         except Exception as e:
             self.logger.error(f"Unhandled exception in state machine: {str(e)}")
 
@@ -106,13 +109,11 @@ class StateMachine(object):
         self.signal_state_machine_to_stop.set()
 
     def battery_level_is_above_mission_start_threshold(self) -> bool:
-        if not self.shared_state.robot_battery_level.check():
+        battery_level = self.shared_state.robot_battery_level.check()
+        if not battery_level:
             self.logger.warning("Battery level is None")
             return False
-        return (
-            not self.shared_state.robot_battery_level.check()
-            < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
-        )
+        return not battery_level < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
 
     def update_state(self) -> None:
         """Updates the current state of the state machine."""
