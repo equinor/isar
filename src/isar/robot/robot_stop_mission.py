@@ -62,6 +62,7 @@ class RobotStopMissionThread(Thread):
                 )
             return
 
+        assert error is not None
         error_description = (
             f"\nFailed to stop the robot after {retries} attempts because: "
             f"{error.error_description}"
