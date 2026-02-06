@@ -110,6 +110,9 @@ def to_isar_task(task_definition: StartMissionTaskDefinition) -> TASKS:
 
 
 def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
+    if task_definition.inspection is None:
+        raise ValueError("Inspection in task definition was None")
+
     inspection_definition = task_definition.inspection
 
     if inspection_definition.type == InspectionTypes.image:
@@ -122,6 +125,8 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             zoom=task_definition.zoom,
         )
     elif inspection_definition.type == InspectionTypes.video:
+        if inspection_definition.duration is None:
+            raise ValueError("No duration given to video inspection task")
         return TakeVideo(
             id=task_definition.id if task_definition.id else str(uuid4()),
             robot_pose=task_definition.pose.to_alitra_pose(),
@@ -141,6 +146,8 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             zoom=task_definition.zoom,
         )
     elif inspection_definition.type == InspectionTypes.thermal_video:
+        if inspection_definition.duration is None:
+            raise ValueError("No duration given to video inspection task")
         return TakeThermalVideo(
             id=task_definition.id if task_definition.id else str(uuid4()),
             robot_pose=task_definition.pose.to_alitra_pose(),
@@ -151,6 +158,8 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             zoom=task_definition.zoom,
         )
     elif inspection_definition.type == InspectionTypes.audio:
+        if inspection_definition.duration is None:
+            raise ValueError("No duration given to audio inspection task")
         return RecordAudio(
             id=task_definition.id if task_definition.id else str(uuid4()),
             robot_pose=task_definition.pose.to_alitra_pose(),

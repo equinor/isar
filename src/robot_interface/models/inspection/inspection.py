@@ -57,7 +57,7 @@ class InspectionBlob(Inspection):
 
 
 class Image(InspectionBlob):
-    metadata: ImageMetadata
+    metadata: ImageMetadata  # type: ignore
 
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:
@@ -65,7 +65,7 @@ class Image(InspectionBlob):
 
 
 class ThermalImage(InspectionBlob):
-    metadata: ThermalImageMetadata
+    metadata: ThermalImageMetadata  # type: ignore
 
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:
@@ -73,7 +73,7 @@ class ThermalImage(InspectionBlob):
 
 
 class Video(InspectionBlob):
-    metadata: VideoMetadata
+    metadata: VideoMetadata  # type: ignore
 
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:
@@ -81,7 +81,7 @@ class Video(InspectionBlob):
 
 
 class ThermalVideo(InspectionBlob):
-    metadata: ThermalVideoMetadata
+    metadata: ThermalVideoMetadata  # type: ignore
 
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:
@@ -89,7 +89,7 @@ class ThermalVideo(InspectionBlob):
 
 
 class Audio(InspectionBlob):
-    metadata: AudioMetadata
+    metadata: AudioMetadata  # type: ignore
 
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:
@@ -97,7 +97,7 @@ class Audio(InspectionBlob):
 
 
 class GasMeasurement(InspectionValue):
-    metadata: GasMeasurementMetadata
+    metadata: GasMeasurementMetadata  # type: ignore
 
     @staticmethod
     def get_metadata_type() -> Type[InspectionMetadata]:

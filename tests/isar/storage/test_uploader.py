@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 from typing import Tuple
+from uuid import uuid4
 
 from alitra import Frame, Orientation, Pose, Position
 
@@ -35,7 +36,22 @@ def test_should_upload_from_queue(
 ) -> None:
     uploader_thread.start()
 
-    take_image_task = TakeImage()
+    pose = Pose(
+        position=Position(x=4, y=4, z=0, frame=Frame(name="asset")),
+        orientation=Orientation(
+            x=0, y=0, z=-0.7071068, w=0.7071068, frame=Frame(name="asset")
+        ),
+        frame=Frame(name="asset"),
+    )
+
+    take_image_task = TakeImage(
+        id=str(uuid4()),
+        robot_pose=pose,
+        tag_id=str(uuid4()),
+        inspection_description="test",
+        target=pose.position,
+        zoom=None,
+    )
     mission: Mission = Mission(name="Dummy misson", tasks=[take_image_task])
 
     assert isinstance(mission.tasks[0], TakeImage)
