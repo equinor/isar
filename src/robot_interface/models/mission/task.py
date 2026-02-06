@@ -46,7 +46,7 @@ class InspectionTask(Task):
     """
 
     inspection_id: str = Field(default_factory=lambda: str(uuid4()), frozen=True)
-    robot_pose: Pose = Field(default=None, init=True)
+    robot_pose: Pose = Field()
     inspection_description: Optional[str] = Field(default=None)
     zoom: Optional[ZoomDescription] = Field(default=None)
 
@@ -68,7 +68,7 @@ class TakeImage(InspectionTask):
     Task which causes the robot to take an image towards the given target.
     """
 
-    target: Position = Field(default=None)
+    target: Position = Field()
     type: Literal[TaskTypes.TakeImage] = TaskTypes.TakeImage
 
     @staticmethod
@@ -81,7 +81,7 @@ class TakeThermalImage(InspectionTask):
     Task which causes the robot to take a thermal image towards the given target.
     """
 
-    target: Position = Field(default=None)
+    target: Position = Field()
     type: Literal[TaskTypes.TakeThermalImage] = TaskTypes.TakeThermalImage
 
     @staticmethod
@@ -96,8 +96,8 @@ class TakeVideo(InspectionTask):
     Duration of video is given in seconds.
     """
 
-    target: Position = Field(default=None)
-    duration: float = Field(default=None)
+    target: Position = Field()
+    duration: float = Field()
     type: Literal[TaskTypes.TakeVideo] = TaskTypes.TakeVideo
 
     @staticmethod
@@ -112,8 +112,8 @@ class TakeThermalVideo(InspectionTask):
     Duration of video is given in seconds.
     """
 
-    target: Position = Field(default=None)
-    duration: float = Field(default=None)
+    target: Position = Field()
+    duration: float = Field()
     type: Literal[TaskTypes.TakeThermalVideo] = TaskTypes.TakeThermalVideo
 
     @staticmethod
@@ -128,8 +128,8 @@ class RecordAudio(InspectionTask):
     Duration of audio is given in seconds.
     """
 
-    target: Position = Field(default=None)
-    duration: float = Field(default=None)
+    target: Position = Field()
+    duration: float = Field()
     type: Literal[TaskTypes.RecordAudio] = TaskTypes.RecordAudio
 
     @staticmethod

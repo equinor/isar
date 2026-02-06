@@ -3,7 +3,7 @@ import time
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timezone
 from queue import Queue
-from typing import Callable, Tuple
+from typing import Callable, Optional, Tuple
 
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.properties import Properties
@@ -31,7 +31,7 @@ class MqttClientInterface(metaclass=ABCMeta):
         payload: str,
         qos: int = 0,
         retain: bool = False,
-        properties: Properties = None,
+        properties: Optional[Properties] = None,
     ) -> None:
         """
         Parameters
@@ -61,9 +61,9 @@ class MqttPublisher(MqttClientInterface):
         payload: str,
         qos: int = 0,
         retain: bool = False,
-        properties: Properties = None,
+        properties: Optional[Properties] = None,
     ) -> None:
-        queue_message: Tuple[str, str, int, bool, Properties] = (
+        queue_message: Tuple[str, str, int, bool, Optional[Properties]] = (
             topic,
             payload,
             qos,
@@ -82,7 +82,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
         interval: float,
         qos: int = 0,
         retain: bool = False,
-        properties: Properties = None,
+        properties: Optional[Properties] = None,
     ) -> None:
         self.mqtt_queue: Queue = mqtt_queue
         self.telemetry_method: Callable = telemetry_method
@@ -90,7 +90,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
         self.interval: float = interval
         self.qos: int = qos
         self.retain: bool = retain
-        self.properties: Properties = properties
+        self.properties: Optional[Properties] = properties
 
     def run(self, isar_id: str, robot_name: str) -> None:
         self.cloud_health_topic: str = f"isar/{isar_id}/cloud_health"
@@ -109,7 +109,11 @@ class MqttTelemetryPublisher(MqttClientInterface):
                 continue
             except RobotTelemetryException:
                 payload = json.dumps(
-                    CloudHealthPayload(isar_id, robot_name, datetime.now(timezone.utc))
+                    CloudHealthPayload(
+                        isar_id=isar_id,
+                        robot_name=robot_name,
+                        timestamp=datetime.now(timezone.utc),
+                    )
                 )
                 topic = self.cloud_health_topic
 
@@ -137,9 +141,9 @@ class MqttTelemetryPublisher(MqttClientInterface):
         payload: str,
         qos: int = 0,
         retain: bool = False,
-        properties: Properties = None,
+        properties: Optional[Properties] = None,
     ) -> None:
-        queue_message: Tuple[str, str, int, bool, Properties] = (
+        queue_message: Tuple[str, str, int, bool, Optional[Properties]] = (
             topic,
             payload,
             qos,

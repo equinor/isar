@@ -3,7 +3,7 @@ import time
 from datetime import datetime, timezone
 from http import HTTPStatus
 from logging import Logger
-from typing import List, Union
+from typing import Any, List, Union
 
 import click
 import uvicorn
@@ -105,7 +105,7 @@ class API:
     def _create_scheduler_router(self) -> APIRouter:
         router: APIRouter = APIRouter(tags=["Scheduler"])
 
-        authentication_dependency: Security = Security(self.authenticator.get_scheme())
+        authentication_dependency: Any = Security(self.authenticator.get_scheme())
 
         router.add_api_route(
             path="/schedule/start-mission",
@@ -307,7 +307,7 @@ class API:
     def _create_info_router(self) -> APIRouter:
         router: APIRouter = APIRouter(tags=["Info"])
 
-        authentication_dependency: Security = Security(self.authenticator.get_scheme())
+        authentication_dependency: Any = Security(self.authenticator.get_scheme())
 
         router.add_api_route(
             path="/info/robot-settings",
@@ -322,7 +322,7 @@ class API:
     def _create_media_control_router(self) -> APIRouter:
         router: APIRouter = APIRouter(tags=["Media"])
 
-        authentication_dependency: Security = Security(self.authenticator.get_scheme())
+        authentication_dependency: Any = Security(self.authenticator.get_scheme())
 
         router.add_api_route(
             path="/media/media-stream-config",
