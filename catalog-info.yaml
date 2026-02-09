@@ -1,0 +1,13 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: isar
+  description: Integration and Supervisory control of Autonomous Robots - is a tool for integrating robot applications into operator systems. Through the ISAR API you can send commands to a robot to do missions and collect results from the missions.
+  annotations:
+    github.com/project-slug: equinor/isar
+    github.com/team-slug: equinor/eq-robot-developer
+spec:
+  type: service
+  lifecycle: production
+  owner: group:default/eq-robot-developer
+  system: system:default/flotilla
