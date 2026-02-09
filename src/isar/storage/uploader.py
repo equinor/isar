@@ -6,7 +6,7 @@ from threading import Event
 from typing import List
 
 from isar.config.settings import settings
-from isar.models.events import Events
+from isar.models.events import Events, InspectionQueueTuple
 from isar.storage.storage_interface import (
     BlobStoragePath,
     LocalStoragePath,
@@ -94,7 +94,7 @@ class Uploader:
         max_retry_attempts : int
             Maximum attempts to retry an upload when it fails
         """
-        self.upload_queue: Queue = events.upload_queue
+        self.upload_queue: Queue[InspectionQueueTuple] = events.upload_queue
         self.storage_handlers: List[StorageInterface] = storage_handlers
         self.mqtt_publisher = mqtt_publisher
 

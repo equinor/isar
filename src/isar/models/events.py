@@ -11,13 +11,18 @@ from isar.apis.models.models import (
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus
 from robot_interface.models.mission.task import InspectionTask
+from robot_interface.telemetry.mqtt_client import MQTTQueueType
 
 T = TypeVar("T")
 T1 = TypeVar("T1")
 T2 = TypeVar("T2")
+
+
+InspectionQueueTuple = Tuple[Inspection, Mission]
 
 
 class EmptyMessage:
@@ -83,10 +88,11 @@ class Events:
         self.state_machine_events: StateMachineEvents = StateMachineEvents()
         self.robot_service_events: RobotServiceEvents = RobotServiceEvents()
 
-        self.upload_queue: Queue = Queue(maxsize=10)
+        self.upload_queue: Queue[InspectionQueueTuple] = Queue[InspectionQueueTuple](
+            maxsize=10
+        )
 
-        # TODO: add type hinting to this monstrosity
-        self.mqtt_queue: Queue = Queue()
+        self.mqtt_queue: Queue[MQTTQueueType] = Queue[MQTTQueueType]()
 
 
 class APIEvent(Generic[T1, T2]):

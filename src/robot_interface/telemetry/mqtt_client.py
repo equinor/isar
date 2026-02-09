@@ -16,6 +16,8 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.telemetry.payloads import CloudHealthPayload
 
+MQTTQueueType = Tuple[str, str, int, bool, Optional[Properties]]
+
 
 def props_expiry(seconds: int) -> Properties:
     p = Properties(PacketTypes.PUBLISH)
@@ -52,8 +54,8 @@ class MqttClientInterface(metaclass=ABCMeta):
 
 
 class MqttPublisher(MqttClientInterface):
-    def __init__(self, mqtt_queue: Queue) -> None:
-        self.mqtt_queue: Queue = mqtt_queue
+    def __init__(self, mqtt_queue: Queue[MQTTQueueType]) -> None:
+        self.mqtt_queue: Queue[MQTTQueueType] = mqtt_queue
 
     def publish(
         self,
@@ -76,7 +78,7 @@ class MqttPublisher(MqttClientInterface):
 class MqttTelemetryPublisher(MqttClientInterface):
     def __init__(
         self,
-        mqtt_queue: Queue,
+        mqtt_queue: Queue[MQTTQueueType],
         telemetry_method: Callable,
         topic: str,
         interval: float,
@@ -84,7 +86,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
         retain: bool = False,
         properties: Optional[Properties] = None,
     ) -> None:
-        self.mqtt_queue: Queue = mqtt_queue
+        self.mqtt_queue: Queue[MQTTQueueType] = mqtt_queue
         self.telemetry_method: Callable = telemetry_method
         self.topic: str = topic
         self.interval: float = interval
@@ -143,7 +145,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
         retain: bool = False,
         properties: Optional[Properties] = None,
     ) -> None:
-        queue_message: Tuple[str, str, int, bool, Optional[Properties]] = (
+        queue_message: MQTTQueueType = (
             topic,
             payload,
             qos,
