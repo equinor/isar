@@ -2,8 +2,13 @@ from typing import TYPE_CHECKING, List, Union
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.intervention_needed as InterventionNeeded
+from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
+from isar.services.service_connections.persistent_memory import (
+    RobotStartupMode,
+    change_persistent_robot_state,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
@@ -48,6 +53,12 @@ class Maintenance(State):
 
 def transition() -> Transition[Maintenance]:
     def _transition(state_machine: "StateMachine") -> Maintenance:
+        if settings.PERSISTENT_STORAGE_CONNECTION_STRING != "":
+            change_persistent_robot_state(
+                settings.PERSISTENT_STORAGE_CONNECTION_STRING,
+                settings.ISAR_ID,
+                value=RobotStartupMode.Maintenance,
+            )
         return Maintenance(state_machine)
 
     return _transition

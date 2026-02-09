@@ -10,10 +10,12 @@ from isar.models.events import Events, SharedState
 from isar.models.status import IsarStatus
 from isar.services.service_connections.persistent_memory import (
     NoSuchRobotException,
+    RobotStartupMode,
     create_persistent_robot_state,
-    read_persistent_robot_state_is_maintenance_mode,
+    read_persistent_robot_state,
 )
 from isar.services.utilities.mqtt_utilities import publish_isar_status
+from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.maintenance import Maintenance
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
@@ -65,12 +67,14 @@ class StateMachine(object):
                 "PERSISTENT_STORAGE_CONNECTION_STRING is not set. Restarting ISAR will forget the state, including maintenance mode. "
             )
         else:
-            is_maintenance_mode = read_or_create_persistent_maintenance_mode()
+            robot_startup_mode = read_or_create_persistent_mode()
             self.logger.info(
-                f"Connected to robot status database and the maintenance mode was: {is_maintenance_mode}. "
+                f"Connected to robot status database and the startup mode was: {robot_startup_mode}. "
             )
-            if is_maintenance_mode:
+            if robot_startup_mode == RobotStartupMode.Maintenance:
                 self.current_state = Maintenance(self)
+            elif robot_startup_mode == RobotStartupMode.Lockdown:
+                self.current_state = GoingToLockdown(self)
 
         self.transitions_list: Deque[States] = deque(
             [], settings.STATE_TRANSITIONS_LOG_LENGTH
@@ -232,23 +236,25 @@ class StateMachine(object):
             return IsarStatus.Busy
 
 
-def read_or_create_persistent_maintenance_mode() -> bool:
+def read_or_create_persistent_mode() -> RobotStartupMode:
     try:
-        is_maintenance_mode = read_persistent_robot_state_is_maintenance_mode(
+        startup_mode = read_persistent_robot_state(
             settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID
         )
     except NoSuchRobotException:
         create_persistent_robot_state(
-            settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID
+            settings.PERSISTENT_STORAGE_CONNECTION_STRING,
+            settings.ISAR_ID,
+            RobotStartupMode.Maintenance,
         )
-        is_maintenance_mode = read_persistent_robot_state_is_maintenance_mode(
+        startup_mode = read_persistent_robot_state(
             settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID
         )
         logger = logging.getLogger("state_machine")
         logger.info(
-            f"Created new persistent robot state for robot id {settings.ISAR_ID}. It is now set to maintenance mode: {is_maintenance_mode}."
+            f"Created new persistent robot state for robot id {settings.ISAR_ID}. It is now set to: {startup_mode}."
         )
-    return is_maintenance_mode
+    return startup_mode
 
 
 def main(state_machine: StateMachine) -> None:

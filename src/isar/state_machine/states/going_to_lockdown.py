@@ -2,8 +2,13 @@ from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown as Lockdown
+from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
+from isar.services.service_connections.persistent_memory import (
+    RobotStartupMode,
+    change_persistent_robot_state,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -69,6 +74,12 @@ class GoingToLockdown(State):
 
 def transition() -> Transition[GoingToLockdown]:
     def _transition(state_machine: "StateMachine") -> GoingToLockdown:
+        if settings.PERSISTENT_STORAGE_CONNECTION_STRING != "":
+            change_persistent_robot_state(
+                settings.PERSISTENT_STORAGE_CONNECTION_STRING,
+                settings.ISAR_ID,
+                value=RobotStartupMode.Lockdown,
+            )
         return GoingToLockdown(state_machine)
 
     return _transition
