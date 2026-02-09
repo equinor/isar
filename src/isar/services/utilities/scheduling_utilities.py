@@ -16,9 +16,6 @@ from isar.models.events import (
     EventTimeoutError,
     SharedState,
 )
-from isar.services.service_connections.persistent_memory import (
-    change_persistent_robot_state_is_maintenance_mode,
-)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
@@ -446,12 +443,6 @@ class SchedulingUtilities:
     def set_maintenance_mode(self) -> None:
         """Set maintenance mode"""
         try:
-            if settings.PERSISTENT_STORAGE_CONNECTION_STRING != "":
-                change_persistent_robot_state_is_maintenance_mode(
-                    settings.PERSISTENT_STORAGE_CONNECTION_STRING,
-                    settings.ISAR_ID,
-                    value=True,
-                )
             response: MaintenanceResponse = self._send_command(
                 EmptyMessage(), self.api_events.set_maintenance_mode
             )
@@ -485,12 +476,6 @@ class SchedulingUtilities:
             self._send_command(
                 EmptyMessage(), self.api_events.release_from_maintenance_mode
             )
-            if settings.PERSISTENT_STORAGE_CONNECTION_STRING != "":
-                change_persistent_robot_state_is_maintenance_mode(
-                    settings.PERSISTENT_STORAGE_CONNECTION_STRING,
-                    settings.ISAR_ID,
-                    value=False,
-                )
             self.logger.info("OK - Robot released form maintenance mode")
         except EventConflictError:
             error_message = "Previous release robot from maintenance request is still being processed"

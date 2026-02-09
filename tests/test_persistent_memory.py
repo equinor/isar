@@ -12,8 +12,13 @@ from testcontainers.mysql import MySqlContainer
 from isar.services.service_connections.persistent_memory import (
     Base,
     PersistentRobotState,
-    change_persistent_robot_state_is_maintenance_mode,
-    read_persistent_robot_state_is_maintenance_mode,
+    RobotStartupMode,
+    change_persistent_robot_state,
+    read_persistent_robot_state,
+)
+from isar.state_machine.state_machine import (
+    StateMachine,
+    read_or_create_persistent_mode,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
@@ -33,22 +38,104 @@ def test_persistent_storage_schema() -> None:
 
         with Session(engine) as session:
             persistent_state = PersistentRobotState(
-                robot_id="0a0", is_maintenance_mode=True
+                robot_id="0a0", robot_startup_mode=RobotStartupMode.Lockdown
             )
             session.add_all([persistent_state])
             session.commit()
 
-        is_maintenance_mode = read_persistent_robot_state_is_maintenance_mode(
-            connection_url, "0a0"
+        robot_mode = read_persistent_robot_state(connection_url, "0a0")
+        assert robot_mode == RobotStartupMode.Lockdown
+        change_persistent_robot_state(
+            connection_url, "0a0", value=RobotStartupMode.Normal
         )
-        assert is_maintenance_mode
-        change_persistent_robot_state_is_maintenance_mode(
-            connection_url, "0a0", value=False
+        robot_mode = read_persistent_robot_state(connection_url, "0a0")
+        assert robot_mode == RobotStartupMode.Normal
+        change_persistent_robot_state(
+            connection_url, "0a0", value=RobotStartupMode.Maintenance
         )
-        is_maintenance_mode = read_persistent_robot_state_is_maintenance_mode(
-            connection_url, "0a0"
-        )
-        assert not is_maintenance_mode
+        robot_mode = read_persistent_robot_state(connection_url, "0a0")
+        assert robot_mode == RobotStartupMode.Maintenance
+
+
+def test_lockdown_mode(
+    setup_db_connection_string: str,  # The order of the fixtures is important
+    client: TestClient,
+    state_machine_thread: StateMachineThreadMock,
+    robot_service_thread: RobotServiceThreadMock,
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch.object(StateMachine, "print_transitions", return_value=None)
+
+    # Now running ISAR should put it into maintenance mode
+    state_machine_thread.start()
+    robot_service_thread.start()
+
+    assert state_machine_thread.state_machine.current_state.name == States.Maintenance
+
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
+
+    t_start = time.time()
+    while (
+        state_machine_thread.state_machine.shared_state.robot_status.check()
+        != RobotStatus.Home
+    ):
+        if time.time() - t_start > 10:
+            raise Exception("Robot did not come Home within expected time")
+        time.sleep(0.5)
+
+    response = client.post(url="/schedule/release-maintenance-mode")
+    assert response.status_code == HTTPStatus.OK
+    assert state_machine_thread.state_machine.current_state.name == States.Home
+
+    mocker.patch.object(
+        StubRobot, "mission_status", return_value=MissionStatus.InProgress
+    )  # The robot will not go to awaiting next mission after mission has started, it should remain in monitor. In order to test the "stop" functionality.
+    response = client.post(
+        url="/schedule/start-mission",
+        json=jsonable_encoder(
+            {
+                "mission_definition": DummyMissionDefinition.dummy_start_mission_definition
+            }
+        ),
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    assert state_machine_thread.state_machine.current_state.name == States.Monitor
+    response = client.post(url="/schedule/lockdown")
+    assert response.status_code == HTTPStatus.OK
+
+    mocker.patch.object(
+        StubRobot, "mission_status", return_value=MissionStatus.Successful
+    )
+
+    time.sleep(3)
+
+    response = client.post(
+        url="/schedule/start-mission",
+        json=jsonable_encoder(
+            {
+                "mission_definition": DummyMissionDefinition.dummy_start_mission_definition
+            }
+        ),
+    )
+    assert response.status_code == HTTPStatus.CONFLICT
+
+    time.sleep(10)  # Give the state machine enough time to stop the mission
+
+    assert state_machine_thread.state_machine.transitions_list == deque(
+        [
+            States.Maintenance,
+            States.Home,
+            States.Monitor,
+            States.StoppingGoToLockdown,
+            States.GoingToLockdown,
+            States.Lockdown,
+        ]
+    )
+
+    robot_startup_mode = read_or_create_persistent_mode()
+
+    assert robot_startup_mode == RobotStartupMode.Lockdown
 
 
 def test_maintenance_mode(
@@ -115,6 +202,8 @@ def test_maintenance_mode(
         ),
     )
     assert response.status_code == HTTPStatus.CONFLICT
+
+    time.sleep(5)  # Give the state machine enough time to stop the mission
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [
