@@ -1,3 +1,5 @@
+import time
+
 from pytest_mock import MockerFixture
 
 from isar.models.events import EmptyMessage
@@ -7,7 +9,11 @@ from isar.robot.robot_pause_mission import RobotPauseMissionThread
 from isar.robot.robot_resume_mission import RobotResumeMissionThread
 from isar.robot.robot_start_mission import RobotStartMissionThread
 from isar.robot.robot_stop_mission import RobotStopMissionThread
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
+from robot_interface.models.exceptions.robot_exceptions import (
+    ErrorMessage,
+    ErrorReason,
+    RobotAlreadyHomeException,
+)
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TakeImage, Task
 from tests.test_mocks.pose import DummyPose
@@ -498,3 +504,36 @@ def test_mission_paus_starts_when_start_is_done(
     assert not r_service.state_machine_events.pause_mission.has_event()
     assert r_service.pause_mission_thread is not None
     mock_pause_mission_start.assert_called_once()
+
+
+def test_start_mission_reports_robot_already_home(
+    mocked_robot_service_with_real_threads: Robot, mocker: MockerFixture
+) -> None:
+    r_service = mocked_robot_service_with_real_threads
+
+    def mock_initiate_mission(mission: Mission) -> None:
+        raise RobotAlreadyHomeException("test")
+
+    r_service.robot.initiate_mission = mock_initiate_mission  # type: ignore
+
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
+    r_service.start_mission_thread = RobotStartMissionThread(
+        r_service.robot, r_service.signal_thread_quitting, mission
+    )
+    r_service.start_mission_thread.start()
+
+    timeout = 10
+    start_time = time.time()
+    while r_service.start_mission_thread.is_alive():
+        if time.time() > start_time + timeout:
+            assert False
+
+    r_service._start_mission_done_handler()
+
+    assert r_service.robot_service_events.robot_already_home.has_event()
+    assert not r_service.robot_service_events.mission_started.has_event()
+    assert r_service.start_mission_thread is None
+    assert r_service.monitor_mission_thread is None
