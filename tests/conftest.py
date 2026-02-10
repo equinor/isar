@@ -236,6 +236,18 @@ def mocked_robot_service(
     return robot_service
 
 
+@pytest.fixture
+def mocked_robot_service_with_real_threads(container: ApplicationContainer) -> Robot:
+    robot_service: Robot = Robot(
+        events=container.events(),
+        robot=container.robot_interface(),
+        shared_state=container.shared_state(),
+        mqtt_publisher=container.mqtt_client(),
+    )
+
+    return robot_service
+
+
 @pytest.fixture(autouse=True)
 def run_before_and_after_tests() -> Generator[None, None, None]:
     results_folder: Path = Path("tests/results")
