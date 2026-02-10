@@ -9,7 +9,6 @@ from typing import Generator
 
 import pytest
 import sqlalchemy
-from dependency_injector.providers import Singleton
 from dependency_injector.wiring import providers
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -162,7 +161,7 @@ def robot() -> StubRobot:
 @pytest.fixture()
 def scheduling_utilities(
     container: ApplicationContainer,
-) -> Singleton[SchedulingUtilities]:
+) -> SchedulingUtilities:
     """Fixture to provide the SchedulingUtilities instance."""
     return container.scheduling_utilities()
 
@@ -238,7 +237,7 @@ def mocked_robot_service(
 
 
 @pytest.fixture(autouse=True)
-def run_before_and_after_tests() -> None:  # type: ignore
+def run_before_and_after_tests() -> Generator[None, None, None]:
     results_folder: Path = Path("tests/results")
     yield
 
