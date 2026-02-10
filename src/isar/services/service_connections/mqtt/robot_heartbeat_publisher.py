@@ -23,7 +23,7 @@ class RobotHeartbeatPublisher:
             self.mqtt_publisher.publish(
                 topic=settings.TOPIC_ISAR_ROBOT_HEARTBEAT,
                 payload=payload.model_dump_json(),
-                retain=True,
+                retain=False,
                 properties=props_expiry(settings.MQTT_ROBOT_HEARTBEAT_EXPIRY),
             )
 
