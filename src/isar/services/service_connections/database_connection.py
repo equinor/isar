@@ -16,8 +16,10 @@ def get_db_connection_string() -> str:
     token_env = get_access_token().token
     password_env = token_env
 
+    ssl_mode = "?sslmode=require"
+
     return (
         f"postgresql://"
-        f"postgresuser:{password_env}@"
-        f"{settings.DATABASE_SERVER_NAME}:5432/isar"
+        f"{settings.DATABASE_USER}:{password_env}@"
+        f"{settings.DATABASE_SERVER_NAME}:5432/isar{ssl_mode}"
     )

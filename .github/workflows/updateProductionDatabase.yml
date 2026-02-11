@@ -1,0 +1,32 @@
+name: Update database in production
+permissions:
+  contents: read
+  pull-requests: read
+  packages: write
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: .
+
+jobs:
+  trigger-github-deployment:
+    name: Trigger GitHub Deployment
+    environment: Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Empty Step
+        run: echo "Hello World"
+
+  run_migrations:
+    name: Update database in Production
+    needs: [trigger-github-deployment]
+    uses: ./.github/workflows/runMigrations.yml
+    with:
+      PullRequestCheckout: false
+      Environment: Production
+    secrets:
+      ClientId: ${{secrets.CLIENTID}}
+      ClientSecret: ${{secrets.CLIENTSECRET}}

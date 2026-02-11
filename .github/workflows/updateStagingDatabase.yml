@@ -1,0 +1,32 @@
+name: Update database in staging
+permissions:
+  contents: read
+  pull-requests: read
+  packages: write
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: .
+
+jobs:
+  trigger-github-deployment:
+    name: Trigger GitHub Deployment
+    environment: Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Empty Step
+        run: echo "Hello World"
+
+  run_migrations:
+    name: Update database in Staging
+    needs: [trigger-github-deployment]
+    uses: ./.github/workflows/runMigrations.yml
+    with:
+      PullRequestCheckout: false
+      Environment: Staging
+    secrets:
+      ClientId: ${{secrets.CLIENTID}}
+      ClientSecret: ${{secrets.CLIENTSECRET}}
