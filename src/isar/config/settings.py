@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     # Endpoint open telemetry will export telemetry in the otlp protocol to
     OPEN_TELEMETRY_OTLP_EXPORTER_ENDPOINT: str = Field(default="http://localhost:4318")
 
+    DATABASE_SERVER_NAME: str = Field(default="")
+
+    USE_DB: bool = Field(default=True)
+
     # Determines which robot package ISAR will attempt to import
     # Name must match with an installed python package in the local environment
     ROBOT_PACKAGE: str = Field(default="isar_robot")
@@ -135,8 +139,6 @@ class Settings(BaseSettings):
 
     # Name of blob container in Azure Blob Storage [slimm test]
     BLOB_CONTAINER: str = Field(default="test")
-
-    PERSISTENT_STORAGE_CONNECTION_STRING: str = Field(default="")
 
     # The configuration of this section is tightly coupled with the metadata that is
     # submitted with the results once they have been uploaded.

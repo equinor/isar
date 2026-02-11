@@ -48,9 +48,8 @@ class Lockdown(State):
 
 def transition() -> Transition[Lockdown]:
     def _transition(state_machine: "StateMachine") -> Lockdown:
-        if settings.PERSISTENT_STORAGE_CONNECTION_STRING != "":
+        if settings.USE_DB:
             change_persistent_robot_state(
-                settings.PERSISTENT_STORAGE_CONNECTION_STRING,
                 settings.ISAR_ID,
                 value=RobotStartupMode.Lockdown,
             )

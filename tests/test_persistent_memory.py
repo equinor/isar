@@ -13,8 +13,8 @@ from isar.services.service_connections.persistent_memory import (
     Base,
     PersistentRobotState,
     RobotStartupMode,
-    change_persistent_robot_state,
-    read_persistent_robot_state,
+    change_persistent_robot_state_with_connection_string,
+    read_persistent_robot_state_with_connection_string,
 )
 from isar.state_machine.state_machine import (
     StateMachine,
@@ -43,40 +43,48 @@ def test_persistent_storage_schema() -> None:
             session.add_all([persistent_state])
             session.commit()
 
-        robot_mode = read_persistent_robot_state(connection_url, "0a0")
+        robot_mode = read_persistent_robot_state_with_connection_string(
+            connection_url, "0a0"
+        )
         assert robot_mode == RobotStartupMode.Lockdown
-        change_persistent_robot_state(
+        change_persistent_robot_state_with_connection_string(
             connection_url, "0a0", value=RobotStartupMode.Normal
         )
-        robot_mode = read_persistent_robot_state(connection_url, "0a0")
+        robot_mode = read_persistent_robot_state_with_connection_string(
+            connection_url, "0a0"
+        )
         assert robot_mode == RobotStartupMode.Normal
-        change_persistent_robot_state(
+        change_persistent_robot_state_with_connection_string(
             connection_url, "0a0", value=RobotStartupMode.Maintenance
         )
-        robot_mode = read_persistent_robot_state(connection_url, "0a0")
+        robot_mode = read_persistent_robot_state_with_connection_string(
+            connection_url, "0a0"
+        )
         assert robot_mode == RobotStartupMode.Maintenance
 
 
 def test_lockdown_mode(
-    setup_db_connection_string: str,  # The order of the fixtures is important
     client: TestClient,
-    state_machine_thread: StateMachineThreadMock,
+    state_machine_thread_with_db: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(StateMachine, "print_transitions", return_value=None)
 
     # Now running ISAR should put it into maintenance mode
-    state_machine_thread.start()
+    state_machine_thread_with_db.start()
     robot_service_thread.start()
 
-    assert state_machine_thread.state_machine.current_state.name == States.Maintenance
+    assert (
+        state_machine_thread_with_db.state_machine.current_state.name
+        == States.Maintenance
+    )
 
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
 
     t_start = time.time()
     while (
-        state_machine_thread.state_machine.shared_state.robot_status.check()
+        state_machine_thread_with_db.state_machine.shared_state.robot_status.check()
         != RobotStatus.Home
     ):
         if time.time() - t_start > 10:
@@ -85,7 +93,7 @@ def test_lockdown_mode(
 
     response = client.post(url="/schedule/release-maintenance-mode")
     assert response.status_code == HTTPStatus.OK
-    assert state_machine_thread.state_machine.current_state.name == States.Home
+    assert state_machine_thread_with_db.state_machine.current_state.name == States.Home
 
     mocker.patch.object(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
@@ -100,7 +108,9 @@ def test_lockdown_mode(
     )
     assert response.status_code == HTTPStatus.OK
 
-    assert state_machine_thread.state_machine.current_state.name == States.Monitor
+    assert (
+        state_machine_thread_with_db.state_machine.current_state.name == States.Monitor
+    )
     response = client.post(url="/schedule/lockdown")
     assert response.status_code == HTTPStatus.OK
 
@@ -122,7 +132,7 @@ def test_lockdown_mode(
 
     time.sleep(10)  # Give the state machine enough time to stop the mission
 
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    assert state_machine_thread_with_db.state_machine.transitions_list == deque(
         [
             States.Maintenance,
             States.Home,
@@ -139,17 +149,19 @@ def test_lockdown_mode(
 
 
 def test_maintenance_mode(
-    setup_db_connection_string: str,  # The order of the fixtures is important
     client: TestClient,
-    state_machine_thread: StateMachineThreadMock,
+    state_machine_thread_with_db: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
 ) -> None:
     # Now running ISAR should put it into maintenance mode
-    state_machine_thread.start()
+    state_machine_thread_with_db.start()
     robot_service_thread.start()
 
-    assert state_machine_thread.state_machine.current_state.name == States.Maintenance
+    assert (
+        state_machine_thread_with_db.state_machine.current_state.name
+        == States.Maintenance
+    )
 
     # The robot should have started in maintenance mode since the robot id is not found in the database.
     response = client.post(
@@ -165,7 +177,7 @@ def test_maintenance_mode(
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     t_start = time.time()
     while (
-        state_machine_thread.state_machine.shared_state.robot_status.check()
+        state_machine_thread_with_db.state_machine.shared_state.robot_status.check()
         != RobotStatus.Home
     ):
         if time.time() - t_start > 10:
@@ -174,7 +186,7 @@ def test_maintenance_mode(
 
     response = client.post(url="/schedule/release-maintenance-mode")
     assert response.status_code == HTTPStatus.OK
-    assert state_machine_thread.state_machine.current_state.name == States.Home
+    assert state_machine_thread_with_db.state_machine.current_state.name == States.Home
 
     mocker.patch.object(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
@@ -189,7 +201,9 @@ def test_maintenance_mode(
     )
     assert response.status_code == HTTPStatus.OK
 
-    assert state_machine_thread.state_machine.current_state.name == States.Monitor
+    assert (
+        state_machine_thread_with_db.state_machine.current_state.name == States.Monitor
+    )
     response = client.post(url="/schedule/maintenance-mode")
     assert response.status_code == HTTPStatus.OK
 
@@ -205,7 +219,7 @@ def test_maintenance_mode(
 
     time.sleep(5)  # Give the state machine enough time to stop the mission
 
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    assert state_machine_thread_with_db.state_machine.transitions_list == deque(
         [
             States.Maintenance,
             States.Home,
