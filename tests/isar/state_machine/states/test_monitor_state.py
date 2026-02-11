@@ -234,8 +234,8 @@ def test_robot_mission_status_exception_handling(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
+    mocker: MockerFixture,
 ) -> None:
-
     mission = Mission(
         name="Dummy mission",
         tasks=[StubTask.take_image()],

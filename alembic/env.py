@@ -1,10 +1,10 @@
-import os
 from logging.config import fileConfig
 
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context  # type: ignore[attr-defined]
+from isar.services.service_connections.database_connection import get_db_url
 from isar.services.service_connections.persistent_memory import Base
 
 # this is the Alembic Config object, which provides
@@ -42,8 +42,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    # url = config.get_main_option("sqlalchemy.url")
-    url = get_connection_string()
+    url = get_db_url()
 
     context.configure(
         url=url,
@@ -63,7 +62,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    url = get_connection_string()
+    url = get_db_url()
 
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
@@ -77,15 +76,6 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
-
-
-def get_connection_string() -> str:
-    url = os.getenv("ISAR_PERSISTENT_STORAGE_CONNECTION_STRING")
-    if url is None or url == "":
-        raise Exception(
-            "The environment variable ISAR_PERSISTENT_STORAGE_CONNECTION_STRING needs to be set in order to connect to the database. "
-        )
-    return url
 
 
 if context.is_offline_mode():

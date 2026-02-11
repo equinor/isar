@@ -53,9 +53,8 @@ class Maintenance(State):
 
 def transition() -> Transition[Maintenance]:
     def _transition(state_machine: "StateMachine") -> Maintenance:
-        if settings.PERSISTENT_STORAGE_CONNECTION_STRING != "":
+        if settings.USE_DB:
             change_persistent_robot_state(
-                settings.PERSISTENT_STORAGE_CONNECTION_STRING,
                 settings.ISAR_ID,
                 value=RobotStartupMode.Maintenance,
             )

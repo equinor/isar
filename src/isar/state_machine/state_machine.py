@@ -62,9 +62,9 @@ class StateMachine(object):
 
         self.current_state: State = UnknownStatus(self)
 
-        if settings.PERSISTENT_STORAGE_CONNECTION_STRING == "":
+        if not settings.USE_DB:
             self.logger.warning(
-                "PERSISTENT_STORAGE_CONNECTION_STRING is not set. Restarting ISAR will forget the state, including maintenance mode. "
+                "Not using ISAR database. Restarting ISAR will forget the state, including maintenance mode. "
             )
         else:
             robot_startup_mode = read_or_create_persistent_mode()
@@ -238,18 +238,13 @@ class StateMachine(object):
 
 def read_or_create_persistent_mode() -> RobotStartupMode:
     try:
-        startup_mode = read_persistent_robot_state(
-            settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID
-        )
+        startup_mode = read_persistent_robot_state(settings.ISAR_ID)
     except NoSuchRobotException:
         create_persistent_robot_state(
-            settings.PERSISTENT_STORAGE_CONNECTION_STRING,
             settings.ISAR_ID,
             RobotStartupMode.Maintenance,
         )
-        startup_mode = read_persistent_robot_state(
-            settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID
-        )
+        startup_mode = read_persistent_robot_state(settings.ISAR_ID)
         logger = logging.getLogger("state_machine")
         logger.info(
             f"Created new persistent robot state for robot id {settings.ISAR_ID}. It is now set to: {startup_mode}."
