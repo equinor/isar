@@ -3,7 +3,7 @@ Alembic is used to migrate the databases. [link](https://alembic.sqlalchemy.org/
 # How to
 
 Requirements:
-1. Set the correct environment variable connection string `ISAR_PERSISTENT_STORAGE_CONNECTION_STRING` for the database.
+1. Set credentials for azure authentication towards the postgres database.
 
 <details>
 <summary>

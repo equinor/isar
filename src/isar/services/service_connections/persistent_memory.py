@@ -7,6 +7,10 @@ import sqlalchemy
 from sqlalchemy import Enum, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
+from isar.services.service_connections.database_connection import (
+    get_db_connection_string,
+)
+
 
 class Base(DeclarativeBase):
     pass
@@ -35,7 +39,7 @@ class NoSuchRobotException(Exception):
     pass
 
 
-def read_persistent_robot_state(
+def read_persistent_robot_state_with_connection_string(
     connection_string: str, robot_id: str
 ) -> RobotStartupMode:
     engine = sqlalchemy.create_engine(connection_string)
@@ -54,7 +58,14 @@ def read_persistent_robot_state(
         return read_persistent_state.robot_startup_mode
 
 
-def change_persistent_robot_state(
+def read_persistent_robot_state(robot_id: str) -> RobotStartupMode:
+    connection_string = get_db_connection_string()
+    return read_persistent_robot_state_with_connection_string(
+        connection_string, robot_id
+    )
+
+
+def change_persistent_robot_state_with_connection_string(
     connection_string: str, robot_id: str, value: RobotStartupMode
 ) -> None:
     engine = sqlalchemy.create_engine(connection_string)
@@ -74,9 +85,17 @@ def change_persistent_robot_state(
         session.commit()
 
 
+def change_persistent_robot_state(robot_id: str, value: RobotStartupMode) -> None:
+    connection_string = get_db_connection_string()
+    return change_persistent_robot_state_with_connection_string(
+        connection_string, robot_id, value
+    )
+
+
 def create_persistent_robot_state(
-    connection_string: str, robot_id: str, startup_mode: RobotStartupMode
+    robot_id: str, startup_mode: RobotStartupMode
 ) -> None:
+    connection_string = get_db_connection_string()
     engine = sqlalchemy.create_engine(connection_string)
 
     with Session(engine) as session:
