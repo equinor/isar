@@ -45,7 +45,7 @@ class Paused(State):
                 return None
 
             state_machine.publish_mission_aborted(
-                mission_id, "Robot battery too low to continue mission", True
+                mission_id, "Robot battery too low to continue mission"
             )
             state_machine.logger.warning(
                 "Cancelling current mission due to low battery"

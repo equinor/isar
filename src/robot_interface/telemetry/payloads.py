@@ -88,7 +88,6 @@ class MissionAbortedPayload(BaseModel):
     isar_id: str
     robot_name: str
     mission_id: Optional[str] = None
-    can_be_continued: bool
     timestamp: datetime
     reason: Optional[str] = None
 

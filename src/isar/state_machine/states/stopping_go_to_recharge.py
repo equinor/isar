@@ -25,7 +25,7 @@ class StoppingGoToRecharge(State):
             successful_stop: EmptyMessage,
         ) -> Transition[GoingToRecharging.GoingToRecharging]:
             state_machine.publish_mission_aborted(
-                mission_id, "Robot battery too low to continue mission", True
+                mission_id, "Robot battery too low to continue mission"
             )
             state_machine.start_return_home_mission()
             return GoingToRecharging.transition()

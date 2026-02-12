@@ -32,7 +32,7 @@ class StoppingGoToLockdown(State):
             successful_stop: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
             state_machine.publish_mission_aborted(
-                mission_id, "Robot being sent to lockdown", True
+                mission_id, "Robot being sent to lockdown"
             )
 
             events.api_requests.send_to_lockdown.response.trigger_event(
