@@ -139,7 +139,7 @@ class StateMachine(object):
         self.events.state_machine_events.start_mission.trigger_event(mission)
 
     def publish_mission_aborted(
-        self, current_mission_id: Optional[str], reason: str, can_be_continued: bool
+        self, current_mission_id: Optional[str], reason: str
     ) -> None:
         if not self.mqtt_publisher:
             return
@@ -154,7 +154,6 @@ class StateMachine(object):
             robot_name=settings.ROBOT_NAME,
             mission_id=current_mission_id,
             reason=reason,
-            can_be_continued=can_be_continued,
             timestamp=datetime.now(timezone.utc),
         )
 
