@@ -41,6 +41,10 @@ class TelemetryObstacleStatusPayload(TelemetryPayload, BaseModel):
 class TelemetryPressurePayload(TelemetryPayload, BaseModel):
     pressure_level: float
 
+class GenericFloatTelemetryPayload(TelemetryPayload, BaseModel):
+    value: float
+    name: str
+
 
 @dataclass
 class DocumentInfo:
