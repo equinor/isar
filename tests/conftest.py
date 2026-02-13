@@ -45,8 +45,6 @@ from tests.test_mocks.state_machine_mocks import (
 
 @pytest.fixture(autouse=True)
 def setup_test_environment() -> None:
-    settings.PERSISTENT_STORAGE_CONNECTION_STRING = ""
-
     logger_names = [
         "main",
         "api",
@@ -127,9 +125,10 @@ def access_token() -> str:
 
 @pytest.fixture()
 def state_machine(
-    container: ApplicationContainer, robot: RobotInterface
+    container: ApplicationContainer, robot: RobotInterface, mocker: MockerFixture
 ) -> StateMachine:
     """Fixture to provide the StateMachine instance."""
+    mocker.patch.object(settings, "USE_DB", False)
     return StateMachine(
         events=container.events(),
         shared_state=container.shared_state(),
@@ -144,6 +143,7 @@ def sync_state_machine(
 ) -> StateMachine:
     """Fixture to provide the StateMachine instance without running the state loops."""
     mocker.patch.object(State, "run", return_value=lambda: None)
+    mocker.patch.object(settings, "USE_DB", False)
     return StateMachine(
         events=container.events(),
         shared_state=container.shared_state(),
@@ -169,7 +169,28 @@ def scheduling_utilities(
 @pytest.fixture
 def state_machine_thread(
     container: ApplicationContainer,
+    mocker: MockerFixture,
 ) -> Generator[StateMachineThreadMock, None, None]:
+    mocker.patch.object(settings, "USE_DB", False)
+    state_machine_thread: StateMachineThreadMock = StateMachineThreadMock(
+        container=container,
+    )
+    yield state_machine_thread
+    state_machine_thread.join()
+
+
+@pytest.fixture
+def state_machine_thread_with_db(
+    setup_db_connection_string: str,
+    container: ApplicationContainer,
+    mocker: MockerFixture,
+) -> Generator[StateMachineThreadMock, None, None]:
+    mocker.patch.object(settings, "USE_DB", True)
+    # read_persistent_robot_state
+    mocker.patch(
+        "isar.services.service_connections.persistent_memory.get_db_url",
+        return_value=setup_db_connection_string,
+    )
     state_machine_thread: StateMachineThreadMock = StateMachineThreadMock(
         container=container,
     )
@@ -260,12 +281,11 @@ def run_before_and_after_tests() -> Generator[None, None, None]:
 
 
 @pytest.fixture()
-def setup_db_connection_string() -> Generator[None, None, None]:
+def setup_db_connection_string() -> Generator[str, None, None]:
     with MySqlContainer("mysql:9.4.0", dialect="pymysql") as mysql:
         connection_url = mysql.get_connection_url()
-        settings.PERSISTENT_STORAGE_CONNECTION_STRING = connection_url
 
         engine = sqlalchemy.create_engine(connection_url)
         Base.metadata.create_all(engine)
 
-        yield
+        yield connection_url
