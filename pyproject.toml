@@ -7,7 +7,7 @@ name = "isar"
 authors = [{ name = "Equinor ASA", email = "fg_robots_dev@equinor.com" }]
 description = "Integration and Supervisory control of Autonomous Robots"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 license = { file = "LICENSE" }
 classifiers = [
     "Intended Audience :: Developers",
@@ -15,11 +15,9 @@ classifiers = [
     "License :: OSI Approved :: Eclipse Public License 2.0 (EPL-2.0)",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Software Development :: Libraries",
@@ -67,7 +65,7 @@ repository = "https://github.com/equinor/isar.git"
 
 [project.optional-dependencies]
 dev = [
-    "black==25.11.0",
+    "black",
     "isort",
     "mypy",
     "pip-tools",
