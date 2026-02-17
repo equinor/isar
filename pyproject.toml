@@ -50,8 +50,6 @@ dependencies = [
     "opentelemetry-sdk",
     "opentelemetry-exporter-otlp",
     "opentelemetry-instrumentation-fastapi",
-    "azure-monitor-opentelemetry",
-    "azure-monitor-opentelemetry-exporter",
     "pymysql",
     "sqlalchemy",
     "psycopg2-binary"
