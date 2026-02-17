@@ -34,7 +34,9 @@ class Maintenance(State):
             if robot_status == RobotStatus.Home:
                 return Home.transition()
             else:
-                return InterventionNeeded.transition()
+                return InterventionNeeded.transition(
+                    "Robot not home after releasing maintenance mode"
+                )
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](

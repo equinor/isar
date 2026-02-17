@@ -29,7 +29,9 @@ class StoppingDueToMaintenance(State):
             state_machine.logger.error(
                 f"Failed to stop mission in StoppingDueToMaintenance. Message: {error_message.error_description}"
             )
-            return InterventionNeeded.transition()
+            return InterventionNeeded.transition(
+                "Failed to stop mission when entering maintenance mode"
+            )
 
         def _successful_stop_event_handler(
             successful_stop: EmptyMessage,

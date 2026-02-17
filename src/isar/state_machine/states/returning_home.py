@@ -86,10 +86,9 @@ class ReturningHome(State):
                 state_machine.logger.warning(
                     f"Failed to return home after {self.failed_return_home_attempts} attempts."
                 )
-                state_machine.publish_intervention_needed(
-                    error_message=f"Return home failed after {self.failed_return_home_attempts} attempts."
+                return InterventionNeeded.transition(
+                    f"Return home failed after {self.failed_return_home_attempts} attempts"
                 )
-                return InterventionNeeded.transition()
             else:
                 state_machine.start_mission(
                     Mission(
