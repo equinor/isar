@@ -76,8 +76,9 @@ class InterventionNeeded(State):
         )
 
 
-def transition() -> Transition[InterventionNeeded]:
+def transition(reason: str) -> Transition[InterventionNeeded]:
     def _transition(state_machine: "StateMachine") -> InterventionNeeded:
+        state_machine.publish_intervention_needed(error_message=reason)
         return InterventionNeeded(state_machine)
 
     return _transition

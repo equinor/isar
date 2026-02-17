@@ -51,7 +51,9 @@ class Offline(State):
                 self.logger.info(
                     "Got robot status available while in offline state. Leaving offline state."
                 )
-                return InterventionNeeded.transition()
+                return InterventionNeeded.transition(
+                    "Robot not home after going online. Localisation likely needed"
+                )
             elif robot_status == RobotStatus.BlockedProtectiveStop:
                 self.logger.info(
                     "Got robot status blocked protective stop while in offline state. Leaving offline state."

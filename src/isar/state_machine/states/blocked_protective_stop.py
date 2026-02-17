@@ -51,7 +51,7 @@ class BlockedProtectiveStop(State):
                 self.logger.info(
                     "Got robot status available while in blocked protective stop state. Leaving blocked protective stop state."
                 )
-                return InterventionNeeded.transition()
+                return InterventionNeeded.transition("Robot no longer in blocked state")
             elif robot_status == RobotStatus.Offline:
                 self.logger.info(
                     "Got robot status offline while in blocked protective stop state. Leaving blocked protective stop state."

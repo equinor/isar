@@ -28,10 +28,7 @@ class GoingToLockdown(State):
                 f"Failed to go to lockdown because: "
                 f"{mission_failed.error_description}"
             )
-            state_machine.publish_intervention_needed(
-                error_message="Lockdown mission failed."
-            )
-            return InterventionNeeded.transition()
+            return InterventionNeeded.transition("Lockdown mission failed")
 
         def _mission_failed_to_resume_event_handler(
             mission_failed_to_resume: ErrorMessage,
@@ -40,7 +37,9 @@ class GoingToLockdown(State):
                 f"Failed to resume return to home mission and going to lockdown because: "
                 f"{mission_failed_to_resume.error_description or ''}"
             )
-            return InterventionNeeded.transition()
+            return InterventionNeeded.transition(
+                "Failed to resume return to home mission"
+            )
 
         def _mission_success_event_handler(
             success: EmptyMessage,
