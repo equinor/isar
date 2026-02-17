@@ -14,10 +14,6 @@ class Settings(BaseSettings):
     # Endpoint open telemetry will export telemetry in the otlp protocol to
     OPEN_TELEMETRY_OTLP_EXPORTER_ENDPOINT: str = Field(default="http://localhost:4318")
 
-    # Connection string for Azure Application Insights
-    # This is optional and it will use managed identity if not set
-    APPLICATIONINSIGHTS_CONNECTION_STRING: str = Field(default="")
-
     # Determines which robot package ISAR will attempt to import
     # Name must match with an installed python package in the local environment
     ROBOT_PACKAGE: str = Field(default="isar_robot")
@@ -213,13 +209,8 @@ class Settings(BaseSettings):
 
     #   Log handlers
     # Determines which log handlers are used by ISAR
-    # Multiple log handlers can be chosen
-    # Each handler will be called when logging
-    # Selecting a different log handler than local may require certain access rights:
-    #    - The Azure AI logger requires the 'APPLICATIONINSIGHTS_CONNECTION_STRING' to be set as an environment variable.
     # In general logging is configured in logging.conf
     LOG_HANDLER_LOCAL_ENABLED: bool = Field(default=True)
-    LOG_HANDLER_APPLICATION_INSIGHTS_ENABLED: bool = Field(default=False)
 
     DEBUG_LOG_FORMATTER: bool = Field(default=False)
 
