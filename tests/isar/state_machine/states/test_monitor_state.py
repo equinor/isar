@@ -1,7 +1,7 @@
 import time
 from collections import deque
 from http import HTTPStatus
-from typing import Optional, cast
+from typing import cast
 from uuid import uuid4
 
 import pytest
@@ -54,7 +54,7 @@ def test_stopping_to_recharge_goes_to_monitor(
         sync_state_machine, "mission_id"
     )
     stopping_go_to_recharge_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         stopping_go_to_recharge_state.get_event_handler_by_name("failed_stop_event")
     )
 
@@ -80,7 +80,7 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     )
 
     stopping_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         stopping_state.get_event_handler_by_name("successful_stop_event")
     )
 
@@ -101,7 +101,7 @@ def test_stopping_lockdown_failing_to_monitor(
     )
 
     stopping_go_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         stopping_go_to_lockdown_state.get_event_handler_by_name("failed_stop_event")
     )
 
@@ -125,8 +125,8 @@ def test_transition_from_pausing_to_monitor(
     sync_state_machine.current_state = Pausing(sync_state_machine, "mission_id")
 
     pausing_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
-        pausing_state.get_event_handler_by_name("failed_pause_event")
+    event_handler: EventHandlerMapping | None = pausing_state.get_event_handler_by_name(
+        "failed_pause_event"
     )
 
     assert event_handler is not None
@@ -146,7 +146,7 @@ def test_transition_from_resuming_to_monitor(
     sync_state_machine.current_state = Resuming(sync_state_machine, "mission_id")
 
     resuming_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         resuming_state.get_event_handler_by_name("successful_resume_event")
     )
 

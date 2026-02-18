@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Literal, Optional, Type, Union
+from typing import Literal, Type
 from uuid import uuid4
 
 from alitra import Pose, Position
@@ -35,8 +35,8 @@ class ZoomDescription(BaseModel):
 
 class Task(BaseModel):
     status: TaskStatus = Field(default=TaskStatus.NotStarted)
-    error_message: Optional[ErrorMessage] = Field(default=None)
-    tag_id: Optional[str] = Field(default=None)
+    error_message: ErrorMessage | None = Field(default=None)
+    tag_id: str | None = Field(default=None)
     id: str = Field(default_factory=lambda: str(uuid4()), frozen=True)
 
 
@@ -47,8 +47,8 @@ class InspectionTask(Task):
 
     inspection_id: str = Field(default_factory=lambda: str(uuid4()), frozen=True)
     robot_pose: Pose = Field()
-    inspection_description: Optional[str] = Field(default=None)
-    zoom: Optional[ZoomDescription] = Field(default=None)
+    inspection_description: str | None = Field(default=None)
+    zoom: ZoomDescription | None = Field(default=None)
 
     @staticmethod
     def get_inspection_type() -> Type[Inspection]:
@@ -149,12 +149,12 @@ class TakeCO2Measurement(InspectionTask):
         return CO2Measurement
 
 
-TASKS = Union[
-    ReturnToHome,
-    TakeImage,
-    TakeThermalImage,
-    TakeVideo,
-    TakeThermalVideo,
-    TakeCO2Measurement,
-    RecordAudio,
-]
+TASKS = (
+    ReturnToHome
+    | TakeImage
+    | TakeThermalImage
+    | TakeVideo
+    | TakeThermalVideo
+    | TakeCO2Measurement
+    | RecordAudio
+)

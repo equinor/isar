@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.models.events import EmptyMessage
@@ -13,8 +13,8 @@ def test_transition_from_paused_to_resuming(
     sync_state_machine.current_state = Paused(sync_state_machine, "mission_id")
 
     paused_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
-        paused_state.get_event_handler_by_name("resume_mission_event")
+    event_handler: EventHandlerMapping | None = paused_state.get_event_handler_by_name(
+        "resume_mission_event"
     )
 
     assert event_handler is not None

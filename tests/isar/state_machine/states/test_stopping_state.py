@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.models.events import EmptyMessage
@@ -19,7 +19,7 @@ def test_mqtt_message_not_sent_on_mission_stopped(
     sync_state_machine.current_state = Stopping(sync_state_machine, "mission_id")
 
     stopping_state: State = cast(State, sync_state_machine.current_state)
-    stopping_state_event_handler: Optional[EventHandlerMapping] = (
+    stopping_state_event_handler: EventHandlerMapping | None = (
         stopping_state.get_event_handler_by_name("successful_stop_event")
     )
     assert stopping_state_event_handler is not None
@@ -39,7 +39,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(
     sync_state_machine.current_state = UnknownStatus(sync_state_machine)
 
     unknown_status_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         unknown_status_state.get_event_handler_by_name("robot_status_event")
     )
     assert event_handler is not None
@@ -55,7 +55,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(
     assert type(sync_state_machine.current_state) is Stopping
 
     stopping_state: State = cast(State, sync_state_machine.current_state)
-    stopping_state_event_handler: Optional[EventHandlerMapping] = (
+    stopping_state_event_handler: EventHandlerMapping | None = (
         stopping_state.get_event_handler_by_name("successful_stop_event")
     )
     assert stopping_state_event_handler is not None
@@ -74,7 +74,7 @@ def test_stopping_mission_fails(
 ) -> None:
     sync_state_machine.current_state = Stopping(sync_state_machine, "mission_id")
     stopping_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         stopping_state.get_event_handler_by_name("failed_stop_event")
     )
 
@@ -96,7 +96,7 @@ def test_stopping_mission_succeeds(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
     sync_state_machine.current_state = Stopping(sync_state_machine, "mission_id")
     stopping_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         stopping_state.get_event_handler_by_name("successful_stop_event")
     )
 
@@ -116,7 +116,7 @@ def test_stopping_mission_succeeds_with_low_battery(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.current_state = Stopping(sync_state_machine, "mission_id")
     stopping_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         stopping_state.get_event_handler_by_name("successful_stop_event")
     )
 

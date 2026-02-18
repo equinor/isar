@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class ErrorReason(str, Enum):
@@ -29,7 +28,7 @@ class ErrorReason(str, Enum):
 
 @dataclass
 class ErrorMessage:
-    error_reason: Optional[ErrorReason]
+    error_reason: ErrorReason | None
     error_description: str
 
 

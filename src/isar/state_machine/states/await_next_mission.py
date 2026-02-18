@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
@@ -44,7 +44,7 @@ class AwaitNextMission(State):
 
         def _robot_battery_level_updated_handler(
             battery_level: float,
-        ) -> Optional[Transition[GoingToRecharging.GoingToRecharging]]:
+        ) -> Transition[GoingToRecharging.GoingToRecharging] | None:
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
@@ -69,7 +69,7 @@ class AwaitNextMission(State):
 
         def _start_mission_event_handler(
             mission: Mission,
-        ) -> Optional[Transition[Monitor.Monitor]]:
+        ) -> Transition[Monitor.Monitor] | None:
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 events.api_requests.start_mission.response.trigger_event(
                     MissionStartResponse(

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.maintenance as Maintenance
@@ -38,8 +38,8 @@ class InterventionNeeded(State):
 
         def _robot_status_event_handler(
             has_changed: EmptyMessage,
-        ) -> Optional[Transition[Home.Home]]:
-            robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
+        ) -> Transition[Home.Home] | None:
+            robot_status: RobotStatus | None = shared_state.robot_status.check()
             if robot_status == RobotStatus.Home:
                 self.logger.info(
                     "Got robot status home while in intervention needed state. Leaving intervention needed state."

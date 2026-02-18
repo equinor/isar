@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.paused as Paused
@@ -28,10 +28,10 @@ class StoppingPausedMission(State):
 
         def _successful_stop_event_handler(
             successful_stop: EmptyMessage,
-        ) -> Union[
-            Transition[ReturningHome.ReturningHome],
-            Transition[AwaitNextMission.AwaitNextMission],
-        ]:
+        ) -> (
+            Transition[ReturningHome.ReturningHome]
+            | Transition[AwaitNextMission.AwaitNextMission]
+        ):
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 return ReturningHome.transition_and_start_mission()
             return AwaitNextMission.transition()

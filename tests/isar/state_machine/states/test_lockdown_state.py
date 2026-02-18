@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.models.events import EmptyMessage
@@ -16,8 +16,8 @@ def test_mission_stopped_when_going_to_lockdown(
     sync_state_machine.current_state = Monitor(sync_state_machine, "mission_id")
 
     monitor_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
-        monitor_state.get_event_handler_by_name("send_to_lockdown_event")
+    event_handler: EventHandlerMapping | None = monitor_state.get_event_handler_by_name(
+        "send_to_lockdown_event"
     )
 
     assert event_handler is not None
@@ -35,7 +35,7 @@ def test_going_to_lockdown_transitions_to_lockdown(
     sync_state_machine.current_state = GoingToLockdown(sync_state_machine)
 
     going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         going_to_lockdown_state.get_event_handler_by_name("mission_succeeded_event")
     )
 

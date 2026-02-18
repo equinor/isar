@@ -3,7 +3,7 @@ import time
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timezone
 from queue import Queue
-from typing import Callable, Optional, Tuple
+from typing import Callable, Tuple
 
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.properties import Properties
@@ -16,7 +16,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.telemetry.payloads import CloudHealthPayload
 
-MQTTQueueType = Tuple[str, str, int, bool, Optional[Properties]]
+MQTTQueueType = Tuple[str, str, int, bool, Properties | None]
 
 
 def props_expiry(seconds: int) -> Properties:
@@ -33,7 +33,7 @@ class MqttClientInterface(metaclass=ABCMeta):
         payload: str,
         qos: int = 0,
         retain: bool = False,
-        properties: Optional[Properties] = None,
+        properties: Properties | None = None,
     ) -> None:
         """
         Parameters
@@ -63,9 +63,9 @@ class MqttPublisher(MqttClientInterface):
         payload: str,
         qos: int = 0,
         retain: bool = False,
-        properties: Optional[Properties] = None,
+        properties: Properties | None = None,
     ) -> None:
-        queue_message: Tuple[str, str, int, bool, Optional[Properties]] = (
+        queue_message: Tuple[str, str, int, bool, Properties | None] = (
             topic,
             payload,
             qos,
@@ -84,7 +84,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
         interval: float,
         qos: int = 0,
         retain: bool = False,
-        properties: Optional[Properties] = None,
+        properties: Properties | None = None,
     ) -> None:
         self.mqtt_queue: Queue[MQTTQueueType] = mqtt_queue
         self.telemetry_method: Callable = telemetry_method
@@ -92,7 +92,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
         self.interval: float = interval
         self.qos: int = qos
         self.retain: bool = retain
-        self.properties: Optional[Properties] = properties
+        self.properties: Properties | None = properties
 
     def run(self, isar_id: str, robot_name: str) -> None:
         self.cloud_health_topic: str = f"isar/{isar_id}/cloud_health"
@@ -143,7 +143,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
         payload: str,
         qos: int = 0,
         retain: bool = False,
-        properties: Optional[Properties] = None,
+        properties: Properties | None = None,
     ) -> None:
         queue_message: MQTTQueueType = (
             topic,

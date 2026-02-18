@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 from queue import Queue
 from threading import Thread
-from typing import Callable, List, Optional
+from typing import Callable, List
 
 from alitra import Frame, Orientation, Pose, Position
 
@@ -44,7 +44,7 @@ class StubRobot(RobotInterface):
         self.robot_pose_return_value: Pose = pose
         self.robot_status_return_value: RobotStatus = robot_status
         self.initiate_mission_delay: float = initiate_mission_delay
-        self.mission: Optional[Mission] = None
+        self.mission: Mission | None = None
 
     def initiate_mission(self, mission: Mission) -> None:
         time.sleep(self.initiate_mission_delay)

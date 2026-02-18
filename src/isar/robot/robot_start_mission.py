@@ -1,6 +1,5 @@
 import logging
 from threading import Event, Thread
-from typing import Optional
 
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -24,7 +23,7 @@ class RobotStartMissionThread(Thread):
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
         self.mission = mission
-        self.error_message: Optional[ErrorMessage] = None
+        self.error_message: ErrorMessage | None = None
         Thread.__init__(self, name="Robot start mission thread")
 
     def run(self) -> None:
