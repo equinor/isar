@@ -2,7 +2,7 @@ import logging
 from queue import Queue
 from threading import Event as ThreadEvent
 from threading import Thread
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Tuple
 
 from isar.config.settings import settings
 from isar.models.events import (
@@ -45,17 +45,17 @@ class Robot(object):
         self.upload_queue: Queue = events.upload_queue
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
-        self.start_mission_thread: Optional[RobotStartMissionThread] = None
-        self.robot_battery_thread: Optional[RobotBatteryThread] = None
-        self.robot_status_thread: Optional[RobotStatusThread] = None
-        self.monitor_mission_thread: Optional[RobotMonitorMissionThread] = None
-        self.stop_mission_thread: Optional[RobotStopMissionThread] = None
-        self.pause_mission_thread: Optional[RobotPauseMissionThread] = None
-        self.resume_mission_thread: Optional[RobotResumeMissionThread] = None
+        self.start_mission_thread: RobotStartMissionThread | None = None
+        self.robot_battery_thread: RobotBatteryThread | None = None
+        self.robot_status_thread: RobotStatusThread | None = None
+        self.monitor_mission_thread: RobotMonitorMissionThread | None = None
+        self.stop_mission_thread: RobotStopMissionThread | None = None
+        self.pause_mission_thread: RobotPauseMissionThread | None = None
+        self.resume_mission_thread: RobotResumeMissionThread | None = None
         self.upload_inspection_threads: List[RobotUploadInspectionThread] = []
         self.signal_thread_quitting: ThreadEvent = ThreadEvent()
         self.signal_mission_stopped: ThreadEvent = ThreadEvent()
-        self.inspection_callback_thread: Optional[Thread] = None
+        self.inspection_callback_thread: Thread | None = None
 
     def stop(self) -> None:
         self.signal_thread_quitting.set()

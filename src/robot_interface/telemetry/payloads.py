@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 from alitra import Pose
 from pydantic import BaseModel
@@ -31,7 +31,7 @@ class TelemetryPosePayload(TelemetryPayload, BaseModel):
 
 class TelemetryBatteryPayload(TelemetryPayload, BaseModel):
     battery_level: float
-    battery_state: Optional[BatteryState] = None
+    battery_state: BatteryState | None = None
 
 
 class TelemetryObstacleStatusPayload(TelemetryPayload, BaseModel):
@@ -77,30 +77,30 @@ class RobotHeartbeatPayload(BaseModel):
 class MissionPayload(BaseModel):
     isar_id: str
     robot_name: str
-    mission_id: Optional[str] = None
-    status: Optional[MissionStatus] = None
-    error_reason: Optional[ErrorReason] = None
-    error_description: Optional[str] = None
+    mission_id: str | None = None
+    status: MissionStatus | None = None
+    error_reason: ErrorReason | None = None
+    error_description: str | None = None
     timestamp: datetime
 
 
 class MissionAbortedPayload(BaseModel):
     isar_id: str
     robot_name: str
-    mission_id: Optional[str] = None
+    mission_id: str | None = None
     timestamp: datetime
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 class TaskPayload(BaseModel):
     isar_id: str
     robot_name: str
-    mission_id: Optional[str] = None
-    task_id: Optional[str] = None
-    status: Optional[TaskStatus] = None
-    task_type: Optional[TaskTypes] = None
-    error_reason: Optional[ErrorReason] = None
-    error_description: Optional[str] = None
+    mission_id: str | None = None
+    task_id: str | None = None
+    status: TaskStatus | None = None
+    task_type: TaskTypes | None = None
+    error_reason: ErrorReason | None = None
+    error_description: str | None = None
     timestamp: datetime
 
 
@@ -111,9 +111,9 @@ class InspectionResultPayload(BaseModel):
     blob_storage_data_path: BlobStoragePath
     blob_storage_metadata_path: BlobStoragePath
     installation_code: str
-    tag_id: Optional[str] = None
-    inspection_type: Optional[str] = None
-    inspection_description: Optional[str] = None
+    tag_id: str | None = None
+    inspection_type: str | None = None
+    inspection_description: str | None = None
     timestamp: datetime
 
 
@@ -122,9 +122,9 @@ class InspectionValuePayload(BaseModel):
     robot_name: str
     inspection_id: str
     installation_code: str
-    tag_id: Optional[str] = None
-    inspection_type: Optional[str] = None
-    inspection_description: Optional[str] = None
+    tag_id: str | None = None
+    inspection_type: str | None = None
+    inspection_description: str | None = None
     value: float
     unit: str
     x: float

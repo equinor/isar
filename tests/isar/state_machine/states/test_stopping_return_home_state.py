@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.models.events import EmptyMessage
@@ -18,7 +18,7 @@ def test_return_home_cancelled_when_new_mission_received(
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         returning_home_state.get_event_handler_by_name("start_mission_event")
     )
 
@@ -38,7 +38,7 @@ def test_stopping_return_home_mission_fails(
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     sync_state_machine.current_state = StoppingReturnHome(sync_state_machine, mission)
     stopping_return_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         stopping_return_home_state.get_event_handler_by_name("failed_stop_event")
     )
 
@@ -61,7 +61,7 @@ def test_stopping_return_home_mission_succeeds(
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     sync_state_machine.current_state = StoppingReturnHome(sync_state_machine, mission)
     stopping_return_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         stopping_return_home_state.get_event_handler_by_name("successful_stop_event")
     )
 

@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.models.events import EmptyMessage
@@ -14,7 +14,7 @@ def test_going_to_recharging_goes_to_recharge(
 ) -> None:
     sync_state_machine.current_state = GoingToRecharging(sync_state_machine)
     going_to_recharging_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         going_to_recharging_state.get_event_handler_by_name("mission_succeeded_event")
     )
 
@@ -31,7 +31,7 @@ def test_home_goes_to_recharging_when_battery_low(
 ) -> None:
     sync_state_machine.current_state = Home(sync_state_machine)
     home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = home_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping | None = home_state.get_event_handler_by_name(
         "robot_battery_update_event"
     )
 
@@ -50,7 +50,7 @@ def test_lockdown_transitions_to_recharing_if_battery_low(
     sync_state_machine.current_state = Lockdown(sync_state_machine)
 
     lockdown_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         lockdown_state.get_event_handler_by_name("release_from_lockdown")
     )
 
@@ -68,7 +68,7 @@ def test_recharging_continues_when_battery_low(
 ) -> None:
     sync_state_machine.current_state = Recharging(sync_state_machine)
     recharging_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         recharging_state.get_event_handler_by_name("robot_battery_update_event")
     )
 

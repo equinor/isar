@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.blocked_protective_stop as BlockedProtectiveStop
@@ -34,16 +34,15 @@ class UnknownStatus(State):
 
         def _robot_status_event_handler(
             has_changed: EmptyMessage,
-        ) -> Optional[
-            Union[
-                Transition[Home.Home],
-                Transition[AwaitNextMission.AwaitNextMission],
-                Transition[Offline.Offline],
-                Transition[BlockedProtectiveStop.BlockedProtectiveStop],
-                Transition[Stopping.Stopping],
-            ]
-        ]:
-            robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
+        ) -> (
+            Transition[Home.Home]
+            | Transition[AwaitNextMission.AwaitNextMission]
+            | Transition[Offline.Offline]
+            | Transition[BlockedProtectiveStop.BlockedProtectiveStop]
+            | Transition[Stopping.Stopping]
+            | None
+        ):
+            robot_status: RobotStatus | None = shared_state.robot_status.check()
 
             if robot_status == RobotStatus.Home:
                 self.logger.info(

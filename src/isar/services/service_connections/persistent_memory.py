@@ -1,7 +1,6 @@
 # This file uses SQLAlchemy to interface the persistent database storage.
 
 from enum import Enum as EnumClass
-from typing import Optional
 
 import sqlalchemy
 from sqlalchemy import Enum, Integer, String
@@ -74,9 +73,7 @@ def change_persistent_robot_state_with_connection_string(
         statement = sqlalchemy.select(PersistentRobotState).where(
             PersistentRobotState.robot_id == robot_id
         )
-        read_persistent_state: Optional[PersistentRobotState] = session.scalar(
-            statement
-        )
+        read_persistent_state: PersistentRobotState | None = session.scalar(statement)
 
         if read_persistent_state is None:
             raise ValueError("Could not read missing column 'Lockdown mode'")

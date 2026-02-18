@@ -4,7 +4,7 @@ from abc import ABC
 from copy import deepcopy
 from dataclasses import dataclass
 from threading import Event as ThreadEvent
-from typing import TYPE_CHECKING, Any, Callable, Generic, List, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, List, TypeVar
 
 from isar.config.settings import settings
 from isar.models.events import Event
@@ -20,7 +20,7 @@ Transition = Callable[["StateMachine"], T_state]
 class EventHandlerMapping(Generic[T]):
     name: str
     event: Event[T]
-    handler: Callable[[T], Optional[Transition]]
+    handler: Callable[[T], Transition | None]
     should_not_consume: bool = False
 
 
@@ -28,7 +28,7 @@ class EventHandlerMapping(Generic[T]):
 class TimeoutHandlerMapping:
     name: str
     timeout_in_seconds: float
-    handler: Callable[[], Optional[Transition]]
+    handler: Callable[[], Transition | None]
 
 
 if TYPE_CHECKING:
@@ -55,7 +55,7 @@ class State(ABC):
 
     def get_event_handler_by_name(
         self, event_handler_name: str
-    ) -> Optional[EventHandlerMapping]:
+    ) -> EventHandlerMapping | None:
         filtered_handlers = list(
             filter(
                 lambda mapping: mapping.name == event_handler_name,
@@ -66,7 +66,7 @@ class State(ABC):
 
     def get_event_timer_by_name(
         self, event_timer_name: str
-    ) -> Optional[TimeoutHandlerMapping]:
+    ) -> TimeoutHandlerMapping | None:
         filtered_timers = list(
             filter(
                 lambda mapping: mapping.name == event_timer_name,
@@ -75,7 +75,7 @@ class State(ABC):
         )
         return filtered_timers[0] if len(filtered_timers) > 0 else None
 
-    def run(self) -> Optional["State"]:
+    def run(self) -> "State | None":
         should_exit_state: bool = False
         timers = deepcopy(self.timers)
         entered_time = time.time()
@@ -95,7 +95,7 @@ class State(ABC):
                 break
 
             for handler_mapping in self.event_handler_mappings:
-                event_value: Optional[Any]
+                event_value: Any | None
                 if handler_mapping.should_not_consume:
                     event_value = handler_mapping.event.check()
                 else:

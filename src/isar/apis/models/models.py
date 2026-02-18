@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from alitra import Frame, Orientation, Pose, Position
 from pydantic import BaseModel, Field
@@ -8,8 +8,8 @@ from robot_interface.models.mission.task import TaskTypes
 
 class TaskResponse(BaseModel):
     id: str
-    tag_id: Optional[str] = None
-    inspection_id: Optional[str] = None
+    tag_id: str | None = None
+    inspection_id: str | None = None
     type: TaskTypes
 
 
@@ -20,23 +20,23 @@ class StartMissionResponse(BaseModel):
 
 class ControlMissionResponse(BaseModel):
     success: bool
-    failure_reason: Optional[str] = None
+    failure_reason: str | None = None
 
 
 class MissionStartResponse(BaseModel):
-    mission_id: Optional[str] = None
+    mission_id: str | None = None
     mission_started: bool
-    mission_not_started_reason: Optional[str] = None
+    mission_not_started_reason: str | None = None
 
 
 class LockdownResponse(BaseModel):
     lockdown_started: bool
-    failure_reason: Optional[str] = None
+    failure_reason: str | None = None
 
 
 class MaintenanceResponse(BaseModel):
     is_maintenance_mode: bool
-    failure_reason: Optional[str] = None
+    failure_reason: str | None = None
 
 
 class RobotInfoResponse(BaseModel):

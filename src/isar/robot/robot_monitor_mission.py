@@ -1,7 +1,7 @@
 import logging
 import time
 from threading import Event, Thread
-from typing import Callable, Iterator, Optional
+from typing import Callable, Iterator
 
 from isar.config.settings import settings
 from isar.services.utilities.mqtt_utilities import (
@@ -24,7 +24,7 @@ from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 
-def get_next_task(task_iterator: Iterator[TASKS]) -> Optional[TASKS]:
+def get_next_task(task_iterator: Iterator[TASKS]) -> TASKS | None:
     try:
         return next(task_iterator)
     except StopIteration:
@@ -70,13 +70,13 @@ class RobotMonitorMissionThread(Thread):
         self.mission_id: str = mission.id
         self.tasks = mission.tasks
 
-        self.error_message: Optional[ErrorMessage] = None
+        self.error_message: ErrorMessage | None = None
 
         Thread.__init__(self, name="Robot mission monitoring thread")
 
     def _get_task_status(self, task_id: str) -> TaskStatus:
         task_status: TaskStatus = TaskStatus.NotStarted
-        failed_task_error: Optional[ErrorMessage] = None
+        failed_task_error: ErrorMessage | None = None
         request_status_failure_counter: int = 0
 
         while (
@@ -137,7 +137,7 @@ class RobotMonitorMissionThread(Thread):
 
     def _get_mission_status(self, mission_id: str) -> MissionStatus:
         mission_status: MissionStatus = MissionStatus.NotStarted
-        failed_mission_error: Optional[ErrorMessage] = None
+        failed_mission_error: ErrorMessage | None = None
         request_status_failure_counter: int = 0
 
         while (
@@ -225,7 +225,7 @@ class RobotMonitorMissionThread(Thread):
         else:
             return MissionStatus.Successful
 
-    def _get_and_handle_task_status(self, current_task: TASKS) -> Optional[TASKS]:
+    def _get_and_handle_task_status(self, current_task: TASKS) -> TASKS | None:
         try:
             new_task_status = self._get_task_status(current_task.id)
         except RobotTaskStatusException as e:
@@ -253,7 +253,7 @@ class RobotMonitorMissionThread(Thread):
             return next_task
         return current_task
 
-    def _handle_stopped_mission(self, current_task: Optional[TASKS]) -> None:
+    def _handle_stopped_mission(self, current_task: TASKS | None) -> None:
         if current_task is not None:
             current_task.status = TaskStatus.Cancelled
             publish_task_status(self.mqtt_publisher, current_task, self.mission_id)
@@ -267,7 +267,7 @@ class RobotMonitorMissionThread(Thread):
     def run(self) -> None:
 
         self.task_iterator: Iterator[TASKS] = iter(self.tasks)
-        current_task: Optional[TASKS] = get_next_task(self.task_iterator)
+        current_task: TASKS | None = get_next_task(self.task_iterator)
         current_task.status = TaskStatus.NotStarted  # type: ignore
         current_mission_status = MissionStatus.NotStarted
 

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.intervention_needed as InterventionNeeded
@@ -23,9 +23,7 @@ class Maintenance(State):
 
         def _release_from_maintenance_handler(
             should_release_from_maintenance: EmptyMessage,
-        ) -> Union[
-            Transition[Home.Home], Transition[InterventionNeeded.InterventionNeeded]
-        ]:
+        ) -> Transition[Home.Home] | Transition[InterventionNeeded.InterventionNeeded]:
             events.api_requests.release_from_maintenance_mode.response.trigger_event(
                 EmptyMessage()
             )

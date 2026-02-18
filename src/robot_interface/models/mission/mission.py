@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from uuid import uuid4
 
 from alitra import Pose
@@ -13,9 +13,9 @@ class Mission(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()), frozen=True)
     tasks: List[TASKS] = Field(default_factory=list, frozen=True)
     name: str = Field(frozen=True)
-    start_pose: Optional[Pose] = Field(default=None, frozen=True)
+    start_pose: Pose | None = Field(default=None, frozen=True)
     status: MissionStatus = MissionStatus.NotStarted
-    error_message: Optional[ErrorMessage] = Field(default=None)
+    error_message: ErrorMessage | None = Field(default=None)
 
     def _is_return_to_home_mission(self) -> bool:
         if len(self.tasks) != 1:

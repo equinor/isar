@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
@@ -16,7 +16,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging(
         sync_state_machine, "mission_id"
     )
     stopping_go_to_recharge_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         stopping_go_to_recharge_state.get_event_handler_by_name("successful_stop_event")
     )
 
@@ -40,7 +40,7 @@ def test_return_home_goes_to_recharging_when_battery_low(
 ) -> None:
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
     returning_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         returning_home_state.get_event_handler_by_name("robot_battery_update_event")
     )
 

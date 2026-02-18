@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.models.events import EmptyMessage
@@ -19,7 +19,7 @@ def test_lockdown_transitions_to_home(
     sync_state_machine.current_state = Lockdown(sync_state_machine)
 
     lockdown_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         lockdown_state.get_event_handler_by_name("release_from_lockdown")
     )
 
@@ -39,10 +39,10 @@ def test_state_machine_with_return_home_failure_successful_retries(
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler_success: Optional[EventHandlerMapping] = (
+    event_handler_success: EventHandlerMapping | None = (
         returning_home_state.get_event_handler_by_name("mission_succeeded_event")
     )
-    event_handler_failure: Optional[EventHandlerMapping] = (
+    event_handler_failure: EventHandlerMapping | None = (
         returning_home_state.get_event_handler_by_name("mission_failed_event")
     )
 
@@ -74,7 +74,7 @@ def test_intervention_needed_transitions_to_home_if_robot_is_home(
     sync_state_machine.current_state = InterventionNeeded(sync_state_machine)
 
     intervention_needed_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         intervention_needed_state.get_event_handler_by_name("robot_status_event")
     )
     assert event_handler is not None
@@ -95,7 +95,7 @@ def test_recharging_goes_to_home_when_battery_high(
     sync_state_machine.current_state = Recharging(sync_state_machine)
 
     recharging_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         recharging_state.get_event_handler_by_name("robot_battery_update_event")
     )
 

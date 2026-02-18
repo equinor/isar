@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.recharging as Recharging
@@ -22,7 +22,7 @@ class Lockdown(State):
 
         def _release_from_lockdown_handler(
             should_release_from_lockdown: EmptyMessage,
-        ) -> Union[Transition[Home.Home], Transition[Recharging.Recharging]]:
+        ) -> Transition[Home.Home] | Transition[Recharging.Recharging]:
             events.api_requests.release_from_lockdown.response.trigger_event(
                 EmptyMessage()
             )

@@ -1,11 +1,11 @@
 import ast
 import os
-from typing import List, Optional
+from typing import List
 
 from python_to_mermaid import MermaidDiagram
 
 
-def get_imports(source_code: str) -> tuple[Optional[str], list]:
+def get_imports(source_code: str) -> tuple[str | None, list]:
     own_class_name = None
     imported_states = []
     tree = ast.parse(source_code)

@@ -1,5 +1,5 @@
 from threading import Lock
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
@@ -15,7 +15,7 @@ class MqttPublisherFake(MqttClientInterface):
         payload: str,
         qos: int = 0,
         retain: bool = False,
-        properties: Optional[Any] = None,
+        properties: Any | None = None,
     ) -> None:
         with self._lock:
             self.published.append(
@@ -28,7 +28,7 @@ class MqttPublisherFake(MqttClientInterface):
                 }
             )
 
-    def last(self) -> Optional[Dict[str, Any]]:
+    def last(self) -> Dict[str, Any] | None:
         with self._lock:
             return self.published[-1] if self.published else None
 

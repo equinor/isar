@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
@@ -17,7 +17,7 @@ def test_going_to_recharging_goes_to_intervention_needed(
 ) -> None:
     sync_state_machine.current_state = GoingToRecharging(sync_state_machine)
     going_to_recharging_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         going_to_recharging_state.get_event_handler_by_name("mission_failed_event")
     )
 
@@ -41,7 +41,7 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
     sync_state_machine.current_state = GoingToLockdown(sync_state_machine)
 
     going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         going_to_lockdown_state.get_event_handler_by_name("mission_failed_event")
     )
 
@@ -65,7 +65,7 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
     sync_state_machine.current_state = GoingToLockdown(sync_state_machine)
 
     going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         going_to_lockdown_state.get_event_handler_by_name("mission_failed_event")
     )
 
@@ -87,7 +87,7 @@ def test_state_machine_with_return_home_failure(
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         returning_home_state.get_event_handler_by_name("mission_failed_event")
     )
 
@@ -125,7 +125,7 @@ def test_intervention_needed_transitions_does_not_transition_if_status_is_not_ho
     sync_state_machine.current_state = InterventionNeeded(sync_state_machine)
 
     intervention_needed_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         intervention_needed_state.get_event_handler_by_name("robot_status_event")
     )
     assert event_handler is not None

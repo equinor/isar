@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.intervention_needed as InterventionNeeded
@@ -31,15 +31,14 @@ class BlockedProtectiveStop(State):
 
         def _robot_status_event_handler(
             status_changed: EmptyMessage,
-        ) -> Optional[
-            Union[
-                Transition[Home.Home],
-                Transition[InterventionNeeded.InterventionNeeded],
-                Transition[Offline.Offline],
-                Transition[UnknownStatus.UnknownStatus],
-            ]
-        ]:
-            robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
+        ) -> (
+            Transition[Home.Home]
+            | Transition[InterventionNeeded.InterventionNeeded]
+            | Transition[Offline.Offline]
+            | Transition[UnknownStatus.UnknownStatus]
+            | None
+        ):
+            robot_status: RobotStatus | None = shared_state.robot_status.check()
             if robot_status == RobotStatus.BlockedProtectiveStop:
                 return None
             elif robot_status == RobotStatus.Home:

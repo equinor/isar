@@ -2,7 +2,7 @@ import logging
 import os
 import time
 from queue import Empty, Queue
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Tuple
 
 import backoff
 from backoff.types import Details
@@ -93,7 +93,7 @@ class MqttClient(MqttClientInterface):
                 time.sleep(0)  # avoid CPU spin
                 continue
             try:
-                item: Tuple[str, str, int, bool, Optional[Properties]] = (
+                item: Tuple[str, str, int, bool, Properties | None] = (
                     self.mqtt_queue.get(timeout=1)
                 )
                 if len(item) == 4:
@@ -118,7 +118,7 @@ class MqttClient(MqttClientInterface):
         userdata: Any,
         flags: Dict[str, Any],
         reason_code: ReasonCode,
-        properties: Union[Properties, None],
+        properties: Properties | None,
     ) -> None:
         self.logger.info(f"Connected: {reason_code}")
 
@@ -128,7 +128,7 @@ class MqttClient(MqttClientInterface):
         ignored: Any,
         disconnectFlags: mqtt.DisconnectFlags,
         reasonCode: ReasonCode,
-        properties: Union[Properties, None],
+        properties: Properties | None,
     ) -> None:
         self.logger.warning(f"Unexpected disconnect: {reasonCode}.")
 
@@ -151,7 +151,7 @@ class MqttClient(MqttClientInterface):
         payload: str,
         qos: int = 0,
         retain: bool = False,
-        properties: Optional[Properties] = None,
+        properties: Properties | None = None,
     ) -> None:
         self.logger.debug("Publishing message to topic: %s", topic)
         self.client.publish(

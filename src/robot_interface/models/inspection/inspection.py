@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Type
+from typing import Type
 
 from alitra import Pose, Position
 from pydantic import BaseModel, Field
@@ -10,8 +10,8 @@ class InspectionMetadata(BaseModel):
     robot_pose: Pose
     target_position: Position
     file_type: str
-    tag_id: Optional[str] = None
-    inspection_description: Optional[str] = None
+    tag_id: str | None = None
+    inspection_description: str | None = None
 
 
 class ImageMetadata(InspectionMetadata):
@@ -53,7 +53,7 @@ class InspectionValue(Inspection):
 
 
 class InspectionBlob(Inspection):
-    data: Optional[bytes] = Field(default=None, frozen=True)
+    data: bytes | None = Field(default=None, frozen=True)
 
 
 class Image(InspectionBlob):

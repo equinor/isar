@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.blocked_protective_stop as BlockedProtectiveStop
@@ -45,7 +45,7 @@ class Home(State):
 
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,
-        ) -> Optional[Transition[Maintenance.Maintenance]]:
+        ) -> Transition[Maintenance.Maintenance] | None:
             events.api_requests.set_maintenance_mode.response.trigger_event(
                 MaintenanceResponse(is_maintenance_mode=True)
             )
@@ -53,15 +53,14 @@ class Home(State):
 
         def _robot_status_event_handler(
             has_changed: EmptyMessage,
-        ) -> Optional[
-            Union[
-                Transition[AwaitNextMission.AwaitNextMission],
-                Transition[Offline.Offline],
-                Transition[BlockedProtectiveStop.BlockedProtectiveStop],
-                Transition[UnknownStatus.UnknownStatus],
-            ]
-        ]:
-            robot_status: Optional[RobotStatus] = shared_state.robot_status.check()
+        ) -> (
+            Transition[AwaitNextMission.AwaitNextMission]
+            | Transition[Offline.Offline]
+            | Transition[BlockedProtectiveStop.BlockedProtectiveStop]
+            | Transition[UnknownStatus.UnknownStatus]
+            | None
+        ):
+            robot_status: RobotStatus | None = shared_state.robot_status.check()
             if robot_status == RobotStatus.Home:
                 return None
             elif robot_status == RobotStatus.Available:
@@ -86,7 +85,7 @@ class Home(State):
 
         def _robot_battery_level_updated_handler(
             battery_level: float,
-        ) -> Optional[Transition[Recharging.Recharging]]:
+        ) -> Transition[Recharging.Recharging] | None:
             if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
                 return None
 
@@ -99,7 +98,7 @@ class Home(State):
 
         def _start_mission_event_handler(
             mission: Mission,
-        ) -> Optional[Transition[Monitor.Monitor]]:
+        ) -> Transition[Monitor.Monitor] | None:
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 events.api_requests.start_mission.response.trigger_event(
                     MissionStartResponse(
