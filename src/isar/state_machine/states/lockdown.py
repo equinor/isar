@@ -8,7 +8,6 @@ from isar.models.events import EmptyMessage
 from isar.services.service_connections.persistent_memory import (
     RobotStartupMode,
     change_persistent_robot_state,
-    read_persistent_robot_state,
 )
 from isar.state_machine.states_enum import States
 
@@ -50,15 +49,11 @@ class Lockdown(State):
 def transition() -> Transition[Lockdown]:
     def _transition(state_machine: "StateMachine") -> Lockdown:
         if settings.PERSISTENT_STORAGE_CONNECTION_STRING != "":
-            current_startup_mode = read_persistent_robot_state(
-                settings.PERSISTENT_STORAGE_CONNECTION_STRING, settings.ISAR_ID
+            change_persistent_robot_state(
+                settings.PERSISTENT_STORAGE_CONNECTION_STRING,
+                settings.ISAR_ID,
+                value=RobotStartupMode.Lockdown,
             )
-            if current_startup_mode != RobotStartupMode.Lockdown:
-                change_persistent_robot_state(
-                    settings.PERSISTENT_STORAGE_CONNECTION_STRING,
-                    settings.ISAR_ID,
-                    value=RobotStartupMode.Lockdown,
-                )
         return Lockdown(state_machine)
 
     return _transition
