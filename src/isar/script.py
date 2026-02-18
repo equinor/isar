@@ -37,8 +37,7 @@ def print_setting(
 
 def print_startup_info() -> None:
     logger: Logger = logging.getLogger("main")
-    logger.info(
-        """
+    logger.info("""
          __   ________   ___        ________
         / /  / ______/  /   |      / ____  /
        / /  / /_____   / /| |     / /___/ /
@@ -46,8 +45,7 @@ def print_startup_info() -> None:
      / /  ______/ /  / /  | |   / /  | |
     /_/  /_______/  /_/   |_|  /_/   |_|
 
-"""
-    )
+""")
 
     def print_setting(setting: str = "", value: Any = "", fillchar: str = " ") -> None:
         separator = ": " if value != "" else ""
