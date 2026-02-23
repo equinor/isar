@@ -41,6 +41,9 @@ class RobotException(Exception):
         self.error_reason: ErrorReason = error_reason
         self.error_description: str = error_description
 
+    def __str__(self) -> str:
+        return self.error_description
+
 
 # An exception which should be thrown by the robot package if it is unable to
 # communicate with the robot API. ISAR will retry the request.
