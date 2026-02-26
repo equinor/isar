@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     DATABASE_USER: str = Field(default="")
 
-    USE_DB: bool = Field(default=True)
+    USE_DB: bool = Field(default=False)
 
     # Determines which robot package ISAR will attempt to import
     # Name must match with an installed python package in the local environment
