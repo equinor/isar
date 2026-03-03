@@ -52,7 +52,7 @@ dacite==1.9.2
     #   isar (pyproject.toml)
 dependency-injector==4.48.3
     # via isar (pyproject.toml)
-fastapi==0.133.1
+fastapi==0.135.1
     # via
     #   fastapi-azure-auth
     #   isar (pyproject.toml)
@@ -64,7 +64,7 @@ googleapis-common-protos==1.72.0
     #   opentelemetry-exporter-otlp-proto-http
 greenlet==3.3.2
     # via sqlalchemy
-grpcio==1.78.1
+grpcio==1.78.0
     # via opentelemetry-exporter-otlp-proto-grpc
 h11==0.16.0
     # via
@@ -170,7 +170,7 @@ pyjwt[crypto]==2.11.0
     #   msal
 pymysql==1.1.2
     # via isar (pyproject.toml)
-python-dotenv==1.2.1
+python-dotenv==1.2.2
     # via
     #   isar (pyproject.toml)
     #   pydantic-settings
@@ -189,7 +189,7 @@ scipy==1.17.1
     # via alitra
 six==1.17.0
     # via transitions
-sqlalchemy==2.0.47
+sqlalchemy==2.0.48
     # via isar (pyproject.toml)
 starlette==0.52.1
     # via
