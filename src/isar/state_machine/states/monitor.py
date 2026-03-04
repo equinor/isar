@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.pausing as Pausing
@@ -37,7 +37,7 @@ class Monitor(State):
 
         def _robot_battery_level_updated_handler(
             battery_level: float,
-        ) -> Optional[Transition[StoppingGoToRecharge.StoppingGoToRecharge]]:
+        ) -> Transition[StoppingGoToRecharge.StoppingGoToRecharge] | None:
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
@@ -90,7 +90,7 @@ class Monitor(State):
 
         def _stop_mission_event_handler(
             stop_mission_id: str,
-        ) -> Optional[Transition[Stopping.Stopping]]:
+        ) -> Transition[Stopping.Stopping] | None:
             if mission_id == stop_mission_id or stop_mission_id == "":
                 return Stopping.transition_and_trigger_stop(mission_id, True)
             else:

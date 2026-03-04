@@ -1,6 +1,6 @@
 import time
 from enum import Enum
-from typing import List, Optional
+from typing import List
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -38,28 +38,28 @@ class TaskType(str, Enum):
 class StartMissionInspectionDefinition(BaseModel):
     type: InspectionTypes = Field(default=InspectionTypes.image)
     inspection_target: InputPosition
-    inspection_description: Optional[str] = None
-    duration: Optional[float] = None
+    inspection_description: str | None = None
+    duration: float | None = None
 
 
 class StartMissionTaskDefinition(BaseModel):
-    id: Optional[str] = None
+    id: str | None = None
     type: TaskType = Field(default=TaskType.Inspection)
     pose: InputPose
-    inspection: Optional[StartMissionInspectionDefinition] = None
-    tag: Optional[str] = None
-    zoom: Optional[ZoomDescription] = None
+    inspection: StartMissionInspectionDefinition | None = None
+    tag: str | None = None
+    zoom: ZoomDescription | None = None
 
 
 class StartMissionDefinition(BaseModel):
-    id: Optional[str] = None
+    id: str | None = None
     tasks: List[StartMissionTaskDefinition]
-    name: Optional[str] = None
-    start_pose: Optional[InputPose] = None
+    name: str | None = None
+    start_pose: InputPose | None = None
 
 
 class StopMissionDefinition(BaseModel):
-    mission_id: Optional[str] = None
+    mission_id: str | None = None
 
 
 class MissionFormatError(Exception):

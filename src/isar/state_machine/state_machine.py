@@ -2,7 +2,7 @@ import logging
 from collections import deque
 from datetime import datetime, timezone
 from threading import Event
-from typing import Deque, Optional
+from typing import Deque
 
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import State
@@ -57,7 +57,7 @@ class StateMachine(object):
         self.events: Events = events
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
-        self.mqtt_publisher: Optional[MqttClientInterface] = mqtt_publisher
+        self.mqtt_publisher: MqttClientInterface | None = mqtt_publisher
 
         self.signal_state_machine_to_stop: Event = Event()
 
@@ -98,7 +98,7 @@ class StateMachine(object):
         try:
             while True:
                 self.update_state()
-                next_state: Optional[State] = self.current_state.run()
+                next_state: State | None = self.current_state.run()
 
                 if next_state is None:
                     self.logger.warning(
@@ -140,7 +140,7 @@ class StateMachine(object):
         self.events.state_machine_events.start_mission.trigger_event(mission)
 
     def publish_mission_aborted(
-        self, current_mission_id: Optional[str], reason: str
+        self, current_mission_id: str | None, reason: str
     ) -> None:
         if not self.mqtt_publisher:
             return

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
@@ -44,7 +44,7 @@ class ReturningHome(State):
 
         def _start_mission_event_handler(
             mission: Mission,
-        ) -> Optional[Transition[StoppingReturnHome.StoppingReturnHome]]:
+        ) -> Transition[StoppingReturnHome.StoppingReturnHome] | None:
             # The check below is arguably not needed due to the battery eventhandler
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 response = MissionStartResponse(
@@ -77,7 +77,7 @@ class ReturningHome(State):
 
         def _mission_failed_event_handler(
             mission_failed: ErrorMessage,
-        ) -> Optional[Transition[InterventionNeeded.InterventionNeeded]]:
+        ) -> Transition[InterventionNeeded.InterventionNeeded] | None:
             state_machine.logger.warning(
                 f"Failed return home because: " f"{mission_failed.error_description}"
             )
@@ -120,7 +120,7 @@ class ReturningHome(State):
 
         def _robot_battery_level_updated_handler(
             battery_level: float,
-        ) -> Optional[Transition[GoingToRecharging.GoingToRecharging]]:
+        ) -> Transition[GoingToRecharging.GoingToRecharging] | None:
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD

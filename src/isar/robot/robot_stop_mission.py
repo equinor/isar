@@ -1,7 +1,6 @@
 import logging
 import time
 from threading import Event, Thread
-from typing import Optional
 
 from isar.config.settings import settings
 from robot_interface.models.exceptions.robot_exceptions import (
@@ -23,12 +22,12 @@ class RobotStopMissionThread(Thread):
         self.logger = logging.getLogger("robot")
         self.robot: RobotInterface = robot
         self.signal_thread_quitting: Event = signal_thread_quitting
-        self.error_message: Optional[ErrorMessage] = None
+        self.error_message: ErrorMessage | None = None
         Thread.__init__(self, name="Robot stop mission thread")
 
     def run(self) -> None:
         retries = 0
-        error: Optional[ErrorMessage] = None
+        error: ErrorMessage | None = None
         while retries < settings.STOP_ROBOT_ATTEMPTS_LIMIT:
             if self.signal_thread_quitting.wait(0):
                 self.error_message = ErrorMessage(

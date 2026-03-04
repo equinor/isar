@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.lockdown as Lockdown
@@ -23,7 +23,7 @@ class Recharging(State):
 
         def robot_battery_level_updated_handler(
             battery_level: float,
-        ) -> Optional[Transition[Home.Home]]:
+        ) -> Transition[Home.Home] | None:
             if battery_level < settings.ROBOT_BATTERY_RECHARGE_THRESHOLD:
                 return None
 
@@ -31,7 +31,7 @@ class Recharging(State):
 
         def robot_offline_handler(
             robot_status: RobotStatus,
-        ) -> Optional[Transition[Offline.Offline]]:
+        ) -> Transition[Offline.Offline] | None:
             if robot_status == RobotStatus.Offline:
                 self.logger.info(
                     "Got robot status offline while in recharging state. Leaving recharging state."

@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.models.events import EmptyMessage
@@ -19,7 +19,7 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
     sync_state_machine.current_state = PausingReturnHome(sync_state_machine)
 
     pausing_return_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         pausing_return_home_state.get_event_handler_by_name("successful_pause_event")
     )
 
@@ -37,7 +37,7 @@ def test_resuming_paused_return_home(
     sync_state_machine.current_state = ReturnHomePaused(sync_state_machine)
 
     return_home_paused_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         return_home_paused_state.get_event_handler_by_name("resume_return_home_event")
     )
 
@@ -56,7 +56,7 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
     sync_state_machine.current_state = ReturnHomePaused(sync_state_machine)
 
     return_home_paused_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         return_home_paused_state.get_event_handler_by_name("start_mission_event")
     )
 
@@ -78,8 +78,8 @@ def test_stop_request_with_wrong_id_in_paused(
     sync_state_machine.current_state = Paused(sync_state_machine, "mission_id")
 
     paused_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
-        paused_state.get_event_handler_by_name("stop_mission_event")
+    event_handler: EventHandlerMapping | None = paused_state.get_event_handler_by_name(
+        "stop_mission_event"
     )
 
     assert event_handler is not None

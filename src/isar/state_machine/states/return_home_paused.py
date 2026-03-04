@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.resuming_return_home as ResumingReturnHome
@@ -28,7 +28,7 @@ class ReturnHomePaused(State):
 
         def _robot_battery_level_updated_handler(
             battery_level: float,
-        ) -> Optional[Transition[ReturningHome.ReturningHome]]:
+        ) -> Transition[ReturningHome.ReturningHome] | None:
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
@@ -42,7 +42,7 @@ class ReturnHomePaused(State):
 
         def _start_mission_event_handler(
             mission: Mission,
-        ) -> Optional[Transition[StoppingPausedReturnHome.StoppingPausedReturnHome]]:
+        ) -> Transition[StoppingPausedReturnHome.StoppingPausedReturnHome] | None:
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 response = MissionStartResponse(
                     mission_id=None,

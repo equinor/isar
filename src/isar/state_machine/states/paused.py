@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.resuming as Resuming
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
@@ -22,7 +22,7 @@ class Paused(State):
 
         def _stop_mission_event_handler(
             stop_mission_id: str,
-        ) -> Optional[Transition[StoppingPausedMission.StoppingPausedMission]]:
+        ) -> Transition[StoppingPausedMission.StoppingPausedMission] | None:
             if mission_id == stop_mission_id or stop_mission_id == "":
                 return StoppingPausedMission.transition_and_trigger_stop(
                     mission_id, True
@@ -37,7 +37,7 @@ class Paused(State):
 
         def _robot_battery_level_updated_handler(
             battery_level: float,
-        ) -> Optional[Transition[StoppingPausedMission.StoppingPausedMission]]:
+        ) -> Transition[StoppingPausedMission.StoppingPausedMission] | None:
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
@@ -76,7 +76,7 @@ class Paused(State):
 
         def _resume_mission_event_handler(
             should_resume: EmptyMessage,
-        ) -> Optional[Transition[Resuming.Resuming]]:
+        ) -> Transition[Resuming.Resuming] | None:
             state_machine.events.api_requests.resume_mission.response.trigger_event(
                 ControlMissionResponse(success=True)
             )

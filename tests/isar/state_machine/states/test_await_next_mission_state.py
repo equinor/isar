@@ -1,6 +1,6 @@
 import time
 from collections import deque
-from typing import Optional, cast
+from typing import cast
 
 from pytest_mock import MockerFixture
 
@@ -79,7 +79,7 @@ def test_transition_from_resuming_to_paused(
     sync_state_machine.current_state = Resuming(sync_state_machine, "mission_id")
 
     resuming_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         resuming_state.get_event_handler_by_name("failed_resume_event")
     )
 
@@ -106,7 +106,7 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
 
     unknown_status_state: State = cast(State, sync_state_machine.current_state)
 
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         unknown_status_state.get_event_handler_by_name("robot_status_event")
     )
     assert event_handler is not None
@@ -123,7 +123,7 @@ def test_transition_from_resuming_return_home_to_await_next_mission(
     sync_state_machine.current_state = ResumingReturnHome(sync_state_machine)
 
     resuming_return_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         resuming_return_home_state.get_event_handler_by_name("failed_resume_event")
     )
 

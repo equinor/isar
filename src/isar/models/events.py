@@ -1,7 +1,7 @@
 from collections import deque
 from queue import Empty, Queue
 from threading import Lock
-from typing import Generic, Optional, Tuple, TypeVar
+from typing import Generic, Tuple, TypeVar
 
 from isar.apis.models.models import (
     ControlMissionResponse,
@@ -35,7 +35,7 @@ class Event(Queue[T]):
         super().__init__(maxsize=1)
         self.name = name
 
-    def trigger_event(self, data: T, timeout: Optional[int] = None) -> None:
+    def trigger_event(self, data: T, timeout: int | None = None) -> None:
         try:
             # We always want a timeout when blocking for results, so that
             # the thread will never get stuck waiting for a result
@@ -45,7 +45,7 @@ class Event(Queue[T]):
                 raise EventTimeoutError
             return None
 
-    def consume_event(self, timeout: Optional[int] = None) -> Optional[T]:
+    def consume_event(self, timeout: int | None = None) -> T | None:
         try:
             return self.get(block=timeout is not None, timeout=timeout)
         except Empty:
@@ -69,7 +69,7 @@ class Event(Queue[T]):
             self.qsize() != 0
         )  # Queue size is not reliable, but should be sufficient for this case
 
-    def check(self) -> Optional[T]:
+    def check(self) -> T | None:
         if not self._qsize():
             return None
         with self.mutex:

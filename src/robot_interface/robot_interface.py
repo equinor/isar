@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from queue import Queue
 from threading import Thread
-from typing import Callable, List, Optional
+from typing import Callable, List
 
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -187,7 +187,7 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def generate_media_config(self) -> Optional[MediaConfig]:
+    def generate_media_config(self) -> MediaConfig | None:
         """
         Generate a JSON containing the url and token needed to establish a media stream
         connection to a robot.

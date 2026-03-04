@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
@@ -20,7 +20,7 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
     sync_state_machine.current_state = ReturnHomePaused(sync_state_machine)
 
     return_home_paused_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         return_home_paused_state.get_event_handler_by_name("send_to_lockdown_event")
     )
 
@@ -32,7 +32,7 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
     assert type(sync_state_machine.current_state) is GoingToLockdown
 
     going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
-    lockdown_event_handler: Optional[EventHandlerMapping] = (
+    lockdown_event_handler: EventHandlerMapping | None = (
         going_to_lockdown_state.get_event_handler_by_name("mission_failed_to_resume")
     )
     assert lockdown_event_handler is not None
@@ -57,7 +57,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
     )
 
     stopping_go_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         stopping_go_to_lockdown_state.get_event_handler_by_name("successful_stop_event")
     )
 
@@ -86,7 +86,7 @@ def test_return_home_transitions_to_going_to_lockdown(
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         returning_home_state.get_event_handler_by_name("send_to_lockdown_event")
     )
 
@@ -105,7 +105,7 @@ def test_recharging_transitions_to_going_to_lockdown(
     sync_state_machine.current_state = GoingToRecharging(sync_state_machine)
 
     going_to_recharging_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         going_to_recharging_state.get_event_handler_by_name("send_to_lockdown_event")
     )
 
@@ -124,7 +124,7 @@ def test_await_next_mission_transitions_to_going_to_lockdown(
     sync_state_machine.current_state = AwaitNextMission(sync_state_machine)
 
     await_next_mission_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         await_next_mission_state.get_event_handler_by_name("send_to_lockdown_event")
     )
 

@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from typing import Optional
 
 from isar.config.settings import settings
 from isar.models.status import IsarStatus
@@ -16,11 +15,11 @@ from robot_interface.telemetry.payloads import (
 
 
 def publish_task_status(
-    mqtt_publisher: MqttClientInterface, task: TASKS, mission_id: Optional[str]
+    mqtt_publisher: MqttClientInterface, task: TASKS, mission_id: str | None
 ) -> None:
     """Publishes the task status to the MQTT Broker"""
 
-    error_message: Optional[ErrorMessage] = None
+    error_message: ErrorMessage | None = None
     if task:
         if task.error_message:
             error_message = task.error_message
@@ -50,7 +49,7 @@ def publish_mission_status(
     mqtt_publisher: MqttClientInterface,
     mission_id: str,
     mission_status: MissionStatus,
-    error_message: Optional[ErrorMessage],
+    error_message: ErrorMessage | None,
 ) -> None:
     if not mqtt_publisher:
         return

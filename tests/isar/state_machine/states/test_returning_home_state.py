@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from isar.eventhandlers.eventhandler import (
     EventHandlerMapping,
@@ -31,7 +31,7 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
     )
 
     stopping_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         stopping_state.get_event_handler_by_name("successful_stop_event")
     )
 
@@ -49,7 +49,7 @@ def test_transition_from_pausing_return_home_to_returning_home(
     sync_state_machine.current_state = PausingReturnHome(sync_state_machine)
 
     pausing_return_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         pausing_return_home_state.get_event_handler_by_name("failed_pause_event")
     )
 
@@ -70,7 +70,7 @@ def test_transition_from_resuming_return_home_to_returning_home_state(
     sync_state_machine.current_state = ResumingReturnHome(sync_state_machine)
 
     resuming_return_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         resuming_return_home_state.get_event_handler_by_name("successful_resume_event")
     )
 
@@ -89,7 +89,7 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         returning_home_state.get_event_handler_by_name("mission_succeeded_event")
     )
 
@@ -104,7 +104,7 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
     )
 
     home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler_robot_status: Optional[EventHandlerMapping] = (
+    event_handler_robot_status: EventHandlerMapping | None = (
         home_state.get_event_handler_by_name("robot_status_event")
     )
 
@@ -121,7 +121,7 @@ def test_return_home_not_cancelled_when_battery_is_low(
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: Optional[EventHandlerMapping] = (
+    event_handler: EventHandlerMapping | None = (
         returning_home_state.get_event_handler_by_name("start_mission_event")
     )
 
@@ -142,7 +142,7 @@ def test_return_home_starts_when_battery_is_low(
     sync_state_machine.current_state = AwaitNextMission(sync_state_machine)
 
     await_next_mission_state: State = cast(State, sync_state_machine.current_state)
-    timer: Optional[TimeoutHandlerMapping] = (
+    timer: TimeoutHandlerMapping | None = (
         await_next_mission_state.get_event_timer_by_name("should_return_home_timer")
     )
 
