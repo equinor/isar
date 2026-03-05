@@ -49,9 +49,6 @@ def test_state_machine_transitions_when_running_full_mission(
             initiate_mission_delay=1,
         )
     )
-    robot_service_thread.robot_service.robot_status_thread.robot_status_poll_interval = (
-        0.5
-    )
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()

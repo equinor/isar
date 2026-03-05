@@ -55,7 +55,7 @@ class RobotMonitorMissionThread(Thread):
         request_inspection_upload: Callable[[InspectionTask], None],
         robot: RobotInterface,
         mqtt_publisher: MqttClientInterface,
-        signal_thread_quitting: Event,
+        signal_exit: Event,
         signal_mission_stopped: Event,
         mission: Mission,
     ):
@@ -64,7 +64,7 @@ class RobotMonitorMissionThread(Thread):
             request_inspection_upload
         )
         self.robot: RobotInterface = robot
-        self.signal_thread_quitting: Event = signal_thread_quitting
+        self.signal_exit: Event = signal_exit
         self.signal_mission_stopped: Event = signal_mission_stopped
         self.mqtt_publisher = mqtt_publisher
         self.mission_id: str = mission.id
@@ -83,9 +83,7 @@ class RobotMonitorMissionThread(Thread):
             request_status_failure_counter
             < settings.REQUEST_STATUS_FAILURE_COUNTER_LIMIT
         ):
-            if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
-                0
-            ):
+            if self.signal_exit.wait(0) or self.signal_mission_stopped.wait(0):
                 failed_task_error = ErrorMessage(
                     error_reason=ErrorReason.RobotTaskStatusException,
                     error_description="Task status collection was cancelled by monitor thread exit",
@@ -144,9 +142,7 @@ class RobotMonitorMissionThread(Thread):
             request_status_failure_counter
             < settings.REQUEST_STATUS_FAILURE_COUNTER_LIMIT
         ):
-            if self.signal_thread_quitting.wait(0) or self.signal_mission_stopped.wait(
-                0
-            ):
+            if self.signal_exit.wait(0) or self.signal_mission_stopped.wait(0):
                 break
             if request_status_failure_counter > 0:
                 time.sleep(settings.REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY)
@@ -272,7 +268,7 @@ class RobotMonitorMissionThread(Thread):
         current_mission_status = MissionStatus.NotStarted
 
         while True:
-            if self.signal_thread_quitting.wait(0):
+            if self.signal_exit.wait(0):
                 return
             if self.signal_mission_stopped.wait(0):
                 self._handle_stopped_mission(current_task)
