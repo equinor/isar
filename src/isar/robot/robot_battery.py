@@ -12,13 +12,13 @@ class RobotBatteryThread(Thread):
     def __init__(
         self,
         robot: RobotInterface,
-        signal_thread_quitting: Event,
+        signal_exit: Event,
         shared_state: SharedState,
     ):
         self.logger = logging.getLogger("robot")
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
-        self.signal_thread_quitting: Event = signal_thread_quitting
+        self.signal_exit: Event = signal_exit
         self.last_robot_battery_poll_time: float = time.time()
         self.force_battery_poll_next_iteration: bool = True
         Thread.__init__(self, name="Robot battery thread")
@@ -40,12 +40,12 @@ class RobotBatteryThread(Thread):
         )
 
     def run(self) -> None:
-        if self.signal_thread_quitting.is_set():
+        if self.signal_exit.is_set():
             return
 
         thread_check_interval = settings.THREAD_CHECK_INTERVAL
 
-        while not self.signal_thread_quitting.wait(thread_check_interval):
+        while not self.signal_exit.wait(thread_check_interval):
             if not self._is_ready_to_poll_for_battery():
                 continue
             try:

@@ -103,16 +103,16 @@ class Uploader:
         self.max_retry_attempts = max_retry_attempts
         self._internal_upload_queue: List[UploaderQueueItem] = []
 
-        self.signal_thread_quitting: Event = Event()
+        self.signal_exit: Event = Event()
 
         self.logger = logging.getLogger("uploader")
 
     def stop(self) -> None:
-        self.signal_thread_quitting.set()
+        self.signal_exit.set()
 
     def run(self) -> None:
         self.logger.info("Started uploader")
-        while not self.signal_thread_quitting.wait(0):
+        while not self.signal_exit.wait(0):
             inspection: Inspection
             mission: Mission
             try:
