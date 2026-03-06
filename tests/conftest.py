@@ -21,9 +21,9 @@ from isar.eventhandlers.eventhandler import State
 from isar.models.events import Events
 from isar.modules import ApplicationContainer
 from isar.robot.function_thread import FunctionThread
-from isar.robot.robot import Robot
 from isar.robot.robot_battery import RobotBatteryThread
 from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
+from isar.robot.robot_service import Robot
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.service_connections.persistent_memory import Base
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities

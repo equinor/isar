@@ -12,7 +12,7 @@ from isar.config.open_telemetry import setup_open_telemetry
 from isar.config.settings import robot_settings, settings
 from isar.models.events import Events, InspectionQueueTuple
 from isar.modules import ApplicationContainer, get_injector
-from isar.robot.robot import Robot
+from isar.robot.robot_service import Robot
 from isar.services.service_connections.mqtt.mqtt_client import MqttClient
 from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
     RobotHeartbeatPublisher,
