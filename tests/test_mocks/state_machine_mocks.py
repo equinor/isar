@@ -1,7 +1,7 @@
 from threading import Thread
 
 from isar.modules import ApplicationContainer
-from isar.robot.robot_service import Robot
+from isar.robot.robot_service import RobotService
 from isar.state_machine.state_machine import StateMachine, main
 from isar.storage.uploader import Uploader
 
@@ -33,8 +33,8 @@ class UploaderThreadMock(object):
 
 
 class RobotServiceThreadMock(object):
-    def __init__(self, robot_service: Robot) -> None:
-        self.robot_service: Robot = robot_service
+    def __init__(self, robot_service: RobotService) -> None:
+        self.robot_service: RobotService = robot_service
 
     def start(self) -> None:
         self._thread: Thread = Thread(target=self.robot_service.run)

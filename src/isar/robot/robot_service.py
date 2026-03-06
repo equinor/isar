@@ -30,7 +30,7 @@ from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 
-class Robot(object):
+class RobotService:
     def __init__(
         self,
         events: Events,

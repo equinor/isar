@@ -2,7 +2,7 @@ from pytest_mock import MockerFixture
 
 from isar.robot.function_thread import FunctionThread
 from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
-from isar.robot.robot_service import Robot
+from isar.robot.robot_service import RobotService
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     ErrorReason,
@@ -14,7 +14,7 @@ from tests.test_mocks.pose import DummyPose
 
 
 def test_mission_fails_to_schedule(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
     mocker.patch.object(FunctionThread, "is_alive", return_value=False)
@@ -48,7 +48,7 @@ def test_mission_fails_to_schedule(
 
 
 def test_mission_succeeds_to_schedule(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
     mock_publish_mission_status = mocker.patch(
@@ -77,7 +77,7 @@ def test_mission_succeeds_to_schedule(
 
 
 def test_mission_fails_to_stop(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
 
@@ -119,7 +119,9 @@ def test_mission_fails_to_stop(
     assert not r_service.robot_service_events.mission_successfully_stopped.has_event()
 
 
-def test_successful_stop(mocked_robot_service: Robot, mocker: MockerFixture) -> None:
+def test_successful_stop(
+    mocked_robot_service: RobotService, mocker: MockerFixture
+) -> None:
     r_service = mocked_robot_service
     mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=True)
 
@@ -148,7 +150,7 @@ def test_successful_stop(mocked_robot_service: Robot, mocker: MockerFixture) -> 
 
 
 def test_monitor_mission_handler_waits_for_thread(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
     mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=True)
@@ -175,7 +177,7 @@ def test_monitor_mission_handler_waits_for_thread(
 
 
 def test_monitor_mission_reports_nothing_after_mission_stopped(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
     mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=False)
@@ -205,7 +207,7 @@ def test_monitor_mission_reports_nothing_after_mission_stopped(
 
 
 def test_monitor_mission_reports_mission_failed(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
     mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=False)
@@ -237,7 +239,7 @@ def test_monitor_mission_reports_mission_failed(
 
 
 def test_monitor_mission_reports_mission_success(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
     mocker.patch.object(RobotMonitorMissionThread, "is_alive", return_value=False)
@@ -265,7 +267,7 @@ def test_monitor_mission_reports_mission_success(
 
 
 def test_mission_fails_to_pause(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
 
@@ -293,7 +295,7 @@ def test_mission_fails_to_pause(
 
 
 def test_mission_succeeds_to_pause(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
 
@@ -306,7 +308,7 @@ def test_mission_succeeds_to_pause(
 
 
 def test_mission_fails_to_resume(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
 
@@ -334,7 +336,7 @@ def test_mission_fails_to_resume(
 
 
 def test_mission_succeeds_to_resume(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
 
@@ -347,7 +349,7 @@ def test_mission_succeeds_to_resume(
 
 
 def test_start_mission_reports_robot_already_home(
-    mocked_robot_service: Robot, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
 
