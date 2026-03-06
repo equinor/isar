@@ -1,7 +1,7 @@
 from threading import Thread
 
 from isar.modules import ApplicationContainer
-from isar.robot.robot import Robot
+from isar.robot.robot_service import Robot
 from isar.state_machine.state_machine import StateMachine, main
 from isar.storage.uploader import Uploader
 

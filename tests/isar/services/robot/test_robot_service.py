@@ -1,8 +1,8 @@
 from pytest_mock import MockerFixture
 
 from isar.robot.function_thread import FunctionThread
-from isar.robot.robot import Robot
 from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
+from isar.robot.robot_service import Robot
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     ErrorReason,
@@ -19,7 +19,7 @@ def test_mission_fails_to_schedule(
     r_service = mocked_robot_service
     mocker.patch.object(FunctionThread, "is_alive", return_value=False)
     mock_publish_mission_status = mocker.patch(
-        "isar.robot.robot.publish_mission_status"
+        "isar.robot.robot_service.publish_mission_status"
     )
 
     task_1: Task = TakeImage(
@@ -28,7 +28,7 @@ def test_mission_fails_to_schedule(
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
     mocker.patch(
-        "isar.robot.robot.robot_start_mission",
+        "isar.robot.robot_service.robot_start_mission",
         return_value=ErrorMessage(
             error_reason=ErrorReason.RobotUnknownErrorException,
             error_description="test",
@@ -52,7 +52,7 @@ def test_mission_succeeds_to_schedule(
 ) -> None:
     r_service = mocked_robot_service
     mock_publish_mission_status = mocker.patch(
-        "isar.robot.robot.publish_mission_status"
+        "isar.robot.robot_service.publish_mission_status"
     )
 
     task_1: Task = TakeImage(
@@ -62,7 +62,7 @@ def test_mission_succeeds_to_schedule(
 
     r_service.signal_mission_stopped.set()  # We want to test that this is cleared
 
-    mocker.patch("isar.robot.robot.robot_start_mission", return_value=None)
+    mocker.patch("isar.robot.robot_service.robot_start_mission", return_value=None)
 
     r_service._start_mission_handler(mission)
 
@@ -96,7 +96,7 @@ def test_mission_fails_to_stop(
     )
 
     mocker.patch(
-        "isar.robot.robot.robot_stop_mission",
+        "isar.robot.robot_service.robot_stop_mission",
         return_value=ErrorMessage(
             error_reason=ErrorReason.RobotUnknownErrorException,
             error_description="test",
@@ -127,7 +127,7 @@ def test_successful_stop(mocked_robot_service: Robot, mocker: MockerFixture) -> 
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
-    mocker.patch("isar.robot.robot.robot_stop_mission", return_value=None)
+    mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
 
     r_service.monitor_mission_thread = RobotMonitorMissionThread(
         lambda task: None,
@@ -270,7 +270,7 @@ def test_mission_fails_to_pause(
     r_service = mocked_robot_service
 
     mocker.patch(
-        "isar.robot.robot.robot_pause_mission",
+        "isar.robot.robot_service.robot_pause_mission",
         return_value=ErrorMessage(
             error_reason=ErrorReason.RobotUnknownErrorException,
             error_description="test",
@@ -297,7 +297,7 @@ def test_mission_succeeds_to_pause(
 ) -> None:
     r_service = mocked_robot_service
 
-    mocker.patch("isar.robot.robot.robot_pause_mission", return_value=None)
+    mocker.patch("isar.robot.robot_service.robot_pause_mission", return_value=None)
 
     r_service._pause_mission_handler()
 
@@ -311,7 +311,7 @@ def test_mission_fails_to_resume(
     r_service = mocked_robot_service
 
     mocker.patch(
-        "isar.robot.robot.robot_resume_mission",
+        "isar.robot.robot_service.robot_resume_mission",
         return_value=ErrorMessage(
             error_reason=ErrorReason.RobotUnknownErrorException,
             error_description="test",
@@ -338,7 +338,7 @@ def test_mission_succeeds_to_resume(
 ) -> None:
     r_service = mocked_robot_service
 
-    mocker.patch("isar.robot.robot.robot_resume_mission", return_value=None)
+    mocker.patch("isar.robot.robot_service.robot_resume_mission", return_value=None)
 
     r_service._resume_mission_handler()
 
