@@ -339,7 +339,7 @@ class Robot(object):
             self.inspection_callback_thread.start()
             self.logger.info("Inspection callback thread started and will be monitored")
 
-    def _monitor_inspection_callback_thread(self) -> None:
+    def _restart_inspection_thread_if_stopped(self) -> None:
         if (
             self.inspection_callback_thread is not None
             and not self.inspection_callback_thread.is_alive()
@@ -419,7 +419,7 @@ class Robot(object):
                 self._monitor_mission_done_handler()
 
                 if settings.UPLOAD_INSPECTIONS_ASYNC:
-                    self._monitor_inspection_callback_thread()
+                    self._restart_inspection_thread_if_stopped()
         except Exception as e:
             self.logger.error(f"Unhandled exception in robot service: {str(e)}")
         self.logger.info("Exiting robot service main thread")
