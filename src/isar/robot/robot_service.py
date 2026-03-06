@@ -46,8 +46,8 @@ class RobotService:
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.action_thread: Optional[FunctionThread] = None
-        self.robot_battery_thread: Optional[RobotBatteryThread] = None
-        self.robot_status_thread: Optional[RobotStatusThread] = None
+        self.battery_thread: Optional[RobotBatteryThread] = None
+        self.status_thread: Optional[RobotStatusThread] = None
         self.monitor_mission_thread: Optional[RobotMonitorMissionThread] = None
         self.upload_inspection_threads: List[FunctionThread] = []
         self.signal_exit: ThreadEvent = ThreadEvent()
@@ -56,13 +56,10 @@ class RobotService:
 
     def stop(self) -> None:
         self.signal_exit.set()
-        if self.robot_status_thread is not None and self.robot_status_thread.is_alive():
-            self.robot_status_thread.join()
-        if (
-            self.robot_battery_thread is not None
-            and self.robot_battery_thread.is_alive()
-        ):
-            self.robot_battery_thread.join()
+        if self.status_thread is not None and self.status_thread.is_alive():
+            self.status_thread.join()
+        if self.battery_thread is not None and self.battery_thread.is_alive():
+            self.battery_thread.join()
         if (
             self.monitor_mission_thread is not None
             and self.monitor_mission_thread.is_alive()
@@ -74,9 +71,8 @@ class RobotService:
             if thread.is_alive():
                 thread.join()
         self.upload_inspection_threads = []
-        self.robot_status_thread = None
-        self.robot_battery_thread = None
-        self.action_thread = None
+        self.status_thread = None
+        self.battery_thread = None
         self.action_thread = None
         self.monitor_mission_thread = None
 
@@ -231,19 +227,19 @@ class RobotService:
             self.monitor_mission_thread = None
 
     def _register_status_threads(self) -> None:
-        self.robot_status_thread = RobotStatusThread(
+        self.status_thread = RobotStatusThread(
             robot=self.robot,
             signal_exit=self.signal_exit,
             shared_state=self.shared_state,
             state_machine_events=self.state_machine_events,
             robot_service_events=self.robot_service_events,
         )
-        self.robot_status_thread.start()
+        self.status_thread.start()
 
-        self.robot_battery_thread = RobotBatteryThread(
+        self.battery_thread = RobotBatteryThread(
             self.robot, self.signal_exit, self.shared_state
         )
-        self.robot_battery_thread.start()
+        self.battery_thread.start()
 
     def _process_state_machine_requests(self) -> FunctionThread | None:
         start_mission_request = self.state_machine_events.start_mission.consume_event()
