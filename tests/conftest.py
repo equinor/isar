@@ -23,7 +23,7 @@ from isar.modules import ApplicationContainer
 from isar.robot.function_thread import FunctionThread
 from isar.robot.robot_battery import RobotBatteryThread
 from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
-from isar.robot.robot_service import Robot
+from isar.robot.robot_service import RobotService
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.service_connections.persistent_memory import Base
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -74,7 +74,7 @@ def container() -> ApplicationContainer:
     )
     container.robot.override(
         providers.Singleton(
-            Robot,
+            RobotService,
             events=container.events(),
             robot=container.robot_interface(),
             shared_state=container.shared_state(),
@@ -207,7 +207,7 @@ def uploader_thread(
 def robot_service_thread(
     container: ApplicationContainer,
 ) -> Generator[RobotServiceThreadMock, None, None]:
-    robot_service: Robot = Robot(
+    robot_service: RobotService = RobotService(
         events=container.events(),
         robot=container.robot_interface(),
         shared_state=container.shared_state(),
@@ -224,8 +224,8 @@ def robot_service_thread(
 @pytest.fixture
 def mocked_robot_service(
     container: ApplicationContainer, mocker: MockerFixture
-) -> Robot:
-    robot_service: Robot = Robot(
+) -> RobotService:
+    robot_service: RobotService = RobotService(
         events=container.events(),
         robot=container.robot_interface(),
         shared_state=container.shared_state(),
