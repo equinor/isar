@@ -20,15 +20,11 @@ from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import State
 from isar.models.events import Events
 from isar.modules import ApplicationContainer
-from isar.robot.robot import Robot
+from isar.robot.function_thread import FunctionThread
 from isar.robot.robot_battery import RobotBatteryThread
 from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
-from isar.robot.robot_pause_mission import RobotPauseMissionThread
-from isar.robot.robot_resume_mission import RobotResumeMissionThread
-from isar.robot.robot_start_mission import RobotStartMissionThread
+from isar.robot.robot_service import RobotService
 from isar.robot.robot_status import RobotStatusThread
-from isar.robot.robot_stop_mission import RobotStopMissionThread
-from isar.robot.robot_upload_inspection import RobotUploadInspectionThread
 from isar.services.service_connections.persistent_memory import Base
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
@@ -78,7 +74,7 @@ def container() -> ApplicationContainer:
     )
     container.robot.override(
         providers.Singleton(
-            Robot,
+            RobotService,
             events=container.events(),
             robot=container.robot_interface(),
             shared_state=container.shared_state(),
@@ -211,7 +207,7 @@ def uploader_thread(
 def robot_service_thread(
     container: ApplicationContainer,
 ) -> Generator[RobotServiceThreadMock, None, None]:
-    robot_service: Robot = Robot(
+    robot_service: RobotService = RobotService(
         events=container.events(),
         robot=container.robot_interface(),
         shared_state=container.shared_state(),
@@ -228,43 +224,23 @@ def robot_service_thread(
 @pytest.fixture
 def mocked_robot_service(
     container: ApplicationContainer, mocker: MockerFixture
-) -> Robot:
-    robot_service: Robot = Robot(
+) -> RobotService:
+    robot_service: RobotService = RobotService(
         events=container.events(),
         robot=container.robot_interface(),
         shared_state=container.shared_state(),
         mqtt_publisher=container.mqtt_client(),
     )
 
-    mocker.patch.object(RobotStartMissionThread, "run", return_value=lambda: None)
     mocker.patch.object(RobotBatteryThread, "run", return_value=lambda: None)
     mocker.patch.object(RobotStatusThread, "run", return_value=lambda: None)
     mocker.patch.object(RobotMonitorMissionThread, "run", return_value=lambda: None)
-    mocker.patch.object(RobotStopMissionThread, "run", return_value=lambda: None)
-    mocker.patch.object(RobotPauseMissionThread, "run", return_value=lambda: None)
-    mocker.patch.object(RobotResumeMissionThread, "run", return_value=lambda: None)
-    mocker.patch.object(RobotUploadInspectionThread, "run", return_value=lambda: None)
+    mocker.patch.object(FunctionThread, "run", return_value=lambda: None)
 
-    mocker.patch.object(RobotStartMissionThread, "join", return_value=lambda: None)
     mocker.patch.object(RobotBatteryThread, "join", return_value=lambda: None)
     mocker.patch.object(RobotStatusThread, "join", return_value=lambda: None)
     mocker.patch.object(RobotMonitorMissionThread, "join", return_value=lambda: None)
-    mocker.patch.object(RobotStopMissionThread, "join", return_value=lambda: None)
-    mocker.patch.object(RobotPauseMissionThread, "join", return_value=lambda: None)
-    mocker.patch.object(RobotResumeMissionThread, "join", return_value=lambda: None)
-    mocker.patch.object(RobotUploadInspectionThread, "join", return_value=lambda: None)
-
-    return robot_service
-
-
-@pytest.fixture
-def mocked_robot_service_with_real_threads(container: ApplicationContainer) -> Robot:
-    robot_service: Robot = Robot(
-        events=container.events(),
-        robot=container.robot_interface(),
-        shared_state=container.shared_state(),
-        mqtt_publisher=container.mqtt_client(),
-    )
+    mocker.patch.object(FunctionThread, "join", return_value=lambda: None)
 
     return robot_service
 

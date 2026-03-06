@@ -17,7 +17,7 @@ class RobotStatusThread(Thread):
     def __init__(
         self,
         robot: RobotInterface,
-        signal_thread_quitting: Event,
+        signal_exit: Event,
         shared_state: SharedState,
         robot_service_events: RobotServiceEvents,
         state_machine_events: StateMachineEvents,
@@ -27,7 +27,7 @@ class RobotStatusThread(Thread):
         self.robot_service_events: RobotServiceEvents = robot_service_events
         self.state_machine_events: StateMachineEvents = state_machine_events
         self.robot: RobotInterface = robot
-        self.signal_thread_quitting: Event = signal_thread_quitting
+        self.signal_exit: Event = signal_exit
         self.robot_status_poll_interval: float = settings.ROBOT_API_STATUS_POLL_INTERVAL
         self.last_robot_status_poll_time: float = time.time()
         Thread.__init__(self, name="Robot status thread")
@@ -42,12 +42,12 @@ class RobotStatusThread(Thread):
         return time_since_last_robot_status_poll > self.robot_status_poll_interval
 
     def run(self) -> None:
-        if self.signal_thread_quitting.is_set():
+        if self.signal_exit.is_set():
             return
 
         thread_check_interval = settings.THREAD_CHECK_INTERVAL
 
-        while not self.signal_thread_quitting.wait(thread_check_interval):
+        while not self.signal_exit.wait(thread_check_interval):
 
             if not self._is_ready_to_poll_for_status():
                 continue

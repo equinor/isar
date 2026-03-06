@@ -8,7 +8,7 @@ from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.settings import settings
 from isar.models.events import Events, SharedState
-from isar.robot.robot import Robot
+from isar.robot.robot_service import RobotService
 from isar.services.utilities.robot_utilities import RobotUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
@@ -79,7 +79,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
 
     # Robot
     robot = providers.Singleton(
-        Robot,
+        RobotService,
         events=events,
         robot=robot_interface,
         shared_state=shared_state,
