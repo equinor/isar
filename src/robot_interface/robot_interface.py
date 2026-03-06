@@ -183,7 +183,7 @@ class RobotInterface(metaclass=ABCMeta):
     @abstractmethod
     def register_inspection_callback(
         self, callback_function: Callable[[Inspection, Mission], None]
-    ) -> None:
+    ) -> Thread:
         """Register a function which should be run when inspection data is received
         asynchronously. This function should expect to receive an Inspection from.
 
@@ -193,7 +193,8 @@ class RobotInterface(metaclass=ABCMeta):
 
         Returns
         -------
-        None
+        Thread
+            The thread which waits for new inspections.
 
         """
         raise NotImplementedError
