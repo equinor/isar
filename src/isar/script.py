@@ -8,7 +8,7 @@ from typing import Any, List
 import isar
 from isar.apis.api import API
 from isar.config.log import setup_loggers
-from isar.config.open_telemetry import setup_open_telemetry
+from isar.config.open_telemetry import instrument_fastapi, setup_open_telemetry
 from isar.config.settings import robot_settings, settings
 from isar.models.events import Events, InspectionQueueTuple
 from isar.modules import ApplicationContainer, get_injector
@@ -79,7 +79,8 @@ def start() -> None:
     injector: ApplicationContainer = get_injector()
 
     setup_loggers()
-    setup_open_telemetry(app=injector.api().app)
+    setup_open_telemetry()
+    instrument_fastapi(injector.api().app)
     logger: Logger = logging.getLogger("main")
 
     print_startup_info()

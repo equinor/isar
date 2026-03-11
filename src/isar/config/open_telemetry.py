@@ -28,7 +28,7 @@ from isar.config.settings import settings
 logging.getLogger("opentelemetry.sdk").setLevel(logging.CRITICAL)
 
 
-def setup_open_telemetry(app: FastAPI) -> None:
+def setup_open_telemetry() -> None:
 
     resource = Resource.create(
         {
@@ -64,6 +64,9 @@ def setup_open_telemetry(app: FastAPI) -> None:
     handler = LoggingHandler(logger_provider=log_provider)
     attach_loggers_for_open_telemetry(handler)
 
+
+def instrument_fastapi(app: FastAPI) -> None:
+    tracer_provider = trace.get_tracer_provider()
     FastAPIInstrumentor.instrument_app(app, tracer_provider=tracer_provider)
 
 
@@ -90,7 +93,7 @@ def get_otlp_exporters(
     metric_ep = urljoin(base, "v1/metrics")
 
     print("[OTEL] Using HTTP/Protobuf protocol for OpenTelemetry export")
-    print(f"[OTEL]  traces → {trace_ep}")
+    print(f"[OTEL]  traces  → {trace_ep}")
     print(f"[OTEL]  logs   → {log_ep}")
     print(f"[OTEL]  metrics→ {metric_ep}")
 
