@@ -74,6 +74,12 @@ def attach_loggers_for_open_telemetry(handler: LoggingHandler) -> None:
         logger = logging.getLogger(logger_name)
         logger.addHandler(handler)
 
+    # Attach to the robot package's root logger
+    robot_package_logger = logging.getLogger(settings.ROBOT_PACKAGE)
+    robot_package_logger.addHandler(handler)
+    if not robot_package_logger.level:
+        robot_package_logger.setLevel(logging.INFO)
+
 
 def get_otlp_exporters(
     endpoint: str,

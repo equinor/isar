@@ -42,6 +42,13 @@ def setup_loggers() -> None:
         if "level" in log_config.get("root", {}):
             root_logger.setLevel(log_config["root"]["level"])
 
+        # Attach robot package logger
+        robot_logger = logging.getLogger(settings.ROBOT_PACKAGE)
+        robot_logger.addHandler(log_handler)
+        robot_logger.propagate = False
+        if not robot_logger.level:
+            robot_logger.setLevel(logging.INFO)
+
 
 def load_log_config() -> dict[str, Any]:
     source = files("isar").joinpath("config").joinpath("logging.conf")
