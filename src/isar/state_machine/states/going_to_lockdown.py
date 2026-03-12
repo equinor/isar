@@ -28,6 +28,11 @@ class GoingToLockdown(State):
                 f"Failed to go to lockdown because: "
                 f"{mission_failed.error_description}"
             )
+            if settings.USE_DB:
+                change_persistent_robot_state(
+                    settings.ISAR_ID,
+                    value=RobotStartupMode.Normal,
+                )
             return InterventionNeeded.transition("Lockdown mission failed")
 
         def _mission_failed_to_resume_event_handler(
@@ -37,6 +42,11 @@ class GoingToLockdown(State):
                 f"Failed to resume return to home mission and going to lockdown because: "
                 f"{mission_failed_to_resume.error_description or ''}"
             )
+            if settings.USE_DB:
+                change_persistent_robot_state(
+                    settings.ISAR_ID,
+                    value=RobotStartupMode.Normal,
+                )
             return InterventionNeeded.transition(
                 "Failed to resume return to home mission"
             )

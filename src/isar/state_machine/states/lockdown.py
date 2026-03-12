@@ -26,6 +26,13 @@ class Lockdown(State):
             events.api_requests.release_from_lockdown.response.trigger_event(
                 EmptyMessage()
             )
+
+            if settings.USE_DB:
+                change_persistent_robot_state(
+                    settings.ISAR_ID,
+                    value=RobotStartupMode.Normal,
+                )
+
             if state_machine.battery_level_is_above_mission_start_threshold():
                 return Home.transition()
             else:

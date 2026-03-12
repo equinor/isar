@@ -30,6 +30,12 @@ class Maintenance(State):
                 EmptyMessage()
             )
 
+            if settings.USE_DB:
+                change_persistent_robot_state(
+                    settings.ISAR_ID,
+                    value=RobotStartupMode.Normal,
+                )
+
             robot_status = state_machine.shared_state.robot_status.check()
             if robot_status == RobotStatus.Home:
                 return Home.transition()
