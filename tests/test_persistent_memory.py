@@ -95,6 +95,7 @@ def test_lockdown_mode(
 
     response = client.post(url="/schedule/release-maintenance-mode")
     assert response.status_code == HTTPStatus.OK
+    time.sleep(1)  # Give time to write to database
     assert state_machine_thread_with_db.state_machine.current_state.name == States.Home
 
     mocker.patch.object(
@@ -188,6 +189,7 @@ def test_maintenance_mode(
 
     response = client.post(url="/schedule/release-maintenance-mode")
     assert response.status_code == HTTPStatus.OK
+    time.sleep(1)  # Give time to write to database
     assert state_machine_thread_with_db.state_machine.current_state.name == States.Home
 
     mocker.patch.object(
@@ -259,6 +261,7 @@ def test_release_maintenance_mode(
 
     response = client.post(url="/schedule/release-maintenance-mode")
     assert response.status_code == HTTPStatus.OK
+    time.sleep(1)  # Give time to write to database
     assert state_machine_thread_with_db.state_machine.current_state.name == States.Home
 
     robotStartUpMode = read_persistent_robot_state(settings.ISAR_ID)
