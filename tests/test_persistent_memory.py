@@ -9,11 +9,13 @@ from pytest_mock import MockerFixture
 from sqlalchemy.orm import Session
 from testcontainers.mysql import MySqlContainer
 
+from isar.config.settings import settings
 from isar.services.service_connections.persistent_memory import (
     Base,
     PersistentRobotState,
     RobotStartupMode,
     change_persistent_robot_state_with_connection_string,
+    read_persistent_robot_state,
     read_persistent_robot_state_with_connection_string,
 )
 from isar.state_machine.state_machine import (
@@ -226,5 +228,46 @@ def test_maintenance_mode(
             States.Monitor,
             States.StoppingDueToMaintenance,
             States.Maintenance,
+        ]
+    )
+
+
+def test_release_maintenance_mode(
+    client: TestClient,
+    state_machine_thread_with_db: StateMachineThreadMock,
+    robot_service_thread: RobotServiceThreadMock,
+    mocker: MockerFixture,
+) -> None:
+    # Now running ISAR should put it into maintenance mode
+    state_machine_thread_with_db.start()
+    robot_service_thread.start()
+
+    assert (
+        state_machine_thread_with_db.state_machine.current_state.name
+        == States.Maintenance
+    )
+
+    mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
+    t_start = time.time()
+    while (
+        state_machine_thread_with_db.state_machine.shared_state.robot_status.check()
+        != RobotStatus.Home
+    ):
+        if time.time() - t_start > 10:
+            raise Exception("Robot did not come Home within expected time")
+        time.sleep(0.5)
+
+    response = client.post(url="/schedule/release-maintenance-mode")
+    assert response.status_code == HTTPStatus.OK
+    assert state_machine_thread_with_db.state_machine.current_state.name == States.Home
+
+    robotStartUpMode = read_persistent_robot_state(settings.ISAR_ID)
+
+    assert robotStartUpMode == RobotStartupMode.Normal
+
+    assert state_machine_thread_with_db.state_machine.transitions_list == deque(
+        [
+            States.Maintenance,
+            States.Home,
         ]
     )
