@@ -22,7 +22,6 @@ from isar.models.events import Events
 from isar.modules import ApplicationContainer
 from isar.robot.function_thread import FunctionThread
 from isar.robot.robot_battery import RobotBatteryThread
-from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
 from isar.robot.robot_service import RobotService
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.service_connections.persistent_memory import Base
@@ -234,12 +233,10 @@ def mocked_robot_service(
 
     mocker.patch.object(RobotBatteryThread, "run", return_value=lambda: None)
     mocker.patch.object(RobotStatusThread, "run", return_value=lambda: None)
-    mocker.patch.object(RobotMonitorMissionThread, "run", return_value=lambda: None)
     mocker.patch.object(FunctionThread, "run", return_value=lambda: None)
 
     mocker.patch.object(RobotBatteryThread, "join", return_value=lambda: None)
     mocker.patch.object(RobotStatusThread, "join", return_value=lambda: None)
-    mocker.patch.object(RobotMonitorMissionThread, "join", return_value=lambda: None)
     mocker.patch.object(FunctionThread, "join", return_value=lambda: None)
 
     return robot_service

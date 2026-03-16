@@ -14,7 +14,7 @@ from isar.models.events import (
 )
 from isar.robot.function_thread import FunctionThread
 from isar.robot.robot_battery import RobotBatteryThread
-from isar.robot.robot_monitor_mission import RobotMonitorMissionThread
+from isar.robot.robot_monitor_mission import robot_monitor_mission
 from isar.robot.robot_pause_mission import robot_pause_mission
 from isar.robot.robot_resume_mission import robot_resume_mission
 from isar.robot.robot_start_mission import robot_start_mission
@@ -48,7 +48,7 @@ class RobotService:
         self.action_thread: FunctionThread | None = None
         self.battery_thread: RobotBatteryThread | None = None
         self.status_thread: RobotStatusThread | None = None
-        self.monitor_mission_thread: RobotMonitorMissionThread | None = None
+        self.monitor_mission_thread: FunctionThread | None = None
         self.upload_inspection_threads: List[FunctionThread] = []
         self.signal_exit: ThreadEvent = ThreadEvent()
         self.signal_mission_stopped: ThreadEvent = ThreadEvent()
@@ -205,26 +205,27 @@ class RobotService:
             self.inspection_callback_thread.join()
             self.inspection_callback_thread.start()
 
-    def _monitor_mission_done_handler(self) -> None:
-        if (
-            self.monitor_mission_thread is not None
-            and not self.monitor_mission_thread.is_alive()
-        ):
-            mission_manually_cancelled = (
-                self.monitor_mission_thread.signal_mission_stopped.is_set()
+    def _monitor_mission_handler(self, mission: Mission) -> None:
+        def request_inspection_upload(task: InspectionTask) -> None:
+            self.robot_service_events.request_inspection_upload.trigger_event(
+                (task, mission)
             )
-            error_message = self.monitor_mission_thread.error_message
-            if not mission_manually_cancelled:
-                if error_message is not None:
-                    self.robot_service_events.mission_failed.trigger_event(
-                        error_message
-                    )
-                else:
-                    self.robot_service_events.mission_succeeded.trigger_event(
-                        EmptyMessage()
-                    )
-            self.monitor_mission_thread.join()
-            self.monitor_mission_thread = None
+
+        error_message = robot_monitor_mission(
+            mission,
+            self.signal_exit,
+            self.signal_mission_stopped,
+            self.robot,
+            request_inspection_upload,
+            self.mqtt_publisher,
+        )
+        if not self.signal_mission_stopped.is_set():
+            if error_message is not None:
+                self.robot_service_events.mission_failed.trigger_event(error_message)
+            else:
+                self.robot_service_events.mission_succeeded.trigger_event(
+                    EmptyMessage()
+                )
 
     def _register_status_threads(self) -> None:
         self.status_thread = RobotStatusThread(
@@ -270,23 +271,14 @@ class RobotService:
             while not self.signal_exit.wait(0):
                 if self.action_thread is None or not self.action_thread.is_alive():
                     self.action_thread = self._process_state_machine_requests()
-                    self._monitor_mission_done_handler()
 
                 started_mission = (
                     self.robot_service_events.mission_started.consume_event()
                 )
                 if started_mission is not None:
-                    self.monitor_mission_thread = RobotMonitorMissionThread(
-                        lambda task: self.robot_service_events.request_inspection_upload.trigger_event(
-                            (task, started_mission)
-                        ),
-                        self.robot,
-                        self.mqtt_publisher,
-                        self.signal_exit,
-                        self.signal_mission_stopped,
-                        started_mission,
+                    self.monitor_mission_thread = FunctionThread(
+                        self._monitor_mission_handler, started_mission
                     )
-                    self.monitor_mission_thread.start()
 
                 upload_request: Tuple[(InspectionTask, Mission)] | None = (
                     self.robot_service_events.request_inspection_upload.consume_event()
