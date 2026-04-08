@@ -13,6 +13,18 @@ from robot_interface.models.robots.media import MediaConfig
 class RobotInterface(metaclass=ABCMeta):
     """Interface to communicate with robots."""
 
+    def __init__(self, robot_name: str, isar_id: str) -> None:
+        """Initializes the robot interface
+
+        ISAR will call the constructor of the implemented robot interface by supplying
+        the parameters robot_name and isar_id. The constructor in the derived class shall
+        call super().__init__(robot_name=robot_name, isar_id=isar_id) to ensure the correct
+        initialization of the robot interface.
+
+        """
+        self.robot_name = robot_name
+        self.isar_id = isar_id
+
     @abstractmethod
     def initiate_mission(self, mission: Mission) -> None:
         """Send a mission to the robot and initiate execution of the mission

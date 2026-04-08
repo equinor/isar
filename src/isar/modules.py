@@ -27,7 +27,9 @@ class ApplicationContainer(containers.DeclarativeContainer):
 
     # Robot-related services
     robot_interface = providers.Singleton(
-        lambda: import_module(f"{settings.ROBOT_PACKAGE}.robotinterface").Robot()
+        lambda: import_module(f"{settings.ROBOT_PACKAGE}.robotinterface").Robot(
+            robot_name=settings.ROBOT_NAME, isar_id=settings.ISAR_ID
+        )
     )
     robot_utilities = providers.Singleton(RobotUtilities, robot=robot_interface)
 
