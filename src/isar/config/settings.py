@@ -145,7 +145,7 @@ class Settings(BaseSettings):
     # The configuration of this section is tightly coupled with the metadata that is
     # submitted with the results once they have been uploaded.
 
-    # Four digit code indicating facility
+    # Four-digit code indicating facility
     PLANT_CODE: str = Field(default="1210")
 
     # Name of the facility the robot is operating in
