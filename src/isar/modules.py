@@ -8,6 +8,7 @@ from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.settings import settings
 from isar.models.events import Events, SharedState
+from isar.robot.robot_inspection_service import RobotInspectionService
 from isar.robot.robot_service import RobotService
 from isar.services.utilities.robot_utilities import RobotUtilities
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
@@ -85,6 +86,14 @@ class ApplicationContainer(containers.DeclarativeContainer):
         events=events,
         robot=robot_interface,
         shared_state=shared_state,
+        mqtt_publisher=mqtt_client,
+    )
+
+    # Inspection data service
+    inspection_service = providers.Singleton(
+        RobotInspectionService,
+        events=events,
+        robot=robot_interface,
         mqtt_publisher=mqtt_client,
     )
 

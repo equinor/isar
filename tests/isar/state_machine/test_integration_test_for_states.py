@@ -1,5 +1,6 @@
 import time
 from collections import deque
+from threading import Thread
 from typing import List
 
 import pytest
@@ -118,8 +119,10 @@ def test_state_machine_with_successful_collection(
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
     uploader_thread: UploaderThreadMock,
+    robot_inspection_service_thread: Thread,
     mocker: MockerFixture,
 ) -> None:
+    robot_inspection_service_thread.start()
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
 
     storage_mock: StorageInterface = container.storage_handlers(List[StorageInterface])[

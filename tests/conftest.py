@@ -5,6 +5,7 @@
 import logging
 import shutil
 from pathlib import Path
+from threading import Thread
 from typing import Generator
 
 import pytest
@@ -22,6 +23,7 @@ from isar.models.events import Events
 from isar.modules import ApplicationContainer
 from isar.robot.function_thread import FunctionThread
 from isar.robot.robot_battery import RobotBatteryThread
+from isar.robot.robot_inspection_service import RobotInspectionService
 from isar.robot.robot_service import RobotService
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.service_connections.persistent_memory import Base
@@ -77,6 +79,14 @@ def container() -> ApplicationContainer:
             events=container.events(),
             robot=container.robot_interface(),
             shared_state=container.shared_state(),
+        )
+    )
+    container.inspection_service.override(
+        providers.Singleton(
+            RobotInspectionService,
+            events=container.events(),
+            robot=container.robot_interface(),
+            mqtt_publisher=container.mqtt_client(),
         )
     )
     return container
@@ -218,6 +228,24 @@ def robot_service_thread(
     )
     yield robot_service_thread
     robot_service_thread.join()
+
+
+@pytest.fixture
+def robot_inspection_service_thread(
+    container: ApplicationContainer,
+) -> Generator[Thread, None, None]:
+    robot_inspection_service: RobotInspectionService = RobotInspectionService(
+        events=container.events(),
+        robot=container.robot_interface(),
+        mqtt_publisher=container.mqtt_client(),
+    )
+
+    robot_inspection_service_thread: Thread = Thread(
+        target=robot_inspection_service.run
+    )
+    yield robot_inspection_service_thread
+    robot_inspection_service.stop()
+    robot_inspection_service_thread.join()
 
 
 @pytest.fixture

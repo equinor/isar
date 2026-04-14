@@ -1,10 +1,6 @@
 import logging
-from queue import Queue
 from threading import Event as ThreadEvent
-from threading import Thread
-from typing import Callable, List, Tuple
 
-from isar.config.settings import settings
 from isar.models.events import (
     EmptyMessage,
     Events,
@@ -20,7 +16,6 @@ from isar.robot.robot_resume_mission import robot_resume_mission
 from isar.robot.robot_start_mission import robot_start_mission
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import robot_stop_mission
-from isar.robot.robot_upload_inspection import robot_upload_inspection
 from isar.services.utilities.mqtt_utilities import publish_mission_status
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
@@ -42,17 +37,14 @@ class RobotService:
         self.state_machine_events: StateMachineEvents = events.state_machine_events
         self.robot_service_events: RobotServiceEvents = events.robot_service_events
         self.mqtt_publisher: MqttClientInterface = mqtt_publisher
-        self.upload_queue: Queue = events.upload_queue
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.action_thread: FunctionThread | None = None
         self.battery_thread: RobotBatteryThread | None = None
         self.status_thread: RobotStatusThread | None = None
         self.monitor_mission_thread: FunctionThread | None = None
-        self.upload_inspection_threads: List[FunctionThread] = []
         self.signal_exit: ThreadEvent = ThreadEvent()
         self.signal_mission_stopped: ThreadEvent = ThreadEvent()
-        self.inspection_callback_thread: Thread | None = None
 
     def stop(self) -> None:
         self.signal_exit.set()
@@ -67,10 +59,6 @@ class RobotService:
             self.monitor_mission_thread.join()
         if self.action_thread is not None and self.action_thread.is_alive():
             self.action_thread.join()
-        for thread in self.upload_inspection_threads:
-            if thread.is_alive():
-                thread.join()
-        self.upload_inspection_threads = []
         self.status_thread = None
         self.battery_thread = None
         self.action_thread = None
@@ -168,43 +156,6 @@ class RobotService:
                 EmptyMessage()
             )
 
-    def _upload_inspection_event_handler(
-        self, inspection: InspectionTask, mission: Mission
-    ) -> None:
-        robot_upload_inspection(
-            self.robot, self.logger, inspection, mission, self.upload_queue
-        )
-
-    def _prune_upload_thread_list(self) -> None:
-        if len(self.upload_inspection_threads) > 0:
-            self.upload_inspection_threads[:] = [
-                thread
-                for thread in self.upload_inspection_threads
-                if not thread.is_alive()
-            ]
-
-    def register_and_monitor_inspection_callback(
-        self,
-        callback_function: Callable,
-    ) -> None:
-        self.inspection_callback_function = callback_function
-
-        self.inspection_callback_thread = self.robot.register_inspection_callback(
-            callback_function
-        )
-        if self.inspection_callback_thread is not None:
-            self.inspection_callback_thread.start()
-            self.logger.info("Inspection callback thread started and will be monitored")
-
-    def _restart_inspection_thread_if_stopped(self) -> None:
-        if (
-            self.inspection_callback_thread is not None
-            and not self.inspection_callback_thread.is_alive()
-        ):
-            self.logger.warning("Inspection callback thread died - restarting")
-            self.inspection_callback_thread.join()
-            self.inspection_callback_thread.start()
-
     def _monitor_mission_handler(self, mission: Mission) -> None:
         def request_inspection_upload(task: InspectionTask) -> None:
             self.robot_service_events.request_inspection_upload.trigger_event(
@@ -279,23 +230,6 @@ class RobotService:
                     self.monitor_mission_thread = FunctionThread(
                         self._monitor_mission_handler, started_mission
                     )
-
-                upload_request: Tuple[(InspectionTask, Mission)] | None = (
-                    self.robot_service_events.request_inspection_upload.consume_event()
-                )
-                if upload_request is not None:
-                    self.upload_inspection_threads.append(
-                        FunctionThread(
-                            self._upload_inspection_event_handler,
-                            upload_request[0],
-                            upload_request[1],
-                        )
-                    )
-
-                self._prune_upload_thread_list()
-
-                if settings.UPLOAD_INSPECTIONS_ASYNC:
-                    self._restart_inspection_thread_if_stopped()
         except Exception as e:
             self.logger.error(f"Unhandled exception in robot service: {str(e)}")
         self.logger.info("Exiting robot service main thread")

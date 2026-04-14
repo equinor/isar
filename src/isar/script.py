@@ -12,6 +12,7 @@ from isar.config.open_telemetry import instrument_fastapi, setup_open_telemetry
 from isar.config.settings import robot_settings, settings
 from isar.models.events import Events, InspectionQueueTuple
 from isar.modules import ApplicationContainer, get_injector
+from isar.robot.robot_inspection_service import RobotInspectionService
 from isar.robot.robot_service import RobotService
 from isar.services.service_connections.mqtt.mqtt_client import MqttClient
 from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
@@ -88,6 +89,7 @@ def start() -> None:
     robot_interface: RobotInterface = injector.robot_interface()
     events: Events = injector.events()
     robot: RobotService = injector.robot()
+    inspection_service: RobotInspectionService = injector.inspection_service()
 
     threads: List[Thread] = []
 
@@ -103,6 +105,12 @@ def start() -> None:
     )
     state_machine_thread.start()
     threads.append(state_machine_thread)
+
+    inspection_service_thread: Thread = Thread(
+        target=inspection_service.run, name="Inspection service", daemon=True
+    )
+    inspection_service_thread.start()
+    threads.append(inspection_service_thread)
 
     uploader_thread: Thread = Thread(
         target=uploader.run, name="ISAR Uploader", daemon=True
@@ -125,7 +133,9 @@ def start() -> None:
             )
             state_machine.events.upload_queue.put(message)
 
-        robot.register_and_monitor_inspection_callback(inspections_callback)
+        inspection_service.register_and_monitor_inspection_callback(
+            inspections_callback
+        )
 
     mqtt_client: MqttClient = MqttClient(mqtt_queue=events.mqtt_queue)
 
