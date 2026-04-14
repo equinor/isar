@@ -1,11 +1,17 @@
+import os
+
 from azure.core.credentials import AccessToken
-from azure.identity import DefaultAzureCredential
+from azure.identity import ClientSecretCredential
 
 from isar.config.settings import settings
 
 
 def get_access_token() -> AccessToken:
-    credential = DefaultAzureCredential()
+    credential = ClientSecretCredential(
+        client_id=settings.AZURE_CLIENT_ID,
+        tenant_id=settings.AZURE_TENANT_ID,
+        client_secret=os.environ["ISAR_AZURE_CLIENT_SECRET"],
+    )
     accesstoken = credential.get_token(
         "https://ossrdbms-aad.database.windows.net/.default"
     )
