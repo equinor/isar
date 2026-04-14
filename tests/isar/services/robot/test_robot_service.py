@@ -1,3 +1,5 @@
+import asyncio
+
 from pytest_mock import MockerFixture
 
 from isar.robot.function_thread import FunctionThread
@@ -59,15 +61,11 @@ def test_mission_succeeds_to_schedule(
     )
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
-    r_service.signal_mission_stopped.set()  # We want to test that this is cleared
-
     mocker.patch("isar.robot.robot_service.robot_start_mission", return_value=None)
 
     success = r_service._start_mission_handler(mission)
 
     assert success
-
-    assert not r_service.signal_mission_stopped.is_set()
 
     mock_publish_mission_status.assert_called_once()
 
@@ -85,7 +83,7 @@ def test_mission_fails_to_stop(
         ),
     )
 
-    r_service._stop_mission_handler()
+    asyncio.run(r_service._stop_mission_handler(None))
 
     assert r_service.robot_service_events.mission_failed_to_stop.has_event()
     mission_failed_to_stop_event = (
@@ -96,7 +94,6 @@ def test_mission_fails_to_stop(
         mission_failed_to_stop_event.error_reason
         == ErrorReason.RobotUnknownErrorException
     )
-    assert not r_service.signal_mission_stopped.is_set()
     assert not r_service.robot_service_events.mission_successfully_stopped.has_event()
 
 
@@ -110,10 +107,9 @@ def test_successful_stop(
     r_service.monitor_mission_thread = FunctionThread(lambda: None)
     mocker.patch.object(FunctionThread, "is_alive", return_value=True)
 
-    r_service._stop_mission_handler()
+    asyncio.run(r_service._stop_mission_handler(None))
 
     assert r_service.robot_service_events.mission_successfully_stopped.has_event()
-    assert r_service.signal_mission_stopped.is_set()
     assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
     assert not r_service.robot_service_events.mission_failed.has_event()
     assert not r_service.robot_service_events.mission_succeeded.has_event()
@@ -129,11 +125,12 @@ def test_monitor_mission_reports_nothing_after_mission_stopped(
     )
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
-    mocker.patch("isar.robot.robot_service.robot_monitor_mission", return_value=None)
+    mocker.patch(
+        "isar.robot.robot_service.robot_monitor_mission",
+        side_effect=asyncio.CancelledError(),
+    )
 
-    r_service.signal_mission_stopped.set()
-
-    r_service._monitor_mission_handler(mission)
+    asyncio.run(r_service._monitor_mission_handler(mission))
 
     assert not r_service.robot_service_events.mission_failed.has_event()
     assert not r_service.robot_service_events.mission_succeeded.has_event()
@@ -154,7 +151,7 @@ def test_monitor_mission_reports_mission_failed(
         return_value=ErrorMessage(ErrorReason.RobotUnknownErrorException, ""),
     )
 
-    r_service._monitor_mission_handler(mission)
+    asyncio.run(r_service._monitor_mission_handler(mission))
 
     assert r_service.robot_service_events.mission_failed.has_event()
     assert not r_service.robot_service_events.mission_succeeded.has_event()
@@ -172,12 +169,10 @@ def test_monitor_mission_reports_mission_success(
 
     mocker.patch("isar.robot.robot_service.robot_monitor_mission", return_value=None)
 
-    r_service._monitor_mission_handler(mission)
+    asyncio.run(r_service._monitor_mission_handler(mission))
 
     assert r_service.robot_service_events.mission_succeeded.has_event()
     assert not r_service.robot_service_events.mission_failed.has_event()
-
-    assert r_service.monitor_mission_thread is None
 
 
 def test_mission_fails_to_pause(
