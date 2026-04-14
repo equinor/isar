@@ -63,14 +63,11 @@ def test_mission_succeeds_to_schedule(
 
     mocker.patch("isar.robot.robot_service.robot_start_mission", return_value=None)
 
-    r_service._start_mission_handler(mission)
+    success = r_service._start_mission_handler(mission)
+
+    assert success
 
     assert not r_service.signal_mission_stopped.is_set()
-    mission_started_event = (
-        r_service.robot_service_events.mission_started.consume_event()
-    )
-    assert mission_started_event is not None
-    assert mission_started_event.id == mission.id
 
     mock_publish_mission_status.assert_called_once()
 
@@ -279,8 +276,8 @@ def test_start_mission_reports_robot_already_home(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
     )
     mission: Mission = Mission(name="Dummy mission", tasks=[task_1])
-    r_service._start_mission_handler(mission)
+    success = r_service._start_mission_handler(mission)
 
+    assert not success
     assert r_service.robot_service_events.robot_already_home.has_event()
-    assert not r_service.robot_service_events.mission_started.has_event()
     assert r_service.monitor_mission_thread is None

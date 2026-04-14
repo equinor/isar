@@ -39,7 +39,6 @@ class RobotService:
         self.mqtt_publisher: MqttClientInterface = mqtt_publisher
         self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
-        self.action_thread: FunctionThread | None = None
         self.battery_thread: RobotBatteryThread | None = None
         self.status_thread: RobotStatusThread | None = None
         self.monitor_mission_thread: FunctionThread | None = None
@@ -57,14 +56,11 @@ class RobotService:
             and self.monitor_mission_thread.is_alive()
         ):
             self.monitor_mission_thread.join()
-        if self.action_thread is not None and self.action_thread.is_alive():
-            self.action_thread.join()
         self.status_thread = None
         self.battery_thread = None
-        self.action_thread = None
         self.monitor_mission_thread = None
 
-    def _start_mission_handler(self, mission: Mission) -> None:
+    def _start_mission_handler(self, mission: Mission) -> bool:
         mission.status = MissionStatus.NotStarted
         publish_mission_status(self.mqtt_publisher, mission.id, mission.status, None)
         error_message: ErrorMessage | None = robot_start_mission(
@@ -76,7 +72,7 @@ class RobotService:
             and error_message.error_reason == ErrorReason.RobotAlreadyHomeException
         ):
             self.robot_service_events.robot_already_home.trigger_event(EmptyMessage())
-            return
+            return False
         elif error_message:
             mission.status = MissionStatus.Failed
             error_message.error_description = (
@@ -87,7 +83,7 @@ class RobotService:
                 self.mqtt_publisher, mission.id, mission.status, error_message
             )
             self.robot_service_events.mission_failed.trigger_event(error_message)
-            return
+            return False
 
         self.logger.info("Received confirmation that mission has started")
 
@@ -101,7 +97,7 @@ class RobotService:
             # Here we panic
 
         self.signal_mission_stopped.clear()
-        self.robot_service_events.mission_started.trigger_event(mission)
+        return True
 
     def _stop_mission_handler(self) -> None:
         error_message: ErrorMessage | None = robot_stop_mission(
@@ -193,43 +189,40 @@ class RobotService:
         )
         self.battery_thread.start()
 
-    def _process_state_machine_requests(self) -> FunctionThread | None:
-        start_mission_request = self.state_machine_events.start_mission.consume_event()
-        if start_mission_request:
-            return FunctionThread(self._start_mission_handler, start_mission_request)
-
-        pause_mission_request = self.state_machine_events.pause_mission.consume_event()
-        if pause_mission_request:
-            return FunctionThread(self._pause_mission_handler)
-
-        resume_mission_request = (
-            self.state_machine_events.resume_mission.consume_event()
-        )
-        if resume_mission_request:
-            return FunctionThread(self._resume_mission_handler)
-
-        stop_mission_request = self.state_machine_events.stop_mission.consume_event()
-        if stop_mission_request:
-            return FunctionThread(self._stop_mission_handler)
-
-        return None
-
     def run(self) -> None:
 
         self._register_status_threads()
 
         try:
             while not self.signal_exit.wait(0):
-                if self.action_thread is None or not self.action_thread.is_alive():
-                    self.action_thread = self._process_state_machine_requests()
-
-                started_mission = (
-                    self.robot_service_events.mission_started.consume_event()
+                start_mission_request = (
+                    self.state_machine_events.start_mission.consume_event()
                 )
-                if started_mission is not None:
-                    self.monitor_mission_thread = FunctionThread(
-                        self._monitor_mission_handler, started_mission
-                    )
+                if start_mission_request:
+                    success = self._start_mission_handler(start_mission_request)
+                    if success:
+                        self.monitor_mission_thread = FunctionThread(
+                            self._monitor_mission_handler, start_mission_request
+                        )
+
+                pause_mission_request = (
+                    self.state_machine_events.pause_mission.consume_event()
+                )
+                if pause_mission_request:
+                    self._pause_mission_handler()
+
+                resume_mission_request = (
+                    self.state_machine_events.resume_mission.consume_event()
+                )
+                if resume_mission_request:
+                    self._resume_mission_handler()
+
+                stop_mission_request = (
+                    self.state_machine_events.stop_mission.consume_event()
+                )
+                if stop_mission_request:
+                    self._stop_mission_handler()
+
         except Exception as e:
             self.logger.error(f"Unhandled exception in robot service: {str(e)}")
         self.logger.info("Exiting robot service main thread")
