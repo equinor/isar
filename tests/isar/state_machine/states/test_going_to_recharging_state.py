@@ -1,15 +1,38 @@
 from typing import cast
 
-from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
-from isar.models.events import EmptyMessage
+from isar.models.events import AbortedMission, EmptyMessage
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.going_to_recharging import GoingToRecharging
+from isar.state_machine.states.going_to_recharging_with_mission import (
+    GoingToRechargingWithMission,
+)
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRecharge
 
 
-def test_stopping_to_recharge_goes_to_going_to_recharging(
+def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_tasks(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.current_state = StoppingGoToRecharge(
+        sync_state_machine, "mission_id"
+    )
+    stopping_go_to_recharge_state: State = cast(State, sync_state_machine.current_state)
+    event_handler: EventHandlerMapping | None = (
+        stopping_go_to_recharge_state.get_event_handler_by_name(
+            "mission_already_done_event"
+        )
+    )
+
+    assert event_handler is not None
+
+    transition = event_handler.handler(EmptyMessage())
+
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is GoingToRecharging
+
+
+def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.current_state = StoppingGoToRecharge(
@@ -22,17 +45,12 @@ def test_stopping_to_recharge_goes_to_going_to_recharging(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(EmptyMessage())
+    transition = event_handler.handler(AbortedMission(name="test"))
 
-    assert not sync_state_machine.events.mqtt_queue.empty()
-
-    mqtt_message = sync_state_machine.events.mqtt_queue.get(block=False)
-    assert mqtt_message is not None
-    mqtt_payload_topic = mqtt_message[0]
-    assert mqtt_payload_topic is settings.TOPIC_ISAR_MISSION_ABORTED
+    assert sync_state_machine.events.mqtt_queue.empty()
 
     sync_state_machine.current_state = transition(sync_state_machine)
-    assert type(sync_state_machine.current_state) is GoingToRecharging
+    assert type(sync_state_machine.current_state) is GoingToRechargingWithMission
 
 
 def test_return_home_goes_to_recharging_when_battery_low(

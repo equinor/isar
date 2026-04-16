@@ -1,0 +1,75 @@
+from typing import TYPE_CHECKING, List
+
+import isar.state_machine.states.going_to_lockdown as GoingToLockdown
+import isar.state_machine.states.intervention_needed as InterventionNeeded
+import isar.state_machine.states.recharging_with_mission as RechargingWithMission
+from isar.apis.models.models import LockdownResponse
+from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.models.events import AbortedMission, EmptyMessage
+from isar.state_machine.states_enum import States
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+
+if TYPE_CHECKING:
+    from isar.state_machine.state_machine import StateMachine
+
+
+class GoingToRechargingWithMission(State):
+
+    def __init__(self, state_machine: "StateMachine", mission: AbortedMission):
+        events = state_machine.events
+
+        def _mission_failed_event_handler(
+            mission_failed: ErrorMessage,
+        ) -> Transition[InterventionNeeded.InterventionNeeded]:
+            state_machine.logger.warning(
+                f"Failed to go to recharging because: "
+                f"{mission_failed.error_description}"
+            )
+            state_machine.print_transitions()
+            return InterventionNeeded.transition("Return home to recharge failed")
+
+        def _mission_success_event_handler(
+            succcess: EmptyMessage,
+        ) -> Transition[RechargingWithMission.RechargingWithMission]:
+            return RechargingWithMission.transition(mission)
+
+        def _send_to_lockdown_event_handler(
+            should_lockdown: EmptyMessage,
+        ) -> Transition[GoingToLockdown.GoingToLockdown]:
+            events.api_requests.send_to_lockdown.response.trigger_event(
+                LockdownResponse(lockdown_started=True)
+            )
+            return GoingToLockdown.transition()
+
+        event_handlers: List[EventHandlerMapping] = [
+            EventHandlerMapping[ErrorMessage](
+                name="mission_failed_event",
+                event=events.robot_service_events.mission_failed,
+                handler=_mission_failed_event_handler,
+            ),
+            EventHandlerMapping[EmptyMessage](
+                name="mission_succeeded_event",
+                event=events.robot_service_events.mission_succeeded,
+                handler=_mission_success_event_handler,
+            ),
+            EventHandlerMapping[EmptyMessage](
+                name="send_to_lockdown_event",
+                event=events.api_requests.send_to_lockdown.request,
+                handler=_send_to_lockdown_event_handler,
+            ),
+        ]
+        super().__init__(
+            state_name=States.GoingToRechargingWithMission,
+            state_machine=state_machine,
+            event_handler_mappings=event_handlers,
+        )
+
+
+def transition_and_start_return_home(
+    mission: AbortedMission,
+) -> Transition[GoingToRechargingWithMission]:
+    def _transition(state_machine: "StateMachine") -> GoingToRechargingWithMission:
+        state_machine.start_return_home_mission()
+        return GoingToRechargingWithMission(state_machine, mission=mission)
+
+    return _transition

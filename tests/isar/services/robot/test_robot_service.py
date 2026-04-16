@@ -2,7 +2,6 @@ import asyncio
 
 from pytest_mock import MockerFixture
 
-from isar.robot.function_thread import FunctionThread
 from isar.robot.robot_service import RobotService
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -10,6 +9,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotAlreadyHomeException,
 )
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.status import TaskStatus
 from robot_interface.models.mission.task import TakeImage, Task
 from tests.test_mocks.pose import DummyPose
 
@@ -18,7 +18,6 @@ def test_mission_fails_to_schedule(
     mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
-    mocker.patch.object(FunctionThread, "is_alive", return_value=False)
     mock_publish_mission_status = mocker.patch(
         "isar.robot.robot_service.publish_mission_status"
     )
@@ -42,8 +41,6 @@ def test_mission_fails_to_schedule(
     mission_failed_event = r_service.robot_service_events.mission_failed.get()
     assert mission_failed_event is not None
     assert mission_failed_event.error_reason == ErrorReason.RobotUnknownErrorException
-
-    assert r_service.monitor_mission_thread is None
 
     assert mock_publish_mission_status.call_count == 2
 
@@ -97,19 +94,84 @@ def test_mission_fails_to_stop(
     assert not r_service.robot_service_events.mission_successfully_stopped.has_event()
 
 
-def test_successful_stop(
+def test_successful_stop_with_remaining_tasks(
     mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
 
     mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
 
-    r_service.monitor_mission_thread = FunctionThread(lambda: None)
-    mocker.patch.object(FunctionThread, "is_alive", return_value=True)
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position,
+        robot_pose=DummyPose.default_pose(),
+        status=TaskStatus.Cancelled,
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
+
+    mocker.patch(
+        "isar.robot.robot_service.robot_monitor_mission",
+        return_value=(None, mission),
+    )
+
+    async def test_stop_mission_handler() -> None:
+        monitor_mission_task = asyncio.create_task(
+            r_service._monitor_mission_handler(mission)
+        )
+        await asyncio.sleep(0)
+        await r_service._stop_mission_handler(monitor_mission_task)
+
+    asyncio.run(test_stop_mission_handler())
+
+    assert r_service.robot_service_events.mission_successfully_stopped.has_event()
+    assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
+    assert not r_service.robot_service_events.mission_failed.has_event()
+    assert not r_service.robot_service_events.mission_succeeded.has_event()
+
+
+def test_successful_stop_with_no_remaining_tasks(
+    mocked_robot_service: RobotService, mocker: MockerFixture
+) -> None:
+    r_service = mocked_robot_service
+
+    mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
+
+    task_1: Task = TakeImage(
+        target=DummyPose.default_pose().position,
+        robot_pose=DummyPose.default_pose(),
+        status=TaskStatus.Successful,
+    )
+    mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
+
+    mocker.patch(
+        "isar.robot.robot_service.robot_monitor_mission",
+        return_value=(None, mission),
+    )
+
+    async def test_stop_mission_handler() -> None:
+        monitor_mission_task = asyncio.create_task(
+            r_service._monitor_mission_handler(mission)
+        )
+        await asyncio.sleep(0)
+        await r_service._stop_mission_handler(monitor_mission_task)
+
+    asyncio.run(test_stop_mission_handler())
+
+    assert r_service.robot_service_events.stopped_mission_already_done.has_event()
+    assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
+    assert not r_service.robot_service_events.mission_failed.has_event()
+    assert not r_service.robot_service_events.mission_succeeded.has_event()
+
+
+def test_successful_stop_with_no_ongoing_monitoring(
+    mocked_robot_service: RobotService, mocker: MockerFixture
+) -> None:
+    r_service = mocked_robot_service
+
+    mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
 
     asyncio.run(r_service._stop_mission_handler(None))
 
-    assert r_service.robot_service_events.mission_successfully_stopped.has_event()
+    assert r_service.robot_service_events.stopped_mission_already_done.has_event()
     assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
     assert not r_service.robot_service_events.mission_failed.has_event()
     assert not r_service.robot_service_events.mission_succeeded.has_event()
@@ -148,7 +210,7 @@ def test_monitor_mission_reports_mission_failed(
 
     mocker.patch(
         "isar.robot.robot_service.robot_monitor_mission",
-        return_value=ErrorMessage(ErrorReason.RobotUnknownErrorException, ""),
+        return_value=(ErrorMessage(ErrorReason.RobotUnknownErrorException, ""), None),
     )
 
     asyncio.run(r_service._monitor_mission_handler(mission))
@@ -167,7 +229,9 @@ def test_monitor_mission_reports_mission_success(
     )
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
-    mocker.patch("isar.robot.robot_service.robot_monitor_mission", return_value=None)
+    mocker.patch(
+        "isar.robot.robot_service.robot_monitor_mission", return_value=(None, None)
+    )
 
     asyncio.run(r_service._monitor_mission_handler(mission))
 
@@ -275,4 +339,3 @@ def test_start_mission_reports_robot_already_home(
 
     assert not success
     assert r_service.robot_service_events.robot_already_home.has_event()
-    assert r_service.monitor_mission_thread is None
