@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
-import isar.state_machine.states.monitor as Monitor
+import isar.state_machine.states.intervention_needed as InterventionNeeded
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
@@ -18,8 +18,10 @@ class StoppingGoToRecharge(State):
 
         def _failed_stop_event_handler(
             error_message: ErrorMessage,
-        ) -> Transition[Monitor.Monitor]:
-            return Monitor.transition_with_existing_mission(mission_id)
+        ) -> Transition[InterventionNeeded.InterventionNeeded]:
+            return InterventionNeeded.transition(
+                "Failed to stop mission when battery was low"
+            )
 
         def _successful_stop_event_handler(
             successful_stop: EmptyMessage,
