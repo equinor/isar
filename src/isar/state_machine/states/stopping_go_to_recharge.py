@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
+import isar.state_machine.states.going_to_recharging_with_mission as GoingToRechargingWithMission
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import EmptyMessage
+from isar.models.events import AbortedMission, EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -24,11 +25,15 @@ class StoppingGoToRecharge(State):
             )
 
         def _successful_stop_event_handler(
-            successful_stop: EmptyMessage,
-        ) -> Transition[GoingToRecharging.GoingToRecharging]:
-            state_machine.publish_mission_aborted(
-                mission_id, "Robot battery too low to continue mission"
+            aborted_mission: AbortedMission,
+        ) -> Transition[GoingToRechargingWithMission.GoingToRechargingWithMission]:
+            return GoingToRechargingWithMission.transition_and_start_return_home(
+                aborted_mission
             )
+
+        def _mission_already_done_event_handler(
+            already_stopped_event: EmptyMessage,
+        ) -> Transition[GoingToRecharging.GoingToRecharging]:
             state_machine.start_return_home_mission()
             return GoingToRecharging.transition()
 
@@ -38,10 +43,15 @@ class StoppingGoToRecharge(State):
                 event=events.robot_service_events.mission_failed_to_stop,
                 handler=_failed_stop_event_handler,
             ),
-            EventHandlerMapping[EmptyMessage](
+            EventHandlerMapping[AbortedMission](
                 name="successful_stop_event",
                 event=events.robot_service_events.mission_successfully_stopped,
                 handler=_successful_stop_event_handler,
+            ),
+            EventHandlerMapping[EmptyMessage](
+                name="mission_already_done_event",
+                event=events.robot_service_events.stopped_mission_already_done,
+                handler=_mission_already_done_event_handler,
             ),
         ]
         super().__init__(

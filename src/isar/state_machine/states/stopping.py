@@ -5,7 +5,7 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
-from isar.models.events import EmptyMessage
+from isar.models.events import AbortedMission, EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
@@ -27,7 +27,7 @@ class Stopping(State):
             return Monitor.transition_with_existing_mission(mission_id)
 
         def _successful_stop_event_handler(
-            successful_stop: EmptyMessage,
+            successful_stop: AbortedMission | EmptyMessage,
         ) -> (
             Transition[AwaitNextMission.AwaitNextMission]
             | Transition[ReturningHome.ReturningHome]
@@ -42,9 +42,14 @@ class Stopping(State):
                 event=events.robot_service_events.mission_failed_to_stop,
                 handler=_failed_stop_event_handler,
             ),
-            EventHandlerMapping[EmptyMessage](
+            EventHandlerMapping[AbortedMission](
                 name="successful_stop_event",
                 event=events.robot_service_events.mission_successfully_stopped,
+                handler=_successful_stop_event_handler,
+            ),
+            EventHandlerMapping[EmptyMessage](
+                name="mission_already_done_event",
+                event=events.robot_service_events.stopped_mission_already_done,
                 handler=_successful_stop_event_handler,
             ),
         ]

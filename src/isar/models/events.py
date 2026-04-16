@@ -30,6 +30,9 @@ class EmptyMessage:
         return "Empty message"
 
 
+AbortedMission = Mission
+
+
 class Event(Queue[T]):
     def __init__(self, name: str) -> None:
         super().__init__(maxsize=1)
@@ -155,8 +158,11 @@ class RobotServiceEvents:
         self.mission_failed_to_stop: Event[ErrorMessage] = Event(
             "mission_failed_to_stop"
         )
-        self.mission_successfully_stopped: Event[EmptyMessage] = Event(
+        self.mission_successfully_stopped: Event[AbortedMission] = Event(
             "mission_successfully_stopped"
+        )
+        self.stopped_mission_already_done: Event[EmptyMessage] = Event(
+            "stopped_mission_already_done"
         )
         self.mission_failed_to_pause: Event[ErrorMessage] = Event(
             "mission_failed_to_pause"

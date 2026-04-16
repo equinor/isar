@@ -1,8 +1,9 @@
 import asyncio
 import logging
-from typing import Callable, Iterator, List, Optional
+from typing import Callable, Iterator, List, Optional, Tuple
 
 from isar.config.settings import settings
+from isar.models.events import AbortedMission
 from isar.services.utilities.mqtt_utilities import (
     publish_mission_status,
     publish_task_status,
@@ -184,7 +185,7 @@ async def robot_monitor_mission(
     robot: RobotInterface,
     request_inspection_upload: Callable[[InspectionTask], None],
     mqtt_publisher: MqttClientInterface,
-) -> None | ErrorMessage:
+) -> Tuple[None | ErrorMessage, AbortedMission | None]:
     logger = logging.getLogger("robot")
     error_message: Optional[ErrorMessage] = None
 
@@ -287,7 +288,7 @@ async def robot_monitor_mission(
 
             await asyncio.sleep(settings.FSM_SLEEP_TIME)
         logger.info("Stopped monitoring mission")
-        return error_message
+        return error_message, mission
     except asyncio.CancelledError:
         if current_task is not None:
             current_task.status = TaskStatus.Cancelled
@@ -298,4 +299,4 @@ async def robot_monitor_mission(
             MissionStatus.Cancelled,
             ErrorMessage(ErrorReason.RobotMissionStatusException, "Mission cancelled"),
         )
-        return None
+        return None, mission

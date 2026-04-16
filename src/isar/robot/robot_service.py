@@ -3,13 +3,13 @@ import logging
 from threading import Event as ThreadEvent
 
 from isar.models.events import (
+    AbortedMission,
     EmptyMessage,
     Events,
     RobotServiceEvents,
     SharedState,
     StateMachineEvents,
 )
-from isar.robot.function_thread import FunctionThread
 from isar.robot.robot_battery import RobotBatteryThread
 from isar.robot.robot_monitor_mission import robot_monitor_mission
 from isar.robot.robot_pause_mission import robot_pause_mission
@@ -20,7 +20,7 @@ from isar.robot.robot_stop_mission import robot_stop_mission
 from isar.services.utilities.mqtt_utilities import publish_mission_status
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
@@ -42,7 +42,6 @@ class RobotService:
         self.robot: RobotInterface = robot
         self.battery_thread: RobotBatteryThread | None = None
         self.status_thread: RobotStatusThread | None = None
-        self.monitor_mission_thread: FunctionThread | None = None
         self.signal_exit: ThreadEvent = ThreadEvent()
 
     def stop(self) -> None:
@@ -51,14 +50,8 @@ class RobotService:
             self.status_thread.join()
         if self.battery_thread is not None and self.battery_thread.is_alive():
             self.battery_thread.join()
-        if (
-            self.monitor_mission_thread is not None
-            and self.monitor_mission_thread.is_alive()
-        ):
-            self.monitor_mission_thread.join()
         self.status_thread = None
         self.battery_thread = None
-        self.monitor_mission_thread = None
 
     def _start_mission_handler(self, mission: Mission) -> bool:
         mission.status = MissionStatus.NotStarted
@@ -89,7 +82,7 @@ class RobotService:
         return True
 
     async def _stop_mission_handler(
-        self, monitor_mission_task: asyncio.Task | None
+        self, monitor_mission_task: asyncio.Task[AbortedMission | None] | None
     ) -> None:
         error_message: ErrorMessage | None = robot_stop_mission(
             self.signal_exit, self.robot, self.logger
@@ -100,17 +93,41 @@ class RobotService:
                 error_message
             )
         else:
-            if monitor_mission_task is not None and not monitor_mission_task.done():
-                monitor_mission_task.cancel()
-                try:
-                    await monitor_mission_task
-                except asyncio.CancelledError:
-                    pass
+            try:
+                if monitor_mission_task is not None:
+                    if not monitor_mission_task.done():
+                        monitor_mission_task.cancel()
+                    aborted_mission: AbortedMission | None = await monitor_mission_task
+                    if aborted_mission is not None:
+                        unfinished_tasks = list(
+                            filter(
+                                lambda task: task.status
+                                not in [
+                                    TaskStatus.Failed,
+                                    TaskStatus.Successful,
+                                    TaskStatus.PartiallySuccessful,
+                                ],
+                                aborted_mission.tasks,
+                            )
+                        )
+                        if len(unfinished_tasks) > 0:
+                            continued_mission = Mission(
+                                id=aborted_mission.id,
+                                name=aborted_mission.name,
+                                tasks=unfinished_tasks,
+                                start_pose=aborted_mission.start_pose,
+                            )
+                            self.robot_service_events.mission_successfully_stopped.trigger_event(
+                                continued_mission
+                            )
+                            return
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self.robot_service_events.mission_succeeded.clear_event()
+                self.robot_service_events.mission_failed.clear_event()
 
-            # The mission status will already be reported on MQTT, the state machine does not need the event
-            self.robot_service_events.mission_succeeded.clear_event()
-            self.robot_service_events.mission_failed.clear_event()
-            self.robot_service_events.mission_successfully_stopped.trigger_event(
+            self.robot_service_events.stopped_mission_already_done.trigger_event(
                 EmptyMessage()
             )
 
@@ -142,7 +159,8 @@ class RobotService:
                 EmptyMessage()
             )
 
-    async def _monitor_mission_handler(self, mission: Mission) -> None:
+    async def _monitor_mission_handler(self, mission: Mission) -> Mission | None:
+        aborted_mission: Mission | None = None
         try:
 
             def request_inspection_upload(task: InspectionTask) -> None:
@@ -150,7 +168,7 @@ class RobotService:
                     (task, mission)
                 )
 
-            error_message = await robot_monitor_mission(
+            error_message, aborted_mission = await robot_monitor_mission(
                 mission,
                 self.robot,
                 request_inspection_upload,
@@ -164,6 +182,8 @@ class RobotService:
                 )
         except asyncio.CancelledError:
             pass
+        finally:
+            return mission if aborted_mission is None else aborted_mission
 
     def _register_status_threads(self) -> None:
         self.status_thread = RobotStatusThread(
@@ -181,7 +201,7 @@ class RobotService:
         self.battery_thread.start()
 
     async def _run_main_event_loop(self) -> None:
-        monitor_mission_task: asyncio.Task | None = None
+        monitor_mission_task: asyncio.Task[AbortedMission | None] | None = None
 
         try:
             while not self.signal_exit.wait(0):
@@ -233,5 +253,4 @@ class RobotService:
     def run(self) -> None:
 
         self._register_status_threads()
-
         asyncio.run(self._run_main_event_loop())
