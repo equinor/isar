@@ -24,13 +24,13 @@ For local development, please fork the repository. Then, clone and install in th
 ```
 git clone https://github.com/<path_to_parent>/isar
 cd isar
-pip install -r requirements.txt -e ".[dev]"
+uv sync --extra dev
 ```
 
 Verify that you can run the tests:
 
 ```bash
-pytest .
+uv run pytest .
 ```
 
 The repository contains a configuration file for installing pre-commit hooks. Currently, [black](https://github.com/psf/black) and a mirror of [mypy](https://github.com/pre-commit/mirrors-mypy) are configured hooks. Install with:
@@ -59,7 +59,7 @@ The separate repository should also have a settings.env file in a config folder 
 A mocked robot can be found in [this repository](https://github.com/equinor/isar-robot). Install the repo, i.e:
 
 ```bash
-pip install isar-robot
+uv pip install isar-robot
 ```
 
 NB: isar-robot has not been published to PyPi for some time, and needs to be downloaded directly
@@ -72,7 +72,7 @@ for [configuration](#configuration) for overwriting configuration.
 If you have the robot repository locally, you can simply install through
 
 ```bash
-pip install -e /path/to/robot/repo/
+uv pip install -e /path/to/robot/repo/
 ```
 
 #### Running ISAR with a robot simulator
@@ -101,7 +101,7 @@ make <command-in-makefile> # for example: make run
 To run ISAR:
 
 ```bash
-isar-start
+uv run isar-start
 ```
 
 Note, running the full system requires that an implementation of a robot has been installed. See
@@ -204,7 +204,7 @@ Remember to set `ISAR_ENV` back to `None` when you want to run `isar-start` afte
 After following the steps in [Development](#install), you can run the tests:
 
 ```bash
-pytest .
+uv run pytest .
 ```
 
 To create an interface test in your robot repository, use the function `interface_test` from `robot_interface`. The
@@ -220,7 +220,7 @@ setting up the `isar-turtlebot` implementation with simulator and run the follow
 launched.
 
 ```bash
-pytest tests/integration
+uv run pytest tests/integration
 ```
 
 Note that these tests will run towards the actual simulation (you may monitor it through Gazebo and RVIZ) and it will
@@ -341,16 +341,16 @@ export ISAR_API_PORT=port_name_higher_than_1024 ISAR_ISAR_ID=guid ISAR_ROBOT_NAM
 
 # Dependencies
 
-The dependencies used for this package are listed in `pyproject.toml` and pinned in `requirements.txt`. This ensures our builds are predictable and deterministic. This project uses `pip-compile` (from [`pip-tools`](https://github.com/jazzband/pip-tools)) for this:
+The dependencies used for this package are listed in `pyproject.toml` and pinned in `uv.lock`. This ensures our builds are predictable and deterministic. This project uses [uv](https://docs.astral.sh/uv/) for dependency management:
 
 ```
-pip-compile --output-file=requirements.txt pyproject.toml
+uv lock
 ```
 
-To update the requirements to the latest versions, run the same command with the `--upgrade` flag:
+To update the dependencies to the latest versions, run:
 
 ```
-pip-compile --output-file=requirements.txt pyproject.toml --upgrade
+uv lock --upgrade
 ```
 
 # Contributions

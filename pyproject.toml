@@ -66,7 +66,6 @@ dev = [
     "black",
     "isort",
     "mypy",
-    "pip-tools",
     "pre-commit",
     "pytest-mock",
     "pytest-xdist",

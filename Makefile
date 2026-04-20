@@ -1,16 +1,16 @@
 run:
-	isar-start
+	uv run isar-start
 
 test:
-	ENVIRONMENT=local ISAR_ENV=test pytest .
+	ENVIRONMENT=local ISAR_ENV=test uv run pytest .
 
 format:
-	isort .
-	black .
-	ruff check . --fix
+	uv run isort .
+	uv run black .
+	uv run ruff check . --fix
 
 check:
-	mypy .
+	uv run mypy .
 
 run-debug: # debug logs
 	API_LOG_LEVEL=DEBUG \
@@ -20,4 +20,4 @@ run-debug: # debug logs
 	UPLOADER_LOG_LEVEL=DEBUG \
 	CONSOLE_LOG_LEVEL=DEBUG \
 	ISAR_DEBUG_LOG_FORMATTER=True \
-	isar-start
+	uv run isar-start

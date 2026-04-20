@@ -161,20 +161,6 @@ wheels = [
 ]
 
 [[package]]
-name = "build"
-version = "1.4.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "colorama", marker = "os_name == 'nt'" },
-    { name = "packaging" },
-    { name = "pyproject-hooks" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3f/16/4b272700dea44c1d2e8ca963ebb3c684efe22b3eba8cfa31c5fdb60de707/build-1.4.3.tar.gz", hash = "sha256:5aa4231ae0e807efdf1fd0623e07366eca2ab215921345a2e38acdd5d0fa0a74", size = 89314, upload-time = "2026-04-10T21:25:40.857Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b2/30/f169e1d8b2071beaf8b97088787e30662b1d8fb82f8c0941d14678c0cbf1/build-1.4.3-py3-none-any.whl", hash = "sha256:1bc22b19b383303de8f2c8554c9a32894a58d3f185fe3756b0b20d255bee9a38", size = 26171, upload-time = "2026-04-10T21:25:39.671Z" },
-]
-
-[[package]]
 name = "certifi"
 version = "2026.2.25"
 source = { registry = "https://pypi.org/simple" }
@@ -703,7 +689,6 @@ dev = [
     { name = "black" },
     { name = "isort" },
     { name = "mypy" },
-    { name = "pip-tools" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-mock" },
@@ -734,7 +719,6 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-fastapi" },
     { name = "opentelemetry-sdk" },
     { name = "paho-mqtt" },
-    { name = "pip-tools", marker = "extra == 'dev'" },
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "psycopg2-binary" },
     { name = "pydantic" },
@@ -1256,32 +1240,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pip"
-version = "26.0.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/48/83/0d7d4e9efe3344b8e2fe25d93be44f64b65364d3c8d7bc6dc90198d5422e/pip-26.0.1.tar.gz", hash = "sha256:c4037d8a277c89b320abe636d59f91e6d0922d08a05b60e85e53b296613346d8", size = 1812747, upload-time = "2026-02-05T02:20:18.702Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/de/f0/c81e05b613866b76d2d1066490adf1a3dbc4ee9d9c839961c3fc8a6997af/pip-26.0.1-py3-none-any.whl", hash = "sha256:bdb1b08f4274833d62c1aa29e20907365a2ceb950410df15fc9521bad440122b", size = 1787723, upload-time = "2026-02-05T02:20:16.416Z" },
-]
-
-[[package]]
-name = "pip-tools"
-version = "7.5.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "build" },
-    { name = "click" },
-    { name = "pip" },
-    { name = "pyproject-hooks" },
-    { name = "setuptools" },
-    { name = "wheel" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/4a/db/c6e2a02db5d98aa5f3250a305ce71e8bc3d1a022d1f47a54d14492ae23de/pip_tools-7.5.3.tar.gz", hash = "sha256:8fa364779ebc010cbfe17cb9de404457ac733e100840423f28f6955de7742d41", size = 176153, upload-time = "2026-02-11T18:25:07.72Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/74/59906d876c6cb1137f42a137164f2fe683b06283cde84bfcf7f5dd43970b/pip_tools-7.5.3-py3-none-any.whl", hash = "sha256:3aac0c473240ae90db7213c033401f345b05197293ccbdd2704e52e7a783785e", size = 71359, upload-time = "2026-02-11T18:25:06.119Z" },
-]
-
-[[package]]
 name = "platformdirs"
 version = "4.9.6"
 source = { registry = "https://pypi.org/simple" }
@@ -1519,15 +1477,6 @@ wheels = [
 [package.optional-dependencies]
 rsa = [
     { name = "cryptography" },
-]
-
-[[package]]
-name = "pyproject-hooks"
-version = "1.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e7/82/28175b2414effca1cdac8dc99f76d660e7a4fb0ceefa4b4ab8f5f6742925/pyproject_hooks-1.2.0.tar.gz", hash = "sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8", size = 19228, upload-time = "2024-09-29T09:24:13.293Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/24/12818598c362d7f300f18e74db45963dbcb85150324092410c8b49405e42/pyproject_hooks-1.2.0-py3-none-any.whl", hash = "sha256:9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913", size = 10216, upload-time = "2024-09-29T09:24:11.978Z" },
 ]
 
 [[package]]
@@ -1810,15 +1759,6 @@ wheels = [
 ]
 
 [[package]]
-name = "setuptools"
-version = "82.0.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4f/db/cfac1baf10650ab4d1c111714410d2fbb77ac5a616db26775db562c8fab2/setuptools-82.0.1.tar.gz", hash = "sha256:7d872682c5d01cfde07da7bccc7b65469d3dca203318515ada1de5eda35efbf9", size = 1152316, upload-time = "2026-03-09T12:47:17.221Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/76/f789f7a86709c6b087c5a2f52f911838cad707cc613162401badc665acfe/setuptools-82.0.1-py3-none-any.whl", hash = "sha256:a59e362652f08dcd477c78bb6e7bd9d80a7995bc73ce773050228a348ce2e5bb", size = 1006223, upload-time = "2026-03-09T12:47:15.026Z" },
-]
-
-[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1976,18 +1916,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/0c/98/3a7e644e19cb26133488caff231be390579860bbbb3da35913c49a1d0a46/virtualenv-21.2.4.tar.gz", hash = "sha256:b294ef68192638004d72524ce7ef303e9d0cf5a44c95ce2e54a7500a6381cada", size = 5850742, upload-time = "2026-04-14T22:15:31.438Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/27/8d/edd0bd910ff803c308ee9a6b7778621af0d10252219ad9f19ef4d4982a61/virtualenv-21.2.4-py3-none-any.whl", hash = "sha256:29d21e941795206138d0f22f4e45ff7050e5da6c6472299fb7103318763861ac", size = 5831232, upload-time = "2026-04-14T22:15:29.342Z" },
-]
-
-[[package]]
-name = "wheel"
-version = "0.46.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "packaging" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/89/24/a2eb353a6edac9a0303977c4cb048134959dd2a51b48a269dfc9dde00c8a/wheel-0.46.3.tar.gz", hash = "sha256:e3e79874b07d776c40bd6033f8ddf76a7dad46a7b8aa1b2787a83083519a1803", size = 60605, upload-time = "2026-01-22T12:39:49.136Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/22/b76d483683216dde3d67cba61fb2444be8d5be289bf628c13fc0fd90e5f9/wheel-0.46.3-py3-none-any.whl", hash = "sha256:4b399d56c9d9338230118d705d9737a2a468ccca63d5e813e2a4fc7815d8bc4d", size = 30557, upload-time = "2026-01-22T12:39:48.099Z" },
 ]
 
 [[package]]
