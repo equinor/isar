@@ -33,24 +33,6 @@ Verify that you can run the tests:
 uv run pytest .
 ```
 
-The repository contains a configuration file for installing pre-commit hooks. Currently, [black](https://github.com/psf/black) and a mirror of [mypy](https://github.com/pre-commit/mirrors-mypy) are configured hooks. Install with:
-
-```
-pre-commit install
-```
-
-Verify that pre-commit runs:
-
-```
-pre-commit
-```
-
-pre-commit will now run the installed hooks before code is commited to git. To turn pre-commit off, run:
-
-```
-pre-commit uninstall
-```
-
 ### Robot integration
 
 To connect the state machine to a robot in a separate repository, it is required that the separate repository implements
