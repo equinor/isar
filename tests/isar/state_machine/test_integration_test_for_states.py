@@ -37,6 +37,7 @@ def test_state_machine_transitions_when_running_full_mission(
     mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
+    mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
     state_machine_thread.start()
     robot_service_thread.start()
@@ -83,6 +84,7 @@ def test_state_machine_failed_dependency(
 ) -> None:
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
     mocker.patch.object(settings, "RETURN_HOME_RETRY_LIMIT", 3)
+    mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
@@ -132,6 +134,7 @@ def test_state_machine_with_successful_collection(
     mocker.patch.object(
         RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
     )
+    mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
@@ -216,7 +219,7 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
     )
 
-    settings.FSM_SLEEP_TIME = 0
+    mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
     state_machine_thread.start()
     robot_service_thread.start()
