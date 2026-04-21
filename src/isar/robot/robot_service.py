@@ -162,18 +162,33 @@ class RobotService:
     async def _monitor_mission_handler(self, mission: Mission) -> Mission | None:
         aborted_mission: Mission | None = None
         try:
+            should_report_status = not mission._is_return_to_home_mission()
 
             def request_inspection_upload(task: InspectionTask) -> None:
                 self.robot_service_events.request_inspection_upload.trigger_event(
                     (task, mission)
                 )
 
-            error_message, aborted_mission = await robot_monitor_mission(
-                mission,
-                self.robot,
-                request_inspection_upload,
-                self.mqtt_publisher,
+            if should_report_status:
+                publish_mission_status(
+                    self.mqtt_publisher, mission.id, MissionStatus.InProgress, None
+                )
+            mission_status, error_message, aborted_mission, is_aborted = (
+                await robot_monitor_mission(
+                    mission,
+                    self.robot,
+                    request_inspection_upload,
+                    self.mqtt_publisher,
+                    should_report_status,
+                )
             )
+            if is_aborted:
+                return mission if aborted_mission is None else aborted_mission
+
+            if should_report_status:
+                publish_mission_status(
+                    self.mqtt_publisher, mission.id, mission_status, error_message
+                )
             if error_message is not None:
                 self.robot_service_events.mission_failed.trigger_event(error_message)
             else:

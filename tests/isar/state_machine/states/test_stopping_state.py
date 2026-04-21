@@ -12,7 +12,7 @@ from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, Err
 from robot_interface.models.mission.status import RobotStatus
 
 
-def test_mqtt_message_not_sent_on_mission_stopped(
+def test_mqtt_mission_status_sent_on_mission_stopped(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
@@ -26,7 +26,7 @@ def test_mqtt_message_not_sent_on_mission_stopped(
 
     transition = stopping_state_event_handler.handler(EmptyMessage())
 
-    assert sync_state_machine.events.mqtt_queue.empty() is True
+    assert sync_state_machine.events.mqtt_queue.qsize() == 1
 
     sync_state_machine.current_state = transition(sync_state_machine)
 
@@ -104,7 +104,7 @@ def test_stopping_mission_succeeds(
 
     transition = event_handler.handler(EmptyMessage())
 
-    assert sync_state_machine.events.mqtt_queue.empty()
+    assert sync_state_machine.events.mqtt_queue.qsize() == 1
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is AwaitNextMission
@@ -124,7 +124,7 @@ def test_stopping_mission_succeeds_with_low_battery(
 
     transition = event_handler.handler(EmptyMessage())
 
-    assert sync_state_machine.events.mqtt_queue.empty()
+    assert sync_state_machine.events.mqtt_queue.qsize() == 1
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is ReturningHome

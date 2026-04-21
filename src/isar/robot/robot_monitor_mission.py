@@ -4,10 +4,7 @@ from typing import Callable, Iterator, List, Optional, Tuple
 
 from isar.config.settings import settings
 from isar.models.events import AbortedMission
-from isar.services.utilities.mqtt_utilities import (
-    publish_mission_status,
-    publish_task_status,
-)
+from isar.services.utilities.mqtt_utilities import publish_task_status
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     ErrorReason,
@@ -185,14 +182,16 @@ async def robot_monitor_mission(
     robot: RobotInterface,
     request_inspection_upload: Callable[[InspectionTask], None],
     mqtt_publisher: MqttClientInterface,
-) -> Tuple[None | ErrorMessage, AbortedMission | None]:
+    should_report_status: bool,
+) -> Tuple[MissionStatus, ErrorMessage | None, AbortedMission | None, bool]:
     logger = logging.getLogger("robot")
+    logger.info(f"Started monitoring mission {mission.name}")
     error_message: Optional[ErrorMessage] = None
 
     task_iterator: Iterator[TASKS] = iter(mission.tasks)
     current_task: Optional[TASKS] = get_next_task(task_iterator)
     current_task.status = TaskStatus.NotStarted  # type: ignore
-    current_mission_status = MissionStatus.NotStarted
+    mission_status = MissionStatus.InProgress  # Since initiate mission has completed
 
     try:
         while True:
@@ -204,7 +203,10 @@ async def robot_monitor_mission(
                     if current_task.status != new_task_status:
                         current_task.status = new_task_status
                         log_task_status(logger, current_task)
-                        publish_task_status(mqtt_publisher, current_task, mission.id)
+                        if should_report_status:
+                            publish_task_status(
+                                mqtt_publisher, current_task, mission.id
+                            )
 
                     if is_finished(new_task_status):
                         if should_upload_inspections(current_task):
@@ -214,9 +216,10 @@ async def robot_monitor_mission(
                             # This is not required, but does make reporting more responsive
                             current_task.status = TaskStatus.InProgress
                             log_task_status(logger, current_task)
-                            publish_task_status(
-                                mqtt_publisher, current_task, mission.id
-                            )
+                            if should_report_status:
+                                publish_task_status(
+                                    mqtt_publisher, current_task, mission.id
+                                )
                 except RobotTaskStatusException as e:
                     logger.error(
                         "Failed to collect task status. Error description: %s",
@@ -235,13 +238,9 @@ async def robot_monitor_mission(
                 )
                 if current_task:
                     current_task.status = TaskStatus.Failed
-                    publish_task_status(mqtt_publisher, current_task, mission.id)
-                publish_mission_status(
-                    mqtt_publisher,
-                    mission.id,
-                    MissionStatus.Failed,
-                    error_message,
-                )
+                    if should_report_status:
+                        publish_task_status(mqtt_publisher, current_task, mission.id)
+                mission_status = MissionStatus.Failed
                 break
 
             if new_mission_status == MissionStatus.Cancelled or (
@@ -255,7 +254,8 @@ async def robot_monitor_mission(
                     and current_task.status == TaskStatus.InProgress
                 ):
                     current_task.status = TaskStatus.Cancelled
-                    publish_task_status(mqtt_publisher, current_task, mission.id)
+                    if should_report_status:
+                        publish_task_status(mqtt_publisher, current_task, mission.id)
 
                 # Standardises final mission status report
                 new_mission_status = get_mission_status_based_on_task_status(
@@ -269,34 +269,19 @@ async def robot_monitor_mission(
                         error_reason=None,
                         error_description="The mission failed because all tasks in the mission failed",
                     )
-                publish_mission_status(
-                    mqtt_publisher,
-                    mission.id,
-                    new_mission_status,
-                    error_message,
-                )
+                mission_status = new_mission_status
                 break
 
-            if new_mission_status != current_mission_status:
-                current_mission_status = new_mission_status
-                publish_mission_status(
-                    mqtt_publisher,
-                    mission.id,
-                    current_mission_status,
-                    error_message,
-                )
+            if new_mission_status != mission_status:
+                mission_status = new_mission_status
 
             await asyncio.sleep(settings.FSM_SLEEP_TIME)
         logger.info("Stopped monitoring mission")
-        return error_message, mission
+        return mission_status, error_message, mission, False
     except asyncio.CancelledError:
         if current_task is not None:
             current_task.status = TaskStatus.Cancelled
-            publish_task_status(mqtt_publisher, current_task, mission.id)
-        publish_mission_status(
-            mqtt_publisher,
-            mission.id,
-            MissionStatus.Cancelled,
-            ErrorMessage(ErrorReason.RobotMissionStatusException, "Mission cancelled"),
-        )
-        return None, mission
+            if should_report_status:
+                publish_task_status(mqtt_publisher, current_task, mission.id)
+        mission_status = MissionStatus.Cancelled
+        return mission_status, None, mission, True
