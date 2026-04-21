@@ -3,7 +3,6 @@ import logging
 from typing import Callable, Iterator, List, Optional, Tuple
 
 from isar.config.settings import settings
-from isar.models.events import AbortedMission
 from isar.services.utilities.mqtt_utilities import publish_task_status
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -183,7 +182,7 @@ async def robot_monitor_mission(
     request_inspection_upload: Callable[[InspectionTask], None],
     mqtt_publisher: MqttClientInterface,
     should_report_status: bool,
-) -> Tuple[MissionStatus, ErrorMessage | None, AbortedMission | None, bool]:
+) -> Tuple[MissionStatus, ErrorMessage | None, Mission, bool]:
     logger = logging.getLogger("robot")
     logger.info(f"Started monitoring mission {mission.name}")
     error_message: Optional[ErrorMessage] = None

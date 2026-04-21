@@ -5,7 +5,7 @@ from alitra import Pose
 from pydantic import BaseModel, Field
 
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.status import MissionStatus
+from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from robot_interface.models.mission.task import TASKS, TaskTypes
 
 
@@ -23,3 +23,16 @@ class Mission(BaseModel):
         if self.tasks[0].type != TaskTypes.ReturnToHome:
             return False
         return True
+
+    def _get_unfinished_tasks(self) -> List[TASKS]:
+        return list(
+            filter(
+                lambda task: task.status
+                not in [
+                    TaskStatus.Failed,
+                    TaskStatus.Successful,
+                    TaskStatus.PartiallySuccessful,
+                ],
+                self.tasks,
+            )
+        )
