@@ -106,7 +106,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
             try:
                 payload = self.telemetry_method(isar_id=isar_id, robot_name=robot_name)
                 topic = self.topic
-            except (RobotTelemetryPoseException, RobotTelemetryNoUpdateException):
+            except RobotTelemetryPoseException, RobotTelemetryNoUpdateException:
                 time.sleep(self.interval)
                 continue
             except RobotTelemetryException:
