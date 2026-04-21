@@ -211,12 +211,16 @@ class StateMachine(object):
             return IsarStatus.InterventionNeeded
         elif self.current_state.name == States.Recharging:
             return IsarStatus.Recharging
+        elif self.current_state.name == States.RechargingWithMission:
+            return IsarStatus.RechargingWithMission
         elif self.current_state.name == States.Lockdown:
             return IsarStatus.Lockdown
         elif self.current_state.name == States.GoingToLockdown:
             return IsarStatus.GoingToLockdown
         elif self.current_state.name == States.GoingToRecharging:
             return IsarStatus.GoingToRecharging
+        elif self.current_state.name == States.GoingToRechargingWithMission:
+            return IsarStatus.GoingToRechargingWithMission
         elif self.current_state.name == States.Maintenance:
             return IsarStatus.Maintenance
         elif self.current_state.name == States.Pausing:
