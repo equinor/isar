@@ -154,6 +154,9 @@ class RobotServiceEvents:
     def __init__(self) -> None:
         self.mission_succeeded: Event[EmptyMessage] = Event("mission_succeeded")
         self.mission_failed: Event[ErrorMessage] = Event("mission_failed")
+        self.mission_started_successfully: Event[EmptyMessage] = Event(
+            "mission_started_successfully"
+        )
         self.robot_status_changed: Event[EmptyMessage] = Event("robot_status_changed")
         self.mission_failed_to_stop: Event[ErrorMessage] = Event(
             "mission_failed_to_stop"

@@ -18,9 +18,6 @@ def test_mission_fails_to_schedule(
     mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
-    mock_publish_mission_status = mocker.patch(
-        "isar.robot.robot_service.publish_mission_status"
-    )
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
@@ -42,16 +39,11 @@ def test_mission_fails_to_schedule(
     assert mission_failed_event is not None
     assert mission_failed_event.error_reason == ErrorReason.RobotUnknownErrorException
 
-    assert mock_publish_mission_status.call_count == 2
-
 
 def test_mission_succeeds_to_schedule(
     mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:
     r_service = mocked_robot_service
-    mock_publish_mission_status = mocker.patch(
-        "isar.robot.robot_service.publish_mission_status"
-    )
 
     task_1: Task = TakeImage(
         target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
@@ -63,8 +55,6 @@ def test_mission_succeeds_to_schedule(
     success = r_service._start_mission_handler(mission)
 
     assert success
-
-    mock_publish_mission_status.assert_called_once()
 
 
 def test_mission_fails_to_stop(

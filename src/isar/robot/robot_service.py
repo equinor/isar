@@ -17,7 +17,6 @@ from isar.robot.robot_resume_mission import robot_resume_mission
 from isar.robot.robot_start_mission import robot_start_mission
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import robot_stop_mission
-from isar.services.utilities.mqtt_utilities import publish_mission_status
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
@@ -54,8 +53,6 @@ class RobotService:
         self.battery_thread = None
 
     def _start_mission_handler(self, mission: Mission) -> bool:
-        mission.status = MissionStatus.NotStarted
-        publish_mission_status(self.mqtt_publisher, mission.id, mission.status, None)
         error_message: ErrorMessage | None = robot_start_mission(
             self.signal_exit, self.robot, self.logger, mission
         )
@@ -71,13 +68,12 @@ class RobotService:
             error_message.error_description = (
                 f"Failed to initiate due to: {error_message.error_description}"
             )
-            mission.error_message = error_message
-            publish_mission_status(
-                self.mqtt_publisher, mission.id, mission.status, error_message
-            )
             self.robot_service_events.mission_failed.trigger_event(error_message)
             return False
-
+        if not mission._is_return_to_home_mission():
+            self.robot_service_events.mission_started_successfully.trigger_event(
+                EmptyMessage()
+            )
         self.logger.info("Received confirmation that mission has started")
         return True
 
@@ -155,23 +151,19 @@ class RobotService:
     async def _monitor_mission_handler(self, mission: Mission) -> Mission | None:
         remaining_mission: Mission | None = None
         try:
-            should_report_status = not mission._is_return_to_home_mission()
+            should_report_task_status = not mission._is_return_to_home_mission()
 
             def request_inspection_upload(task: InspectionTask) -> None:
                 self.robot_service_events.request_inspection_upload.trigger_event(
                     (task, mission)
                 )
 
-            if should_report_status:
-                publish_mission_status(
-                    self.mqtt_publisher, mission.id, MissionStatus.InProgress, None
-                )
             error_message, remaining_mission, is_aborted = await robot_monitor_mission(
                 mission,
                 self.robot,
                 request_inspection_upload,
                 self.mqtt_publisher,
-                should_report_status,
+                should_report_task_status,
             )
             if is_aborted:
                 return remaining_mission

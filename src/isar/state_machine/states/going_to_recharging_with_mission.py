@@ -6,8 +6,10 @@ import isar.state_machine.states.recharging_with_mission as RechargingWithMissio
 from isar.apis.models.models import LockdownResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
+from isar.services.utilities.mqtt_utilities import publish_mission_status
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -25,7 +27,9 @@ class GoingToRechargingWithMission(State):
                 f"Failed to go to recharging because: "
                 f"{mission_failed.error_description}"
             )
-            state_machine.print_transitions()
+            publish_mission_status(
+                state_machine.mqtt_publisher, mission.id, MissionStatus.Failed, None
+            )
             return InterventionNeeded.transition("Return home to recharge failed")
 
         def _mission_success_event_handler(
