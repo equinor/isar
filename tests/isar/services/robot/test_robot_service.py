@@ -9,7 +9,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotAlreadyHomeException,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, TaskStatus
+from robot_interface.models.mission.status import TaskStatus
 from robot_interface.models.mission.task import TakeImage, Task
 from tests.test_mocks.pose import DummyPose
 
@@ -110,7 +110,7 @@ def test_successful_stop_with_remaining_tasks(
 
     mocker.patch(
         "isar.robot.robot_service.robot_monitor_mission",
-        return_value=(MissionStatus.Cancelled, None, mission, True),
+        return_value=(None, mission, True),
     )
 
     async def test_stop_mission_handler() -> None:
@@ -211,7 +211,6 @@ def test_monitor_mission_reports_mission_failed(
     mocker.patch(
         "isar.robot.robot_service.robot_monitor_mission",
         return_value=(
-            MissionStatus.Failed,
             ErrorMessage(ErrorReason.RobotUnknownErrorException, ""),
             None,
             False,
@@ -236,7 +235,7 @@ def test_monitor_mission_reports_mission_success(
 
     mocker.patch(
         "isar.robot.robot_service.robot_monitor_mission",
-        return_value=(MissionStatus.Failed, None, None, False),
+        return_value=(None, None, False),
     )
 
     asyncio.run(r_service._monitor_mission_handler(mission))

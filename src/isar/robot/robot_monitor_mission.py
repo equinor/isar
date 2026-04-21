@@ -182,7 +182,7 @@ async def robot_monitor_mission(
     request_inspection_upload: Callable[[InspectionTask], None],
     mqtt_publisher: MqttClientInterface,
     should_report_status: bool,
-) -> Tuple[MissionStatus, ErrorMessage | None, Mission, bool]:
+) -> Tuple[ErrorMessage | None, Mission, bool]:
     logger = logging.getLogger("robot")
     logger.info(f"Started monitoring mission {mission.name}")
     error_message: Optional[ErrorMessage] = None
@@ -190,7 +190,6 @@ async def robot_monitor_mission(
     task_iterator: Iterator[TASKS] = iter(mission.tasks)
     current_task: Optional[TASKS] = get_next_task(task_iterator)
     current_task.status = TaskStatus.NotStarted  # type: ignore
-    mission_status = MissionStatus.InProgress  # Since initiate mission has completed
 
     try:
         while True:
@@ -239,7 +238,6 @@ async def robot_monitor_mission(
                     current_task.status = TaskStatus.Failed
                     if should_report_status:
                         publish_task_status(mqtt_publisher, current_task, mission.id)
-                mission_status = MissionStatus.Failed
                 break
 
             if new_mission_status == MissionStatus.Cancelled or (
@@ -268,19 +266,14 @@ async def robot_monitor_mission(
                         error_reason=None,
                         error_description="The mission failed because all tasks in the mission failed",
                     )
-                mission_status = new_mission_status
                 break
-
-            if new_mission_status != mission_status:
-                mission_status = new_mission_status
 
             await asyncio.sleep(settings.FSM_SLEEP_TIME)
         logger.info("Stopped monitoring mission")
-        return mission_status, error_message, mission, False
+        return error_message, mission, False
     except asyncio.CancelledError:
         if current_task is not None:
             current_task.status = TaskStatus.Cancelled
             if should_report_status:
                 publish_task_status(mqtt_publisher, current_task, mission.id)
-        mission_status = MissionStatus.Cancelled
-        return mission_status, None, mission, True
+        return None, mission, True
