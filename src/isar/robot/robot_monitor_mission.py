@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Callable, Iterator, List, Optional, Tuple
+from typing import Callable, Iterator, Optional, Tuple
 
 from isar.config.settings import settings
 from isar.services.utilities.mqtt_utilities import publish_task_status
@@ -159,21 +159,42 @@ def log_task_status(logger: logging.Logger, task: TASKS) -> None:
         )
 
 
-def get_mission_status_based_on_task_status(tasks: List[TASKS]) -> MissionStatus:
-    fail_statuses = [
-        TaskStatus.Cancelled,
-        TaskStatus.Failed,
-    ]
-    partially_fail_statuses = fail_statuses + [TaskStatus.PartiallySuccessful]
+async def get_and_report_task_status(
+    current_task: TASKS,
+    robot: RobotInterface,
+    mission_id: str,
+    task_iterator: Iterator[TASKS],
+    mqtt_publisher: MqttClientInterface,
+    request_inspection_upload: Callable[[InspectionTask], None],
+) -> TASKS:
+    logger = logging.getLogger("robot")
+    new_task_status: TaskStatus | None = None
+    try:
+        new_task_status = await get_task_status(robot, current_task.id)
 
-    if len(tasks) == 0:
-        return MissionStatus.Successful
-    elif all(task.status in fail_statuses for task in tasks):
-        return MissionStatus.Failed
-    elif any(task.status in partially_fail_statuses for task in tasks):
-        return MissionStatus.PartiallySuccessful
-    else:
-        return MissionStatus.Successful
+        if current_task.status != new_task_status:
+            current_task.status = new_task_status
+            log_task_status(logger, current_task)
+            publish_task_status(mqtt_publisher, current_task, mission_id)
+
+        if is_finished(new_task_status):
+            if should_upload_inspections(current_task):
+                request_inspection_upload(current_task)  # type: ignore
+            next_task = get_next_task(task_iterator)
+            if next_task is not None:
+                # This is not required, but does make reporting more responsive
+                current_task.status = TaskStatus.InProgress
+                log_task_status(logger, next_task)
+                publish_task_status(mqtt_publisher, next_task, mission_id)
+            return next_task
+    except RobotTaskStatusException as e:
+        logger.error(
+            "Failed to collect task status. Error description: %s",
+            e.error_description,
+        )
+        # Currently we only stop mission monitoring after failing to get mission status
+        return None
+    return current_task
 
 
 async def robot_monitor_mission(
@@ -193,37 +214,15 @@ async def robot_monitor_mission(
 
     try:
         while True:
-            if current_task:
-                new_task_status: TaskStatus | None = None
-                try:
-                    new_task_status = await get_task_status(robot, current_task.id)
-
-                    if current_task.status != new_task_status:
-                        current_task.status = new_task_status
-                        log_task_status(logger, current_task)
-                        if should_report_status:
-                            publish_task_status(
-                                mqtt_publisher, current_task, mission.id
-                            )
-
-                    if is_finished(new_task_status):
-                        if should_upload_inspections(current_task):
-                            request_inspection_upload(current_task)  # type: ignore
-                        current_task = get_next_task(task_iterator)
-                        if current_task is not None:
-                            # This is not required, but does make reporting more responsive
-                            current_task.status = TaskStatus.InProgress
-                            log_task_status(logger, current_task)
-                            if should_report_status:
-                                publish_task_status(
-                                    mqtt_publisher, current_task, mission.id
-                                )
-                except RobotTaskStatusException as e:
-                    logger.error(
-                        "Failed to collect task status. Error description: %s",
-                        e.error_description,
-                    )
-                    # Currently we only stop mission monitoring after failing to get mission status
+            if should_report_status and current_task:
+                current_task = await get_and_report_task_status(
+                    current_task,
+                    robot,
+                    mission.id,
+                    task_iterator,
+                    mqtt_publisher,
+                    request_inspection_upload,
+                )
 
             new_mission_status: MissionStatus
             try:
@@ -240,40 +239,45 @@ async def robot_monitor_mission(
                         publish_task_status(mqtt_publisher, current_task, mission.id)
                 break
 
-            if new_mission_status == MissionStatus.Cancelled or (
-                new_mission_status
-                not in [MissionStatus.NotStarted, MissionStatus.InProgress]
-                and current_task is None  # We wait for all task statuses
+            if (
+                should_report_status
+                and current_task is not None
+                and new_mission_status
+                in [MissionStatus.Successful, MissionStatus.Failed]
             ):
-                if (
-                    new_mission_status == MissionStatus.Cancelled
-                    and current_task is not None
-                    and current_task.status == TaskStatus.InProgress
-                ):
-                    current_task.status = TaskStatus.Cancelled
-                    if should_report_status:
-                        publish_task_status(mqtt_publisher, current_task, mission.id)
+                continue  # We want to get tasks statuses before we exit monitoring
 
-                # Standardises final mission status report
-                new_mission_status = get_mission_status_based_on_task_status(
-                    mission.tasks
-                )
+            if (
+                should_report_status
+                and new_mission_status == MissionStatus.Cancelled
+                and current_task is not None
+                and current_task.status == TaskStatus.InProgress
+            ):
+                current_task.status = TaskStatus.Cancelled
+                if should_report_status:
+                    publish_task_status(mqtt_publisher, current_task, mission.id)
+
+            if new_mission_status not in [
+                MissionStatus.NotStarted,
+                MissionStatus.InProgress,
+                MissionStatus.Paused,
+            ]:
                 if error_message is None and new_mission_status in [
                     MissionStatus.Failed,
                     MissionStatus.Cancelled,
                 ]:
                     error_message = ErrorMessage(
                         error_reason=None,
-                        error_description="The mission failed because all tasks in the mission failed",
+                        error_description="The mission was reported as failed by the robot",
                     )
                 break
 
             await asyncio.sleep(settings.FSM_SLEEP_TIME)
-        logger.info("Stopped monitoring mission")
         return error_message, mission, False
     except asyncio.CancelledError:
-        if current_task is not None:
+        if should_report_status and current_task is not None:
             current_task.status = TaskStatus.Cancelled
-            if should_report_status:
-                publish_task_status(mqtt_publisher, current_task, mission.id)
+            publish_task_status(mqtt_publisher, current_task, mission.id)
         return None, mission, True
+    finally:
+        logger.info("Stopped monitoring mission")
