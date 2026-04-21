@@ -6,8 +6,10 @@ import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
+from isar.services.utilities.mqtt_utilities import publish_mission_status
 from isar.state_machine.states_enum import States
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
+from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -32,6 +34,14 @@ class Stopping(State):
             Transition[AwaitNextMission.AwaitNextMission]
             | Transition[ReturningHome.ReturningHome]
         ):
+            publish_mission_status(
+                state_machine.mqtt_publisher,
+                mission_id,
+                MissionStatus.Cancelled,
+                ErrorMessage(
+                    ErrorReason.RobotActionException, "Mission stopped by user"
+                ),
+            )
             if not state_machine.battery_level_is_above_mission_start_threshold():
                 return ReturningHome.transition_and_start_mission()
             return AwaitNextMission.transition()

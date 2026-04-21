@@ -4,8 +4,10 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.paused as Paused
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
+from isar.services.utilities.mqtt_utilities import publish_mission_status
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -27,6 +29,9 @@ class Pausing(State):
         def _successful_pause_event_handler(
             successful_pause: EmptyMessage,
         ) -> Transition[Paused.Paused]:
+            publish_mission_status(
+                state_machine.mqtt_publisher, mission_id, MissionStatus.Paused, None
+            )
             return Paused.transition(mission_id)
 
         event_handlers: List[EventHandlerMapping] = [

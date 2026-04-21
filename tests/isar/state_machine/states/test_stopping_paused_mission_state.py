@@ -49,7 +49,7 @@ def test_stopping_paused_mission_succeeds(
 
     transition = event_handler.handler(EmptyMessage())
 
-    assert sync_state_machine.events.mqtt_queue.empty()
+    assert sync_state_machine.events.mqtt_queue.qsize() == 1
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is AwaitNextMission
@@ -71,7 +71,7 @@ def test_stopping_paused_mission_succeeds_with_low_battery(
 
     transition = event_handler.handler(EmptyMessage())
 
-    assert sync_state_machine.events.mqtt_queue.empty()
+    assert sync_state_machine.events.mqtt_queue.qsize() == 1
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is ReturningHome
