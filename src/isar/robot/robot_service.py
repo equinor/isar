@@ -166,22 +166,16 @@ class RobotService:
                 publish_mission_status(
                     self.mqtt_publisher, mission.id, MissionStatus.InProgress, None
                 )
-            mission_status, error_message, remaining_mission, is_aborted = (
-                await robot_monitor_mission(
-                    mission,
-                    self.robot,
-                    request_inspection_upload,
-                    self.mqtt_publisher,
-                    should_report_status,
-                )
+            error_message, remaining_mission, is_aborted = await robot_monitor_mission(
+                mission,
+                self.robot,
+                request_inspection_upload,
+                self.mqtt_publisher,
+                should_report_status,
             )
             if is_aborted:
                 return remaining_mission
 
-            if should_report_status:
-                publish_mission_status(
-                    self.mqtt_publisher, mission.id, mission_status, error_message
-                )
             if error_message is not None:
                 self.robot_service_events.mission_failed.trigger_event(error_message)
             else:

@@ -10,9 +10,11 @@ from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
+from isar.services.utilities.mqtt_utilities import publish_mission_status
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.status import MissionStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -67,6 +69,9 @@ class Monitor(State):
             success: EmptyMessage,
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
             state_machine.logger.info("Mission succeeded")
+            publish_mission_status(
+                state_machine.mqtt_publisher, mission_id, MissionStatus.Successful, None
+            )
             return AwaitNextMission.transition()
 
         def _set_maintenance_mode_event_handler(
@@ -85,6 +90,12 @@ class Monitor(State):
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
             state_machine.logger.warning(
                 f"Mission failed because: " f"{mission_failed.error_description}"
+            )
+            publish_mission_status(
+                state_machine.mqtt_publisher,
+                mission_id,
+                MissionStatus.Failed,
+                mission_failed,
             )
             return AwaitNextMission.transition()
 
