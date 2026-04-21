@@ -112,7 +112,17 @@ class Monitor(State):
                 )
                 return None
 
+        def _mission_started_event_handler(mission_started: EmptyMessage) -> None:
+            publish_mission_status(
+                state_machine.mqtt_publisher, mission_id, MissionStatus.InProgress, None
+            )
+
         event_handlers: List[EventHandlerMapping] = [
+            EventHandlerMapping[EmptyMessage](
+                name="mission_started_event",
+                event=events.robot_service_events.mission_started_successfully,
+                handler=_mission_started_event_handler,
+            ),
             EventHandlerMapping[str](
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
@@ -161,6 +171,10 @@ def transition_and_start_mission(
     mission: Mission, should_respond_to_API_request: bool = False
 ) -> Transition[Monitor]:
     def _transition(state_machine: "StateMachine") -> Monitor:
+        publish_mission_status(
+            state_machine.mqtt_publisher, mission.id, MissionStatus.NotStarted, None
+        )
+        state_machine.events.robot_service_events.mission_started_successfully.clear_event()
         state_machine.start_mission(mission=mission)
         if should_respond_to_API_request:
             state_machine.events.api_requests.start_mission.response.trigger_event(
