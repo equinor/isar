@@ -4,7 +4,12 @@ import isar.state_machine.states.lockdown as Lockdown
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.offline as Offline
-from isar.apis.models.models import LockdownResponse, MaintenanceResponse
+import isar.state_machine.states.recharging as Recharging
+from isar.apis.models.models import (
+    ControlMissionResponse,
+    LockdownResponse,
+    MaintenanceResponse,
+)
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
@@ -60,6 +65,22 @@ class RechargingWithMission(State):
             )
             return Maintenance.transition()
 
+        def _stop_mission_event_handler(
+            stop_mission_id: str,
+        ) -> Transition[Recharging.Recharging] | None:
+            if mission.id == stop_mission_id or stop_mission_id == "":
+                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                    ControlMissionResponse(success=True)
+                )
+                return Recharging.transition()
+            else:
+                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                    ControlMissionResponse(
+                        success=False, failure_reason="Mission not found"
+                    )
+                )
+                return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[float](
                 name="robot_battery_update_event",
@@ -81,6 +102,11 @@ class RechargingWithMission(State):
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,
+            ),
+            EventHandlerMapping[str](
+                name="stop_mission_event",
+                event=events.api_requests.stop_mission.request,
+                handler=_stop_mission_event_handler,
             ),
         ]
         super().__init__(

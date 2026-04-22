@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
+import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging_with_mission as RechargingWithMission
-from isar.apis.models.models import LockdownResponse
+from isar.apis.models.models import ControlMissionResponse, LockdownResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
 from isar.services.utilities.mqtt_utilities import publish_mission_status
@@ -45,6 +46,22 @@ class GoingToRechargingWithMission(State):
             )
             return GoingToLockdown.transition()
 
+        def _stop_mission_event_handler(
+            stop_mission_id: str,
+        ) -> Transition[GoingToRecharging.GoingToRecharging] | None:
+            if mission.id == stop_mission_id or stop_mission_id == "":
+                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                    ControlMissionResponse(success=True)
+                )
+                return GoingToRecharging.transition()
+            else:
+                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                    ControlMissionResponse(
+                        success=False, failure_reason="Mission not found"
+                    )
+                )
+                return None
+
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
@@ -60,6 +77,11 @@ class GoingToRechargingWithMission(State):
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
+            ),
+            EventHandlerMapping[str](
+                name="stop_mission_event",
+                event=events.api_requests.stop_mission.request,
+                handler=_stop_mission_event_handler,
             ),
         ]
         super().__init__(

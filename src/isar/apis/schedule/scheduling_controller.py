@@ -152,6 +152,10 @@ class SchedulingController:
             or state == States.Offline
             or state == States.Home
             or state == States.ReturningHome
+            or state == States.GoingToLockdown
+            or state == States.GoingToRecharging
+            or state == States.Recharging
+            or state == States.Maintenance
         ):
             error_message = (
                 f"Conflict - Stop command received in invalid state - State: {state}"
