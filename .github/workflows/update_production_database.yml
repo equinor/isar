@@ -1,0 +1,27 @@
+name: Update production database
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  workflow_dispatch:
+
+jobs:
+  trigger_github_deployment:
+    name: Trigger GitHub Deployment
+    environment: Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Empty Step
+        run: echo "Hello World"
+
+  run_migrations:
+    name: Update database in Production
+    needs: [trigger_github_deployment]
+    uses: equinor/armada/.github/workflows/run_alembic_migrations.yml@main
+    with:
+      environment: Production
+    secrets:
+      client_id: ${{ secrets.CLIENTID }}
+      client_secret: ${{ secrets.CLIENTSECRET }}
