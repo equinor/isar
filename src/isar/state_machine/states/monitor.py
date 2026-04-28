@@ -49,10 +49,7 @@ class Monitor(State):
             state_machine.logger.warning(
                 "Cancelling current mission due to low battery"
             )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(
-                EmptyMessage()
-            )
-            return StoppingGoToRecharge.transition(mission_id)
+            return StoppingGoToRecharge.transition_and_stop_mission()
 
         def _send_to_lockdown_event_handler(
             should_lockdown: EmptyMessage,

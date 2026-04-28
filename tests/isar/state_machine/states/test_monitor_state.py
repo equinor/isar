@@ -51,9 +51,7 @@ def _mock_robot_exception_with_message() -> RobotException:
 def test_stopping_to_recharge_goes_to_intervention_needed(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = StoppingGoToRecharge(
-        sync_state_machine, "mission_id"
-    )
+    sync_state_machine.current_state = StoppingGoToRecharge(sync_state_machine)
     stopping_go_to_recharge_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
         stopping_go_to_recharge_state.get_event_handler_by_name("failed_stop_event")
@@ -260,3 +258,24 @@ def test_robot_mission_status_exception_handling(
             States.AwaitNextMission,
         ]
     )
+
+
+def test_transition_from_monitor_to_stopping_to_recharge(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.current_state = Monitor(sync_state_machine, "test_id")
+
+    paused_state: State = cast(State, sync_state_machine.current_state)
+    event_handler: EventHandlerMapping | None = paused_state.get_event_handler_by_name(
+        "robot_battery_update_event"
+    )
+
+    assert event_handler is not None
+
+    transition = event_handler.handler(10.0)
+
+    sync_state_machine.current_state = transition(sync_state_machine)
+
+    assert type(sync_state_machine.current_state) is StoppingGoToRecharge
+    assert not sync_state_machine.events.api_requests.stop_mission.response.has_event()
+    assert sync_state_machine.events.state_machine_events.stop_mission.has_event()
