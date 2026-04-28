@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List
 import isar.state_machine.states.resuming as Resuming
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
+import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 import isar.state_machine.states.stopping_paused_mission as StoppingPausedMission
 from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
@@ -37,20 +38,16 @@ class Paused(State):
 
         def _robot_battery_level_updated_handler(
             battery_level: float,
-        ) -> Transition[StoppingPausedMission.StoppingPausedMission] | None:
+        ) -> Transition[StoppingGoToRecharge.StoppingGoToRecharge] | None:
             if (
                 battery_level is None
                 or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
             ):
                 return None
-
-            state_machine.publish_mission_aborted(
-                mission_id, "Robot battery too low to continue mission"
-            )
             state_machine.logger.warning(
                 "Cancelling current mission due to low battery"
             )
-            return StoppingPausedMission.transition_and_trigger_stop(mission_id)
+            return StoppingGoToRecharge.transition_and_stop_mission()
 
         def _send_to_lockdown_event_handler(
             should_lockdown: EmptyMessage,

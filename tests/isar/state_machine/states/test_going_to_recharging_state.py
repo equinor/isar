@@ -14,9 +14,7 @@ from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRechar
 def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_tasks(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = StoppingGoToRecharge(
-        sync_state_machine, "mission_id"
-    )
+    sync_state_machine.current_state = StoppingGoToRecharge(sync_state_machine)
     stopping_go_to_recharge_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
         stopping_go_to_recharge_state.get_event_handler_by_name(
@@ -35,9 +33,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_task
 def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = StoppingGoToRecharge(
-        sync_state_machine, "mission_id"
-    )
+    sync_state_machine.current_state = StoppingGoToRecharge(sync_state_machine)
     stopping_go_to_recharge_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
         stopping_go_to_recharge_state.get_event_handler_by_name("successful_stop_event")

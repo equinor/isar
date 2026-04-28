@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class StoppingGoToRecharge(State):
 
-    def __init__(self, state_machine: "StateMachine", mission_id: str):
+    def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
         def _failed_stop_event_handler(
@@ -61,8 +61,11 @@ class StoppingGoToRecharge(State):
         )
 
 
-def transition(mission_id: str) -> Transition[StoppingGoToRecharge]:
+def transition_and_stop_mission() -> Transition[StoppingGoToRecharge]:
     def _transition(state_machine: "StateMachine") -> StoppingGoToRecharge:
-        return StoppingGoToRecharge(state_machine, mission_id=mission_id)
+        state_machine.events.state_machine_events.stop_mission.trigger_event(
+            EmptyMessage()
+        )
+        return StoppingGoToRecharge(state_machine)
 
     return _transition
