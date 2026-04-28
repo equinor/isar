@@ -134,7 +134,7 @@ def test_successful_stop_with_no_remaining_tasks(
 
     mocker.patch(
         "isar.robot.robot_service.robot_monitor_mission",
-        return_value=(None, mission),
+        return_value=(None, mission, True),
     )
 
     async def test_stop_mission_handler() -> None:
