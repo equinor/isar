@@ -176,8 +176,7 @@ class RobotService:
                 )
         except asyncio.CancelledError:
             pass
-        finally:
-            return mission if remaining_mission is None else remaining_mission
+        return mission if remaining_mission is None else remaining_mission
 
     def _register_status_threads(self) -> None:
         self.status_thread = RobotStatusThread(
