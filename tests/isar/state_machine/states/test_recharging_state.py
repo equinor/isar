@@ -1,12 +1,14 @@
 from typing import cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
-from isar.models.events import EmptyMessage
+from isar.models.events import AbortedMission, EmptyMessage
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.going_to_recharging import GoingToRecharging
 from isar.state_machine.states.home import Home
 from isar.state_machine.states.lockdown import Lockdown
+from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.recharging import Recharging
+from isar.state_machine.states.recharging_with_mission import RechargingWithMission
 
 
 def test_going_to_recharging_goes_to_recharge(
@@ -77,3 +79,41 @@ def test_recharging_continues_when_battery_low(
     transition = event_handler.handler(10.0)
 
     assert transition is None
+
+
+def test_continuing_mission_when_battery_high(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.current_state = RechargingWithMission(
+        sync_state_machine, mission=AbortedMission(name="test", id="test_id")
+    )
+    returning_home_state: State = cast(State, sync_state_machine.current_state)
+    event_handler: EventHandlerMapping | None = (
+        returning_home_state.get_event_handler_by_name("robot_battery_update_event")
+    )
+
+    assert event_handler is not None
+
+    transition = event_handler.handler(100.0)
+
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is Monitor
+
+
+def test_cancelling_mission_when_recharging_with_mission(
+    sync_state_machine: StateMachine,
+) -> None:
+    sync_state_machine.current_state = RechargingWithMission(
+        sync_state_machine, mission=AbortedMission(name="test", id="test_id")
+    )
+    returning_home_state: State = cast(State, sync_state_machine.current_state)
+    event_handler: EventHandlerMapping | None = (
+        returning_home_state.get_event_handler_by_name("stop_mission_event")
+    )
+
+    assert event_handler is not None
+
+    transition = event_handler.handler("test_id")
+
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is Recharging
