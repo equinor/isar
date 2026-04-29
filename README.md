@@ -285,7 +285,6 @@ Enabling API authentication also requires the same environment variables. The re
 AZURE_CLIENT_ID
 AZURE_TENANT_ID
 AZURE_CLIENT_SECRET
-ISAR_BLOB_STORAGE_ACCOUNT
 ```
 
 ## MQTT communication
