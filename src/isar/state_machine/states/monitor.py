@@ -171,6 +171,8 @@ def transition_and_start_mission(
         publish_mission_status(
             state_machine.mqtt_publisher, mission.id, MissionStatus.NotStarted, None
         )
+        state_machine.events.robot_service_events.mission_failed.clear_event()
+        state_machine.events.robot_service_events.mission_succeeded.clear_event()
         state_machine.events.robot_service_events.mission_started_successfully.clear_event()
         state_machine.start_mission(mission=mission)
         if should_respond_to_API_request:

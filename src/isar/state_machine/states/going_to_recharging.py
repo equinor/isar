@@ -39,7 +39,7 @@ class GoingToRecharging(State):
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
-            return GoingToLockdown.transition()
+            return GoingToLockdown.transition_to_existing_mission()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
@@ -65,7 +65,17 @@ class GoingToRecharging(State):
         )
 
 
-def transition() -> Transition[GoingToRecharging]:
+def transition_and_start_return_home() -> Transition[GoingToRecharging]:
+    def _transition(state_machine: "StateMachine") -> GoingToRecharging:
+        state_machine.events.robot_service_events.mission_failed.clear_event()
+        state_machine.events.robot_service_events.mission_succeeded.clear_event()
+        state_machine.start_return_home_mission()
+        return GoingToRecharging(state_machine)
+
+    return _transition
+
+
+def transition_to_existing_mission() -> Transition[GoingToRecharging]:
     def _transition(state_machine: "StateMachine") -> GoingToRecharging:
         return GoingToRecharging(state_machine)
 
