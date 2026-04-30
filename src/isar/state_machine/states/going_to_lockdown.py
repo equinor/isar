@@ -81,7 +81,22 @@ class GoingToLockdown(State):
         )
 
 
-def transition() -> Transition[GoingToLockdown]:
+def transition_and_start_mission() -> Transition[GoingToLockdown]:
+    def _transition(state_machine: "StateMachine") -> GoingToLockdown:
+        state_machine.events.robot_service_events.mission_failed.clear_event()
+        state_machine.events.robot_service_events.mission_succeeded.clear_event()
+        state_machine.start_return_home_mission()
+        if settings.USE_DB:
+            change_persistent_robot_state(
+                settings.ISAR_ID,
+                value=RobotStartupMode.Lockdown,
+            )
+        return GoingToLockdown(state_machine)
+
+    return _transition
+
+
+def transition_to_existing_mission() -> Transition[GoingToLockdown]:
     def _transition(state_machine: "StateMachine") -> GoingToLockdown:
         if settings.USE_DB:
             change_persistent_robot_state(

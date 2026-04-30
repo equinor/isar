@@ -38,8 +38,7 @@ class StoppingGoToLockdown(State):
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
-            state_machine.start_return_home_mission()
-            return GoingToLockdown.transition()
+            return GoingToLockdown.transition_and_start_mission()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](

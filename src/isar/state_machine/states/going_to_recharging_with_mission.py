@@ -44,7 +44,7 @@ class GoingToRechargingWithMission(State):
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
-            return GoingToLockdown.transition()
+            return GoingToLockdown.transition_to_existing_mission()
 
         def _stop_mission_event_handler(
             stop_mission_id: str,
@@ -53,7 +53,7 @@ class GoingToRechargingWithMission(State):
                 state_machine.events.api_requests.stop_mission.response.trigger_event(
                     ControlMissionResponse(success=True)
                 )
-                return GoingToRecharging.transition()
+                return GoingToRecharging.transition_to_existing_mission()
             else:
                 state_machine.events.api_requests.stop_mission.response.trigger_event(
                     ControlMissionResponse(
@@ -95,6 +95,8 @@ def transition_and_start_return_home(
     mission: AbortedMission,
 ) -> Transition[GoingToRechargingWithMission]:
     def _transition(state_machine: "StateMachine") -> GoingToRechargingWithMission:
+        state_machine.events.robot_service_events.mission_failed.clear_event()
+        state_machine.events.robot_service_events.mission_succeeded.clear_event()
         state_machine.start_return_home_mission()
         return GoingToRechargingWithMission(state_machine, mission=mission)
 

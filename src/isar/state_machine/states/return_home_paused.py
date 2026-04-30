@@ -68,7 +68,7 @@ class ReturnHomePaused(State):
                 EmptyMessage()
             )
 
-            return GoingToLockdown.transition()
+            return GoingToLockdown.transition_to_existing_mission()
 
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,

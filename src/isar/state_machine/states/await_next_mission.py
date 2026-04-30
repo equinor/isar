@@ -39,8 +39,7 @@ class AwaitNextMission(State):
                 LockdownResponse(lockdown_started=True)
             )
 
-            state_machine.start_return_home_mission()
-            return GoingToLockdown.transition()
+            return GoingToLockdown.transition_and_start_mission()
 
         def _robot_battery_level_updated_handler(
             battery_level: float,
@@ -51,8 +50,7 @@ class AwaitNextMission(State):
             ):
                 return None
 
-            state_machine.start_return_home_mission()
-            return GoingToRecharging.transition()
+            return GoingToRecharging.transition_and_start_return_home()
 
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,

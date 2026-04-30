@@ -73,7 +73,7 @@ class ReturningHome(State):
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(lockdown_started=True)
             )
-            return GoingToLockdown.transition()
+            return GoingToLockdown.transition_to_existing_mission()
 
         def _mission_failed_event_handler(
             mission_failed: ErrorMessage,
@@ -127,7 +127,7 @@ class ReturningHome(State):
             ):
                 return None
 
-            return GoingToRecharging.transition()
+            return GoingToRecharging.transition_to_existing_mission()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
@@ -183,6 +183,8 @@ def transition_and_start_mission(
     should_respond_to_API_request: bool = False,
 ) -> Transition[ReturningHome]:
     def _transition(state_machine: "StateMachine") -> ReturningHome:
+        state_machine.events.robot_service_events.mission_failed.clear_event()
+        state_machine.events.robot_service_events.mission_succeeded.clear_event()
         state_machine.start_return_home_mission()
         if should_respond_to_API_request:
             state_machine.events.api_requests.return_home.response.trigger_event(

@@ -34,8 +34,7 @@ class StoppingGoToRecharge(State):
         def _mission_already_done_event_handler(
             already_stopped_event: EmptyMessage,
         ) -> Transition[GoingToRecharging.GoingToRecharging]:
-            state_machine.start_return_home_mission()
-            return GoingToRecharging.transition()
+            return GoingToRecharging.transition_and_start_return_home()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
