@@ -1,7 +1,9 @@
 import json
+import logging
 import time
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timezone
+from logging import Logger
 from queue import Queue
 from typing import Callable, Tuple
 
@@ -94,6 +96,8 @@ class MqttTelemetryPublisher(MqttClientInterface):
         self.retain: bool = retain
         self.properties: Properties | None = properties
 
+        self.logger: Logger = logging.getLogger("telemetry")
+
     def run(self, isar_id: str, robot_name: str) -> None:
         self.cloud_health_topic: str = f"isar/{isar_id}/cloud_health"
         self.battery_topic: str = f"isar/{isar_id}/battery"
@@ -118,6 +122,10 @@ class MqttTelemetryPublisher(MqttClientInterface):
                     )
                 )
                 topic = self.cloud_health_topic
+            except Exception as e:
+                self.logger.error(f"Unexpected error in MQTT telemetry publisher: {e}")
+                time.sleep(self.interval)
+                continue
 
             publish_properties = self.properties
 
