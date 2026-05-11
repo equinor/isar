@@ -1,0 +1,21 @@
+name: Run database migrations (Development)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  run_migrations:
+    name: Update database in Development
+    uses: equinor/armada/.github/workflows/run_alembic_migrations.yml@main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      environment: Development
+    secrets:
+      client_id: ${{ secrets.CLIENTID }}
+      client_secret: ${{ secrets.CLIENTSECRET }}
