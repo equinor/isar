@@ -183,8 +183,10 @@ def transition_and_start_mission(
     should_respond_to_API_request: bool = False,
 ) -> Transition[ReturningHome]:
     def _transition(state_machine: "StateMachine") -> ReturningHome:
-        state_machine.events.robot_service_events.mission_failed.clear_event()
-        state_machine.events.robot_service_events.mission_succeeded.clear_event()
+        if state_machine.events.robot_service_events.mission_failed.clear_event():
+            state_machine.logger.warning("Mission failed had lingering event")
+        if state_machine.events.robot_service_events.mission_succeeded.clear_event():
+            state_machine.logger.warning("Mission succeeded had lingering event")
         state_machine.start_return_home_mission()
         if should_respond_to_API_request:
             state_machine.events.api_requests.return_home.response.trigger_event(

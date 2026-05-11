@@ -171,9 +171,14 @@ def transition_and_start_mission(
         publish_mission_status(
             state_machine.mqtt_publisher, mission.id, MissionStatus.NotStarted, None
         )
-        state_machine.events.robot_service_events.mission_failed.clear_event()
-        state_machine.events.robot_service_events.mission_succeeded.clear_event()
-        state_machine.events.robot_service_events.mission_started_successfully.clear_event()
+        if state_machine.events.robot_service_events.mission_failed.clear_event():
+            state_machine.logger.warning("Mission failed had lingering event")
+        if state_machine.events.robot_service_events.mission_succeeded.clear_event():
+            state_machine.logger.warning("Mission succeeded had lingering event")
+        if (
+            state_machine.events.robot_service_events.mission_started_successfully.clear_event()
+        ):
+            state_machine.logger.warning("Mission started had lingering event")
         state_machine.start_mission(mission=mission)
         if should_respond_to_API_request:
             state_machine.events.api_requests.start_mission.response.trigger_event(
