@@ -58,14 +58,15 @@ class Event(Queue[T]):
         except ValueError:
             raise EventConflictError
 
-    def clear_event(self) -> None:
+    def clear_event(self) -> bool:
         while True:
             try:
                 self.get(block=False)
+                return True
             except Empty:
-                break
+                return False
             except ValueError:
-                break
+                return False
 
     def has_event(self) -> bool:
         return (
