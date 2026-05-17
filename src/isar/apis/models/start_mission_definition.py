@@ -40,6 +40,7 @@ class StartMissionInspectionDefinition(BaseModel):
     inspection_target: InputPosition
     inspection_description: str | None = None
     duration: float | None = None
+    analysis_types: list[str] | None = Field(default=None)
 
 
 class StartMissionTaskDefinition(BaseModel):
@@ -123,6 +124,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             inspection_description=task_definition.inspection.inspection_description,
             target=task_definition.inspection.inspection_target.to_alitra_position(),
             zoom=task_definition.zoom,
+            analysis_types=inspection_definition.analysis_types,
         )
     elif inspection_definition.type == InspectionTypes.video:
         if inspection_definition.duration is None:
@@ -135,6 +137,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             target=task_definition.inspection.inspection_target.to_alitra_position(),
             duration=inspection_definition.duration,
             zoom=task_definition.zoom,
+            analysis_types=inspection_definition.analysis_types,
         )
     elif inspection_definition.type == InspectionTypes.thermal_image:
         return TakeThermalImage(
@@ -144,6 +147,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             inspection_description=task_definition.inspection.inspection_description,
             target=task_definition.inspection.inspection_target.to_alitra_position(),
             zoom=task_definition.zoom,
+            analysis_types=inspection_definition.analysis_types,
         )
     elif inspection_definition.type == InspectionTypes.thermal_video:
         if inspection_definition.duration is None:
@@ -156,6 +160,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             target=task_definition.inspection.inspection_target.to_alitra_position(),
             duration=inspection_definition.duration,
             zoom=task_definition.zoom,
+            analysis_types=inspection_definition.analysis_types,
         )
     elif inspection_definition.type == InspectionTypes.audio:
         if inspection_definition.duration is None:
@@ -167,6 +172,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             inspection_description=task_definition.inspection.inspection_description,
             target=task_definition.inspection.inspection_target.to_alitra_position(),
             duration=inspection_definition.duration,
+            analysis_types=inspection_definition.analysis_types,
         )
     elif inspection_definition.type == InspectionTypes.co2_measurement:
         return TakeCO2Measurement(
@@ -174,6 +180,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             robot_pose=task_definition.pose.to_alitra_pose(),
             tag_id=task_definition.tag,
             inspection_description=task_definition.inspection.inspection_description,
+            analysis_types=inspection_definition.analysis_types,
         )
     else:
         raise ValueError(

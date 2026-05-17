@@ -43,6 +43,7 @@ def construct_metadata_file(
             "robot_name": settings.ROBOT_NAME,
             "inspection_description": inspection.metadata.inspection_description,
             "tag": inspection.metadata.tag_id,
+            "analysis_types": inspection.metadata.analysis_types,
             "robot_pose": {
                 "position": {
                     "x": inspection.metadata.robot_pose.position.x,

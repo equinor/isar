@@ -1,6 +1,7 @@
+import json
 import time
 from datetime import datetime
-from typing import Tuple
+from typing import Callable, Tuple
 from uuid import uuid4
 
 from alitra import Frame, Orientation, Pose, Position
@@ -29,6 +30,17 @@ ARBITRARY_IMAGE_METADATA = ImageMetadata(
     target_position=Position(0, 0, 0, Frame("asset")),
     file_type="jpg",
 )
+
+
+def _wait_until(
+    predicate: Callable[[], bool], timeout: float = 5.0, interval: float = 0.01
+) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if predicate():
+            return
+        time.sleep(interval)
+    raise AssertionError(f"Timed out after {timeout}s waiting for predicate")
 
 
 def test_should_upload_from_queue(
@@ -65,12 +77,10 @@ def test_should_upload_from_queue(
     )
 
     uploader: Uploader = container.uploader()
+    storage_handler: StorageFake = uploader.storage_handlers[0]  # type: ignore
 
     uploader.upload_queue.put(message)
-    time.sleep(0.01)
-
-    storage_handler: StorageFake = uploader.storage_handlers[0]  # type: ignore
-    assert inspection in storage_handler.stored_inspections
+    _wait_until(lambda: inspection in storage_handler.stored_inspections)
 
 
 def test_should_retry_failed_upload_from_queue(
@@ -93,15 +103,15 @@ def test_should_retry_failed_upload_from_queue(
     # Need it to fail so that it retries
     storage_handler.will_fail = True
     uploader.upload_queue.put(message)
+    # Fixed wait: asserting absence of upload requires a real elapsed window
     time.sleep(1)
 
     # Should not upload, instead raise StorageException
     assert not storage_handler.blob_exists(inspection)
     storage_handler.will_fail = False
-    time.sleep(3)
 
-    # After some time, it should have retried and now it should be successful
-    assert storage_handler.blob_exists(inspection)
+    # Retry succeeds once exponential backoff elapses
+    _wait_until(lambda: storage_handler.blob_exists(inspection), timeout=5.0)
 
 
 def test_should_not_publish_when_blob_paths_are_empty(
@@ -127,8 +137,59 @@ def test_should_not_publish_when_blob_paths_are_empty(
         mission,
     )
     uploader.upload_queue.put(message)
-    time.sleep(1)
+    _wait_until(lambda: inspection in storage_handler.stored)
 
-    assert inspection in storage_handler.stored
-
+    # Brief quiet period to confirm no MQTT publish follows the store
+    time.sleep(0.1)
     assert len(mqtt_fake.published) == 0
+
+
+def _put_inspection_with_analysis_types(
+    container: ApplicationContainer,
+    analysis_types: list[str] | None,
+) -> MqttPublisherFake:
+    metadata = ImageMetadata(
+        start_time=datetime.now(),
+        robot_pose=Pose(
+            Position(0, 0, 0, Frame("asset")),
+            Orientation(x=0, y=0, z=0, w=1, frame=Frame("asset")),
+            Frame("asset"),
+        ),
+        target_position=Position(0, 0, 0, Frame("asset")),
+        file_type="jpg",
+        analysis_types=analysis_types,
+    )
+    inspection = InspectionBlob(metadata=metadata, id=str(uuid4()))
+    mission = Mission(name="m")
+
+    uploader: Uploader = container.uploader()
+    mqtt_fake = MqttPublisherFake()
+    uploader.mqtt_publisher = mqtt_fake
+
+    message: Tuple[Inspection, Mission] = (inspection, mission)
+    uploader.upload_queue.put(message)
+    return mqtt_fake
+
+
+def test_publishes_required_analysis_when_present(
+    container: ApplicationContainer, uploader_thread: UploaderThreadMock
+) -> None:
+    uploader_thread.start()
+    mqtt_fake = _put_inspection_with_analysis_types(
+        container, ["anonymize", "thermal-reading"]
+    )
+    _wait_until(lambda: mqtt_fake.count() == 1)
+
+    payload = json.loads(mqtt_fake.last()["payload"])
+    assert payload["required_analysis"] == ["anonymize", "thermal-reading"]
+
+
+def test_publishes_null_required_analysis_when_absent(
+    container: ApplicationContainer, uploader_thread: UploaderThreadMock
+) -> None:
+    uploader_thread.start()
+    mqtt_fake = _put_inspection_with_analysis_types(container, None)
+    _wait_until(lambda: mqtt_fake.count() == 1)
+
+    payload = json.loads(mqtt_fake.last()["payload"])
+    assert payload["required_analysis"] is None

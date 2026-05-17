@@ -1,6 +1,7 @@
 import json
 import os
 
+import pytest
 from alitra import Frame, Orientation, Pose, Position
 
 from isar.apis.models.models import InputOrientation, InputPose, InputPosition
@@ -13,7 +14,7 @@ from isar.apis.models.start_mission_definition import (
     to_isar_mission,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import TakeImage
+from robot_interface.models.mission.task import InspectionTask, TakeImage
 
 
 def test_to_isar_mission() -> None:
@@ -79,3 +80,41 @@ def test_mission_definition_from_json_to_isar_mission() -> None:
     )
     assert task.type == "take_image"
     assert task.target == Position(0.0, 0.0, 0.0, frame=Frame("robot"))
+    assert task.analysis_types == ["anonymize"]
+
+
+def _build_mission_with_inspection_payload(inspection_payload: dict) -> Mission:
+    payload = {
+        "name": "mission",
+        "tasks": [
+            {
+                "type": "inspection",
+                "pose": {
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "orientation": {"x": 0, "y": 0, "z": 0, "w": 1},
+                },
+                "inspection": inspection_payload,
+            }
+        ],
+    }
+    return to_isar_mission(StartMissionDefinition.model_validate(payload))
+
+
+@pytest.mark.parametrize(
+    "inspection_type",
+    [t.value for t in InspectionTypes],
+)
+def test_analysis_types_defaults_to_none_for_all_inspection_types(
+    inspection_type: str,
+) -> None:
+    payload: dict = {
+        "type": inspection_type,
+        "inspection_target": {"x": 0, "y": 0, "z": 0},
+    }
+    if inspection_type in {"Video", "ThermalVideo", "Audio"}:
+        payload["duration"] = 1.0
+
+    mission = _build_mission_with_inspection_payload(payload)
+    task = mission.tasks[0]
+    assert isinstance(task, InspectionTask)
+    assert task.analysis_types is None

@@ -49,6 +49,7 @@ class InspectionTask(Task):
     robot_pose: Pose = Field()
     inspection_description: str | None = Field(default=None)
     zoom: ZoomDescription | None = Field(default=None)
+    analysis_types: list[str] | None = Field(default=None)
 
     @staticmethod
     def get_inspection_type() -> Type[Inspection]:

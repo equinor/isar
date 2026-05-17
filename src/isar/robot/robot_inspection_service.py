@@ -47,6 +47,7 @@ def robot_upload_inspection(
         )
 
     inspection.metadata.tag_id = task.tag_id
+    inspection.metadata.analysis_types = task.analysis_types
 
     message: Tuple[Inspection, Mission] = (
         inspection,
