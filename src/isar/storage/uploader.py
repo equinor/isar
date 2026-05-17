@@ -259,9 +259,6 @@ class Uploader:
         inspection: InspectionBlob,
         inspection_paths: StoragePaths[BlobStoragePath],
     ) -> None:
-        """Publishes the reference of the inspection result to the MQTT Broker
-        along with the analysis type
-        """
         if not self.mqtt_publisher:
             return
 
@@ -275,6 +272,7 @@ class Uploader:
             tag_id=inspection.metadata.tag_id,
             inspection_type=type(inspection).__name__,
             inspection_description=inspection.metadata.inspection_description,
+            required_analysis=inspection.metadata.analysis_types,
             timestamp=inspection.metadata.start_time,
         )
         self.mqtt_publisher.publish(

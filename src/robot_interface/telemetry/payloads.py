@@ -114,6 +114,7 @@ class InspectionResultPayload(BaseModel):
     tag_id: str | None = None
     inspection_type: str | None = None
     inspection_description: str | None = None
+    required_analysis: list[str] | None = None
     timestamp: datetime
 
 

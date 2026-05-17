@@ -12,6 +12,7 @@ class InspectionMetadata(BaseModel):
     file_type: str
     tag_id: str | None = None
     inspection_description: str | None = None
+    analysis_types: list[str] | None = None
 
 
 class ImageMetadata(InspectionMetadata):

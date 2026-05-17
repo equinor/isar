@@ -28,6 +28,7 @@
           "z": 0,
           "frame_name": "robot"
         },
+        "analysis_types": ["anonymize"],
         "id": "generated_inspection_id"
       },
       "tag": "MY-TAG-123",

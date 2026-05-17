@@ -16,10 +16,16 @@ class StorageFake(StorageInterface):
     def __init__(self) -> None:
         self.stored_inspections: List[Inspection] = []
 
-    def store(self, inspection: Inspection, mission: Mission) -> None:
+    def store(
+        self, inspection: InspectionBlob, mission: Mission
+    ) -> StoragePaths[BlobStoragePath]:
         if self.will_fail:
             raise StorageException("Fake failed on purpose")
         self.stored_inspections.append(inspection)
+        path = BlobStoragePath(
+            storage_account="acct", blob_container="cont", blob_name="blob"
+        )
+        return StoragePaths(data_path=path, metadata_path=path)
 
     def blob_exists(self, inspection: Inspection) -> bool:
         return inspection in self.stored_inspections
