@@ -17,6 +17,7 @@ from robot_interface.models.mission.task import TakeImage
 from tests.test_mocks.blob_storage import StorageEmptyBlobPathsFake, StorageFake
 from tests.test_mocks.mqtt_client import MqttPublisherFake
 from tests.test_mocks.state_machine_mocks import UploaderThreadMock
+from tests.test_utils import wait_until
 
 MISSION_ID = "some-mission-id"
 ARBITRARY_IMAGE_METADATA = ImageMetadata(
@@ -67,9 +68,9 @@ def test_should_upload_from_queue(
     uploader: Uploader = container.uploader()
 
     uploader.upload_queue.put(message)
-    time.sleep(0.01)
 
     storage_handler: StorageFake = uploader.storage_handlers[0]  # type: ignore
+    assert wait_until(lambda: inspection in storage_handler.stored_inspections)
     assert inspection in storage_handler.stored_inspections
 
 
@@ -98,9 +99,9 @@ def test_should_retry_failed_upload_from_queue(
     # Should not upload, instead raise StorageException
     assert not storage_handler.blob_exists(inspection)
     storage_handler.will_fail = False
-    time.sleep(3)
 
     # After some time, it should have retried and now it should be successful
+    assert wait_until(lambda: storage_handler.blob_exists(inspection))
     assert storage_handler.blob_exists(inspection)
 
 
@@ -127,8 +128,8 @@ def test_should_not_publish_when_blob_paths_are_empty(
         mission,
     )
     uploader.upload_queue.put(message)
-    time.sleep(1)
 
+    assert wait_until(lambda: inspection in storage_handler.stored)
     assert inspection in storage_handler.stored
 
     assert len(mqtt_fake.published) == 0

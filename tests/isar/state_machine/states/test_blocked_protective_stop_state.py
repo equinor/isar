@@ -1,4 +1,3 @@
-import time
 from collections import deque
 
 from pytest_mock import MockerFixture
@@ -10,6 +9,7 @@ from tests.test_mocks.state_machine_mocks import (
     RobotServiceThreadMock,
     StateMachineThreadMock,
 )
+from tests.test_utils import wait_until
 
 
 def test_state_machine_idle_to_blocked_protective_stop_to_idle(
@@ -29,8 +29,12 @@ def test_state_machine_idle_to_blocked_protective_stop_to_idle(
 
     state_machine_thread.start()
     robot_service_thread.start()
-    time.sleep(5)
 
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [States.UnknownStatus, States.BlockedProtectiveStop, States.Home]
     )
+    assert wait_until(
+        lambda: state_machine_thread.state_machine.transitions_list
+        == expected_transitions
+    )
+    assert state_machine_thread.state_machine.transitions_list == expected_transitions
