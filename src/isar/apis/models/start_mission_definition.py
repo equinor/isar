@@ -10,8 +10,10 @@ from isar.config.settings import settings
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
     TASKS,
+    AcousticDetectionType,
     RecordAudio,
     ReturnToHome,
+    TakeAcousticMeasurement,
     TakeCO2Measurement,
     TakeImage,
     TakeThermalImage,
@@ -28,6 +30,7 @@ class InspectionTypes(str, Enum):
     thermal_video = "ThermalVideo"
     audio = "Audio"
     co2_measurement = "CO2Measurement"
+    acoustic_measurement = "AcousticMeasurement"
 
 
 class TaskType(str, Enum):
@@ -35,11 +38,19 @@ class TaskType(str, Enum):
     ReturnToHome = "return_to_home"
 
 
+class AcousticInspectionParameters(BaseModel):
+    frequency_from: float
+    frequency_to: float
+    snr_value_threshold: float
+    detection_type: AcousticDetectionType
+
+
 class StartMissionInspectionDefinition(BaseModel):
     type: InspectionTypes = Field(default=InspectionTypes.image)
     inspection_target: InputPosition
     inspection_description: str | None = None
     duration: float | None = None
+    acoustic: AcousticInspectionParameters | None = None
     analysis_types: list[str] | None = Field(default=None)
 
 
@@ -181,6 +192,22 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
             tag_id=task_definition.tag,
             inspection_description=task_definition.inspection.inspection_description,
             analysis_types=inspection_definition.analysis_types,
+        )
+    elif inspection_definition.type == InspectionTypes.acoustic_measurement:
+        if inspection_definition.acoustic is None:
+            raise ValueError(
+                "No acoustic parameters given to AcousticMeasurement inspection task"
+            )
+        return TakeAcousticMeasurement(
+            id=task_definition.id if task_definition.id else str(uuid4()),
+            robot_pose=task_definition.pose.to_alitra_pose(),
+            tag_id=task_definition.tag,
+            inspection_description=task_definition.inspection.inspection_description,
+            analysis_types=inspection_definition.analysis_types,
+            frequency_from=inspection_definition.acoustic.frequency_from,
+            frequency_to=inspection_definition.acoustic.frequency_to,
+            snr_value_threshold=inspection_definition.acoustic.snr_value_threshold,
+            detection_type=inspection_definition.acoustic.detection_type,
         )
     else:
         raise ValueError(

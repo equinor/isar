@@ -113,6 +113,13 @@ def test_analysis_types_defaults_to_none_for_all_inspection_types(
     }
     if inspection_type in {"Video", "ThermalVideo", "Audio"}:
         payload["duration"] = 1.0
+    if inspection_type == "AcousticMeasurement":
+        payload["acoustic"] = {
+            "frequency_from": 35000.0,
+            "frequency_to": 40000.0,
+            "snr_value_threshold": 30.0,
+            "detection_type": "leak",
+        }
 
     mission = _build_mission_with_inspection_payload(payload)
     task = mission.tasks[0]
