@@ -3,10 +3,11 @@ from typing import Literal, Type
 from uuid import uuid4
 
 from alitra import Pose, Position
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.inspection.inspection import (
+    AcousticMeasurement,
     Audio,
     CO2Measurement,
     Image,
@@ -25,7 +26,17 @@ class TaskTypes(str, Enum):
     TakeVideo = "take_video"
     TakeThermalVideo = "take_thermal_video"
     TakeCO2Measurement = "take_co2_measurement"
+    TakeAcousticMeasurement = "take_acoustic_measurement"
     RecordAudio = "record_audio"
+
+
+class AcousticDetectionType(str, Enum):
+    leak = "leak"
+
+
+# Upper bound (Hz) for the acoustic detection frequency range. Chosen to cover
+# the ultrasonic band targeted by leak detection on currently supported robots.
+MAX_ACOUSTIC_FREQUENCY_HZ = 100_000
 
 
 class ZoomDescription(BaseModel):
@@ -150,6 +161,37 @@ class TakeCO2Measurement(InspectionTask):
         return CO2Measurement
 
 
+class TakeAcousticMeasurement(InspectionTask):
+    """
+    Task which causes the robot to take an acoustic measurement towards the given target.
+    """
+
+    target: Position = Field()
+    frequency_from: float = Field()
+    frequency_to: float = Field()
+    snr_value_threshold: float = Field()
+    detection_type: AcousticDetectionType = Field()
+    type: Literal[TaskTypes.TakeAcousticMeasurement] = TaskTypes.TakeAcousticMeasurement
+
+    @model_validator(mode="after")
+    def _validate_frequency_range(self) -> "TakeAcousticMeasurement":
+        if (
+            not 0
+            <= self.frequency_from
+            < self.frequency_to
+            <= MAX_ACOUSTIC_FREQUENCY_HZ
+        ):
+            raise ValueError(
+                "Acoustic frequency range must satisfy "
+                f"0 <= frequency_from < frequency_to <= {MAX_ACOUSTIC_FREQUENCY_HZ}"
+            )
+        return self
+
+    @staticmethod
+    def get_inspection_type() -> Type[Inspection]:
+        return AcousticMeasurement
+
+
 TASKS = (
     ReturnToHome
     | TakeImage
@@ -157,5 +199,6 @@ TASKS = (
     | TakeVideo
     | TakeThermalVideo
     | TakeCO2Measurement
+    | TakeAcousticMeasurement
     | RecordAudio
 )
