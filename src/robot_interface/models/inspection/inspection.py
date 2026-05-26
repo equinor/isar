@@ -39,6 +39,10 @@ class GasMeasurementMetadata(InspectionMetadata):
     pass
 
 
+class AcousticMeasurementMetadata(InspectionMetadata):
+    pass
+
+
 class Inspection(BaseModel):
     metadata: InspectionMetadata
     id: str = Field(frozen=True)
@@ -107,3 +111,11 @@ class GasMeasurement(InspectionValue):
 
 class CO2Measurement(GasMeasurement):
     pass
+
+
+class AcousticMeasurement(InspectionBlob):
+    metadata: AcousticMeasurementMetadata  # type: ignore
+
+    @staticmethod
+    def get_metadata_type() -> Type[InspectionMetadata]:
+        return AcousticMeasurementMetadata
