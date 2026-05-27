@@ -1,6 +1,7 @@
 import time
+from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import List, Type
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -11,6 +12,7 @@ from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
     TASKS,
     AcousticDetectionType,
+    InspectionTask,
     RecordAudio,
     ReturnToHome,
     TakeAcousticMeasurement,
@@ -121,98 +123,76 @@ def to_isar_task(task_definition: StartMissionTaskDefinition) -> TASKS:
         )
 
 
+@dataclass(frozen=True)
+class _InspectionSpec:
+    cls: Type[InspectionTask]
+    needs_target: bool = True
+    needs_zoom: bool = False
+    needs_duration: bool = False
+    needs_acoustic_params: bool = False
+
+
+_INSPECTION_SPECS: dict[InspectionTypes, _InspectionSpec] = {
+    InspectionTypes.image: _InspectionSpec(TakeImage, needs_zoom=True),
+    InspectionTypes.thermal_image: _InspectionSpec(TakeThermalImage, needs_zoom=True),
+    InspectionTypes.video: _InspectionSpec(
+        TakeVideo, needs_zoom=True, needs_duration=True
+    ),
+    InspectionTypes.thermal_video: _InspectionSpec(
+        TakeThermalVideo, needs_zoom=True, needs_duration=True
+    ),
+    InspectionTypes.audio: _InspectionSpec(RecordAudio, needs_duration=True),
+    InspectionTypes.co2_measurement: _InspectionSpec(
+        TakeCO2Measurement, needs_target=False
+    ),
+    InspectionTypes.acoustic_measurement: _InspectionSpec(
+        TakeAcousticMeasurement, needs_acoustic_params=True
+    ),
+}
+
+
 def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
     if task_definition.inspection is None:
         raise ValueError("Inspection in task definition was None")
 
     inspection_definition = task_definition.inspection
-
-    if inspection_definition.type == InspectionTypes.image:
-        return TakeImage(
-            id=task_definition.id if task_definition.id else str(uuid4()),
-            robot_pose=task_definition.pose.to_alitra_pose(),
-            tag_id=task_definition.tag,
-            inspection_description=task_definition.inspection.inspection_description,
-            target=task_definition.inspection.inspection_target.to_alitra_position(),
-            zoom=task_definition.zoom,
-            analysis_types=inspection_definition.analysis_types,
-        )
-    elif inspection_definition.type == InspectionTypes.video:
-        if inspection_definition.duration is None:
-            raise ValueError("No duration given to video inspection task")
-        return TakeVideo(
-            id=task_definition.id if task_definition.id else str(uuid4()),
-            robot_pose=task_definition.pose.to_alitra_pose(),
-            tag_id=task_definition.tag,
-            inspection_description=task_definition.inspection.inspection_description,
-            target=task_definition.inspection.inspection_target.to_alitra_position(),
-            duration=inspection_definition.duration,
-            zoom=task_definition.zoom,
-            analysis_types=inspection_definition.analysis_types,
-        )
-    elif inspection_definition.type == InspectionTypes.thermal_image:
-        return TakeThermalImage(
-            id=task_definition.id if task_definition.id else str(uuid4()),
-            robot_pose=task_definition.pose.to_alitra_pose(),
-            tag_id=task_definition.tag,
-            inspection_description=task_definition.inspection.inspection_description,
-            target=task_definition.inspection.inspection_target.to_alitra_position(),
-            zoom=task_definition.zoom,
-            analysis_types=inspection_definition.analysis_types,
-        )
-    elif inspection_definition.type == InspectionTypes.thermal_video:
-        if inspection_definition.duration is None:
-            raise ValueError("No duration given to video inspection task")
-        return TakeThermalVideo(
-            id=task_definition.id if task_definition.id else str(uuid4()),
-            robot_pose=task_definition.pose.to_alitra_pose(),
-            tag_id=task_definition.tag,
-            inspection_description=task_definition.inspection.inspection_description,
-            target=task_definition.inspection.inspection_target.to_alitra_position(),
-            duration=inspection_definition.duration,
-            zoom=task_definition.zoom,
-            analysis_types=inspection_definition.analysis_types,
-        )
-    elif inspection_definition.type == InspectionTypes.audio:
-        if inspection_definition.duration is None:
-            raise ValueError("No duration given to audio inspection task")
-        return RecordAudio(
-            id=task_definition.id if task_definition.id else str(uuid4()),
-            robot_pose=task_definition.pose.to_alitra_pose(),
-            tag_id=task_definition.tag,
-            inspection_description=task_definition.inspection.inspection_description,
-            target=task_definition.inspection.inspection_target.to_alitra_position(),
-            duration=inspection_definition.duration,
-            analysis_types=inspection_definition.analysis_types,
-        )
-    elif inspection_definition.type == InspectionTypes.co2_measurement:
-        return TakeCO2Measurement(
-            id=task_definition.id if task_definition.id else str(uuid4()),
-            robot_pose=task_definition.pose.to_alitra_pose(),
-            tag_id=task_definition.tag,
-            inspection_description=task_definition.inspection.inspection_description,
-            analysis_types=inspection_definition.analysis_types,
-        )
-    elif inspection_definition.type == InspectionTypes.acoustic_measurement:
-        if inspection_definition.acoustic is None:
-            raise ValueError(
-                "No acoustic parameters given to AcousticMeasurement inspection task"
-            )
-        return TakeAcousticMeasurement(
-            id=task_definition.id if task_definition.id else str(uuid4()),
-            robot_pose=task_definition.pose.to_alitra_pose(),
-            tag_id=task_definition.tag,
-            inspection_description=task_definition.inspection.inspection_description,
-            analysis_types=inspection_definition.analysis_types,
-            frequency_from=inspection_definition.acoustic.frequency_from,
-            frequency_to=inspection_definition.acoustic.frequency_to,
-            snr_value_threshold=inspection_definition.acoustic.snr_value_threshold,
-            detection_type=inspection_definition.acoustic.detection_type,
-        )
-    else:
+    spec = _INSPECTION_SPECS.get(inspection_definition.type)
+    if spec is None:
         raise ValueError(
             f"Inspection type '{inspection_definition.type}' not supported"
         )
+
+    if spec.needs_duration and inspection_definition.duration is None:
+        raise ValueError(
+            f"No duration given to {inspection_definition.type.value} inspection task"
+        )
+
+    kwargs: dict = {
+        "id": task_definition.id if task_definition.id else str(uuid4()),
+        "robot_pose": task_definition.pose.to_alitra_pose(),
+        "tag_id": task_definition.tag,
+        "inspection_description": inspection_definition.inspection_description,
+        "analysis_types": inspection_definition.analysis_types,
+    }
+    if spec.needs_target:
+        kwargs["target"] = inspection_definition.inspection_target.to_alitra_position()
+    if spec.needs_zoom:
+        kwargs["zoom"] = task_definition.zoom
+    if spec.needs_duration:
+        kwargs["duration"] = inspection_definition.duration
+    if spec.needs_acoustic_params:
+        acoustic = inspection_definition.acoustic
+        if acoustic is None:
+            raise ValueError(
+                f"No acoustic parameters given to "
+                f"{inspection_definition.type.value} inspection task"
+            )
+        kwargs["frequency_from"] = acoustic.frequency_from
+        kwargs["frequency_to"] = acoustic.frequency_to
+        kwargs["snr_value_threshold"] = acoustic.snr_value_threshold
+        kwargs["detection_type"] = acoustic.detection_type
+
+    return spec.cls(**kwargs)
 
 
 def _build_mission_name() -> str:
