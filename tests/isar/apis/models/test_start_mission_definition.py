@@ -14,7 +14,12 @@ from isar.apis.models.start_mission_definition import (
     to_isar_mission,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import InspectionTask, TakeImage
+from robot_interface.models.mission.task import (
+    InspectionTask,
+    Roi,
+    TakeAcousticMeasurement,
+    TakeImage,
+)
 
 
 def test_to_isar_mission() -> None:
@@ -125,3 +130,37 @@ def test_analysis_types_defaults_to_none_for_all_inspection_types(
     task = mission.tasks[0]
     assert isinstance(task, InspectionTask)
     assert task.analysis_types is None
+
+
+def _acoustic_payload(roi: dict | None = None) -> dict:
+    payload: dict = {
+        "type": "AcousticMeasurement",
+        "inspection_target": {"x": 0, "y": 0, "z": 0},
+        "acoustic": {
+            "frequency_from": 35000.0,
+            "frequency_to": 40000.0,
+            "snr_value_threshold": 30.0,
+            "detection_type": "leak",
+        },
+    }
+    if roi is not None:
+        payload["acoustic"]["roi"] = roi
+    return payload
+
+
+def test_acoustic_measurement_defaults_roi_to_none() -> None:
+    mission = _build_mission_with_inspection_payload(_acoustic_payload())
+    task = mission.tasks[0]
+    assert isinstance(task, TakeAcousticMeasurement)
+    assert task.roi is None
+
+
+def test_acoustic_measurement_forwards_roi_to_task() -> None:
+    mission = _build_mission_with_inspection_payload(
+        _acoustic_payload(
+            roi={"x": 760, "y": 400, "width": 133, "height": 160},
+        )
+    )
+    task = mission.tasks[0]
+    assert isinstance(task, TakeAcousticMeasurement)
+    assert task.roi == Roi(x=760, y=400, width=133, height=160)

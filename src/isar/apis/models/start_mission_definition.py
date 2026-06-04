@@ -15,6 +15,7 @@ from robot_interface.models.mission.task import (
     InspectionTask,
     RecordAudio,
     ReturnToHome,
+    Roi,
     TakeAcousticMeasurement,
     TakeCO2Measurement,
     TakeImage,
@@ -45,6 +46,7 @@ class AcousticInspectionParameters(BaseModel):
     frequency_to: float
     snr_value_threshold: float
     detection_type: AcousticDetectionType
+    roi: Roi | None = None
 
 
 class StartMissionInspectionDefinition(BaseModel):
@@ -191,6 +193,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
         kwargs["frequency_to"] = acoustic.frequency_to
         kwargs["snr_value_threshold"] = acoustic.snr_value_threshold
         kwargs["detection_type"] = acoustic.detection_type
+        kwargs["roi"] = acoustic.roi
 
     return spec.cls(**kwargs)
 
