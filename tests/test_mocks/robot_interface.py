@@ -1,5 +1,4 @@
 import time
-from datetime import datetime
 from queue import Queue
 from threading import Thread
 from typing import Callable, List
@@ -12,16 +11,13 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotCommunicationException,
     RobotMissionStatusException,
 )
-from robot_interface.models.inspection.inspection import (
-    Image,
-    ImageMetadata,
-    Inspection,
-)
+from robot_interface.models.inspection.inspection import Image, Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig, MediaConnectionType
 from robot_interface.robot_interface import RobotInterface
+from tests.test_mocks.inspection import stub_image_metadata
 
 
 class StubRobot(RobotInterface):
@@ -95,19 +91,6 @@ class StubRobot(RobotInterface):
 
     def get_battery_level(self) -> float:
         return 80.0
-
-
-def stub_image_metadata() -> ImageMetadata:
-    return ImageMetadata(
-        start_time=datetime.now(),
-        robot_pose=Pose(
-            Position(0, 0, 0, Frame("robot")),
-            Orientation(0, 0, 0, 1, Frame("robot")),
-            Frame("robot"),
-        ),
-        target_position=Position(0, 0, 0, Frame("robot")),
-        file_type="jpg",
-    )
 
 
 class StubRobotInitiateMissionRaisesException(StubRobot):

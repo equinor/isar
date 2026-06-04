@@ -16,7 +16,7 @@ from isar.storage.storage_interface import StorageInterface
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import TakeImage, Task
-from tests.test_mocks.pose import DummyPose
+from tests.test_mocks.inspection import stub_pose
 from tests.test_mocks.robot_interface import (
     StubRobot,
     StubRobotInitiateMissionRaisesException,
@@ -52,12 +52,8 @@ def test_state_machine_transitions_when_running_full_mission(
         )
     )
 
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    task_2: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
+    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
+    task_2: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
     mission: Mission = Mission(name="Dummy mission", tasks=[task_1, task_2])
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
@@ -86,12 +82,8 @@ def test_state_machine_failed_dependency(
     mocker.patch.object(settings, "RETURN_HOME_RETRY_LIMIT", 3)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    task_2: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
+    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
+    task_2: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
     mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.Failed)
@@ -252,12 +244,8 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
 
     robot_service_thread.robot_service.robot = StubRobotInitiateMissionRaisesException()
 
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    task_2: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
+    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
+    task_2: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
     state_machine_thread.start()
@@ -293,12 +281,8 @@ def test_state_machine_battery_too_low_to_start_mission(
     mocker.patch.object(StubRobot, "get_battery_level", return_value=10.0)
     robot_service_thread.start()
     time.sleep(1)
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
-    task_2: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
+    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
+    task_2: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
