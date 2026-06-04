@@ -40,7 +40,16 @@ class GasMeasurementMetadata(InspectionMetadata):
 
 
 class AcousticMeasurementMetadata(InspectionMetadata):
-    pass
+    duration: float
+    snr_value: float
+    leak_rate: float
+    leak_rate_unit: str
+    sound_pressure_level_at_sensor_db: float
+    sound_pressure_level_at_source_db: float
+    distance_to_source: float
+    result: str
+    frequency_from: float
+    frequency_to: float
 
 
 class Inspection(BaseModel):
