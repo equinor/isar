@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Tuple
 
 from isar.config.settings import settings
-from robot_interface.models.inspection.inspection import Inspection
+from robot_interface.models.inspection.inspection import (
+    AcousticMeasurementMetadata,
+    Inspection,
+)
 from robot_interface.models.mission.mission import Mission
 
 
@@ -70,6 +73,19 @@ def construct_metadata_file(
             }
         ],
     }
+
+    if isinstance(inspection.metadata, AcousticMeasurementMetadata):
+        data["additional_meta"]["acoustic_result"] = {
+            "snr_value": inspection.metadata.snr_value,
+            "leak_rate": inspection.metadata.leak_rate,
+            "leak_rate_unit": inspection.metadata.leak_rate_unit,
+            "sound_pressure_level_at_sensor_db": inspection.metadata.sound_pressure_level_at_sensor_db,  # noqa: E501
+            "sound_pressure_level_at_source_db": inspection.metadata.sound_pressure_level_at_source_db,  # noqa: E501
+            "distance_to_source": inspection.metadata.distance_to_source,
+            "result": inspection.metadata.result,
+            "frequency_from": inspection.metadata.frequency_from,
+            "frequency_to": inspection.metadata.frequency_to,
+        }
 
     return json.dumps(data, indent=4).encode()
 
