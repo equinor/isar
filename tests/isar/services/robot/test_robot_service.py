@@ -11,7 +11,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import TaskStatus
 from robot_interface.models.mission.task import TakeImage, Task
-from tests.test_mocks.pose import DummyPose
+from tests.test_mocks.inspection import stub_pose
 
 
 def test_mission_fails_to_schedule(
@@ -19,9 +19,7 @@ def test_mission_fails_to_schedule(
 ) -> None:
     r_service = mocked_robot_service
 
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
+    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
     mocker.patch(
@@ -45,9 +43,7 @@ def test_mission_succeeds_to_schedule(
 ) -> None:
     r_service = mocked_robot_service
 
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
+    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
     mocker.patch("isar.robot.robot_service.robot_start_mission", return_value=None)
@@ -92,8 +88,8 @@ def test_successful_stop_with_remaining_tasks(
     mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
 
     task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position,
-        robot_pose=DummyPose.default_pose(),
+        target=stub_pose().position,
+        robot_pose=stub_pose(),
         status=TaskStatus.Cancelled,
     )
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
@@ -126,8 +122,8 @@ def test_successful_stop_with_no_remaining_tasks(
     mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
 
     task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position,
-        robot_pose=DummyPose.default_pose(),
+        target=stub_pose().position,
+        robot_pose=stub_pose(),
         status=TaskStatus.Successful,
     )
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
@@ -172,9 +168,7 @@ def test_monitor_mission_reports_nothing_after_mission_stopped(
 ) -> None:
     r_service = mocked_robot_service
 
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
+    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
     mocker.patch(
@@ -193,9 +187,7 @@ def test_monitor_mission_reports_mission_failed(
 ) -> None:
     r_service = mocked_robot_service
 
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
+    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
     mocker.patch(
@@ -218,9 +210,7 @@ def test_monitor_mission_reports_mission_success(
 ) -> None:
     r_service = mocked_robot_service
 
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
+    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
     mission: Mission = Mission(name="Dummy misson", tasks=[task_1])
 
     mocker.patch(
@@ -326,9 +316,7 @@ def test_start_mission_reports_robot_already_home(
 
     r_service.robot.initiate_mission = mock_initiate_mission  # type: ignore
 
-    task_1: Task = TakeImage(
-        target=DummyPose.default_pose().position, robot_pose=DummyPose.default_pose()
-    )
+    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
     mission: Mission = Mission(name="Dummy mission", tasks=[task_1])
     success = r_service._start_mission_handler(mission)
 
