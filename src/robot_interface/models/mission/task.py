@@ -39,6 +39,15 @@ class AcousticDetectionType(str, Enum):
 MAX_ACOUSTIC_FREQUENCY_HZ = 100_000
 
 
+class Roi(BaseModel):
+    """Region of interest in image-space pixel coordinates."""
+
+    x: int = Field(ge=0)
+    y: int = Field(ge=0)
+    width: int = Field(gt=0)
+    height: int = Field(gt=0)
+
+
 class ZoomDescription(BaseModel):
     objectWidth: float
     objectHeight: float
@@ -171,6 +180,7 @@ class TakeAcousticMeasurement(InspectionTask):
     frequency_to: float = Field()
     snr_value_threshold: float = Field()
     detection_type: AcousticDetectionType = Field()
+    roi: Roi | None = Field(default=None)
     type: Literal[TaskTypes.TakeAcousticMeasurement] = TaskTypes.TakeAcousticMeasurement
 
     @model_validator(mode="after")
