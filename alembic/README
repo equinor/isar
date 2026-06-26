@@ -3,7 +3,12 @@ Alembic is used to migrate the databases. [link](https://alembic.sqlalchemy.org/
 # How to
 
 Requirements:
-1. Set credentials for azure authentication towards the postgres database.
+1. Set credentials for Azure authentication towards the postgres database.
+   Credential types are controlled by `ISAR_ALLOWED_AUTH_METHODS`, a
+   comma-separated list of `WorkloadIdentity` (federated token in AKS) and/or
+   `ClientSecret` (reads `ISAR_AZURE_CLIENT_SECRET`). Order sets priority in
+   the resulting `ChainedTokenCredential`. Default is `ClientSecret`, which
+   `alembic env.py` uses locally.
 
 <details>
 <summary>

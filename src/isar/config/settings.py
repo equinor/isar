@@ -119,6 +119,12 @@ class Settings(BaseSettings):
         print("Using environment variable for AZURE_CLIENT_ID")
         AZURE_CLIENT_ID = os.environ[azure_client_id_name]
 
+    # Ordered, comma-separated list of credential types used to acquire an
+    # Entra-ID token for the Postgres connection. Allowed values:
+    # "WorkloadIdentity", "ClientSecret". Order sets priority in the resulting
+    # ChainedTokenCredential (e.g. "WorkloadIdentity,ClientSecret").
+    ALLOWED_AUTH_METHODS: str = Field(default="ClientSecret")
+
     # MQTT username
     # The username and password is set by the MQTT broker and must be known in advance
     # The password should be set as an environment variable "MQTT_PASSWORD"
@@ -238,6 +244,10 @@ class Settings(BaseSettings):
     @classmethod
     def prefix_isar_topics(cls, v: Any, info: ValidationInfo) -> str:
         return f"isar/{info.data['ISAR_ID']}/{v}"
+
+    @property
+    def allowed_auth_methods(self) -> List[str]:
+        return [m.strip() for m in self.ALLOWED_AUTH_METHODS.split(",") if m.strip()]
 
     model_config = SettingsConfigDict(
         env_prefix="ISAR_",
