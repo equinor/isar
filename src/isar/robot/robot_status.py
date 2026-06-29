@@ -35,22 +35,13 @@ class RobotStatusThread(Thread):
     def stop(self) -> None:
         return
 
-    def _is_ready_to_poll_for_status(self) -> bool:
-        time_since_last_robot_status_poll = (
-            time.time() - self.last_robot_status_poll_time
-        )
-        return time_since_last_robot_status_poll > self.robot_status_poll_interval
-
     def run(self) -> None:
         if self.signal_exit.is_set():
             return
 
-        thread_check_interval = settings.THREAD_CHECK_INTERVAL
+        while not self.signal_exit.wait(0):
 
-        while not self.signal_exit.wait(thread_check_interval):
-
-            if not self._is_ready_to_poll_for_status():
-                continue
+            time.sleep(settings.ROBOT_API_STATUS_POLL_INTERVAL)
 
             try:
                 self.last_robot_status_poll_time = time.time()

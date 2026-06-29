@@ -9,7 +9,6 @@ from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
 from isar.modules import ApplicationContainer
-from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
@@ -123,9 +122,7 @@ def test_state_machine_with_successful_collection(
         0
     ]
 
-    mocker.patch.object(
-        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
-    )
+    mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
@@ -169,10 +166,9 @@ def test_state_machine_with_unsuccessful_collection(
 
     mocker.patch.object(StubRobot, "get_inspection", return_value=None)
 
-    mocker.patch.object(
-        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
-    )
-
+    mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
+    mocker.patch.object(settings, "ROBOT_API_STATUS_POLL_INTERVAL", 0.01)
+    mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
     state_machine_thread.start()
     robot_service_thread.start()
@@ -240,6 +236,8 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
 ) -> None:
+    mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
+    mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
 
     robot_service_thread.robot_service.robot = StubRobotInitiateMissionRaisesException()

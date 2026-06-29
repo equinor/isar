@@ -64,10 +64,9 @@ class Settings(BaseSettings):
 
     # ISAR telemetry intervals
     ROBOT_HEARTBEAT_PUBLISH_INTERVAL: float = Field(default=1)
-    ROBOT_INFO_PUBLISH_INTERVAL: float = Field(default=5)
+    ROBOT_INFO_PUBLISH_INTERVAL: float = Field(default=30)
     ROBOT_API_BATTERY_POLL_INTERVAL: float = Field(default=5)
     ROBOT_API_STATUS_POLL_INTERVAL: float = Field(default=5)
-    THREAD_CHECK_INTERVAL: float = Field(default=0.01)
 
     # Determines the minimum battery level the robot must have to start a mission
     # If it drops below this level it will recharge to the value set by
