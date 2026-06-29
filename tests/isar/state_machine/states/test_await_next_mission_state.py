@@ -7,7 +7,6 @@ from pytest_mock import MockerFixture
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
 from isar.modules import ApplicationContainer
-from isar.robot.robot_status import RobotStatusThread
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.await_next_mission import AwaitNextMission
@@ -41,10 +40,9 @@ def test_state_machine_with_successful_mission_stop(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
     )
 
-    mocker.patch.object(
-        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
-    )
-
+    mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
+    mocker.patch.object(settings, "ROBOT_API_STATUS_POLL_INTERVAL", 0.01)
+    mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 15)
 
     mission: Mission = Mission(

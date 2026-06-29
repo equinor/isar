@@ -3,7 +3,7 @@ from collections import deque
 
 from pytest_mock import MockerFixture
 
-from isar.robot.robot_status import RobotStatusThread
+from isar.config.settings import settings
 from isar.state_machine.states_enum import States
 from tests.test_mocks.robot_interface import StubRobotBlockedProtectiveStopToHomeTest
 from tests.test_mocks.state_machine_mocks import (
@@ -19,9 +19,8 @@ def test_state_machine_idle_to_blocked_protective_stop_to_idle(
 ) -> None:
     # Robot status check happens every 5 seconds by default, so we mock the behavior
     # to poll for status imediately
-    mocker.patch.object(
-        RobotStatusThread, "_is_ready_to_poll_for_status", return_value=True
-    )
+    mocker.patch.object(settings, "ROBOT_API_STATUS_POLL_INTERVAL", 0.01)
+    mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
     robot_service_thread.robot_service.robot = StubRobotBlockedProtectiveStopToHomeTest(
         robot_service_thread.robot_service.shared_state.state
