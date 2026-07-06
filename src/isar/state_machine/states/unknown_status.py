@@ -1,12 +1,10 @@
 from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.await_next_mission as AwaitNextMission
-import isar.state_machine.states.blocked_protective_stop as BlockedProtectiveStop
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.stopping as Stopping
-from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
@@ -27,10 +25,7 @@ class UnknownStatus(State):
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,
         ) -> Transition[Maintenance.Maintenance]:
-            events.api_requests.set_maintenance_mode.response.trigger_event(
-                MaintenanceResponse(is_maintenance_mode=True)
-            )
-            return Maintenance.transition()
+            return Maintenance.transition_and_reply_to_API()
 
         def _robot_status_event_handler(
             has_changed: EmptyMessage,
@@ -38,7 +33,7 @@ class UnknownStatus(State):
             Transition[Home.Home]
             | Transition[AwaitNextMission.AwaitNextMission]
             | Transition[Offline.Offline]
-            | Transition[BlockedProtectiveStop.BlockedProtectiveStop]
+            | Transition[Maintenance.Maintenance]
             | Transition[Stopping.Stopping]
             | None
         ):
@@ -59,11 +54,11 @@ class UnknownStatus(State):
                     "Got robot status offline while in unknown status state. Leaving unknown status state."
                 )
                 return Offline.transition()
-            elif robot_status == RobotStatus.BlockedProtectiveStop:
+            elif robot_status == RobotStatus.TeleOperation:
                 self.logger.info(
-                    "Got robot status blocked protective stop while in unknown status state. Leaving unknown status state."
+                    "Got robot status teleoperation while in unknown status state. Leaving unknown status state."
                 )
-                return BlockedProtectiveStop.transition()
+                return Maintenance.transition_without_replying_to_API()
             elif robot_status == RobotStatus.Busy:
                 self.logger.info(
                     "Got robot status busy while in unknown status state. Leaving unknown status state."

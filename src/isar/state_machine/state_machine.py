@@ -205,8 +205,6 @@ class StateMachine(object):
             return IsarStatus.ReturningHome
         elif self.current_state.name == States.Offline:
             return IsarStatus.Offline
-        elif self.current_state.name == States.BlockedProtectiveStop:
-            return IsarStatus.BlockedProtectiveStop
         elif self.current_state.name == States.InterventionNeeded:
             return IsarStatus.InterventionNeeded
         elif self.current_state.name == States.Recharging:

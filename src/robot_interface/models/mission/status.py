@@ -26,4 +26,4 @@ class RobotStatus(Enum):
     Busy = "busy"
     Home = "home"
     Offline = "offline"
-    BlockedProtectiveStop = "blockedprotectivestop"
+    TeleOperation = "teleoperation"

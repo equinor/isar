@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.await_next_mission as AwaitNextMission
-import isar.state_machine.states.blocked_protective_stop as BlockedProtectiveStop
 import isar.state_machine.states.lockdown as Lockdown
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.monitor as Monitor
@@ -10,11 +9,7 @@ import isar.state_machine.states.recharging as Recharging
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
 import isar.state_machine.states.unknown_status as UnknownStatus
-from isar.apis.models.models import (
-    LockdownResponse,
-    MaintenanceResponse,
-    MissionStartResponse,
-)
+from isar.apis.models.models import LockdownResponse, MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
@@ -46,17 +41,14 @@ class Home(State):
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,
         ) -> Transition[Maintenance.Maintenance] | None:
-            events.api_requests.set_maintenance_mode.response.trigger_event(
-                MaintenanceResponse(is_maintenance_mode=True)
-            )
-            return Maintenance.transition()
+            return Maintenance.transition_and_reply_to_API()
 
         def _robot_status_event_handler(
             has_changed: EmptyMessage,
         ) -> (
             Transition[AwaitNextMission.AwaitNextMission]
             | Transition[Offline.Offline]
-            | Transition[BlockedProtectiveStop.BlockedProtectiveStop]
+            | Transition[Maintenance.Maintenance]
             | Transition[UnknownStatus.UnknownStatus]
             | None
         ):
@@ -73,11 +65,11 @@ class Home(State):
                     "Got robot status offline while in home state. Leaving home state."
                 )
                 return Offline.transition()
-            elif robot_status == RobotStatus.BlockedProtectiveStop:
+            elif robot_status == RobotStatus.TeleOperation:
                 self.logger.info(
-                    "Got robot status blocked protective stop while in home state. Leaving home state."
+                    "Got robot status teleoperation while in home state. Going to maintenance."
                 )
-                return BlockedProtectiveStop.transition()
+                return Maintenance.transition_without_replying_to_API()
             self.logger.info(
                 f"Got unexpected status {robot_status} while in home state. Leaving home state."
             )

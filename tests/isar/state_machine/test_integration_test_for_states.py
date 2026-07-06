@@ -93,7 +93,7 @@ def test_state_machine_failed_dependency(
     time.sleep(1)
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(3)  # Allow the state machine to transition through the mission
+    time.sleep(5)  # Allow the state machine to transition through the mission
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [

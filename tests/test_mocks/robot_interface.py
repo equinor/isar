@@ -128,21 +128,15 @@ class StubRobotOfflineToAvailableTest(StubRobot):
         return RobotStatus.Available
 
 
-class StubRobotBlockedProtectiveStopToHomeTest(StubRobot):
+class StubRobotHomeToMaintenanceByTeleoperationTest(StubRobot):
     def __init__(self, current_state_event: Event[States]) -> None:
-        self.entered_blocked_p_stop = False
         self.current_state_event = current_state_event
 
     def robot_status(self) -> RobotStatus:
         current_state: States = self.current_state_event.check()
         if current_state is None:
             raise RobotCommunicationException("Could not read state machine state")
-        if current_state == States.BlockedProtectiveStop:
-            self.entered_blocked_p_stop = True
-            return RobotStatus.Home
-        if not self.entered_blocked_p_stop:
-            return RobotStatus.BlockedProtectiveStop
-        return RobotStatus.Home
+        return RobotStatus.TeleOperation
 
 
 class StubRobotOfflineToHomeTest(StubRobot):
