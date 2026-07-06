@@ -103,13 +103,6 @@ class StateMachine(object):
         self.logger.info("Stopping state machine")
         self.signal_state_machine_to_stop.set()
 
-    def battery_level_is_above_mission_start_threshold(self) -> bool:
-        battery_level = self.shared_state.robot_battery_level.check()
-        if not battery_level:
-            self.logger.warning("Battery level is None")
-            return False
-        return not battery_level < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
-
     def update_state(self) -> None:
         """Updates the current state of the state machine."""
         self.shared_state.state.update(self.current_state.name)

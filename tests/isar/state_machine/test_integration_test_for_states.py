@@ -3,8 +3,6 @@ from collections import deque
 from threading import Thread
 from typing import List
 
-import pytest
-from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
@@ -281,21 +279,14 @@ def test_state_machine_battery_too_low_to_start_mission(
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
 ) -> None:
-    mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
+    mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
+    mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
+    mocker.patch.object(settings, "ROBOT_API_STATUS_POLL_INTERVAL", 0.01)
     state_machine_thread.start()
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     mocker.patch.object(StubRobot, "get_battery_level", return_value=10.0)
     robot_service_thread.start()
     time.sleep(1)
-    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
-    task_2: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
-    mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
-
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
-
-    with pytest.raises(HTTPException) as exception_details:
-        scheduling_utilities.start_mission(mission=mission)
-        assert exception_details.value.status_code == 408
 
     assert state_machine_thread.state_machine.transitions_list == deque(
         [

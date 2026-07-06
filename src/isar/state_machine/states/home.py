@@ -9,7 +9,6 @@ import isar.state_machine.states.recharging as Recharging
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
 import isar.state_machine.states.unknown_status as UnknownStatus
-from isar.apis.models.models import MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
@@ -87,16 +86,7 @@ class Home(State):
 
         def _start_mission_event_handler(
             mission: Mission,
-        ) -> Transition[Monitor.Monitor] | None:
-            if not state_machine.battery_level_is_above_mission_start_threshold():
-                events.api_requests.start_mission.response.trigger_event(
-                    MissionStartResponse(
-                        mission_id=mission.id,
-                        mission_started=False,
-                        mission_not_started_reason="Robot battery too low",
-                    )
-                )
-                return None
+        ) -> Transition[Monitor.Monitor]:
             return Monitor.transition_and_start_mission(mission, True)
 
         event_handlers: List[EventHandlerMapping] = [

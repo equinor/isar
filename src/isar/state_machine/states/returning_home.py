@@ -7,7 +7,7 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.pausing_return_home as PausingReturnHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_return_home as StoppingReturnHome
-from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
+from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
@@ -42,19 +42,7 @@ class ReturningHome(State):
 
         def _start_mission_event_handler(
             mission: Mission,
-        ) -> Transition[StoppingReturnHome.StoppingReturnHome] | None:
-            # The check below is arguably not needed due to the battery eventhandler
-            if not state_machine.battery_level_is_above_mission_start_threshold():
-                response = MissionStartResponse(
-                    mission_id=None,
-                    mission_started=False,
-                    mission_not_started_reason="Robot battery too low",
-                )
-                state_machine.events.api_requests.start_mission.response.trigger_event(
-                    response
-                )
-                return None
-
+        ) -> Transition[StoppingReturnHome.StoppingReturnHome]:
             state_machine.events.state_machine_events.stop_mission.trigger_event(
                 EmptyMessage()
             )
@@ -113,10 +101,7 @@ class ReturningHome(State):
         def _robot_battery_level_updated_handler(
             battery_level: float,
         ) -> Transition[GoingToRecharging.GoingToRecharging] | None:
-            if (
-                battery_level is None
-                or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
-            ):
+            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
                 return None
 
             return GoingToRecharging.transition_to_existing_mission()

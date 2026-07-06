@@ -48,7 +48,10 @@ class RobotStatusThread(Thread):
 
                 robot_status = self.robot.robot_status()
 
-                if robot_status is not self.shared_state.robot_status.check():
+                if (
+                    robot_status
+                    and robot_status is not self.shared_state.robot_status.check()
+                ):
                     self.shared_state.robot_status.update(robot_status)
                     self.robot_service_events.robot_status_changed.trigger_event(
                         EmptyMessage()
