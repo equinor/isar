@@ -9,7 +9,7 @@ import isar.state_machine.states.recharging as Recharging
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
 import isar.state_machine.states.unknown_status as UnknownStatus
-from isar.apis.models.models import LockdownResponse, MissionStartResponse
+from isar.apis.models.models import MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
@@ -33,10 +33,7 @@ class Home(State):
         def _send_to_lockdown_event_handler(
             should_send_robot_home: EmptyMessage,
         ) -> Transition[Lockdown.Lockdown]:
-            events.api_requests.send_to_lockdown.response.trigger_event(
-                LockdownResponse(lockdown_started=True)
-            )
-            return Lockdown.transition()
+            return Lockdown.transition_and_respond_to_api()
 
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,
