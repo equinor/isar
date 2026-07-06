@@ -55,7 +55,6 @@ class GoingToLockdown(State):
         def _mission_success_event_handler(
             success: EmptyMessage,
         ) -> Transition[Lockdown.Lockdown]:
-            state_machine.print_transitions()
             return Lockdown.transition_without_responding_to_api()
 
         event_handlers: List[EventHandlerMapping] = [

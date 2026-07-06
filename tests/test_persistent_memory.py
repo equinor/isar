@@ -18,10 +18,7 @@ from isar.services.service_connections.persistent_memory import (
     read_persistent_robot_state,
     read_persistent_robot_state_with_connection_string,
 )
-from isar.state_machine.state_machine import (
-    StateMachine,
-    read_or_create_persistent_mode,
-)
+from isar.state_machine.state_machine import read_or_create_persistent_mode
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
 from tests.test_mocks.mission_definition import DummyMissionDefinition
@@ -71,7 +68,6 @@ def test_lockdown_mode(
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
 ) -> None:
-    mocker.patch.object(StateMachine, "print_transitions", return_value=None)
 
     # Now running ISAR should put it into maintenance mode
     state_machine_thread_with_db.start()
