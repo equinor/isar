@@ -7,11 +7,7 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.pausing_return_home as PausingReturnHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_return_home as StoppingReturnHome
-from isar.apis.models.models import (
-    ControlMissionResponse,
-    LockdownResponse,
-    MissionStartResponse,
-)
+from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
@@ -70,10 +66,7 @@ class ReturningHome(State):
         def _send_to_lockdown_event_handler(
             should_lockdown: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
-            events.api_requests.send_to_lockdown.response.trigger_event(
-                LockdownResponse(lockdown_started=True)
-            )
-            return GoingToLockdown.transition_to_existing_mission()
+            return GoingToLockdown.transition_to_existing_mission_and_report_to_api()
 
         def _mission_failed_event_handler(
             mission_failed: ErrorMessage,

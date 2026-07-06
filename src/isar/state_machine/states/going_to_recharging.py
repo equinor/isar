@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, List
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging as Recharging
-from isar.apis.models.models import LockdownResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
@@ -36,10 +35,7 @@ class GoingToRecharging(State):
         def _send_to_lockdown_event_handler(
             should_lockdown: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
-            events.api_requests.send_to_lockdown.response.trigger_event(
-                LockdownResponse(lockdown_started=True)
-            )
-            return GoingToLockdown.transition_to_existing_mission()
+            return GoingToLockdown.transition_to_existing_mission_and_report_to_api()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](

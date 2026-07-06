@@ -4,7 +4,7 @@ import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging_with_mission as RechargingWithMission
-from isar.apis.models.models import ControlMissionResponse, LockdownResponse
+from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
 from isar.services.utilities.mqtt_utilities import publish_mission_status
@@ -41,10 +41,7 @@ class GoingToRechargingWithMission(State):
         def _send_to_lockdown_event_handler(
             should_lockdown: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
-            events.api_requests.send_to_lockdown.response.trigger_event(
-                LockdownResponse(lockdown_started=True)
-            )
-            return GoingToLockdown.transition_to_existing_mission()
+            return GoingToLockdown.transition_to_existing_mission_and_report_to_api()
 
         def _stop_mission_event_handler(
             stop_mission_id: str,

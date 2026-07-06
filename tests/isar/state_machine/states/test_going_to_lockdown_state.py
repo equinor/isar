@@ -65,6 +65,9 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is GoingToLockdown
+
     assert (
         sync_state_machine.events.api_requests.send_to_lockdown.response.check().lockdown_started
     )
@@ -74,9 +77,6 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
     assert mqtt_message is not None
     mqtt_payload_topic = mqtt_message[0]
     assert mqtt_payload_topic is settings.TOPIC_ISAR_MISSION_ABORTED
-
-    sync_state_machine.current_state = transition(sync_state_machine)
-    assert type(sync_state_machine.current_state) is GoingToLockdown
 
 
 def test_return_home_transitions_to_going_to_lockdown(
@@ -132,6 +132,7 @@ def test_await_next_mission_transitions_to_going_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
-    assert sync_state_machine.events.api_requests.send_to_lockdown.response.check()
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is GoingToLockdown
+
+    assert sync_state_machine.events.api_requests.send_to_lockdown.response.check()
