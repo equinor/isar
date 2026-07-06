@@ -59,8 +59,8 @@ def test_state_machine_with_return_home_failure_successful_retries(
         )
     )
 
-    assert transition is None  # type: ignore
-    assert sync_state_machine.current_state.failed_return_home_attempts == 1
+    assert transition is not None  # type: ignore
+    assert type(sync_state_machine.current_state) is ReturningHome
 
     transition = event_handler_success.handler(EmptyMessage())
 
