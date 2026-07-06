@@ -100,7 +100,7 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Home
     assert (
-        not sync_state_machine.events.robot_service_events.robot_status_changed.check()
+        not sync_state_machine.events.robot_service_events.robot_status_update.check()
     )
 
     home_state: State = cast(State, sync_state_machine.current_state)

@@ -43,9 +43,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(
     )
     assert event_handler is not None
 
-    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Busy)
-
-    transition = event_handler.handler(EmptyMessage())
+    transition = event_handler.handler(RobotStatus.Busy)
 
     assert transition is not None
 

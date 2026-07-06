@@ -158,7 +158,7 @@ class RobotServiceEvents:
         self.mission_started_successfully: Event[EmptyMessage] = Event(
             "mission_started_successfully"
         )
-        self.robot_status_changed: Event[EmptyMessage] = Event("robot_status_changed")
+        self.robot_status_update: Event[RobotStatus] = Event("robot_status_update")
         self.mission_failed_to_stop: Event[ErrorMessage] = Event(
             "mission_failed_to_stop"
         )
@@ -189,7 +189,6 @@ class RobotServiceEvents:
 class SharedState:
     def __init__(self) -> None:
         self.state: Event[States] = Event("state")
-        self.robot_status: Event[RobotStatus] = Event("robot_status")
         self.robot_battery_level: Event[float] = Event("robot_battery_level")
 
 

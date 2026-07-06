@@ -1,7 +1,6 @@
 from typing import cast
 
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
-from isar.models.events import EmptyMessage
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.home import Home
 from isar.state_machine.states.maintenance import Maintenance
@@ -21,11 +20,7 @@ def test_home_transitions_to_maintenance_mode_when_teleoperating(
     )
     assert event_handler is not None
 
-    sync_state_machine.shared_state.robot_status.trigger_event(
-        RobotStatus.TeleOperation
-    )
-
-    transition = event_handler.handler(EmptyMessage())
+    transition = event_handler.handler(RobotStatus.TeleOperation)
 
     assert transition is not None
 
@@ -44,11 +39,7 @@ def test_unknown_status_transitions_to_maintenance_mode_when_teleoperating(
     )
     assert event_handler is not None
 
-    sync_state_machine.shared_state.robot_status.trigger_event(
-        RobotStatus.TeleOperation
-    )
-
-    transition = event_handler.handler(EmptyMessage())
+    transition = event_handler.handler(RobotStatus.TeleOperation)
 
     assert transition is not None
 
@@ -67,11 +58,7 @@ def test_offline_transitions_to_maintenance_mode_when_teleoperating(
     )
     assert event_handler is not None
 
-    sync_state_machine.shared_state.robot_status.trigger_event(
-        RobotStatus.TeleOperation
-    )
-
-    transition = event_handler.handler(EmptyMessage())
+    transition = event_handler.handler(RobotStatus.TeleOperation)
 
     assert transition is not None
 

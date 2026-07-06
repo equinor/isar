@@ -17,10 +17,7 @@ if TYPE_CHECKING:
 class UnknownStatus(State):
 
     def __init__(self, state_machine: "StateMachine"):
-        # Ensures that we will check the status immediately instead of waiting for it to change
         events = state_machine.events
-        shared_state = state_machine.shared_state
-        events.robot_service_events.robot_status_changed.trigger_event(EmptyMessage())
 
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,
@@ -28,7 +25,7 @@ class UnknownStatus(State):
             return Maintenance.transition_and_reply_to_API()
 
         def _robot_status_event_handler(
-            has_changed: EmptyMessage,
+            robot_status: RobotStatus,
         ) -> (
             Transition[Home.Home]
             | Transition[AwaitNextMission.AwaitNextMission]
@@ -37,8 +34,6 @@ class UnknownStatus(State):
             | Transition[Stopping.Stopping]
             | None
         ):
-            robot_status: RobotStatus | None = shared_state.robot_status.check()
-
             if robot_status == RobotStatus.Home:
                 self.logger.info(
                     "Got robot status home while in unknown status state. Leaving unknown status state."
@@ -77,9 +72,9 @@ class UnknownStatus(State):
                 event=events.api_requests.stop_mission.request,
                 handler=_stop_mission_event_handler,
             ),
-            EventHandlerMapping[EmptyMessage](
+            EventHandlerMapping[RobotStatus](
                 name="robot_status_event",
-                event=events.robot_service_events.robot_status_changed,
+                event=events.robot_service_events.robot_status_update,
                 handler=_robot_status_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](

@@ -46,9 +46,6 @@ def test_state_machine_with_return_home_failure_successful_retries(
         returning_home_state.get_event_handler_by_name("mission_failed_event")
     )
 
-    # We do not retry return home missions if the robot is not ready for another mission
-    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Available)
-
     assert event_handler_success is not None
     assert event_handler_failure is not None
 
@@ -79,9 +76,7 @@ def test_intervention_needed_transitions_to_home_if_robot_is_home(
     )
     assert event_handler is not None
 
-    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Home)
-
-    transition = event_handler.handler(EmptyMessage())
+    transition = event_handler.handler(RobotStatus.Home)
 
     assert transition is not None
 

@@ -17,7 +17,6 @@ class Offline(State):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
-        shared_state = state_machine.shared_state
 
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,
@@ -25,7 +24,7 @@ class Offline(State):
             return Maintenance.transition_and_reply_to_API()
 
         def _robot_status_event_handler(
-            has_changed: EmptyMessage,
+            robot_status: RobotStatus,
         ) -> (
             Transition[Home.Home]
             | Transition[InterventionNeeded.InterventionNeeded]
@@ -33,7 +32,6 @@ class Offline(State):
             | Transition[UnknownStatus.UnknownStatus]
             | None
         ):
-            robot_status: RobotStatus | None = shared_state.robot_status.check()
             if robot_status == RobotStatus.Offline:
                 return None
             elif robot_status == RobotStatus.Home:
@@ -59,9 +57,9 @@ class Offline(State):
             return UnknownStatus.transition()
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping[EmptyMessage](
+            EventHandlerMapping[RobotStatus](
                 name="robot_status_event",
-                event=events.robot_service_events.robot_status_changed,
+                event=events.robot_service_events.robot_status_update,
                 handler=_robot_status_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](

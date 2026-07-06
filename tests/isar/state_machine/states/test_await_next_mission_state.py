@@ -96,10 +96,6 @@ def test_transition_from_resuming_to_paused(
 def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_available(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Available)
-    # Make sure that we have not changed robot status
-    sync_state_machine.events.robot_service_events.robot_status_changed.consume_event()
-
     sync_state_machine.current_state = UnknownStatus(sync_state_machine)
 
     unknown_status_state: State = cast(State, sync_state_machine.current_state)
@@ -109,7 +105,7 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
     )
     assert event_handler is not None
 
-    transition = event_handler.handler(event_handler.event)
+    transition = event_handler.handler(RobotStatus.Available)
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is AwaitNextMission
