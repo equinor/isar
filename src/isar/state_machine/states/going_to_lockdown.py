@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown as Lockdown
+from isar.apis.models.models import LockdownResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
@@ -81,8 +82,12 @@ class GoingToLockdown(State):
         )
 
 
-def transition_and_start_mission() -> Transition[GoingToLockdown]:
+def transition_and_start_mission_and_report_to_api() -> Transition[GoingToLockdown]:
     def _transition(state_machine: "StateMachine") -> GoingToLockdown:
+        state_machine.events.api_requests.send_to_lockdown.response.trigger_event(
+            LockdownResponse(lockdown_started=True)
+        )
+
         if state_machine.events.robot_service_events.mission_failed.clear_event():
             state_machine.logger.warning("Mission failed had lingering event")
         if state_machine.events.robot_service_events.mission_succeeded.clear_event():
@@ -98,8 +103,12 @@ def transition_and_start_mission() -> Transition[GoingToLockdown]:
     return _transition
 
 
-def transition_to_existing_mission() -> Transition[GoingToLockdown]:
+def transition_to_existing_mission_and_report_to_api() -> Transition[GoingToLockdown]:
     def _transition(state_machine: "StateMachine") -> GoingToLockdown:
+        state_machine.events.api_requests.send_to_lockdown.response.trigger_event(
+            LockdownResponse(lockdown_started=True)
+        )
+
         if settings.USE_DB:
             change_persistent_robot_state(
                 settings.ISAR_ID,

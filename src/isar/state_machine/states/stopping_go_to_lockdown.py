@@ -34,11 +34,7 @@ class StoppingGoToLockdown(State):
             state_machine.publish_mission_aborted(
                 mission_id, "Robot being sent to lockdown"
             )
-
-            events.api_requests.send_to_lockdown.response.trigger_event(
-                LockdownResponse(lockdown_started=True)
-            )
-            return GoingToLockdown.transition_and_start_mission()
+            return GoingToLockdown.transition_and_start_mission_and_report_to_api()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](

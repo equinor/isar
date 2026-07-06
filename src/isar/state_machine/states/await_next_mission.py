@@ -6,7 +6,7 @@ import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
-from isar.apis.models.models import LockdownResponse, MissionStartResponse
+from isar.apis.models.models import MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import (
     EventHandlerMapping,
@@ -31,11 +31,7 @@ class AwaitNextMission(State):
         def _send_to_lockdown_event_handler(
             should_lockdown: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
-            events.api_requests.send_to_lockdown.response.trigger_event(
-                LockdownResponse(lockdown_started=True)
-            )
-
-            return GoingToLockdown.transition_and_start_mission()
+            return GoingToLockdown.transition_and_start_mission_and_report_to_api()
 
         def _robot_battery_level_updated_handler(
             battery_level: float,
