@@ -56,7 +56,7 @@ class GoingToLockdown(State):
             success: EmptyMessage,
         ) -> Transition[Lockdown.Lockdown]:
             state_machine.print_transitions()
-            return Lockdown.transition()
+            return Lockdown.transition_without_responding_to_api()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](

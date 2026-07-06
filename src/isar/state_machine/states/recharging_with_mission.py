@@ -5,7 +5,7 @@ import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.recharging as Recharging
-from isar.apis.models.models import ControlMissionResponse, LockdownResponse
+from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
@@ -48,10 +48,7 @@ class RechargingWithMission(State):
         def _send_to_lockdown_event_handler(
             should_lockdown: EmptyMessage,
         ) -> Transition[Lockdown.Lockdown]:
-            events.api_requests.send_to_lockdown.response.trigger_event(
-                LockdownResponse(lockdown_started=True)
-            )
-            return Lockdown.transition()
+            return Lockdown.transition_and_respond_to_api()
 
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,

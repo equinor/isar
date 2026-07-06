@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.recharging as Recharging
+from isar.apis.models.models import LockdownResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
@@ -53,8 +54,24 @@ class Lockdown(State):
         )
 
 
-def transition() -> Transition[Lockdown]:
+def transition_without_responding_to_api() -> Transition[Lockdown]:
     def _transition(state_machine: "StateMachine") -> Lockdown:
+        if settings.USE_DB:
+            change_persistent_robot_state(
+                settings.ISAR_ID,
+                value=RobotStartupMode.Lockdown,
+            )
+        return Lockdown(state_machine)
+
+    return _transition
+
+
+def transition_and_respond_to_api() -> Transition[Lockdown]:
+    def _transition(state_machine: "StateMachine") -> Lockdown:
+        state_machine.events.api_requests.send_to_lockdown.response.trigger_event(
+            LockdownResponse(lockdown_started=True)
+        )
+
         if settings.USE_DB:
             change_persistent_robot_state(
                 settings.ISAR_ID,
