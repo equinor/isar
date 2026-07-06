@@ -39,10 +39,7 @@ class Paused(State):
         def _robot_battery_level_updated_handler(
             battery_level: float,
         ) -> Transition[StoppingGoToRecharge.StoppingGoToRecharge] | None:
-            if (
-                battery_level is None
-                or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
-            ):
+            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
                 return None
             state_machine.logger.warning(
                 "Cancelling current mission due to low battery"

@@ -6,7 +6,6 @@ import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
-from isar.apis.models.models import MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import (
     EventHandlerMapping,
@@ -36,10 +35,7 @@ class AwaitNextMission(State):
         def _robot_battery_level_updated_handler(
             battery_level: float,
         ) -> Transition[GoingToRecharging.GoingToRecharging] | None:
-            if (
-                battery_level is None
-                or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
-            ):
+            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
                 return None
 
             return GoingToRecharging.transition_and_start_return_home()
@@ -56,16 +52,7 @@ class AwaitNextMission(State):
 
         def _start_mission_event_handler(
             mission: Mission,
-        ) -> Transition[Monitor.Monitor] | None:
-            if not state_machine.battery_level_is_above_mission_start_threshold():
-                events.api_requests.start_mission.response.trigger_event(
-                    MissionStartResponse(
-                        mission_id=mission.id,
-                        mission_started=False,
-                        mission_not_started_reason="Robot battery too low",
-                    )
-                )
-                return None
+        ) -> Transition[Monitor.Monitor]:
             return Monitor.transition_and_start_mission(mission, True)
 
         event_handlers: List[EventHandlerMapping] = [

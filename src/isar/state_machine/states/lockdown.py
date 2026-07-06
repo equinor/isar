@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.home as Home
-import isar.state_machine.states.recharging as Recharging
 from isar.apis.models.models import LockdownResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
@@ -23,7 +22,7 @@ class Lockdown(State):
 
         def _release_from_lockdown_handler(
             should_release_from_lockdown: EmptyMessage,
-        ) -> Transition[Home.Home] | Transition[Recharging.Recharging]:
+        ) -> Transition[Home.Home]:
             events.api_requests.release_from_lockdown.response.trigger_event(
                 EmptyMessage()
             )
@@ -34,10 +33,7 @@ class Lockdown(State):
                     value=RobotStartupMode.Normal,
                 )
 
-            if state_machine.battery_level_is_above_mission_start_threshold():
-                return Home.transition()
-            else:
-                return Recharging.transition()
+            return Home.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](

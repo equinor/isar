@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.paused as Paused
-import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
@@ -30,15 +29,10 @@ class StoppingPausedMission(State):
 
         def _successful_stop_event_handler(
             successful_stop: AbortedMission | EmptyMessage,
-        ) -> (
-            Transition[ReturningHome.ReturningHome]
-            | Transition[AwaitNextMission.AwaitNextMission]
-        ):
+        ) -> Transition[AwaitNextMission.AwaitNextMission]:
             publish_mission_status(
                 state_machine.mqtt_publisher, mission_id, MissionStatus.Cancelled, None
             )
-            if not state_machine.battery_level_is_above_mission_start_threshold():
-                return ReturningHome.transition_and_start_mission()
             return AwaitNextMission.transition()
 
         event_handlers: List[EventHandlerMapping] = [

@@ -39,6 +39,12 @@ class RobotBatteryThread(Thread):
 
                 robot_battery_level = self.robot.get_battery_level()
 
+                if robot_battery_level is None:
+                    self.logger.warning(
+                        "Received 'None' battery value from robot interface"
+                    )
+                    continue
+
                 self.shared_state.robot_battery_level.update(robot_battery_level)
 
             except RobotException as e:

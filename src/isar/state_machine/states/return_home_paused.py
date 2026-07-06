@@ -5,7 +5,7 @@ import isar.state_machine.states.resuming_return_home as ResumingReturnHome
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_paused_return_home as StoppingPausedReturnHome
-from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
+from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
@@ -25,10 +25,7 @@ class ReturnHomePaused(State):
         def _robot_battery_level_updated_handler(
             battery_level: float,
         ) -> Transition[ReturningHome.ReturningHome] | None:
-            if (
-                battery_level is None
-                or battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
-            ):
+            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
                 return None
 
             state_machine.events.state_machine_events.resume_mission.trigger_event(
@@ -38,17 +35,7 @@ class ReturnHomePaused(State):
 
         def _start_mission_event_handler(
             mission: Mission,
-        ) -> Transition[StoppingPausedReturnHome.StoppingPausedReturnHome] | None:
-            if not state_machine.battery_level_is_above_mission_start_threshold():
-                response = MissionStartResponse(
-                    mission_id=None,
-                    mission_started=False,
-                    mission_not_started_reason="Robot battery too low",
-                )
-                state_machine.events.api_requests.start_mission.response.trigger_event(
-                    response
-                )
-                return None
+        ) -> Transition[StoppingPausedReturnHome.StoppingPausedReturnHome]:
             state_machine.events.state_machine_events.stop_mission.trigger_event(
                 EmptyMessage()
             )
