@@ -86,29 +86,35 @@ def test_state_machine_with_return_home_failure(
     sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
-    returning_home_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: EventHandlerMapping | None = (
-        returning_home_state.get_event_handler_by_name("mission_failed_event")
-    )
+    failure_event_handler: EventHandlerMapping | None
 
     # We do not retry return home missions if the robot is not ready for another mission
     sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Available)
 
-    assert event_handler is not None
-
     for i in range(settings.RETURN_HOME_RETRY_LIMIT - 1):
 
-        transition = event_handler.handler(
+        failure_event_handler = (
+            sync_state_machine.current_state.get_event_handler_by_name(
+                "mission_failed_event"
+            )
+        )
+
+        transition = failure_event_handler.handler(
             ErrorMessage(
                 error_reason=ErrorReason.RobotUnknownErrorException,
                 error_description="test",
             )
         )
 
-        assert transition is None  # type: ignore
-        assert sync_state_machine.current_state.failed_return_home_attempts == i + 1
+        assert transition is not None  # type: ignore
+        sync_state_machine.current_state = transition(sync_state_machine)
+        assert type(sync_state_machine.current_state) is ReturningHome
 
-    transition = event_handler.handler(
+    failure_event_handler = sync_state_machine.current_state.get_event_handler_by_name(
+        "mission_failed_event"
+    )
+
+    transition = failure_event_handler.handler(
         ErrorMessage(
             error_reason=ErrorReason.RobotUnknownErrorException,
             error_description="test",

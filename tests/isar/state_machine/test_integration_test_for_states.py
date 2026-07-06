@@ -102,6 +102,10 @@ def test_state_machine_failed_dependency(
             States.Monitor,
             States.AwaitNextMission,
             States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
             States.InterventionNeeded,
         ]
     )
@@ -261,6 +265,10 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
             States.AwaitNextMission,
             States.Monitor,
             States.AwaitNextMission,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
+            States.ReturningHome,
             States.ReturningHome,
             States.InterventionNeeded,
         ]
