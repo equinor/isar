@@ -27,7 +27,7 @@ class Home(State):
         shared_state = state_machine.shared_state
 
         # This clears the current robot status value, so we don't read an outdated value
-        events.robot_service_events.robot_status_changed.clear_event()
+        events.robot_service_events.robot_status_update.clear_event()
 
         def _send_to_lockdown_event_handler(
             should_send_robot_home: EmptyMessage,
@@ -40,7 +40,7 @@ class Home(State):
             return Maintenance.transition_and_reply_to_API()
 
         def _robot_status_event_handler(
-            has_changed: EmptyMessage,
+            robot_status: RobotStatus,
         ) -> (
             Transition[AwaitNextMission.AwaitNextMission]
             | Transition[Offline.Offline]
@@ -48,7 +48,6 @@ class Home(State):
             | Transition[UnknownStatus.UnknownStatus]
             | None
         ):
-            robot_status: RobotStatus | None = shared_state.robot_status.check()
             if robot_status == RobotStatus.Home:
                 return None
             elif robot_status == RobotStatus.Available:
@@ -105,9 +104,9 @@ class Home(State):
                 event=events.api_requests.stop_mission.request,
                 handler=_stop_mission_event_handler,
             ),
-            EventHandlerMapping[EmptyMessage](
+            EventHandlerMapping[RobotStatus](
                 name="robot_status_event",
-                event=events.robot_service_events.robot_status_changed,
+                event=events.robot_service_events.robot_status_update,
                 handler=_robot_status_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](

@@ -17,7 +17,6 @@ class InterventionNeeded(State):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
-        shared_state = state_machine.shared_state
 
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,
@@ -33,9 +32,8 @@ class InterventionNeeded(State):
             return UnknownStatus.transition()
 
         def _robot_status_event_handler(
-            has_changed: EmptyMessage,
+            robot_status: RobotStatus,
         ) -> Transition[Home.Home] | None:
-            robot_status: RobotStatus | None = shared_state.robot_status.check()
             if robot_status == RobotStatus.Home:
                 self.logger.info(
                     "Got robot status home while in intervention needed state. Leaving intervention needed state."
@@ -59,9 +57,9 @@ class InterventionNeeded(State):
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=_set_maintenance_mode_event_handler,
             ),
-            EventHandlerMapping[EmptyMessage](
+            EventHandlerMapping[RobotStatus](
                 name="robot_status_event",
-                event=events.robot_service_events.robot_status_changed,
+                event=events.robot_service_events.robot_status_update,
                 handler=_robot_status_event_handler,
             ),
         ]

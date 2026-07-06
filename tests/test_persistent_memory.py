@@ -82,7 +82,7 @@ def test_lockdown_mode(
 
     t_start = time.time()
     while (
-        state_machine_thread_with_db.state_machine.shared_state.robot_status.check()
+        state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
         != RobotStatus.Home
     ):
         if time.time() - t_start > 10:
@@ -176,7 +176,7 @@ def test_maintenance_mode(
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     t_start = time.time()
     while (
-        state_machine_thread_with_db.state_machine.shared_state.robot_status.check()
+        state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
         != RobotStatus.Home
     ):
         if time.time() - t_start > 10:
@@ -248,7 +248,7 @@ def test_release_maintenance_mode(
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     t_start = time.time()
     while (
-        state_machine_thread_with_db.state_machine.shared_state.robot_status.check()
+        state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
         != RobotStatus.Home
     ):
         if time.time() - t_start > 10:

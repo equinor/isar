@@ -35,7 +35,9 @@ class Maintenance(State):
                     value=RobotStartupMode.Normal,
                 )
 
-            robot_status = state_machine.shared_state.robot_status.check()
+            robot_status = (
+                state_machine.events.robot_service_events.robot_status_update.consume_event()
+            )
             if robot_status == RobotStatus.Home:
                 return Home.transition()
             else:

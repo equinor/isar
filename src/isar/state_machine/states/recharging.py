@@ -57,7 +57,7 @@ class Recharging(State):
             ),
             EventHandlerMapping[RobotStatus](
                 name="robot_offline_event",
-                event=shared_state.robot_status,
+                event=events.robot_service_events.robot_status_update,
                 handler=robot_offline_handler,
             ),
             EventHandlerMapping[EmptyMessage](

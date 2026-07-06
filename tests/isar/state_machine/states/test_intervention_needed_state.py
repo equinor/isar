@@ -2,7 +2,6 @@ from typing import cast
 
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State
-from isar.models.events import EmptyMessage
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.going_to_recharging import GoingToRecharging
@@ -88,9 +87,6 @@ def test_state_machine_with_return_home_failure(
 
     failure_event_handler: EventHandlerMapping | None
 
-    # We do not retry return home missions if the robot is not ready for another mission
-    sync_state_machine.shared_state.robot_status.trigger_event(RobotStatus.Available)
-
     for i in range(settings.RETURN_HOME_RETRY_LIMIT - 1):
 
         failure_event_handler = (
@@ -143,8 +139,6 @@ def test_intervention_needed_transitions_does_not_transition_if_status_is_not_ho
         RobotStatus.Offline,
     ]
     for status in statuses:
-        sync_state_machine.shared_state.robot_status.update(status)
-
-        transition = event_handler.handler(EmptyMessage())
+        transition = event_handler.handler(status)
 
         assert transition is None  # type: ignore
