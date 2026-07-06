@@ -134,6 +134,7 @@ def test_lockdown_mode(
     assert state_machine_thread_with_db.state_machine.transitions_list == deque(
         [
             States.Maintenance,
+            States.UnknownStatus,
             States.Home,
             States.Monitor,
             States.StoppingGoToLockdown,
@@ -222,6 +223,7 @@ def test_maintenance_mode(
     assert state_machine_thread_with_db.state_machine.transitions_list == deque(
         [
             States.Maintenance,
+            States.UnknownStatus,
             States.Home,
             States.Monitor,
             States.StoppingDueToMaintenance,
@@ -267,6 +269,7 @@ def test_release_maintenance_mode(
     assert state_machine_thread_with_db.state_machine.transitions_list == deque(
         [
             States.Maintenance,
+            States.UnknownStatus,
             States.Home,
         ]
     )

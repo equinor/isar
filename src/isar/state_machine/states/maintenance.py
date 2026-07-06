@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, List
 
-import isar.state_machine.states.home as Home
-import isar.state_machine.states.intervention_needed as InterventionNeeded
+import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import MaintenanceResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
@@ -11,7 +10,6 @@ from isar.services.service_connections.persistent_memory import (
     change_persistent_robot_state,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission.status import RobotStatus
 
 if TYPE_CHECKING:
     from isar.state_machine.state_machine import StateMachine
@@ -24,7 +22,7 @@ class Maintenance(State):
 
         def _release_from_maintenance_handler(
             should_release_from_maintenance: EmptyMessage,
-        ) -> Transition[Home.Home] | Transition[InterventionNeeded.InterventionNeeded]:
+        ) -> Transition[UnknownStatus.UnknownStatus]:
             events.api_requests.release_from_maintenance_mode.response.trigger_event(
                 EmptyMessage()
             )
@@ -35,15 +33,7 @@ class Maintenance(State):
                     value=RobotStartupMode.Normal,
                 )
 
-            robot_status = (
-                state_machine.events.robot_service_events.robot_status_update.consume_event()
-            )
-            if robot_status == RobotStatus.Home:
-                return Home.transition()
-            else:
-                return InterventionNeeded.transition(
-                    "Robot not home after releasing maintenance mode"
-                )
+            return UnknownStatus.transition()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
