@@ -4,7 +4,6 @@ import isar.state_machine.states.home as Home
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.unknown_status as UnknownStatus
-from isar.apis.models.models import MaintenanceResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
@@ -23,10 +22,7 @@ class InterventionNeeded(State):
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,
         ) -> Transition[Maintenance.Maintenance]:
-            events.api_requests.set_maintenance_mode.response.trigger_event(
-                MaintenanceResponse(is_maintenance_mode=True)
-            )
-            return Maintenance.transition()
+            return Maintenance.transition_and_reply_to_API()
 
         def release_intervention_needed_handler(
             should_release: EmptyMessage,

@@ -15,7 +15,6 @@ class States(str, Enum):
     AwaitNextMission = "await_next_mission"
     Home = "home"
     Offline = "offline"
-    BlockedProtectiveStop = "blocked_protective_stop"
     UnknownStatus = "unknown_status"
     InterventionNeeded = "intervention_needed"
     Recharging = "recharging"

@@ -148,7 +148,6 @@ class SchedulingController:
         if (
             state == States.UnknownStatus
             or state == States.Stopping
-            or state == States.BlockedProtectiveStop
             or state == States.Offline
             or state == States.Home
             or state == States.ReturningHome

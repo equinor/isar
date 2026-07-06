@@ -8,7 +8,6 @@ class IsarStatus(Enum):
     Busy = "busy"
     Home = "home"
     Offline = "offline"
-    BlockedProtectiveStop = "blockedprotectivestop"
     ReturningHome = "returninghome"
     InterventionNeeded = "interventionneeded"
     Recharging = "recharging"

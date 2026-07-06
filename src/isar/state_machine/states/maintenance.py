@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.intervention_needed as InterventionNeeded
+from isar.apis.models.models import MaintenanceResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
@@ -57,7 +58,23 @@ class Maintenance(State):
         )
 
 
-def transition() -> Transition[Maintenance]:
+def transition_and_reply_to_API() -> Transition[Maintenance]:
+    def _transition(state_machine: "StateMachine") -> Maintenance:
+        state_machine.events.api_requests.set_maintenance_mode.response.trigger_event(
+            MaintenanceResponse(is_maintenance_mode=True)
+        )
+
+        if settings.USE_DB:
+            change_persistent_robot_state(
+                settings.ISAR_ID,
+                value=RobotStartupMode.Maintenance,
+            )
+        return Maintenance(state_machine)
+
+    return _transition
+
+
+def transition_without_replying_to_API() -> Transition[Maintenance]:
     def _transition(state_machine: "StateMachine") -> Maintenance:
         if settings.USE_DB:
             change_persistent_robot_state(

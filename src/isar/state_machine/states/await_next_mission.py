@@ -6,11 +6,7 @@ import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
-from isar.apis.models.models import (
-    LockdownResponse,
-    MaintenanceResponse,
-    MissionStartResponse,
-)
+from isar.apis.models.models import LockdownResponse, MissionStartResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import (
     EventHandlerMapping,
@@ -55,10 +51,7 @@ class AwaitNextMission(State):
         def _set_maintenance_mode_event_handler(
             should_set_maintenance_mode: EmptyMessage,
         ) -> Transition[Maintenance.Maintenance]:
-            events.api_requests.set_maintenance_mode.response.trigger_event(
-                MaintenanceResponse(is_maintenance_mode=True)
-            )
-            return Maintenance.transition()
+            return Maintenance.transition_and_reply_to_API()
 
         def _stop_mission_event_handler(
             mission_id: str,

@@ -39,10 +39,7 @@ class StoppingDueToMaintenance(State):
             state_machine.publish_mission_aborted(
                 mission_id, "Mission aborted, robot being sent to maintenance"
             )
-            events.api_requests.set_maintenance_mode.response.trigger_event(
-                MaintenanceResponse(is_maintenance_mode=True)
-            )
-            return Maintenance.transition()
+            return Maintenance.transition_and_reply_to_API()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
