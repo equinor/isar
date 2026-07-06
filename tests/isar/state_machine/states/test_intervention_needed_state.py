@@ -134,7 +134,6 @@ def test_intervention_needed_transitions_does_not_transition_if_status_is_not_ho
         RobotStatus.Available,
         RobotStatus.BlockedProtectiveStop,
         RobotStatus.Busy,
-        RobotStatus.Paused,
         RobotStatus.Offline,
     ]
     for status in statuses:

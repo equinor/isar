@@ -23,7 +23,6 @@ class TaskStatus(str, Enum):
 
 class RobotStatus(Enum):
     Available = "available"
-    Paused = "paused"
     Busy = "busy"
     Home = "home"
     Offline = "offline"
