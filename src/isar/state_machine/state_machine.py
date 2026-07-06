@@ -83,16 +83,6 @@ class StateMachine(object):
 
     #################################################################################
 
-    def print_transitions(self) -> None:
-        state_transitions: str = ", ".join(
-            [
-                f"\n  {transition}" if (i + 1) % 10 == 0 else f"{transition}"
-                for i, transition in enumerate(list(self.transitions_list))
-            ]
-        )
-        self.logger.info("State transitions:\n  %s", state_transitions)
-        self.transitions_list.clear()
-
     def run(self) -> None:
         """Runs the state machine loop."""
         try:

@@ -24,7 +24,6 @@ class GoingToRecharging(State):
                 f"Failed to go to recharging because: "
                 f"{mission_failed.error_description}"
             )
-            state_machine.print_transitions()
             return InterventionNeeded.transition("Return home to recharge failed")
 
         def _mission_success_event_handler(
