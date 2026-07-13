@@ -31,6 +31,9 @@ class ErrorMessage:
     error_reason: ErrorReason | None
     error_description: str
 
+    def __str__(self) -> str:
+        return f"[{self.error_reason} - {self.error_description}]"
+
 
 # This is the base exception class for exceptions that should be raised from the robot
 # package and handled in ISAR. Please peruse the different subclasses for information

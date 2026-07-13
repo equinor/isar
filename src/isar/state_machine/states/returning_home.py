@@ -49,15 +49,11 @@ class ReturningHome(State):
             return StoppingReturnHome.transition(mission)
 
         def _mission_failed_event_handler(
-            mission_failed: ErrorMessage,
+            error_message: ErrorMessage,
         ) -> (
             Transition[InterventionNeeded.InterventionNeeded]
             | Transition[ReturningHome]
         ):
-            state_machine.logger.warning(
-                f"Failed return home because: " f"{mission_failed.error_description}"
-            )
-
             if retries < 1:
                 state_machine.logger.warning(
                     f"Failed to return home after {settings.RETURN_HOME_RETRY_LIMIT} attempts."

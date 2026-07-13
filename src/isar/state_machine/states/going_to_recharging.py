@@ -17,20 +17,13 @@ class GoingToRecharging(State):
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
-        def _mission_failed_event_handler(
-            mission_failed: ErrorMessage,
-        ) -> Transition[InterventionNeeded.InterventionNeeded]:
-            state_machine.logger.warning(
-                f"Failed to go to recharging because: "
-                f"{mission_failed.error_description}"
-            )
-            return InterventionNeeded.transition("Return home to recharge failed")
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
-                handler=_mission_failed_event_handler,
+                handler=lambda _: InterventionNeeded.transition(
+                    "Return home to recharge failed"
+                ),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="mission_succeeded_event",

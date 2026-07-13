@@ -159,7 +159,7 @@ class RobotServiceEvents:
             "mission_started_successfully"
         )
         self.robot_status_update: Event[RobotStatus] = Event("robot_status_update")
-        self.mission_failed_to_stop: Event[ErrorMessage] = Event(
+        self.mission_failed_to_stop: Event[EmptyMessage] = Event(
             "mission_failed_to_stop"
         )
         self.mission_successfully_stopped: Event[AbortedMission] = Event(
@@ -168,13 +168,13 @@ class RobotServiceEvents:
         self.stopped_mission_already_done: Event[EmptyMessage] = Event(
             "stopped_mission_already_done"
         )
-        self.mission_failed_to_pause: Event[ErrorMessage] = Event(
+        self.mission_failed_to_pause: Event[EmptyMessage] = Event(
             "mission_failed_to_pause"
         )
         self.mission_successfully_paused: Event[EmptyMessage] = Event(
             "mission_successfully_paused"
         )
-        self.mission_failed_to_resume: Event[ErrorMessage] = Event(
+        self.mission_failed_to_resume: Event[EmptyMessage] = Event(
             "mission_failed_to_resume"
         )
         self.mission_successfully_resumed: Event[EmptyMessage] = Event(

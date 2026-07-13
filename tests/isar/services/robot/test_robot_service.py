@@ -73,10 +73,6 @@ def test_mission_fails_to_stop(
         r_service.robot_service_events.mission_failed_to_stop.get()
     )
     assert mission_failed_to_stop_event is not None
-    assert (
-        mission_failed_to_stop_event.error_reason
-        == ErrorReason.RobotUnknownErrorException
-    )
     assert not r_service.robot_service_events.mission_successfully_stopped.has_event()
 
 
@@ -244,11 +240,6 @@ def test_mission_fails_to_pause(
         r_service.robot_service_events.mission_failed_to_pause.get()
     )
     assert mission_failed_to_pause_event is not None
-    assert (
-        mission_failed_to_pause_event.error_reason
-        == ErrorReason.RobotUnknownErrorException
-    )
-
     assert not r_service.robot_service_events.mission_successfully_paused.has_event()
 
 
@@ -285,11 +276,6 @@ def test_mission_fails_to_resume(
         r_service.robot_service_events.mission_failed_to_resume.get()
     )
     assert mission_failed_to_resume_event is not None
-    assert (
-        mission_failed_to_resume_event.error_reason
-        == ErrorReason.RobotUnknownErrorException
-    )
-
     assert not r_service.robot_service_events.mission_successfully_resumed.has_event()
 
 

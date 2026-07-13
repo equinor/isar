@@ -85,8 +85,9 @@ class RobotService:
         )
 
         if error_message:
+            self.logger.warning(f"Failed to stop mission. {error_message}")
             self.robot_service_events.mission_failed_to_stop.trigger_event(
-                error_message
+                EmptyMessage()
             )
             return
 
@@ -126,8 +127,9 @@ class RobotService:
         )
 
         if error_message:
+            self.logger.warning(f"Failed to pause mission. {error_message}")
             self.robot_service_events.mission_failed_to_pause.trigger_event(
-                error_message
+                EmptyMessage()
             )
         else:
             self.robot_service_events.mission_successfully_paused.trigger_event(
@@ -140,8 +142,9 @@ class RobotService:
         )
 
         if error_message:
+            self.logger.warning(f"Failed to resume mission. {error_message}")
             self.robot_service_events.mission_failed_to_resume.trigger_event(
-                error_message
+                EmptyMessage()
             )
         else:
             self.robot_service_events.mission_successfully_resumed.trigger_event(
@@ -169,6 +172,7 @@ class RobotService:
                 return remaining_mission
 
             if error_message is not None:
+                self.logger.warning(f"Error monitoring mission. {error_message}")
                 self.robot_service_events.mission_failed.trigger_event(error_message)
             else:
                 self.robot_service_events.mission_succeeded.trigger_event(

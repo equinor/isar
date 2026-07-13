@@ -22,14 +22,13 @@ class GoingToRechargingWithMission(State):
         events = state_machine.events
 
         def _mission_failed_event_handler(
-            mission_failed: ErrorMessage,
+            error_message: ErrorMessage,
         ) -> Transition[InterventionNeeded.InterventionNeeded]:
-            state_machine.logger.warning(
-                f"Failed to go to recharging because: "
-                f"{mission_failed.error_description}"
-            )
             publish_mission_status(
-                state_machine.mqtt_publisher, mission.id, MissionStatus.Failed, None
+                state_machine.mqtt_publisher,
+                mission.id,
+                MissionStatus.Failed,
+                error_message,
             )
             return InterventionNeeded.transition("Return home to recharge failed")
 
