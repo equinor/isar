@@ -19,14 +19,6 @@ class Stopping(State):
     def __init__(self, state_machine: "StateMachine", mission_id: str):
         events = state_machine.events
 
-        def _failed_stop_event_handler(
-            error_message: ErrorMessage,
-        ) -> Transition[Monitor.Monitor]:
-            state_machine.logger.warning(
-                f"Failed to stop mission: {error_message.error_description}"
-            )
-            return Monitor.transition_with_existing_mission(mission_id)
-
         def _successful_stop_event_handler(
             successful_stop: AbortedMission | EmptyMessage,
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
@@ -41,10 +33,10 @@ class Stopping(State):
             return AwaitNextMission.transition()
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping[ErrorMessage](
+            EventHandlerMapping[EmptyMessage](
                 name="failed_stop_event",
                 event=events.robot_service_events.mission_failed_to_stop,
-                handler=_failed_stop_event_handler,
+                handler=lambda _: Monitor.transition_with_existing_mission(mission_id),
             ),
             EventHandlerMapping[AbortedMission](
                 name="successful_stop_event",

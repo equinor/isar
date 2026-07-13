@@ -23,12 +23,8 @@ class GoingToLockdown(State):
         events = state_machine.events
 
         def _mission_failed_event_handler(
-            mission_failed: ErrorMessage,
+            error_message: ErrorMessage,
         ) -> Transition[InterventionNeeded.InterventionNeeded]:
-            state_machine.logger.warning(
-                f"Failed to go to lockdown because: "
-                f"{mission_failed.error_description}"
-            )
             if settings.USE_DB:
                 change_persistent_robot_state(
                     settings.ISAR_ID,
@@ -37,12 +33,8 @@ class GoingToLockdown(State):
             return InterventionNeeded.transition("Lockdown mission failed")
 
         def _mission_failed_to_resume_event_handler(
-            mission_failed_to_resume: ErrorMessage,
+            empty_event: EmptyMessage,
         ) -> Transition[InterventionNeeded.InterventionNeeded]:
-            state_machine.logger.warning(
-                f"Failed to resume return to home mission and going to lockdown because: "
-                f"{mission_failed_to_resume.error_description or ''}"
-            )
             if settings.USE_DB:
                 change_persistent_robot_state(
                     settings.ISAR_ID,
@@ -58,7 +50,7 @@ class GoingToLockdown(State):
                 event=events.robot_service_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
-            EventHandlerMapping[ErrorMessage](
+            EventHandlerMapping[EmptyMessage](
                 name="mission_failed_to_resume",
                 event=events.robot_service_events.mission_failed_to_resume,
                 handler=_mission_failed_to_resume_event_handler,

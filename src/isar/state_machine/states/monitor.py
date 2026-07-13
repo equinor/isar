@@ -69,16 +69,16 @@ class Monitor(State):
             return AwaitNextMission.transition()
 
         def _mission_failed_event_handler(
-            mission_failed: ErrorMessage,
+            error_message: ErrorMessage,
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
             state_machine.logger.warning(
-                f"Mission failed because: " f"{mission_failed.error_description}"
+                f"Mission failed because: " f"{error_message.error_description}"
             )
             publish_mission_status(
                 state_machine.mqtt_publisher,
                 mission_id,
                 MissionStatus.Failed,
-                mission_failed,
+                error_message,
             )
             return AwaitNextMission.transition()
 
