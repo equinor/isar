@@ -40,14 +40,6 @@ class ReturningHome(State):
             )
             return PausingReturnHome.transition()
 
-        def _start_mission_event_handler(
-            mission: Mission,
-        ) -> Transition[StoppingReturnHome.StoppingReturnHome]:
-            state_machine.events.state_machine_events.stop_mission.trigger_event(
-                EmptyMessage()
-            )
-            return StoppingReturnHome.transition(mission)
-
         def _mission_failed_event_handler(
             error_message: ErrorMessage,
         ) -> (
@@ -97,7 +89,9 @@ class ReturningHome(State):
             EventHandlerMapping[Mission](
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,
-                handler=_start_mission_event_handler,
+                handler=lambda mission: StoppingReturnHome.transition_and_stop_return_home(
+                    mission
+                ),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="mission_succeeded_event",
