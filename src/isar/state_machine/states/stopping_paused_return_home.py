@@ -17,12 +17,6 @@ class StoppingPausedReturnHome(State):
     def __init__(self, state_machine: "StateMachine", mission: Mission):
         events = state_machine.events
 
-        response = MissionStartResponse(
-            mission_id=mission.id,
-            mission_started=True,
-        )
-        state_machine.events.api_requests.start_mission.response.trigger_event(response)
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="failed_stop_event",
@@ -47,8 +41,20 @@ class StoppingPausedReturnHome(State):
         )
 
 
-def transition(mission: Mission) -> Transition[StoppingPausedReturnHome]:
+def transition_and_stop_return_home_and_reply_to_API(
+    mission: Mission,
+) -> Transition[StoppingPausedReturnHome]:
     def _transition(state_machine: "StateMachine") -> StoppingPausedReturnHome:
+        state_machine.events.state_machine_events.stop_mission.trigger_event(
+            EmptyMessage()
+        )
+
+        response = MissionStartResponse(
+            mission_id=mission.id,
+            mission_started=True,
+        )
+        state_machine.events.api_requests.start_mission.response.trigger_event(response)
+
         return StoppingPausedReturnHome(state_machine, mission)
 
     return _transition

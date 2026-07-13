@@ -33,14 +33,6 @@ class ReturnHomePaused(State):
             )
             return ReturningHome.transition_to_existing_mission()
 
-        def _start_mission_event_handler(
-            mission: Mission,
-        ) -> Transition[StoppingPausedReturnHome.StoppingPausedReturnHome]:
-            state_machine.events.state_machine_events.stop_mission.trigger_event(
-                EmptyMessage()
-            )
-            return StoppingPausedReturnHome.transition(mission)
-
         def _send_to_lockdown_event_handler(
             should_lockdown: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
@@ -87,7 +79,9 @@ class ReturnHomePaused(State):
             EventHandlerMapping[Mission](
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,
-                handler=_start_mission_event_handler,
+                handler=lambda mission: StoppingPausedReturnHome.transition_and_stop_return_home_and_reply_to_API(
+                    mission
+                ),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",

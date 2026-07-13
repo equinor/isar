@@ -32,6 +32,25 @@ def test_return_home_cancelled_when_new_mission_received(
     assert type(sync_state_machine.current_state) is StoppingReturnHome
 
 
+def test_transition_to_stopping_return_home_replies_to_API(
+    sync_state_machine: StateMachine,
+) -> None:
+    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    sync_state_machine.current_state = ReturningHome(sync_state_machine)
+    returning_home_state: State = cast(State, sync_state_machine.current_state)
+    event_handler: EventHandlerMapping | None = (
+        returning_home_state.get_event_handler_by_name("start_mission_event")
+    )
+
+    assert event_handler is not None
+
+    transition = event_handler.handler(mission)
+
+    sync_state_machine.current_state = transition(sync_state_machine)
+    assert type(sync_state_machine.current_state) is StoppingReturnHome
+    assert sync_state_machine.events.api_requests.start_mission.response.has_event()
+
+
 def test_stopping_return_home_mission_fails(
     sync_state_machine: StateMachine,
 ) -> None:
@@ -48,7 +67,7 @@ def test_stopping_return_home_mission_fails(
         ErrorMessage(error_description="", error_reason=ErrorReason.RobotAPIException)
     )
 
-    assert sync_state_machine.events.api_requests.start_mission.response.has_event()
+    assert not sync_state_machine.events.api_requests.start_mission.response.has_event()
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is ReturningHome
