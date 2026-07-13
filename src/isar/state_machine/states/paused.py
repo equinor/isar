@@ -57,17 +57,6 @@ class Paused(State):
             )
             return StoppingGoToLockdown.transition(mission_id)
 
-        def _resume_mission_event_handler(
-            should_resume: EmptyMessage,
-        ) -> Transition[Resuming.Resuming] | None:
-            state_machine.events.api_requests.resume_mission.response.trigger_event(
-                ControlMissionResponse(success=True)
-            )
-            state_machine.events.state_machine_events.resume_mission.trigger_event(
-                EmptyMessage()
-            )
-            return Resuming.transition(mission_id)
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[str](
                 name="stop_mission_event",
@@ -77,7 +66,9 @@ class Paused(State):
             EventHandlerMapping[EmptyMessage](
                 name="resume_mission_event",
                 event=events.api_requests.resume_mission.request,
-                handler=_resume_mission_event_handler,
+                handler=lambda _: Resuming.transition_resume_mission_and_respond_to_API(
+                    mission_id
+                ),
             ),
             EventHandlerMapping[float](
                 name="robot_battery_update_event",
