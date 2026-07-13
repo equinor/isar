@@ -57,14 +57,6 @@ class Paused(State):
             )
             return StoppingGoToLockdown.transition(mission_id)
 
-        def _set_maintenance_mode_event_handler(
-            should_set_maintenance_mode: EmptyMessage,
-        ) -> Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]:
-            state_machine.logger.warning(
-                "Cancelling current mission due to robot going to maintenance mode"
-            )
-            return StoppingDueToMaintenance.transition_and_stop_mission(mission_id)
-
         def _resume_mission_event_handler(
             should_resume: EmptyMessage,
         ) -> Transition[Resuming.Resuming] | None:
@@ -101,7 +93,9 @@ class Paused(State):
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
-                handler=_set_maintenance_mode_event_handler,
+                handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(
+                    mission_id
+                ),
             ),
         ]
         super().__init__(

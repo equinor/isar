@@ -17,40 +17,25 @@ class StoppingGoToRecharge(State):
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
-        def _failed_stop_event_handler(
-            error_message: ErrorMessage,
-        ) -> Transition[InterventionNeeded.InterventionNeeded]:
-            return InterventionNeeded.transition(
-                "Failed to stop mission when battery was low"
-            )
-
-        def _successful_stop_event_handler(
-            aborted_mission: AbortedMission,
-        ) -> Transition[GoingToRechargingWithMission.GoingToRechargingWithMission]:
-            return GoingToRechargingWithMission.transition_and_start_return_home(
-                aborted_mission
-            )
-
-        def _mission_already_done_event_handler(
-            already_stopped_event: EmptyMessage,
-        ) -> Transition[GoingToRecharging.GoingToRecharging]:
-            return GoingToRecharging.transition_and_start_return_home()
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
                 name="failed_stop_event",
                 event=events.robot_service_events.mission_failed_to_stop,
-                handler=_failed_stop_event_handler,
+                handler=lambda _: InterventionNeeded.transition(
+                    "Failed to stop mission when battery was low"
+                ),
             ),
             EventHandlerMapping[AbortedMission](
                 name="successful_stop_event",
                 event=events.robot_service_events.mission_successfully_stopped,
-                handler=_successful_stop_event_handler,
+                handler=lambda aborted_mission: GoingToRechargingWithMission.transition_and_start_return_home(
+                    aborted_mission
+                ),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="mission_already_done_event",
                 event=events.robot_service_events.stopped_mission_already_done,
-                handler=_mission_already_done_event_handler,
+                handler=lambda _: GoingToRecharging.transition_and_start_return_home(),
             ),
         ]
         super().__init__(

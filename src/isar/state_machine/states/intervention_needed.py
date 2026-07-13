@@ -18,11 +18,6 @@ class InterventionNeeded(State):
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
-        def _set_maintenance_mode_event_handler(
-            should_set_maintenance_mode: EmptyMessage,
-        ) -> Transition[Maintenance.Maintenance]:
-            return Maintenance.transition_and_reply_to_API()
-
         def release_intervention_needed_handler(
             should_release: EmptyMessage,
         ) -> Transition[UnknownStatus.UnknownStatus]:
@@ -55,7 +50,7 @@ class InterventionNeeded(State):
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
-                handler=_set_maintenance_mode_event_handler,
+                handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),
             EventHandlerMapping[RobotStatus](
                 name="robot_status_event",

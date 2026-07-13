@@ -18,11 +18,6 @@ class Offline(State):
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
-        def _set_maintenance_mode_event_handler(
-            should_set_maintenance_mode: EmptyMessage,
-        ) -> Transition[Maintenance.Maintenance]:
-            return Maintenance.transition_and_reply_to_API()
-
         def _robot_status_event_handler(
             robot_status: RobotStatus,
         ) -> (
@@ -65,7 +60,7 @@ class Offline(State):
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
-                handler=_set_maintenance_mode_event_handler,
+                handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),
         ]
         super().__init__(

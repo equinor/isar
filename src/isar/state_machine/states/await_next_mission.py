@@ -27,11 +27,6 @@ class AwaitNextMission(State):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
-        def _send_to_lockdown_event_handler(
-            should_lockdown: EmptyMessage,
-        ) -> Transition[GoingToLockdown.GoingToLockdown]:
-            return GoingToLockdown.transition_and_start_mission_and_report_to_api()
-
         def _robot_battery_level_updated_handler(
             battery_level: float,
         ) -> Transition[GoingToRecharging.GoingToRecharging] | None:
@@ -40,26 +35,13 @@ class AwaitNextMission(State):
 
             return GoingToRecharging.transition_and_start_return_home()
 
-        def _set_maintenance_mode_event_handler(
-            should_set_maintenance_mode: EmptyMessage,
-        ) -> Transition[Maintenance.Maintenance]:
-            return Maintenance.transition_and_reply_to_API()
-
-        def _stop_mission_event_handler(
-            mission_id: str,
-        ) -> Transition[Stopping.Stopping]:
-            return Stopping.transition_and_trigger_stop(mission_id, True)
-
-        def _start_mission_event_handler(
-            mission: Mission,
-        ) -> Transition[Monitor.Monitor]:
-            return Monitor.transition_and_start_mission(mission, True)
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[Mission](
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,
-                handler=_start_mission_event_handler,
+                handler=lambda mission: Monitor.transition_and_start_mission(
+                    mission, True
+                ),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="return_home_event",
@@ -69,12 +51,14 @@ class AwaitNextMission(State):
             EventHandlerMapping[str](
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
-                handler=_stop_mission_event_handler,
+                handler=lambda mission_id: Stopping.transition_and_trigger_stop(
+                    mission_id, True
+                ),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
-                handler=_send_to_lockdown_event_handler,
+                handler=lambda _: GoingToLockdown.transition_and_start_mission_and_report_to_api(),
             ),
             EventHandlerMapping[float](
                 name="robot_battery_update_event",
@@ -85,7 +69,7 @@ class AwaitNextMission(State):
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
-                handler=_set_maintenance_mode_event_handler,
+                handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),
         ]
 

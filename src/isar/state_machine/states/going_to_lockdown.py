@@ -52,11 +52,6 @@ class GoingToLockdown(State):
                 "Failed to resume return to home mission"
             )
 
-        def _mission_success_event_handler(
-            success: EmptyMessage,
-        ) -> Transition[Lockdown.Lockdown]:
-            return Lockdown.transition_without_responding_to_api()
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
@@ -71,7 +66,7 @@ class GoingToLockdown(State):
             EventHandlerMapping[EmptyMessage](
                 name="mission_succeeded_event",
                 event=events.robot_service_events.mission_succeeded,
-                handler=_mission_success_event_handler,
+                handler=lambda _: Lockdown.transition_without_responding_to_api(),
             ),
         ]
         super().__init__(

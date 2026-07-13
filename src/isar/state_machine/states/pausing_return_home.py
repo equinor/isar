@@ -24,11 +24,6 @@ class PausingReturnHome(State):
             )
             return ReturningHome.transition_to_existing_mission()
 
-        def _successful_pause_event_handler(
-            successful_pause: EmptyMessage,
-        ) -> Transition[ReturnHomePaused.ReturnHomePaused]:
-            return ReturnHomePaused.transition()
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
                 name="failed_pause_event",
@@ -38,7 +33,7 @@ class PausingReturnHome(State):
             EventHandlerMapping[EmptyMessage](
                 name="successful_pause_event",
                 event=events.robot_service_events.mission_successfully_paused,
-                handler=_successful_pause_event_handler,
+                handler=lambda _: ReturnHomePaused.transition(),
             ),
         ]
         super().__init__(

@@ -48,16 +48,6 @@ class ReturningHome(State):
             )
             return StoppingReturnHome.transition(mission)
 
-        def _mission_success_event_handler(
-            success: EmptyMessage,
-        ) -> Transition[Home.Home]:
-            return Home.transition()
-
-        def _send_to_lockdown_event_handler(
-            should_lockdown: EmptyMessage,
-        ) -> Transition[GoingToLockdown.GoingToLockdown]:
-            return GoingToLockdown.transition_to_existing_mission_and_report_to_api()
-
         def _mission_failed_event_handler(
             mission_failed: ErrorMessage,
         ) -> (
@@ -89,15 +79,6 @@ class ReturningHome(State):
             )
             return StoppingDueToMaintenance.transition_and_stop_mission()
 
-        def _robot_already_home_event_handler(
-            already_home: EmptyMessage,
-        ) -> Transition[Home.Home]:
-            state_machine.logger.info(
-                "Robot reported that it is already home. "
-                "Assuming return home mission successful without running."
-            )
-            return Home.transition()
-
         def _robot_battery_level_updated_handler(
             battery_level: float,
         ) -> Transition[GoingToRecharging.GoingToRecharging] | None:
@@ -125,7 +106,7 @@ class ReturningHome(State):
             EventHandlerMapping[EmptyMessage](
                 name="mission_succeeded_event",
                 event=events.robot_service_events.mission_succeeded,
-                handler=_mission_success_event_handler,
+                handler=lambda _: Home.transition(),
             ),
             EventHandlerMapping[float](
                 name="robot_battery_update_event",
@@ -136,7 +117,7 @@ class ReturningHome(State):
             EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
-                handler=_send_to_lockdown_event_handler,
+                handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
@@ -146,7 +127,7 @@ class ReturningHome(State):
             EventHandlerMapping[EmptyMessage](
                 name="robot_already_home",
                 event=events.robot_service_events.robot_already_home,
-                handler=_robot_already_home_event_handler,
+                handler=lambda _: Home.transition(),
             ),
         ]
         super().__init__(
