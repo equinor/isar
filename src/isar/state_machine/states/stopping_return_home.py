@@ -51,8 +51,11 @@ class StoppingReturnHome(State):
         )
 
 
-def transition(mission: Mission) -> Transition[StoppingReturnHome]:
+def transition_and_stop_return_home(mission: Mission) -> Transition[StoppingReturnHome]:
     def _transition(state_machine: "StateMachine") -> StoppingReturnHome:
+        state_machine.events.state_machine_events.stop_mission.trigger_event(
+            EmptyMessage()
+        )
         return StoppingReturnHome(state_machine, mission)
 
     return _transition

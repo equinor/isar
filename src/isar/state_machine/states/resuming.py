@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, List
 
-from isar.apis.models.models import ControlMissionResponse
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.paused as Paused
+from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.services.utilities.mqtt_utilities import publish_mission_status
