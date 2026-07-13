@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, List
 
+from isar.apis.models.models import ControlMissionResponse
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.paused as Paused
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
@@ -44,8 +45,16 @@ class Resuming(State):
         )
 
 
-def transition(mission_id: str) -> Transition[Resuming]:
+def transition_resume_mission_and_respond_to_API(
+    mission_id: str,
+) -> Transition[Resuming]:
     def _transition(state_machine: "StateMachine") -> Resuming:
+        state_machine.events.api_requests.resume_mission.response.trigger_event(
+            ControlMissionResponse(success=True)
+        )
+        state_machine.events.state_machine_events.resume_mission.trigger_event(
+            EmptyMessage()
+        )
         return Resuming(state_machine, mission_id)
 
     return _transition
