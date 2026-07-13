@@ -48,17 +48,6 @@ class Monitor(State):
             )
             return StoppingGoToRecharge.transition_and_stop_mission()
 
-        def _send_to_lockdown_event_handler(
-            should_lockdown: EmptyMessage,
-        ) -> Transition[StoppingGoToLockdown.StoppingGoToLockdown]:
-            state_machine.logger.warning(
-                "Cancelling current mission due to robot going to lockdown"
-            )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(
-                EmptyMessage()
-            )
-            return StoppingGoToLockdown.transition(mission_id)
-
         def _mission_success_event_handler(
             success: EmptyMessage,
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
@@ -135,7 +124,9 @@ class Monitor(State):
             EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
-                handler=_send_to_lockdown_event_handler,
+                handler=lambda _: StoppingGoToLockdown.transition_and_stop_mission(
+                    mission_id
+                ),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",

@@ -59,8 +59,11 @@ class StoppingGoToLockdown(State):
         )
 
 
-def transition(mission_id: str) -> Transition[StoppingGoToLockdown]:
+def transition_and_stop_mission(mission_id: str) -> Transition[StoppingGoToLockdown]:
     def _transition(state_machine: "StateMachine") -> StoppingGoToLockdown:
+        state_machine.events.state_machine_events.stop_mission.trigger_event(
+            EmptyMessage()
+        )
         return StoppingGoToLockdown(state_machine, mission_id)
 
     return _transition
