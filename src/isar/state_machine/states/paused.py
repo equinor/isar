@@ -63,10 +63,7 @@ class Paused(State):
             state_machine.logger.warning(
                 "Cancelling current mission due to robot going to maintenance mode"
             )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(
-                EmptyMessage()
-            )
-            return StoppingDueToMaintenance.transition(mission_id)
+            return StoppingDueToMaintenance.transition_and_stop_mission(mission_id)
 
         def _resume_mission_event_handler(
             should_resume: EmptyMessage,

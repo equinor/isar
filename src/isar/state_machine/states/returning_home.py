@@ -87,7 +87,7 @@ class ReturningHome(State):
             state_machine.events.state_machine_events.stop_mission.trigger_event(
                 EmptyMessage()
             )
-            return StoppingDueToMaintenance.transition("")
+            return StoppingDueToMaintenance.transition_and_stop_mission()
 
         def _robot_already_home_event_handler(
             already_home: EmptyMessage,
