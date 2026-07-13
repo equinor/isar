@@ -68,14 +68,6 @@ class Monitor(State):
             )
             return AwaitNextMission.transition()
 
-        def _set_maintenance_mode_event_handler(
-            should_set_maintenance_mode: EmptyMessage,
-        ) -> Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]:
-            state_machine.logger.warning(
-                "Cancelling current mission due to robot going to maintenance mode"
-            )
-            return StoppingDueToMaintenance.transition_and_stop_mission(mission_id)
-
         def _mission_failed_event_handler(
             mission_failed: ErrorMessage,
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
@@ -148,7 +140,9 @@ class Monitor(State):
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
-                handler=_set_maintenance_mode_event_handler,
+                handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(
+                    mission_id
+                ),
             ),
         ]
         super().__init__(

@@ -26,16 +26,6 @@ class GoingToRecharging(State):
             )
             return InterventionNeeded.transition("Return home to recharge failed")
 
-        def _mission_success_event_handler(
-            succcess: EmptyMessage,
-        ) -> Transition[Recharging.Recharging]:
-            return Recharging.transition()
-
-        def _send_to_lockdown_event_handler(
-            should_lockdown: EmptyMessage,
-        ) -> Transition[GoingToLockdown.GoingToLockdown]:
-            return GoingToLockdown.transition_to_existing_mission_and_report_to_api()
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
@@ -45,12 +35,12 @@ class GoingToRecharging(State):
             EventHandlerMapping[EmptyMessage](
                 name="mission_succeeded_event",
                 event=events.robot_service_events.mission_succeeded,
-                handler=_mission_success_event_handler,
+                handler=lambda _: Recharging.transition(),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
-                handler=_send_to_lockdown_event_handler,
+                handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
             ),
         ]
         super().__init__(

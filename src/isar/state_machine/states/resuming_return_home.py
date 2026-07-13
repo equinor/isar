@@ -24,11 +24,6 @@ class ResumingReturnHome(State):
             )
             return ReturnHomePaused.transition()
 
-        def _successful_resume_event_handler(
-            successful_resume: EmptyMessage,
-        ) -> Transition[ReturningHome.ReturningHome]:
-            return ReturningHome.transition_to_existing_mission()
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
                 name="failed_resume_event",
@@ -38,7 +33,7 @@ class ResumingReturnHome(State):
             EventHandlerMapping[EmptyMessage](
                 name="successful_resume_event",
                 event=events.robot_service_events.mission_successfully_resumed,
-                handler=_successful_resume_event_handler,
+                handler=lambda _: ReturningHome.transition_to_existing_mission(),
             ),
         ]
         super().__init__(

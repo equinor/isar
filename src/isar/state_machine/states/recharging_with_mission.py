@@ -45,16 +45,6 @@ class RechargingWithMission(State):
                 return Offline.transition()
             return None
 
-        def _send_to_lockdown_event_handler(
-            should_lockdown: EmptyMessage,
-        ) -> Transition[Lockdown.Lockdown]:
-            return Lockdown.transition_and_respond_to_api()
-
-        def _set_maintenance_mode_event_handler(
-            should_set_maintenance_mode: EmptyMessage,
-        ) -> Transition[Maintenance.Maintenance]:
-            return Maintenance.transition_and_reply_to_API()
-
         def _stop_mission_event_handler(
             stop_mission_id: str,
         ) -> Transition[Recharging.Recharging] | None:
@@ -86,12 +76,12 @@ class RechargingWithMission(State):
             EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
-                handler=_send_to_lockdown_event_handler,
+                handler=lambda _: Lockdown.transition_and_respond_to_api(),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
-                handler=_set_maintenance_mode_event_handler,
+                handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),
             EventHandlerMapping[str](
                 name="stop_mission_event",

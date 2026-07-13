@@ -19,11 +19,6 @@ class UnknownStatus(State):
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
 
-        def _set_maintenance_mode_event_handler(
-            should_set_maintenance_mode: EmptyMessage,
-        ) -> Transition[Maintenance.Maintenance]:
-            return Maintenance.transition_and_reply_to_API()
-
         def _robot_status_event_handler(
             robot_status: RobotStatus,
         ) -> (
@@ -61,16 +56,13 @@ class UnknownStatus(State):
                 return Stopping.transition_and_trigger_stop("")
             return None
 
-        def _stop_mission_event_handler(
-            mission_id: str,
-        ) -> Transition[Stopping.Stopping]:
-            return Stopping.transition_and_trigger_stop(mission_id, True)
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[str](
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
-                handler=_stop_mission_event_handler,
+                handler=lambda mission_id: Stopping.transition_and_trigger_stop(
+                    mission_id, True
+                ),
             ),
             EventHandlerMapping[RobotStatus](
                 name="robot_status_event",
@@ -80,7 +72,7 @@ class UnknownStatus(State):
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
-                handler=_set_maintenance_mode_event_handler,
+                handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),
         ]
         super().__init__(

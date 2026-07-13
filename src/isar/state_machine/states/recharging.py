@@ -38,16 +38,6 @@ class Recharging(State):
                 return Offline.transition()
             return None
 
-        def _send_to_lockdown_event_handler(
-            should_lockdown: EmptyMessage,
-        ) -> Transition[Lockdown.Lockdown]:
-            return Lockdown.transition_and_respond_to_api()
-
-        def _set_maintenance_mode_event_handler(
-            should_set_maintenance_mode: EmptyMessage,
-        ) -> Transition[Maintenance.Maintenance]:
-            return Maintenance.transition_and_reply_to_API()
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[float](
                 name="robot_battery_update_event",
@@ -63,12 +53,12 @@ class Recharging(State):
             EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
-                handler=_send_to_lockdown_event_handler,
+                handler=lambda _: Lockdown.transition_and_respond_to_api(),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
-                handler=_set_maintenance_mode_event_handler,
+                handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),
         ]
         super().__init__(

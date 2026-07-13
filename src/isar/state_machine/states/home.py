@@ -29,16 +29,6 @@ class Home(State):
         # This clears the current robot status value, so we don't read an outdated value
         events.robot_service_events.robot_status_update.clear_event()
 
-        def _send_to_lockdown_event_handler(
-            should_send_robot_home: EmptyMessage,
-        ) -> Transition[Lockdown.Lockdown]:
-            return Lockdown.transition_and_respond_to_api()
-
-        def _set_maintenance_mode_event_handler(
-            should_set_maintenance_mode: EmptyMessage,
-        ) -> Transition[Maintenance.Maintenance] | None:
-            return Maintenance.transition_and_reply_to_API()
-
         def _robot_status_event_handler(
             robot_status: RobotStatus,
         ) -> (
@@ -78,21 +68,13 @@ class Home(State):
 
             return Recharging.transition()
 
-        def _stop_mission_event_handler(
-            mission_id: str,
-        ) -> Transition[Stopping.Stopping]:
-            return Stopping.transition_and_trigger_stop(mission_id, True)
-
-        def _start_mission_event_handler(
-            mission: Mission,
-        ) -> Transition[Monitor.Monitor]:
-            return Monitor.transition_and_start_mission(mission, True)
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[Mission](
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,
-                handler=_start_mission_event_handler,
+                handler=lambda mission: Monitor.transition_and_start_mission(
+                    mission, True
+                ),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="return_home_event",
@@ -102,7 +84,9 @@ class Home(State):
             EventHandlerMapping[str](
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
-                handler=_stop_mission_event_handler,
+                handler=lambda mission_id: Stopping.transition_and_trigger_stop(
+                    mission_id, True
+                ),
             ),
             EventHandlerMapping[RobotStatus](
                 name="robot_status_event",
@@ -112,7 +96,7 @@ class Home(State):
             EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
-                handler=_send_to_lockdown_event_handler,
+                handler=lambda _: Lockdown.transition_and_respond_to_api(),
             ),
             EventHandlerMapping[float](
                 name="robot_battery_update_event",
@@ -123,7 +107,7 @@ class Home(State):
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
-                handler=_set_maintenance_mode_event_handler,
+                handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),
         ]
         super().__init__(
