@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class StoppingDueToMaintenance(State):
 
-    def __init__(self, state_machine: "StateMachine", mission_id: str):
+    def __init__(self, state_machine: "StateMachine", mission_id: str | None = None):
         events = state_machine.events
 
         def _failed_stop_event_handler(
@@ -36,9 +36,10 @@ class StoppingDueToMaintenance(State):
         def _successful_stop_event_handler(
             successful_stop: AbortedMission | EmptyMessage,
         ) -> Transition[Maintenance.Maintenance]:
-            state_machine.publish_mission_aborted(
-                mission_id, "Mission aborted, robot being sent to maintenance"
-            )
+            if mission_id:
+                state_machine.publish_mission_aborted(
+                    mission_id, "Mission aborted, robot being sent to maintenance"
+                )
             return Maintenance.transition_and_reply_to_API()
 
         event_handlers: List[EventHandlerMapping] = [
@@ -65,8 +66,13 @@ class StoppingDueToMaintenance(State):
         )
 
 
-def transition(mission_id: str) -> Transition[StoppingDueToMaintenance]:
+def transition_and_stop_mission(
+    mission_id: str | None = None,
+) -> Transition[StoppingDueToMaintenance]:
     def _transition(state_machine: "StateMachine") -> StoppingDueToMaintenance:
+        state_machine.events.state_machine_events.stop_mission.trigger_event(
+            EmptyMessage()
+        )
         return StoppingDueToMaintenance(state_machine, mission_id)
 
     return _transition

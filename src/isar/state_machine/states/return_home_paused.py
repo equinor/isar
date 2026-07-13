@@ -59,7 +59,7 @@ class ReturnHomePaused(State):
             state_machine.events.state_machine_events.stop_mission.trigger_event(
                 EmptyMessage()
             )
-            return StoppingDueToMaintenance.transition("")
+            return StoppingDueToMaintenance.transition_and_stop_mission()
 
         def _resume_mission_event_handler(
             should_resume: EmptyMessage,
