@@ -89,7 +89,7 @@ class ReturningHome(State):
             EventHandlerMapping[Mission](
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,
-                handler=lambda mission: StoppingReturnHome.transition_and_stop_return_home(
+                handler=lambda mission: StoppingReturnHome.transition_and_stop_return_home_and_reply_to_API(
                     mission
                 ),
             ),

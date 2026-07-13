@@ -26,9 +26,6 @@ class Home(State):
         events = state_machine.events
         shared_state = state_machine.shared_state
 
-        # This clears the current robot status value, so we don't read an outdated value
-        events.robot_service_events.robot_status_update.clear_event()
-
         def _robot_status_event_handler(
             robot_status: RobotStatus,
         ) -> (
@@ -119,6 +116,9 @@ class Home(State):
 
 def transition() -> Transition["Home"]:
     def _transition(state_machine: "StateMachine") -> Home:
+        # This clears the current robot status value, so we don't read an outdated value
+        state_machine.events.robot_service_events.robot_status_update.clear_event()
+
         return Home(state_machine)
 
     return _transition
