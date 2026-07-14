@@ -24,17 +24,6 @@ class Monitor(State):
     def __init__(self, state_machine: "StateMachine", mission_id: str):
         events = state_machine.events
 
-        def _pause_mission_event_handler(
-            should_pause: EmptyMessage,
-        ) -> Transition[Pausing.Pausing]:
-            state_machine.events.api_requests.pause_mission.response.trigger_event(
-                ControlMissionResponse(success=True)
-            )
-            state_machine.events.state_machine_events.pause_mission.trigger_event(
-                EmptyMessage()
-            )
-            return Pausing.transition(mission_id)
-
         def _mission_success_event_handler(
             success: EmptyMessage,
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
@@ -90,7 +79,9 @@ class Monitor(State):
             EventHandlerMapping[EmptyMessage](
                 name="pause_mission_event",
                 event=events.api_requests.pause_mission.request,
-                handler=_pause_mission_event_handler,
+                handler=lambda _: Pausing.transition_and_pause_mission_and_reply_to_API(
+                    mission_id
+                ),
             ),
             EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",

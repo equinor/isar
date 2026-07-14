@@ -7,7 +7,6 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.pausing_return_home as PausingReturnHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_return_home as StoppingReturnHome
-from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
@@ -28,17 +27,6 @@ class ReturningHome(State):
     ):
         events = state_machine.events
 
-        def _pause_mission_event_handler(
-            should_pause: EmptyMessage,
-        ) -> Transition[PausingReturnHome.PausingReturnHome]:
-            state_machine.events.api_requests.pause_mission.response.trigger_event(
-                ControlMissionResponse(success=True)
-            )
-            state_machine.events.state_machine_events.pause_mission.trigger_event(
-                EmptyMessage()
-            )
-            return PausingReturnHome.transition()
-
         def _mission_failed_event_handler(
             error_message: ErrorMessage,
         ) -> (
@@ -55,22 +43,11 @@ class ReturningHome(State):
             else:
                 return transition_and_start_mission(False, retries - 1)
 
-        def _set_maintenance_mode_event_handler(
-            should_set_maintenance_mode: EmptyMessage,
-        ) -> Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]:
-            state_machine.logger.warning(
-                "Cancelling current mission due to robot going to maintenance mode"
-            )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(
-                EmptyMessage()
-            )
-            return StoppingDueToMaintenance.transition_and_stop_mission()
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="pause_mission_event",
                 event=events.api_requests.pause_mission.request,
-                handler=_pause_mission_event_handler,
+                handler=lambda _: PausingReturnHome.transition_and_pause_mission_and_reply_to_API(),
             ),
             EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
@@ -102,7 +79,7 @@ class ReturningHome(State):
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
-                handler=_set_maintenance_mode_event_handler,
+                handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="robot_already_home",

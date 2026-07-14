@@ -5,7 +5,6 @@ import isar.state_machine.states.resuming_return_home as ResumingReturnHome
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_paused_return_home as StoppingPausedReturnHome
-from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
@@ -29,33 +28,11 @@ class ReturnHomePaused(State):
 
             return GoingToLockdown.transition_to_existing_mission_and_report_to_api()
 
-        def _set_maintenance_mode_event_handler(
-            should_set_maintenance_mode: EmptyMessage,
-        ) -> Transition[StoppingDueToMaintenance.StoppingDueToMaintenance]:
-            state_machine.logger.warning(
-                "Cancelling current mission due to robot going to maintenance mode"
-            )
-            state_machine.events.state_machine_events.stop_mission.trigger_event(
-                EmptyMessage()
-            )
-            return StoppingDueToMaintenance.transition_and_stop_mission()
-
-        def _resume_mission_event_handler(
-            should_resume: EmptyMessage,
-        ) -> Transition[ResumingReturnHome.ResumingReturnHome]:
-            state_machine.events.api_requests.resume_mission.response.trigger_event(
-                ControlMissionResponse(success=True)
-            )
-            state_machine.events.state_machine_events.resume_mission.trigger_event(
-                EmptyMessage()
-            )
-            return ResumingReturnHome.transition()
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="resume_return_home_event",
                 event=events.api_requests.resume_mission.request,
-                handler=_resume_mission_event_handler,
+                handler=lambda _: ResumingReturnHome.transition_and_resume_mission_and_reply_to_API(),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="robot_battery_below_threshold_event",
@@ -77,7 +54,7 @@ class ReturnHomePaused(State):
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
-                handler=_set_maintenance_mode_event_handler,
+                handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
             ),
         ]
         super().__init__(
