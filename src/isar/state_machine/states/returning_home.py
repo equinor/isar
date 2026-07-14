@@ -27,7 +27,6 @@ class ReturningHome(State):
         retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
     ):
         events = state_machine.events
-        shared_state = state_machine.shared_state
 
         def _pause_mission_event_handler(
             should_pause: EmptyMessage,
@@ -67,14 +66,6 @@ class ReturningHome(State):
             )
             return StoppingDueToMaintenance.transition_and_stop_mission()
 
-        def _robot_battery_level_updated_handler(
-            battery_level: float,
-        ) -> Transition[GoingToRecharging.GoingToRecharging] | None:
-            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
-                return None
-
-            return GoingToRecharging.transition_to_existing_mission()
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="pause_mission_event",
@@ -98,11 +89,10 @@ class ReturningHome(State):
                 event=events.robot_service_events.mission_succeeded,
                 handler=lambda _: Home.transition(),
             ),
-            EventHandlerMapping[float](
-                name="robot_battery_update_event",
-                event=shared_state.robot_battery_level,
-                handler=_robot_battery_level_updated_handler,
-                should_not_consume=True,
+            EventHandlerMapping[EmptyMessage](
+                name="robot_battery_below_threshold_event",
+                event=events.robot_service_events.battery_below_mission_threshold,
+                handler=lambda _: GoingToRecharging.transition_to_existing_mission(),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",

@@ -184,12 +184,17 @@ class RobotServiceEvents:
             "request_inspection_upload"
         )
         self.robot_already_home: Event[EmptyMessage] = Event("robot_already_home")
+        self.battery_below_mission_threshold: Event[EmptyMessage] = Event(
+            "battery_below_mission_threshold"
+        )
+        self.battery_above_recharge_threshold_event: Event[EmptyMessage] = Event(
+            "battery_above_recharge_threshold"
+        )
 
 
 class SharedState:
     def __init__(self) -> None:
         self.state: Event[States] = Event("state")
-        self.robot_battery_level: Event[float] = Event("robot_battery_level")
 
 
 class EventTimeoutError(Exception):

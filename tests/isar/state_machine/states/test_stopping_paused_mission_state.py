@@ -35,7 +35,6 @@ def test_stopping_paused_mission_fails(
 def test_stopping_paused_mission_succeeds(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
     sync_state_machine.current_state = StoppingPausedMission(
         sync_state_machine, "mission_id"
     )

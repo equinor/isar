@@ -12,7 +12,6 @@ from isar.state_machine.states.stopping_go_to_lockdown import StoppingGoToLockdo
 def test_mission_stopped_when_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.current_state = Monitor(sync_state_machine, "mission_id")
 
     monitor_state: State = cast(State, sync_state_machine.current_state)
@@ -31,7 +30,6 @@ def test_mission_stopped_when_going_to_lockdown(
 def test_going_to_lockdown_transitions_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.current_state = GoingToLockdown(sync_state_machine)
 
     going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)

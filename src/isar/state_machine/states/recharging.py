@@ -4,7 +4,6 @@ import isar.state_machine.states.home as Home
 import isar.state_machine.states.lockdown as Lockdown
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.offline as Offline
-from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
@@ -17,16 +16,7 @@ if TYPE_CHECKING:
 class Recharging(State):
 
     def __init__(self, state_machine: "StateMachine"):
-        shared_state = state_machine.shared_state
         events = state_machine.events
-
-        def robot_battery_level_updated_handler(
-            battery_level: float,
-        ) -> Transition[Home.Home] | None:
-            if battery_level < settings.ROBOT_BATTERY_RECHARGE_THRESHOLD:
-                return None
-
-            return Home.transition()
 
         def robot_offline_handler(
             robot_status: RobotStatus,
@@ -39,11 +29,10 @@ class Recharging(State):
             return None
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping[float](
-                name="robot_battery_update_event",
-                event=shared_state.robot_battery_level,
-                handler=robot_battery_level_updated_handler,
-                should_not_consume=True,
+            EventHandlerMapping[EmptyMessage](
+                name="robot_battery_above_recharge_threshold_event",
+                event=events.robot_service_events.battery_above_recharge_threshold_event,
+                handler=lambda _: Home.transition(),
             ),
             EventHandlerMapping[RobotStatus](
                 name="robot_offline_event",

@@ -193,7 +193,10 @@ class RobotService:
         self.status_thread.start()
 
         self.battery_thread = RobotBatteryThread(
-            self.robot, self.signal_exit, self.shared_state
+            self.robot,
+            self.signal_exit,
+            self.robot_service_events.battery_below_mission_threshold,
+            self.robot_service_events.battery_above_recharge_threshold_event,
         )
         self.battery_thread.start()
 

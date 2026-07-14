@@ -14,7 +14,6 @@ from robot_interface.models.mission.status import RobotStatus
 def test_mqtt_mission_status_sent_on_mission_stopped(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
     sync_state_machine.current_state = Stopping(sync_state_machine, "mission_id")
 
     stopping_state: State = cast(State, sync_state_machine.current_state)
@@ -57,8 +56,6 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(
     )
     assert stopping_state_event_handler is not None
 
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
-
     transition = stopping_state_event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
@@ -90,7 +87,6 @@ def test_stopping_mission_fails(
 def test_stopping_mission_succeeds(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
     sync_state_machine.current_state = Stopping(sync_state_machine, "mission_id")
     stopping_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (

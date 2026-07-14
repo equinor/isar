@@ -51,7 +51,6 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
 def test_stopping_lockdown_transitions_to_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.current_state = StoppingGoToLockdown(
         sync_state_machine, "mission_id"
     )
@@ -82,7 +81,6 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
 def test_return_home_transitions_to_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
@@ -101,7 +99,6 @@ def test_return_home_transitions_to_going_to_lockdown(
 def test_recharging_transitions_to_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.current_state = GoingToRecharging(sync_state_machine)
 
     going_to_recharging_state: State = cast(State, sync_state_machine.current_state)
@@ -120,7 +117,6 @@ def test_recharging_transitions_to_going_to_lockdown(
 def test_await_next_mission_transitions_to_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.current_state = AwaitNextMission(sync_state_machine)
 
     await_next_mission_state: State = cast(State, sync_state_machine.current_state)

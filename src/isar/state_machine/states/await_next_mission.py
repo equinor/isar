@@ -25,15 +25,6 @@ class AwaitNextMission(State):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
-        shared_state = state_machine.shared_state
-
-        def _robot_battery_level_updated_handler(
-            battery_level: float,
-        ) -> Transition[GoingToRecharging.GoingToRecharging] | None:
-            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
-                return None
-
-            return GoingToRecharging.transition_and_start_return_home()
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[Mission](
@@ -60,11 +51,10 @@ class AwaitNextMission(State):
                 event=events.api_requests.send_to_lockdown.request,
                 handler=lambda _: GoingToLockdown.transition_and_start_mission_and_report_to_api(),
             ),
-            EventHandlerMapping[float](
-                name="robot_battery_update_event",
-                event=shared_state.robot_battery_level,
-                handler=_robot_battery_level_updated_handler,
-                should_not_consume=True,
+            EventHandlerMapping[EmptyMessage](
+                name="robot_battery_below_threshold_event",
+                event=events.robot_service_events.battery_below_mission_threshold,
+                handler=lambda _: GoingToRecharging.transition_and_start_return_home(),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",

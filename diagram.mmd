@@ -1,0 +1,122 @@
+flowchart TD
+    StoppingPausedReturnHome["StoppingPausedReturnHome"]
+    StoppingDueToMaintenance["StoppingDueToMaintenance"]
+    GoingToRecharging["GoingToRecharging"]
+    ResumingReturnHome["ResumingReturnHome"]
+    Recharging["Recharging"]
+    Monitor["Monitor"]
+    Home["Home"]
+    ReturningHome["ReturningHome"]
+    Maintenance["Maintenance"]
+    StoppingGoToRecharge["StoppingGoToRecharge"]
+    StoppingPausedMission["StoppingPausedMission"]
+    Offline["Offline"]
+    StoppingGoToLockdown["StoppingGoToLockdown"]
+    RechargingWithMission["RechargingWithMission"]
+    AwaitNextMission["AwaitNextMission"]
+    Stopping["Stopping"]
+    GoingToLockdown["GoingToLockdown"]
+    Paused["Paused"]
+    PausingReturnHome["PausingReturnHome"]
+    InterventionNeeded["InterventionNeeded"]
+    StoppingReturnHome["StoppingReturnHome"]
+    ReturnHomePaused["ReturnHomePaused"]
+    UnknownStatus["UnknownStatus"]
+    GoingToRechargingWithMission["GoingToRechargingWithMission"]
+    Resuming["Resuming"]
+    Pausing["Pausing"]
+    Lockdown["Lockdown"]
+    StoppingPausedReturnHome --> Monitor
+    StoppingPausedReturnHome --> ReturnHomePaused
+    StoppingDueToMaintenance --> InterventionNeeded
+    StoppingDueToMaintenance --> Maintenance
+    GoingToRecharging --> GoingToLockdown
+    GoingToRecharging --> InterventionNeeded
+    GoingToRecharging --> Recharging
+    ResumingReturnHome --> ReturnHomePaused
+    ResumingReturnHome --> ReturningHome
+    Recharging --> Home
+    Recharging --> Lockdown
+    Recharging --> Maintenance
+    Recharging --> Offline
+    Monitor --> AwaitNextMission
+    Monitor --> Pausing
+    Monitor --> Stopping
+    Monitor --> StoppingDueToMaintenance
+    Monitor --> StoppingGoToLockdown
+    Monitor --> StoppingGoToRecharge
+    Home --> AwaitNextMission
+    Home --> Lockdown
+    Home --> Maintenance
+    Home --> Monitor
+    Home --> Offline
+    Home --> Recharging
+    Home --> ReturningHome
+    Home --> Stopping
+    Home --> UnknownStatus
+    ReturningHome --> GoingToLockdown
+    ReturningHome --> GoingToRecharging
+    ReturningHome --> Home
+    ReturningHome --> InterventionNeeded
+    ReturningHome --> PausingReturnHome
+    ReturningHome --> StoppingDueToMaintenance
+    ReturningHome --> StoppingReturnHome
+    Maintenance --> UnknownStatus
+    StoppingGoToRecharge --> GoingToRecharging
+    StoppingGoToRecharge --> GoingToRechargingWithMission
+    StoppingGoToRecharge --> InterventionNeeded
+    StoppingPausedMission --> AwaitNextMission
+    StoppingPausedMission --> Paused
+    Offline --> Home
+    Offline --> InterventionNeeded
+    Offline --> Maintenance
+    Offline --> UnknownStatus
+    StoppingGoToLockdown --> GoingToLockdown
+    StoppingGoToLockdown --> Monitor
+    RechargingWithMission --> Lockdown
+    RechargingWithMission --> Maintenance
+    RechargingWithMission --> Monitor
+    RechargingWithMission --> Offline
+    RechargingWithMission --> Recharging
+    AwaitNextMission --> GoingToLockdown
+    AwaitNextMission --> GoingToRecharging
+    AwaitNextMission --> Maintenance
+    AwaitNextMission --> Monitor
+    AwaitNextMission --> ReturningHome
+    AwaitNextMission --> Stopping
+    Stopping --> AwaitNextMission
+    Stopping --> Monitor
+    GoingToLockdown --> InterventionNeeded
+    GoingToLockdown --> Lockdown
+    Paused --> Resuming
+    Paused --> StoppingDueToMaintenance
+    Paused --> StoppingGoToLockdown
+    Paused --> StoppingGoToRecharge
+    Paused --> StoppingPausedMission
+    PausingReturnHome --> ReturnHomePaused
+    PausingReturnHome --> ReturningHome
+    InterventionNeeded --> Home
+    InterventionNeeded --> Maintenance
+    InterventionNeeded --> ReturningHome
+    InterventionNeeded --> UnknownStatus
+    StoppingReturnHome --> Monitor
+    StoppingReturnHome --> ReturningHome
+    ReturnHomePaused --> GoingToLockdown
+    ReturnHomePaused --> ResumingReturnHome
+    ReturnHomePaused --> ReturningHome
+    ReturnHomePaused --> StoppingDueToMaintenance
+    ReturnHomePaused --> StoppingPausedReturnHome
+    UnknownStatus --> AwaitNextMission
+    UnknownStatus --> Home
+    UnknownStatus --> Maintenance
+    UnknownStatus --> Offline
+    UnknownStatus --> Stopping
+    GoingToRechargingWithMission --> GoingToLockdown
+    GoingToRechargingWithMission --> GoingToRecharging
+    GoingToRechargingWithMission --> InterventionNeeded
+    GoingToRechargingWithMission --> RechargingWithMission
+    Resuming --> Monitor
+    Resuming --> Paused
+    Pausing --> Monitor
+    Pausing --> Paused
+    Lockdown --> Home

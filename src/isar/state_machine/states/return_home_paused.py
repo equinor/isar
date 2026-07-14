@@ -6,7 +6,6 @@ import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_paused_return_home as StoppingPausedReturnHome
 from isar.apis.models.models import ControlMissionResponse
-from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
@@ -20,18 +19,6 @@ class ReturnHomePaused(State):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
-        shared_state = state_machine.shared_state
-
-        def _robot_battery_level_updated_handler(
-            battery_level: float,
-        ) -> Transition[ReturningHome.ReturningHome] | None:
-            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
-                return None
-
-            state_machine.events.state_machine_events.resume_mission.trigger_event(
-                EmptyMessage()
-            )
-            return ReturningHome.transition_to_existing_mission()
 
         def _send_to_lockdown_event_handler(
             should_lockdown: EmptyMessage,
@@ -70,11 +57,10 @@ class ReturnHomePaused(State):
                 event=events.api_requests.resume_mission.request,
                 handler=_resume_mission_event_handler,
             ),
-            EventHandlerMapping[float](
-                name="robot_battery_update_event",
-                event=shared_state.robot_battery_level,
-                handler=_robot_battery_level_updated_handler,
-                should_not_consume=True,
+            EventHandlerMapping[EmptyMessage](
+                name="robot_battery_below_threshold_event",
+                event=events.robot_service_events.battery_below_mission_threshold,
+                handler=lambda _: ReturningHome.transition_to_existing_mission(),
             ),
             EventHandlerMapping[Mission](
                 name="start_mission_event",

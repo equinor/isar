@@ -14,7 +14,6 @@ from tests.test_mocks.task import StubTask
 def test_return_home_cancelled_when_new_mission_received(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
@@ -76,7 +75,6 @@ def test_stopping_return_home_mission_fails(
 def test_stopping_return_home_mission_succeeds(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     sync_state_machine.current_state = StoppingReturnHome(sync_state_machine, mission)
     stopping_return_home_state: State = cast(State, sync_state_machine.current_state)

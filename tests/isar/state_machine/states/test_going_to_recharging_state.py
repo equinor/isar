@@ -55,12 +55,14 @@ def test_return_home_goes_to_recharging_when_battery_low(
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
     returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
-        returning_home_state.get_event_handler_by_name("robot_battery_update_event")
+        returning_home_state.get_event_handler_by_name(
+            "robot_battery_below_threshold_event"
+        )
     )
 
     assert event_handler is not None
 
-    transition = event_handler.handler(10.0)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is GoingToRecharging

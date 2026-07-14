@@ -15,7 +15,6 @@ from robot_interface.models.mission.status import RobotStatus
 def test_lockdown_transitions_to_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
     sync_state_machine.current_state = Lockdown(sync_state_machine)
 
     lockdown_state: State = cast(State, sync_state_machine.current_state)
@@ -35,7 +34,6 @@ def test_lockdown_transitions_to_home(
 def test_state_machine_with_return_home_failure_successful_retries(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
@@ -91,12 +89,14 @@ def test_recharging_goes_to_home_when_battery_high(
 
     recharging_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
-        recharging_state.get_event_handler_by_name("robot_battery_update_event")
+        recharging_state.get_event_handler_by_name(
+            "robot_battery_above_recharge_threshold_event"
+        )
     )
 
     assert event_handler is not None
 
-    transition = event_handler.handler(99.9)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
 
