@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.return_home_paused as ReturnHomePaused
 import isar.state_machine.states.returning_home as ReturningHome
+from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
@@ -34,8 +35,14 @@ class ResumingReturnHome(State):
         )
 
 
-def transition() -> Transition[ResumingReturnHome]:
+def transition_and_resume_mission_and_reply_to_API() -> Transition[ResumingReturnHome]:
     def _transition(state_machine: "StateMachine") -> ResumingReturnHome:
+        state_machine.events.api_requests.resume_mission.response.trigger_event(
+            ControlMissionResponse(success=True)
+        )
+        state_machine.events.state_machine_events.resume_mission.trigger_event(
+            EmptyMessage()
+        )
         return ResumingReturnHome(state_machine)
 
     return _transition

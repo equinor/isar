@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.paused as Paused
+from isar.apis.models.models import ControlMissionResponse
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.services.utilities.mqtt_utilities import publish_mission_status
@@ -44,8 +45,16 @@ class Pausing(State):
         )
 
 
-def transition(mission_id: str) -> Transition[Pausing]:
+def transition_and_pause_mission_and_reply_to_API(
+    mission_id: str,
+) -> Transition[Pausing]:
     def _transition(state_machine: "StateMachine") -> Pausing:
+        state_machine.events.api_requests.pause_mission.response.trigger_event(
+            ControlMissionResponse(success=True)
+        )
+        state_machine.events.state_machine_events.pause_mission.trigger_event(
+            EmptyMessage()
+        )
         return Pausing(state_machine, mission_id=mission_id)
 
     return _transition
