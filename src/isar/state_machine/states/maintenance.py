@@ -2,13 +2,8 @@ from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import MaintenanceResponse
-from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
-from isar.services.service_connections.persistent_memory import (
-    RobotStartupMode,
-    change_persistent_robot_state,
-)
 from isar.state_machine.states_enum import States
 
 if TYPE_CHECKING:
@@ -26,12 +21,6 @@ class Maintenance(State):
             events.api_requests.release_from_maintenance_mode.response.trigger_event(
                 EmptyMessage()
             )
-
-            if settings.USE_DB:
-                change_persistent_robot_state(
-                    settings.ISAR_ID,
-                    value=RobotStartupMode.Normal,
-                )
 
             return UnknownStatus.transition()
 
@@ -55,12 +44,6 @@ def transition_and_reply_to_API() -> Transition[Maintenance]:
         state_machine.events.api_requests.set_maintenance_mode.response.trigger_event(
             MaintenanceResponse(is_maintenance_mode=True)
         )
-
-        if settings.USE_DB:
-            change_persistent_robot_state(
-                settings.ISAR_ID,
-                value=RobotStartupMode.Maintenance,
-            )
         return Maintenance(state_machine)
 
     return _transition
@@ -68,11 +51,6 @@ def transition_and_reply_to_API() -> Transition[Maintenance]:
 
 def transition_without_replying_to_API() -> Transition[Maintenance]:
     def _transition(state_machine: "StateMachine") -> Maintenance:
-        if settings.USE_DB:
-            change_persistent_robot_state(
-                settings.ISAR_ID,
-                value=RobotStartupMode.Maintenance,
-            )
         return Maintenance(state_machine)
 
     return _transition
