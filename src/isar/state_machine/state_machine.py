@@ -12,6 +12,7 @@ from isar.services.service_connections.mqtt.mqtt_client import props_expiry
 from isar.services.service_connections.persistent_memory import (
     NoSuchRobotException,
     RobotStartupMode,
+    change_persistent_robot_state,
     create_persistent_robot_state,
     read_persistent_robot_state,
 )
@@ -106,6 +107,28 @@ class StateMachine(object):
     def update_state(self) -> None:
         """Updates the current state of the state machine."""
         self.shared_state.state.update(self.current_state.name)
+
+        if settings.USE_DB:
+            if self.current_state.name in [
+                States.StoppingGoToLockdown,
+                States.GoingToLockdown,
+                States.Lockdown,
+            ]:
+                change_persistent_robot_state(
+                    settings.ISAR_ID,
+                    value=RobotStartupMode.Lockdown,
+                )
+            elif self.current_state.name == States.Maintenance:
+                change_persistent_robot_state(
+                    settings.ISAR_ID,
+                    value=RobotStartupMode.Maintenance,
+                )
+            else:
+                change_persistent_robot_state(
+                    settings.ISAR_ID,
+                    value=RobotStartupMode.Normal,
+                )
+
         self.transitions_list.append(self.current_state.name)
         self.logger.info("State: %s", self.current_state.name)
         self.publish_status()

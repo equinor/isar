@@ -2,13 +2,8 @@ from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.home as Home
 from isar.apis.models.models import LockdownResponse
-from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
-from isar.services.service_connections.persistent_memory import (
-    RobotStartupMode,
-    change_persistent_robot_state,
-)
 from isar.state_machine.states_enum import States
 
 if TYPE_CHECKING:
@@ -26,13 +21,6 @@ class Lockdown(State):
             events.api_requests.release_from_lockdown.response.trigger_event(
                 EmptyMessage()
             )
-
-            if settings.USE_DB:
-                change_persistent_robot_state(
-                    settings.ISAR_ID,
-                    value=RobotStartupMode.Normal,
-                )
-
             return Home.transition()
 
         event_handlers: List[EventHandlerMapping] = [
@@ -52,11 +40,6 @@ class Lockdown(State):
 
 def transition_without_responding_to_api() -> Transition[Lockdown]:
     def _transition(state_machine: "StateMachine") -> Lockdown:
-        if settings.USE_DB:
-            change_persistent_robot_state(
-                settings.ISAR_ID,
-                value=RobotStartupMode.Lockdown,
-            )
         return Lockdown(state_machine)
 
     return _transition
@@ -67,12 +50,6 @@ def transition_and_respond_to_api() -> Transition[Lockdown]:
         state_machine.events.api_requests.send_to_lockdown.response.trigger_event(
             LockdownResponse(lockdown_started=True)
         )
-
-        if settings.USE_DB:
-            change_persistent_robot_state(
-                settings.ISAR_ID,
-                value=RobotStartupMode.Lockdown,
-            )
         return Lockdown(state_machine)
 
     return _transition
