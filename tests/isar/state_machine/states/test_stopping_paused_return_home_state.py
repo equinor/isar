@@ -59,7 +59,6 @@ def test_stopping_paused_return_home_mission_succeeds(
     sync_state_machine: StateMachine,
 ) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
     sync_state_machine.current_state = StoppingPausedReturnHome(
         sync_state_machine, mission
     )

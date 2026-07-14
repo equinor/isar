@@ -22,7 +22,6 @@ from robot_interface.models.mission.task import ReturnToHome
 def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
     example_mission: Mission = Mission(
         name="Dummy return home misson", tasks=[ReturnToHome()]
     )
@@ -85,7 +84,6 @@ def test_transition_from_resuming_return_home_to_returning_home_state(
 def test_transition_from_returning_home_to_home_robot_status_not_updated(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
@@ -116,7 +114,6 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
 def test_return_home_starts_when_battery_is_low(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.current_state = AwaitNextMission(sync_state_machine)
 
     await_next_mission_state: State = cast(State, sync_state_machine.current_state)

@@ -6,7 +6,6 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.recharging as Recharging
 from isar.apis.models.models import ControlMissionResponse
-from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
 from isar.state_machine.states_enum import States
@@ -19,21 +18,7 @@ if TYPE_CHECKING:
 class RechargingWithMission(State):
 
     def __init__(self, state_machine: "StateMachine", mission: AbortedMission):
-        shared_state = state_machine.shared_state
         events = state_machine.events
-
-        def robot_battery_level_updated_handler(
-            battery_level: float,
-        ) -> Transition[Monitor.Monitor] | None:
-            if battery_level < settings.ROBOT_BATTERY_RECHARGE_THRESHOLD:
-                return None
-
-            state_machine.logger.info(
-                f"Continuing mission after finishing recharging: {mission.name}"
-            )
-            return Monitor.transition_and_start_mission(
-                mission, should_respond_to_API_request=False
-            )
 
         def robot_offline_handler(
             robot_status: RobotStatus,
@@ -62,11 +47,12 @@ class RechargingWithMission(State):
                 return None
 
         event_handlers: List[EventHandlerMapping] = [
-            EventHandlerMapping[float](
-                name="robot_battery_update_event",
-                event=shared_state.robot_battery_level,
-                handler=robot_battery_level_updated_handler,
-                should_not_consume=True,
+            EventHandlerMapping[EmptyMessage](
+                name="robot_battery_above_recharging_threshold_event",
+                event=events.robot_service_events.battery_above_recharge_threshold_event,
+                handler=lambda _: Monitor.transition_and_start_mission(
+                    mission, should_respond_to_API_request=False
+                ),
             ),
             EventHandlerMapping[RobotStatus](
                 name="robot_offline_event",

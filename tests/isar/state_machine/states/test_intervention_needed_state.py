@@ -36,7 +36,6 @@ def test_going_to_recharging_goes_to_intervention_needed(
 def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.current_state = GoingToLockdown(sync_state_machine)
 
     going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
@@ -60,7 +59,6 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
 def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.current_state = GoingToLockdown(sync_state_machine)
 
     going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
@@ -82,7 +80,6 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
 def test_state_machine_with_return_home_failure(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
     sync_state_machine.current_state = ReturningHome(sync_state_machine)
 
     failure_event_handler: EventHandlerMapping | None

@@ -52,7 +52,6 @@ def test_resuming_paused_return_home(
 def test_transition_from_paused_return_home_to_stopping_paused_return_home_mission(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(90.0)
     sync_state_machine.current_state = ReturnHomePaused(sync_state_machine)
 
     return_home_paused_state: State = cast(State, sync_state_machine.current_state)

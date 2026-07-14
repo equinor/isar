@@ -9,7 +9,6 @@ import isar.state_machine.states.recharging as Recharging
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
 import isar.state_machine.states.unknown_status as UnknownStatus
-from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
@@ -24,7 +23,6 @@ class Home(State):
 
     def __init__(self, state_machine: "StateMachine"):
         events = state_machine.events
-        shared_state = state_machine.shared_state
 
         def _robot_status_event_handler(
             robot_status: RobotStatus,
@@ -57,14 +55,6 @@ class Home(State):
             )
             return UnknownStatus.transition()
 
-        def _robot_battery_level_updated_handler(
-            battery_level: float,
-        ) -> Transition[Recharging.Recharging] | None:
-            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
-                return None
-
-            return Recharging.transition()
-
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[Mission](
                 name="start_mission_event",
@@ -95,11 +85,10 @@ class Home(State):
                 event=events.api_requests.send_to_lockdown.request,
                 handler=lambda _: Lockdown.transition_and_respond_to_api(),
             ),
-            EventHandlerMapping[float](
-                name="robot_battery_update_event",
-                event=shared_state.robot_battery_level,
-                handler=_robot_battery_level_updated_handler,
-                should_not_consume=True,
+            EventHandlerMapping[EmptyMessage](
+                name="robot_battery_below_threshold_event",
+                event=events.robot_service_events.battery_below_mission_threshold,
+                handler=lambda _: Recharging.transition(),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="set_maintenance_mode",

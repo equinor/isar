@@ -54,12 +54,12 @@ def test_transition_from_paused_to_stopping_to_recharge(
 
     paused_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = paused_state.get_event_handler_by_name(
-        "robot_battery_update_event"
+        "robot_battery_below_threshold_event"
     )
 
     assert event_handler is not None
 
-    transition = event_handler.handler(10.0)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
 

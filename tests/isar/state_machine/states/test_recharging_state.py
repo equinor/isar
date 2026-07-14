@@ -33,31 +33,15 @@ def test_home_goes_to_recharging_when_battery_low(
     sync_state_machine.current_state = Home(sync_state_machine)
     home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = home_state.get_event_handler_by_name(
-        "robot_battery_update_event"
+        "robot_battery_below_threshold_event"
     )
 
     assert event_handler is not None
 
-    transition = event_handler.handler(10.0)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Recharging
-
-
-def test_recharging_continues_when_battery_low(
-    sync_state_machine: StateMachine,
-) -> None:
-    sync_state_machine.current_state = Recharging(sync_state_machine)
-    recharging_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: EventHandlerMapping | None = (
-        recharging_state.get_event_handler_by_name("robot_battery_update_event")
-    )
-
-    assert event_handler is not None
-
-    transition = event_handler.handler(10.0)
-
-    assert transition is None
 
 
 def test_continuing_mission_when_battery_high(
@@ -68,12 +52,14 @@ def test_continuing_mission_when_battery_high(
     )
     returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
-        returning_home_state.get_event_handler_by_name("robot_battery_update_event")
+        returning_home_state.get_event_handler_by_name(
+            "robot_battery_above_recharging_threshold_event"
+        )
     )
 
     assert event_handler is not None
 
-    transition = event_handler.handler(100.0)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
     assert type(sync_state_machine.current_state) is Monitor

@@ -70,7 +70,6 @@ def test_stopping_to_recharge_goes_to_intervention_needed(
 def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(80.0)
     example_mission: Mission = Mission(
         name="Dummy return home misson", tasks=[ReturnToHome()]
     )
@@ -94,7 +93,6 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
 def test_stopping_lockdown_failing_to_monitor(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.shared_state.robot_battery_level.trigger_event(10.0)
     sync_state_machine.current_state = StoppingGoToLockdown(
         sync_state_machine, "mission_id"
     )
@@ -270,12 +268,12 @@ def test_transition_from_monitor_to_stopping_to_recharge(
 
     paused_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = paused_state.get_event_handler_by_name(
-        "robot_battery_update_event"
+        "robot_battery_below_threshold_event"
     )
 
     assert event_handler is not None
 
-    transition = event_handler.handler(10.0)
+    transition = event_handler.handler(EmptyMessage())
 
     sync_state_machine.current_state = transition(sync_state_machine)
 

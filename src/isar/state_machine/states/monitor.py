@@ -7,7 +7,6 @@ import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMai
 import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
-from isar.config.settings import settings
 from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.services.utilities.mqtt_utilities import publish_mission_status
@@ -24,7 +23,6 @@ class Monitor(State):
 
     def __init__(self, state_machine: "StateMachine", mission_id: str):
         events = state_machine.events
-        shared_state = state_machine.shared_state
 
         def _pause_mission_event_handler(
             should_pause: EmptyMessage,
@@ -36,17 +34,6 @@ class Monitor(State):
                 EmptyMessage()
             )
             return Pausing.transition(mission_id)
-
-        def _robot_battery_level_updated_handler(
-            battery_level: float,
-        ) -> Transition[StoppingGoToRecharge.StoppingGoToRecharge] | None:
-            if battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD:
-                return None
-
-            state_machine.logger.warning(
-                "Cancelling current mission due to low battery"
-            )
-            return StoppingGoToRecharge.transition_and_stop_mission()
 
         def _mission_success_event_handler(
             success: EmptyMessage,
@@ -115,11 +102,10 @@ class Monitor(State):
                 event=events.robot_service_events.mission_succeeded,
                 handler=_mission_success_event_handler,
             ),
-            EventHandlerMapping[float](
-                name="robot_battery_update_event",
-                event=shared_state.robot_battery_level,
-                handler=_robot_battery_level_updated_handler,
-                should_not_consume=True,
+            EventHandlerMapping[EmptyMessage](
+                name="robot_battery_below_threshold_event",
+                event=events.robot_service_events.battery_below_mission_threshold,
+                handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(),
             ),
             EventHandlerMapping[EmptyMessage](
                 name="send_to_lockdown_event",

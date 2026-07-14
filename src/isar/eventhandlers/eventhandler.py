@@ -21,7 +21,6 @@ class EventHandlerMapping(Generic[T]):
     name: str
     event: Event[T]
     handler: Callable[[T], Transition | None]
-    should_not_consume: bool = False
 
 
 @dataclass
@@ -96,13 +95,10 @@ class State(ABC):
 
             for handler_mapping in self.event_handler_mappings:
                 event_value: Any | None
-                if handler_mapping.should_not_consume:
-                    event_value = handler_mapping.event.check()
-                else:
-                    event_value = handler_mapping.event.consume_event()
+                event_value = handler_mapping.event.consume_event()
                 if event_value is not None:
                     transition = handler_mapping.handler(event_value)
-                    if transition is not None or not handler_mapping.should_not_consume:
+                    if transition is not None:
                         self.logger.debug(
                             f"Event '{handler_mapping.name}' triggered with input: {event_value}. "
                         )
