@@ -7,7 +7,7 @@ import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMai
 import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
-from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.services.utilities.mqtt_utilities import publish_mission_status
 from isar.state_machine.states_enum import States

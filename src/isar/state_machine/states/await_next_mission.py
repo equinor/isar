@@ -7,7 +7,7 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
 from isar.config.settings import settings
-from isar.eventhandlers.eventhandler import (
+from isar.eventhandlers.state import (
     EventHandlerMapping,
     State,
     TimeoutHandlerMapping,

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown as Lockdown
 from isar.apis.models.models import LockdownResponse
-from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage

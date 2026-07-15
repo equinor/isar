@@ -5,7 +5,7 @@ from threading import Event
 from typing import Deque
 
 from isar.config.settings import settings
-from isar.eventhandlers.eventhandler import State
+from isar.eventhandlers.state import State
 from isar.models.events import Events, SharedState
 from isar.models.status import IsarStatus
 from isar.services.service_connections.mqtt.mqtt_client import props_expiry

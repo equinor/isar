@@ -5,7 +5,7 @@ from typing import cast
 from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
-from isar.eventhandlers.eventhandler import EventHandlerMapping, State
+from isar.eventhandlers.state import EventHandlerMapping, State
 from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine

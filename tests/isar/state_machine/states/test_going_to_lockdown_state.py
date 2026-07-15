@@ -1,7 +1,7 @@
 from typing import cast
 
 from isar.config.settings import settings
-from isar.eventhandlers.eventhandler import EventHandlerMapping, State
+from isar.eventhandlers.state import EventHandlerMapping, State
 from isar.models.events import EmptyMessage
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.await_next_mission import AwaitNextMission
