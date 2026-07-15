@@ -1,31 +1,28 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging_with_mission as RechargingWithMission
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.events import AbortedMission, EmptyMessage
+from isar.models.events import AbortedMission, EmptyMessage, Events
 from isar.services.utilities.mqtt_utilities import publish_mission_status
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+from robot_interface.models.mission.mission import ReturnHomeMission
 from robot_interface.models.mission.status import MissionStatus
-
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
 
 
 class GoingToRechargingWithMission(State):
 
-    def __init__(self, state_machine: "StateMachine", mission: AbortedMission):
-        events = state_machine.events
+    def __init__(self, events: Events, mission: AbortedMission):
 
         def _mission_failed_event_handler(
             error_message: ErrorMessage,
         ) -> Transition[InterventionNeeded.InterventionNeeded]:
             publish_mission_status(
-                state_machine.mqtt_publisher,
+                events.mqtt_queue,
                 mission.id,
                 MissionStatus.Failed,
                 error_message,
@@ -36,12 +33,12 @@ class GoingToRechargingWithMission(State):
             stop_mission_id: str,
         ) -> Transition[GoingToRecharging.GoingToRecharging] | None:
             if mission.id == stop_mission_id or stop_mission_id == "":
-                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                events.api_requests.stop_mission.response.trigger_event(
                     ControlMissionResponse(success=True)
                 )
                 return GoingToRecharging.transition_to_existing_mission()
             else:
-                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                events.api_requests.stop_mission.response.trigger_event(
                     ControlMissionResponse(
                         success=False, failure_reason="Mission not found"
                     )
@@ -72,7 +69,7 @@ class GoingToRechargingWithMission(State):
         ]
         super().__init__(
             state_name=States.GoingToRechargingWithMission,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
@@ -80,12 +77,11 @@ class GoingToRechargingWithMission(State):
 def transition_and_start_return_home(
     mission: AbortedMission,
 ) -> Transition[GoingToRechargingWithMission]:
-    def _transition(state_machine: "StateMachine") -> GoingToRechargingWithMission:
-        if state_machine.events.robot_service_events.mission_failed.clear_event():
-            state_machine.logger.warning("Mission failed had lingering event")
-        if state_machine.events.robot_service_events.mission_succeeded.clear_event():
-            state_machine.logger.warning("Mission succeeded had lingering event")
-        state_machine.start_return_home_mission()
-        return GoingToRechargingWithMission(state_machine, mission=mission)
+    def _transition(events: Events) -> GoingToRechargingWithMission:
+        events.robot_service_events.mission_failed.clear_event()
+        events.robot_service_events.mission_succeeded.clear_event()
+
+        events.state_machine_events.start_mission.trigger_event(ReturnHomeMission())
+        return GoingToRechargingWithMission(events, mission=mission)
 
     return _transition

@@ -15,7 +15,7 @@ from robot_interface.models.mission.status import RobotStatus
 def test_lockdown_transitions_to_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = Lockdown(sync_state_machine)
+    sync_state_machine.current_state = Lockdown(sync_state_machine.events)
 
     lockdown_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -27,14 +27,14 @@ def test_lockdown_transitions_to_home(
     transition = event_handler.handler(EmptyMessage())
 
     assert sync_state_machine.events.api_requests.release_from_lockdown.response.check()
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Home
 
 
 def test_state_machine_with_return_home_failure_successful_retries(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = ReturningHome(sync_state_machine)
+    sync_state_machine.current_state = ReturningHome(sync_state_machine.events)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler_success: EventHandlerMapping | None = (
@@ -59,14 +59,14 @@ def test_state_machine_with_return_home_failure_successful_retries(
 
     transition = event_handler_success.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Home
 
 
 def test_intervention_needed_transitions_to_home_if_robot_is_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = InterventionNeeded(sync_state_machine)
+    sync_state_machine.current_state = InterventionNeeded(sync_state_machine.events)
 
     intervention_needed_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -78,14 +78,14 @@ def test_intervention_needed_transitions_to_home_if_robot_is_home(
 
     assert transition is not None
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Home
 
 
 def test_recharging_goes_to_home_when_battery_high(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = Recharging(sync_state_machine)
+    sync_state_machine.current_state = Recharging(sync_state_machine.events)
 
     recharging_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -98,6 +98,6 @@ def test_recharging_goes_to_home_when_battery_high(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
 
     assert type(sync_state_machine.current_state) is Home

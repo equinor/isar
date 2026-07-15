@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.resuming as Resuming
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
@@ -6,18 +6,14 @@ import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 import isar.state_machine.states.stopping_paused_mission as StoppingPausedMission
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
 
 
 class Paused(State):
 
-    def __init__(self, state_machine: "StateMachine", mission_id: str):
-        events = state_machine.events
+    def __init__(self, events: Events, mission_id: str):
 
         def _stop_mission_event_handler(
             stop_mission_id: str,
@@ -27,7 +23,7 @@ class Paused(State):
                     mission_id, True
                 )
             else:
-                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                events.api_requests.stop_mission.response.trigger_event(
                     ControlMissionResponse(
                         success=False, failure_reason="Mission not found"
                     )
@@ -69,13 +65,13 @@ class Paused(State):
         ]
         super().__init__(
             state_name=States.Paused,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
 
 def transition(mission_id: str) -> Transition[Paused]:
-    def _transition(state_machine: "StateMachine") -> Paused:
-        return Paused(state_machine, mission_id)
+    def _transition(events: Events) -> Paused:
+        return Paused(events, mission_id)
 
     return _transition

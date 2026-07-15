@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
-from robot_interface.models.mission.task import TASKS, TaskTypes
+from robot_interface.models.mission.task import TASKS, ReturnToHome, TaskTypes
 
 
 class Mission(BaseModel):
@@ -36,3 +36,8 @@ class Mission(BaseModel):
                 self.tasks,
             )
         )
+
+
+class ReturnHomeMission(Mission):
+    tasks: List[TASKS] = Field(default_factory=lambda: [ReturnToHome()])
+    name: str = "Return Home"

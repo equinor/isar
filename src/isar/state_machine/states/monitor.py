@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.pausing as Pausing
@@ -7,7 +7,7 @@ import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMai
 import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 from isar.apis.models.models import ControlMissionResponse, MissionStartResponse
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.services.utilities.mqtt_utilities import publish_mission_status
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
@@ -15,32 +15,24 @@ from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
 
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
-
 
 class Monitor(State):
 
-    def __init__(self, state_machine: "StateMachine", mission_id: str):
-        events = state_machine.events
+    def __init__(self, events: Events, mission_id: str):
 
         def _mission_success_event_handler(
             success: EmptyMessage,
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
-            state_machine.logger.info("Mission succeeded")
             publish_mission_status(
-                state_machine.mqtt_publisher, mission_id, MissionStatus.Successful, None
+                events.mqtt_queue, mission_id, MissionStatus.Successful, None
             )
             return AwaitNextMission.transition()
 
         def _mission_failed_event_handler(
             error_message: ErrorMessage,
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
-            state_machine.logger.warning(
-                f"Mission failed because: " f"{error_message.error_description}"
-            )
             publish_mission_status(
-                state_machine.mqtt_publisher,
+                events.mqtt_queue,
                 mission_id,
                 MissionStatus.Failed,
                 error_message,
@@ -53,7 +45,7 @@ class Monitor(State):
             if mission_id == stop_mission_id or stop_mission_id == "":
                 return Stopping.transition_and_trigger_stop(mission_id, True)
             else:
-                state_machine.events.api_requests.stop_mission.response.trigger_event(
+                events.api_requests.stop_mission.response.trigger_event(
                     ControlMissionResponse(
                         success=False, failure_reason="Mission not found"
                     )
@@ -62,7 +54,7 @@ class Monitor(State):
 
         def _mission_started_event_handler(mission_started: EmptyMessage) -> None:
             publish_mission_status(
-                state_machine.mqtt_publisher, mission_id, MissionStatus.InProgress, None
+                events.mqtt_queue, mission_id, MissionStatus.InProgress, None
             )
 
         event_handlers: List[EventHandlerMapping] = [
@@ -115,7 +107,7 @@ class Monitor(State):
         ]
         super().__init__(
             state_name=States.Monitor,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
@@ -123,30 +115,27 @@ class Monitor(State):
 def transition_and_start_mission(
     mission: Mission, should_respond_to_API_request: bool = False
 ) -> Transition[Monitor]:
-    def _transition(state_machine: "StateMachine") -> Monitor:
+    def _transition(events: Events) -> Monitor:
         publish_mission_status(
-            state_machine.mqtt_publisher, mission.id, MissionStatus.NotStarted, None
+            events.mqtt_queue, mission.id, MissionStatus.NotStarted, None
         )
-        if state_machine.events.robot_service_events.mission_failed.clear_event():
-            state_machine.logger.warning("Mission failed had lingering event")
-        if state_machine.events.robot_service_events.mission_succeeded.clear_event():
-            state_machine.logger.warning("Mission succeeded had lingering event")
-        if (
-            state_machine.events.robot_service_events.mission_started_successfully.clear_event()
-        ):
-            state_machine.logger.warning("Mission started had lingering event")
-        state_machine.start_mission(mission=mission)
+        events.robot_service_events.mission_failed.clear_event()
+        events.robot_service_events.mission_succeeded.clear_event()
+        events.robot_service_events.mission_started_successfully.clear_event()
+
+        events.state_machine_events.start_mission.trigger_event(mission)
+
         if should_respond_to_API_request:
-            state_machine.events.api_requests.start_mission.response.trigger_event(
+            events.api_requests.start_mission.response.trigger_event(
                 MissionStartResponse(mission_started=True)
             )
-        return Monitor(state_machine, mission_id=mission.id)
+        return Monitor(events, mission_id=mission.id)
 
     return _transition
 
 
 def transition_with_existing_mission(mission_id: str) -> Transition[Monitor]:
-    def _transition(state_machine: "StateMachine") -> Monitor:
-        return Monitor(state_machine, mission_id=mission_id)
+    def _transition(events: Events) -> Monitor:
+        return Monitor(events, mission_id=mission_id)
 
     return _transition

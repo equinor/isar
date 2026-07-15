@@ -1,20 +1,16 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.return_home_paused as ReturnHomePaused
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
 
 
 class ResumingReturnHome(State):
 
-    def __init__(self, state_machine: "StateMachine"):
-        events = state_machine.events
+    def __init__(self, events: Events):
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
@@ -30,19 +26,17 @@ class ResumingReturnHome(State):
         ]
         super().__init__(
             state_name=States.ResumingReturnHome,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
 
 def transition_and_resume_mission_and_reply_to_API() -> Transition[ResumingReturnHome]:
-    def _transition(state_machine: "StateMachine") -> ResumingReturnHome:
-        state_machine.events.api_requests.resume_mission.response.trigger_event(
+    def _transition(events: Events) -> ResumingReturnHome:
+        events.api_requests.resume_mission.response.trigger_event(
             ControlMissionResponse(success=True)
         )
-        state_machine.events.state_machine_events.resume_mission.trigger_event(
-            EmptyMessage()
-        )
-        return ResumingReturnHome(state_machine)
+        events.state_machine_events.resume_mission.trigger_event(EmptyMessage())
+        return ResumingReturnHome(events)
 
     return _transition

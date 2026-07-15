@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.lockdown as Lockdown
@@ -9,20 +9,16 @@ import isar.state_machine.states.recharging as Recharging
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
 import isar.state_machine.states.unknown_status as UnknownStatus
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus
 
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
-
 
 class Home(State):
 
-    def __init__(self, state_machine: "StateMachine"):
-        events = state_machine.events
+    def __init__(self, events: Events):
 
         def _robot_status_event_handler(
             robot_status: RobotStatus,
@@ -98,16 +94,16 @@ class Home(State):
         ]
         super().__init__(
             state_name=States.Home,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
 
 def transition() -> Transition["Home"]:
-    def _transition(state_machine: "StateMachine") -> Home:
+    def _transition(events: Events) -> Home:
         # This clears the current robot status value, so we don't read an outdated value
-        state_machine.events.robot_service_events.robot_status_update.clear_event()
+        events.robot_service_events.robot_status_update.clear_event()
 
-        return Home(state_machine)
+        return Home(events)
 
     return _transition

@@ -12,7 +12,7 @@ from isar.state_machine.states.stopping_go_to_lockdown import StoppingGoToLockdo
 def test_mission_stopped_when_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = Monitor(sync_state_machine, "mission_id")
+    sync_state_machine.current_state = Monitor(sync_state_machine.events, "mission_id")
 
     monitor_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = monitor_state.get_event_handler_by_name(
@@ -23,14 +23,14 @@ def test_mission_stopped_when_going_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is StoppingGoToLockdown
 
 
 def test_going_to_lockdown_transitions_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = GoingToLockdown(sync_state_machine)
+    sync_state_machine.current_state = GoingToLockdown(sync_state_machine.events)
 
     going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -41,5 +41,5 @@ def test_going_to_lockdown_transitions_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Lockdown

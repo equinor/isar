@@ -17,7 +17,7 @@ from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, Err
 def test_transition_from_return_home_paused_to_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = ReturnHomePaused(sync_state_machine)
+    sync_state_machine.current_state = ReturnHomePaused(sync_state_machine.events)
 
     return_home_paused_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -26,7 +26,7 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
 
     assert sync_state_machine.events.api_requests.send_to_lockdown.response.has_event()
     assert type(sync_state_machine.current_state) is GoingToLockdown
@@ -44,7 +44,7 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
         )
     )
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is InterventionNeeded
 
 
@@ -52,7 +52,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.current_state = StoppingGoToLockdown(
-        sync_state_machine, "mission_id"
+        sync_state_machine.events, "mission_id"
     )
 
     stopping_go_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
@@ -64,7 +64,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is GoingToLockdown
 
     assert (
@@ -81,7 +81,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(
 def test_return_home_transitions_to_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = ReturningHome(sync_state_machine)
+    sync_state_machine.current_state = ReturningHome(sync_state_machine.events)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -92,14 +92,14 @@ def test_return_home_transitions_to_going_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is GoingToLockdown
 
 
 def test_recharging_transitions_to_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = GoingToRecharging(sync_state_machine)
+    sync_state_machine.current_state = GoingToRecharging(sync_state_machine.events)
 
     going_to_recharging_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -110,14 +110,14 @@ def test_recharging_transitions_to_going_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is GoingToLockdown
 
 
 def test_await_next_mission_transitions_to_going_to_lockdown(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = AwaitNextMission(sync_state_machine)
+    sync_state_machine.current_state = AwaitNextMission(sync_state_machine.events)
 
     await_next_mission_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -128,7 +128,7 @@ def test_await_next_mission_transitions_to_going_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is GoingToLockdown
 
     assert sync_state_machine.events.api_requests.send_to_lockdown.response.check()

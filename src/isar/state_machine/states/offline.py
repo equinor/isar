@@ -1,22 +1,18 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.unknown_status as UnknownStatus
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
-
 
 class Offline(State):
 
-    def __init__(self, state_machine: "StateMachine"):
-        events = state_machine.events
+    def __init__(self, events: Events):
 
         def _robot_status_event_handler(
             robot_status: RobotStatus,
@@ -65,13 +61,13 @@ class Offline(State):
         ]
         super().__init__(
             state_name=States.Offline,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
 
 def transition() -> Transition[Offline]:
-    def _transition(state_machine: "StateMachine") -> Offline:
-        return Offline(state_machine)
+    def _transition(events: Events) -> Offline:
+        return Offline(events)
 
     return _transition

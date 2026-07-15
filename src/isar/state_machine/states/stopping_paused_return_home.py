@@ -1,21 +1,17 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.return_home_paused as ReturnHomePaused
 from isar.apis.models.models import MissionStartResponse
-from isar.models.events import AbortedMission, EmptyMessage
+from isar.models.events import AbortedMission, EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
-
 
 class StoppingPausedReturnHome(State):
 
-    def __init__(self, state_machine: "StateMachine", mission: Mission):
-        events = state_machine.events
+    def __init__(self, events: Events, mission: Mission):
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
@@ -36,7 +32,7 @@ class StoppingPausedReturnHome(State):
         ]
         super().__init__(
             state_name=States.StoppingPausedReturnHome,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
@@ -44,17 +40,15 @@ class StoppingPausedReturnHome(State):
 def transition_and_stop_return_home_and_reply_to_API(
     mission: Mission,
 ) -> Transition[StoppingPausedReturnHome]:
-    def _transition(state_machine: "StateMachine") -> StoppingPausedReturnHome:
-        state_machine.events.state_machine_events.stop_mission.trigger_event(
-            EmptyMessage()
-        )
+    def _transition(events: Events) -> StoppingPausedReturnHome:
+        events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
 
         response = MissionStartResponse(
             mission_id=mission.id,
             mission_started=True,
         )
-        state_machine.events.api_requests.start_mission.response.trigger_event(response)
+        events.api_requests.start_mission.response.trigger_event(response)
 
-        return StoppingPausedReturnHome(state_machine, mission)
+        return StoppingPausedReturnHome(events, mission)
 
     return _transition

@@ -14,7 +14,7 @@ from tests.test_mocks.task import StubTask
 def test_return_home_cancelled_when_new_mission_received(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = ReturningHome(sync_state_machine)
+    sync_state_machine.current_state = ReturningHome(sync_state_machine.events)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -27,7 +27,7 @@ def test_return_home_cancelled_when_new_mission_received(
 
     transition = event_handler.handler(mission)
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is StoppingReturnHome
 
 
@@ -35,7 +35,7 @@ def test_transition_to_stopping_return_home_replies_to_API(
     sync_state_machine: StateMachine,
 ) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
-    sync_state_machine.current_state = ReturningHome(sync_state_machine)
+    sync_state_machine.current_state = ReturningHome(sync_state_machine.events)
     returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
         returning_home_state.get_event_handler_by_name("start_mission_event")
@@ -45,7 +45,7 @@ def test_transition_to_stopping_return_home_replies_to_API(
 
     transition = event_handler.handler(mission)
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is StoppingReturnHome
     assert sync_state_machine.events.api_requests.start_mission.response.has_event()
 
@@ -54,7 +54,9 @@ def test_stopping_return_home_mission_fails(
     sync_state_machine: StateMachine,
 ) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
-    sync_state_machine.current_state = StoppingReturnHome(sync_state_machine, mission)
+    sync_state_machine.current_state = StoppingReturnHome(
+        sync_state_machine.events, mission
+    )
     stopping_return_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
         stopping_return_home_state.get_event_handler_by_name("failed_stop_event")
@@ -68,7 +70,7 @@ def test_stopping_return_home_mission_fails(
 
     assert not sync_state_machine.events.api_requests.start_mission.response.has_event()
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is ReturningHome
 
 
@@ -76,7 +78,9 @@ def test_stopping_return_home_mission_succeeds(
     sync_state_machine: StateMachine,
 ) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
-    sync_state_machine.current_state = StoppingReturnHome(sync_state_machine, mission)
+    sync_state_machine.current_state = StoppingReturnHome(
+        sync_state_machine.events, mission
+    )
     stopping_return_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
         stopping_return_home_state.get_event_handler_by_name("successful_stop_event")
@@ -86,5 +90,5 @@ def test_stopping_return_home_mission_succeeds(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Monitor

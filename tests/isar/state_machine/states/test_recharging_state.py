@@ -13,7 +13,7 @@ from isar.state_machine.states.recharging_with_mission import RechargingWithMiss
 def test_going_to_recharging_goes_to_recharge(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = GoingToRecharging(sync_state_machine)
+    sync_state_machine.current_state = GoingToRecharging(sync_state_machine.events)
     going_to_recharging_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
         going_to_recharging_state.get_event_handler_by_name("mission_succeeded_event")
@@ -23,14 +23,14 @@ def test_going_to_recharging_goes_to_recharge(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Recharging
 
 
 def test_home_goes_to_recharging_when_battery_low(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = Home(sync_state_machine)
+    sync_state_machine.current_state = Home(sync_state_machine.events)
     home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = home_state.get_event_handler_by_name(
         "robot_battery_below_threshold_event"
@@ -40,7 +40,7 @@ def test_home_goes_to_recharging_when_battery_low(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Recharging
 
 
@@ -48,7 +48,7 @@ def test_continuing_mission_when_battery_high(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.current_state = RechargingWithMission(
-        sync_state_machine, mission=AbortedMission(name="test", id="test_id")
+        sync_state_machine.events, mission=AbortedMission(name="test", id="test_id")
     )
     returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -61,7 +61,7 @@ def test_continuing_mission_when_battery_high(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Monitor
 
 
@@ -69,7 +69,7 @@ def test_cancelling_mission_when_recharging_with_mission(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.current_state = RechargingWithMission(
-        sync_state_machine, mission=AbortedMission(name="test", id="test_id")
+        sync_state_machine.events, mission=AbortedMission(name="test", id="test_id")
     )
     returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -80,5 +80,5 @@ def test_cancelling_mission_when_recharging_with_mission(
 
     transition = event_handler.handler("test_id")
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Recharging

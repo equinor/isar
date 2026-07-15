@@ -12,7 +12,7 @@ from robot_interface.models.mission.status import RobotStatus
 def test_home_transitions_to_maintenance_mode_when_teleoperating(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = Home(sync_state_machine)
+    sync_state_machine.current_state = Home(sync_state_machine.events)
 
     intervention_needed_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -24,14 +24,14 @@ def test_home_transitions_to_maintenance_mode_when_teleoperating(
 
     assert transition is not None
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Maintenance
 
 
 def test_unknown_status_transitions_to_maintenance_mode_when_teleoperating(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = UnknownStatus(sync_state_machine)
+    sync_state_machine.current_state = UnknownStatus(sync_state_machine.events)
 
     intervention_needed_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -43,14 +43,14 @@ def test_unknown_status_transitions_to_maintenance_mode_when_teleoperating(
 
     assert transition is not None
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Maintenance
 
 
 def test_offline_transitions_to_maintenance_mode_when_teleoperating(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = Offline(sync_state_machine)
+    sync_state_machine.current_state = Offline(sync_state_machine.events)
 
     intervention_needed_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -62,5 +62,5 @@ def test_offline_transitions_to_maintenance_mode_when_teleoperating(
 
     assert transition is not None
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Maintenance
