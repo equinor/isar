@@ -1,22 +1,18 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.lockdown as Lockdown
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.offline as Offline
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
-
 
 class Recharging(State):
 
-    def __init__(self, state_machine: "StateMachine"):
-        events = state_machine.events
+    def __init__(self, events: Events):
 
         def robot_offline_handler(
             robot_status: RobotStatus,
@@ -52,13 +48,13 @@ class Recharging(State):
         ]
         super().__init__(
             state_name=States.Recharging,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
 
 def transition() -> Transition[Recharging]:
-    def _transition(state_machine: "StateMachine") -> Recharging:
-        return Recharging(state_machine)
+    def _transition(events: Events) -> Recharging:
+        return Recharging(events)
 
     return _transition

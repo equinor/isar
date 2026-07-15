@@ -1,13 +1,10 @@
 import logging
 from collections import deque
-from datetime import datetime, timezone
-from threading import Event
 from typing import Deque
 
 from isar.config.settings import settings
-from isar.models.events import Events, SharedState
+from isar.models.events import EmptyMessage, Events, SharedState
 from isar.models.status import IsarStatus
-from isar.services.service_connections.mqtt.mqtt_client import props_expiry
 from isar.services.service_connections.persistent_memory import (
     NoSuchRobotException,
     RobotStartupMode,
@@ -16,19 +13,13 @@ from isar.services.service_connections.persistent_memory import (
     read_persistent_robot_state,
 )
 from isar.services.utilities.mqtt_utilities import publish_isar_status
-from isar.state_machine.state import State
+from isar.state_machine.state import State, Transition
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.maintenance import Maintenance
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import ReturnToHome
 from robot_interface.robot_interface import RobotInterface
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
-from robot_interface.telemetry.payloads import (
-    InterventionNeededPayload,
-    MissionAbortedPayload,
-)
 
 
 class StateMachine(object):
@@ -60,9 +51,7 @@ class StateMachine(object):
         self.robot: RobotInterface = robot
         self.mqtt_publisher: MqttClientInterface | None = mqtt_publisher
 
-        self.signal_state_machine_to_stop: Event = Event()
-
-        self.current_state: State = UnknownStatus(self)
+        self.current_state: State = UnknownStatus(self.events)
 
         if not settings.USE_DB:
             self.logger.warning(
@@ -74,9 +63,9 @@ class StateMachine(object):
                 f"Connected to robot status database and the startup mode was: {robot_startup_mode}. "
             )
             if robot_startup_mode == RobotStartupMode.Maintenance:
-                self.current_state = Maintenance(self)
+                self.current_state = Maintenance(self.events)
             elif robot_startup_mode == RobotStartupMode.Lockdown:
-                self.current_state = GoingToLockdown(self)
+                self.current_state = GoingToLockdown(self.events)
 
         self.transitions_list: Deque[States] = deque(
             [], settings.STATE_TRANSITIONS_LOG_LENGTH
@@ -89,20 +78,22 @@ class StateMachine(object):
         try:
             while True:
                 self.update_state()
-                next_state: State | None = self.current_state.run()
+                transition: Transition | None = self.current_state.run()
 
-                if next_state is None:
+                if transition is None:  # Expected when the thread is killed
                     self.logger.warning(
-                        "Exiting state machine as current state is None"
+                        "Exiting state machine as next transition is None"
                     )
                     break
+
+                next_state: State | None = transition(self.events)
                 self.current_state = next_state
         except Exception as e:
             self.logger.error(f"Unhandled exception in state machine: {str(e)}")
 
     def terminate(self) -> None:
         self.logger.info("Stopping state machine")
-        self.signal_state_machine_to_stop.set()
+        self.events.signal_state_machine_exit.trigger_event(EmptyMessage())
 
     def update_state(self) -> None:
         """Updates the current state of the state machine."""
@@ -131,71 +122,6 @@ class StateMachine(object):
 
         self.transitions_list.append(self.current_state.name)
         self.logger.info("State: %s", self.current_state.name)
-        self.publish_status()
-
-    def start_mission(self, mission: Mission) -> None:
-        """Starts a scheduled mission."""
-        self.events.state_machine_events.start_mission.trigger_event(mission)
-
-    def start_return_home_mission(self) -> None:
-        """Starts a return to home mission."""
-        mission = Mission(
-            tasks=[ReturnToHome()],
-            name="Return Home",
-        )
-        self.events.state_machine_events.start_mission.trigger_event(mission)
-
-    def publish_mission_aborted(
-        self, current_mission_id: str | None, reason: str
-    ) -> None:
-        if not self.mqtt_publisher:
-            return
-
-        if current_mission_id is None:
-            self.logger.warning(
-                "Publishing mission aborted message with no ongoing mission."
-            )
-
-        payload: MissionAbortedPayload = MissionAbortedPayload(
-            isar_id=settings.ISAR_ID,
-            robot_name=settings.ROBOT_NAME,
-            mission_id=current_mission_id,
-            reason=reason,
-            timestamp=datetime.now(timezone.utc),
-        )
-
-        self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_MISSION_ABORTED,
-            payload=payload.model_dump_json(),
-            qos=1,
-            retain=True,
-            properties=props_expiry(settings.MQTT_MISSION_TASK_AND_STATUS_EXPIRY),
-        )
-
-    def publish_intervention_needed(self, error_message: str) -> None:
-        """Publishes the intervention needed message to the MQTT Broker"""
-        if not self.mqtt_publisher:
-            return
-
-        payload: InterventionNeededPayload = InterventionNeededPayload(
-            isar_id=settings.ISAR_ID,
-            robot_name=settings.ROBOT_NAME,
-            reason=error_message,
-            timestamp=datetime.now(timezone.utc),
-        )
-
-        self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_INTERVENTION_NEEDED,
-            payload=payload.model_dump_json(),
-            qos=1,
-            retain=True,
-            properties=props_expiry(settings.MQTT_MISSION_TASK_AND_STATUS_EXPIRY),
-        )
-
-    def publish_status(self) -> None:
-        if not self.mqtt_publisher:
-            return
-
         publish_isar_status(self.mqtt_publisher, self._current_status())
 
     def _current_status(self) -> IsarStatus:

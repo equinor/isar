@@ -1,20 +1,16 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.going_to_recharging_with_mission as GoingToRechargingWithMission
 import isar.state_machine.states.intervention_needed as InterventionNeeded
-from isar.models.events import AbortedMission, EmptyMessage
+from isar.models.events import AbortedMission, EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
 
 
 class StoppingGoToRecharge(State):
 
-    def __init__(self, state_machine: "StateMachine"):
-        events = state_machine.events
+    def __init__(self, events: Events):
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
@@ -39,16 +35,14 @@ class StoppingGoToRecharge(State):
         ]
         super().__init__(
             state_name=States.StoppingGoToRecharge,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
 
 def transition_and_stop_mission() -> Transition[StoppingGoToRecharge]:
-    def _transition(state_machine: "StateMachine") -> StoppingGoToRecharge:
-        state_machine.events.state_machine_events.stop_mission.trigger_event(
-            EmptyMessage()
-        )
-        return StoppingGoToRecharge(state_machine)
+    def _transition(events: Events) -> StoppingGoToRecharge:
+        events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
+        return StoppingGoToRecharge(events)
 
     return _transition

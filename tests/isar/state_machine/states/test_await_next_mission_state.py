@@ -74,7 +74,7 @@ def test_state_machine_with_successful_mission_stop(
 def test_transition_from_resuming_to_paused(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = Resuming(sync_state_machine, "mission_id")
+    sync_state_machine.current_state = Resuming(sync_state_machine.events, "mission_id")
 
     resuming_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -89,14 +89,14 @@ def test_transition_from_resuming_to_paused(
         )
     )
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Paused
 
 
 def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_available(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = UnknownStatus(sync_state_machine)
+    sync_state_machine.current_state = UnknownStatus(sync_state_machine.events)
 
     unknown_status_state: State = cast(State, sync_state_machine.current_state)
 
@@ -107,14 +107,14 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
 
     transition = event_handler.handler(RobotStatus.Available)
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is AwaitNextMission
 
 
 def test_transition_from_resuming_return_home_to_await_next_mission(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = ResumingReturnHome(sync_state_machine)
+    sync_state_machine.current_state = ResumingReturnHome(sync_state_machine.events)
 
     resuming_return_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -129,5 +129,5 @@ def test_transition_from_resuming_return_home_to_await_next_mission(
         )
     )
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is ReturnHomePaused

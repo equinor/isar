@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
@@ -7,7 +7,7 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
 from isar.config.settings import settings
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import (
     EventHandlerMapping,
     State,
@@ -17,14 +17,10 @@ from isar.state_machine.state import (
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
-
 
 class AwaitNextMission(State):
 
-    def __init__(self, state_machine: "StateMachine"):
-        events = state_machine.events
+    def __init__(self, events: Events):
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[Mission](
@@ -73,14 +69,14 @@ class AwaitNextMission(State):
 
         super().__init__(
             state_name=States.AwaitNextMission,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
             timers=timers,
         )
 
 
 def transition() -> Transition[AwaitNextMission]:
-    def _transition(state_machine: "StateMachine") -> AwaitNextMission:
-        return AwaitNextMission(state_machine)
+    def _transition(events: Events) -> AwaitNextMission:
+        return AwaitNextMission(events)
 
     return _transition

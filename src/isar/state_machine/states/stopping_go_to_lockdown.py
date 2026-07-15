@@ -1,20 +1,17 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
-from isar.models.events import AbortedMission, EmptyMessage
+from isar.models.events import AbortedMission, EmptyMessage, Events
+from isar.services.utilities.mqtt_utilities import publish_mission_aborted
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
-
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
 
 
 class StoppingGoToLockdown(State):
 
-    def __init__(self, state_machine: "StateMachine", mission_id: str):
-        events = state_machine.events
+    def __init__(self, events: Events, mission_id: str):
 
         def _failed_stop_event_handler(
             empty_event: EmptyMessage,
@@ -30,8 +27,8 @@ class StoppingGoToLockdown(State):
         def _successful_stop_event_handler(
             successful_stop: AbortedMission | EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
-            state_machine.publish_mission_aborted(
-                mission_id, "Robot being sent to lockdown"
+            publish_mission_aborted(
+                events.mqtt_queue, mission_id, "Robot being sent to lockdown"
             )
             return GoingToLockdown.transition_and_start_mission_and_report_to_api()
 
@@ -54,16 +51,14 @@ class StoppingGoToLockdown(State):
         ]
         super().__init__(
             state_name=States.StoppingGoToLockdown,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
 
 def transition_and_stop_mission(mission_id: str) -> Transition[StoppingGoToLockdown]:
-    def _transition(state_machine: "StateMachine") -> StoppingGoToLockdown:
-        state_machine.events.state_machine_events.stop_mission.trigger_event(
-            EmptyMessage()
-        )
-        return StoppingGoToLockdown(state_machine, mission_id)
+    def _transition(events: Events) -> StoppingGoToLockdown:
+        events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
+        return StoppingGoToLockdown(events, mission_id)
 
     return _transition

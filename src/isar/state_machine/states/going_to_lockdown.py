@@ -1,21 +1,18 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown as Lockdown
 from isar.apis.models.models import LockdownResponse
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
+from robot_interface.models.mission.mission import ReturnHomeMission
 
 
 class GoingToLockdown(State):
 
-    def __init__(self, state_machine: "StateMachine"):
-        events = state_machine.events
+    def __init__(self, events: Events):
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
@@ -40,32 +37,31 @@ class GoingToLockdown(State):
         ]
         super().__init__(
             state_name=States.GoingToLockdown,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
 
 def transition_and_start_mission_and_report_to_api() -> Transition[GoingToLockdown]:
-    def _transition(state_machine: "StateMachine") -> GoingToLockdown:
-        state_machine.events.api_requests.send_to_lockdown.response.trigger_event(
+    def _transition(events: Events) -> GoingToLockdown:
+        events.api_requests.send_to_lockdown.response.trigger_event(
             LockdownResponse(lockdown_started=True)
         )
 
-        if state_machine.events.robot_service_events.mission_failed.clear_event():
-            state_machine.logger.warning("Mission failed had lingering event")
-        if state_machine.events.robot_service_events.mission_succeeded.clear_event():
-            state_machine.logger.warning("Mission succeeded had lingering event")
-        state_machine.start_return_home_mission()
-        return GoingToLockdown(state_machine)
+        events.robot_service_events.mission_failed.clear_event()
+        events.robot_service_events.mission_succeeded.clear_event()
+
+        events.state_machine_events.start_mission.trigger_event(ReturnHomeMission())
+        return GoingToLockdown(events)
 
     return _transition
 
 
 def transition_to_existing_mission_and_report_to_api() -> Transition[GoingToLockdown]:
-    def _transition(state_machine: "StateMachine") -> GoingToLockdown:
-        state_machine.events.api_requests.send_to_lockdown.response.trigger_event(
+    def _transition(events: Events) -> GoingToLockdown:
+        events.api_requests.send_to_lockdown.response.trigger_event(
             LockdownResponse(lockdown_started=True)
         )
-        return GoingToLockdown(state_machine)
+        return GoingToLockdown(events)
 
     return _transition

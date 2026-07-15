@@ -10,7 +10,7 @@ from isar.state_machine.states.returning_home import ReturningHome
 def test_transition_from_returning_home_to_pausing_return_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = ReturningHome(sync_state_machine)
+    sync_state_machine.current_state = ReturningHome(sync_state_machine.events)
 
     returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -21,5 +21,5 @@ def test_transition_from_returning_home_to_pausing_return_home(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is PausingReturnHome

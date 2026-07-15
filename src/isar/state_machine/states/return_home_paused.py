@@ -1,30 +1,24 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.resuming_return_home as ResumingReturnHome
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_paused_return_home as StoppingPausedReturnHome
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
-
 
 class ReturnHomePaused(State):
 
-    def __init__(self, state_machine: "StateMachine"):
-        events = state_machine.events
+    def __init__(self, events: Events):
 
         def _send_to_lockdown_event_handler(
             should_lockdown: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
-            state_machine.events.state_machine_events.resume_mission.trigger_event(
-                EmptyMessage()
-            )
+            events.state_machine_events.resume_mission.trigger_event(EmptyMessage())
 
             return GoingToLockdown.transition_to_existing_mission_and_report_to_api()
 
@@ -59,13 +53,13 @@ class ReturnHomePaused(State):
         ]
         super().__init__(
             state_name=States.ReturnHomePaused,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
 
 def transition() -> Transition[ReturnHomePaused]:
-    def _transition(state_machine: "StateMachine") -> ReturnHomePaused:
-        return ReturnHomePaused(state_machine)
+    def _transition(events: Events) -> ReturnHomePaused:
+        return ReturnHomePaused(events)
 
     return _transition

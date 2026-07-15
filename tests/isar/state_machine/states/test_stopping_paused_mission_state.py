@@ -13,7 +13,7 @@ def test_stopping_paused_mission_fails(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.current_state = StoppingPausedMission(
-        sync_state_machine, "mission_id"
+        sync_state_machine.events, "mission_id"
     )
     stopping_paused_mission_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -28,7 +28,7 @@ def test_stopping_paused_mission_fails(
 
     assert sync_state_machine.events.mqtt_queue.empty()
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Paused
 
 
@@ -36,7 +36,7 @@ def test_stopping_paused_mission_succeeds(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.current_state = StoppingPausedMission(
-        sync_state_machine, "mission_id"
+        sync_state_machine.events, "mission_id"
     )
     stopping_paused_mission_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -49,5 +49,5 @@ def test_stopping_paused_mission_succeeds(
 
     assert sync_state_machine.events.mqtt_queue.qsize() == 1
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is AwaitNextMission

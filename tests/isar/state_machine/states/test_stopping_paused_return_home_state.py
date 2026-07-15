@@ -16,7 +16,7 @@ def test_transition_to_stopping_paused_return_home_replies_to_API(
     sync_state_machine: StateMachine,
 ) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
-    sync_state_machine.current_state = ReturnHomePaused(sync_state_machine)
+    sync_state_machine.current_state = ReturnHomePaused(sync_state_machine.events)
     return_home_paused_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
         return_home_paused_state.get_event_handler_by_name("start_mission_event")
@@ -26,7 +26,7 @@ def test_transition_to_stopping_paused_return_home_replies_to_API(
 
     transition = event_handler.handler(mission)
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is StoppingPausedReturnHome
     assert sync_state_machine.events.api_requests.start_mission.response.has_event()
 
@@ -36,7 +36,7 @@ def test_stopping_paused_return_home_mission_fails(
 ) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     sync_state_machine.current_state = StoppingPausedReturnHome(
-        sync_state_machine, mission
+        sync_state_machine.events, mission
     )
     stopping_paused_return_home_state: State = cast(
         State, sync_state_machine.current_state
@@ -51,7 +51,7 @@ def test_stopping_paused_return_home_mission_fails(
 
     assert not sync_state_machine.events.api_requests.start_mission.response.has_event()
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is ReturnHomePaused
 
 
@@ -60,7 +60,7 @@ def test_stopping_paused_return_home_mission_succeeds(
 ) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     sync_state_machine.current_state = StoppingPausedReturnHome(
-        sync_state_machine, mission
+        sync_state_machine.events, mission
     )
     stopping_paused_return_home_state: State = cast(
         State, sync_state_machine.current_state
@@ -75,5 +75,5 @@ def test_stopping_paused_return_home_mission_succeeds(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Monitor

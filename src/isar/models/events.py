@@ -88,6 +88,10 @@ class Event(Queue[T]):
 
 class Events:
     def __init__(self) -> None:
+        self.signal_state_machine_exit: Event[EmptyMessage] = Event(
+            "signal_state_machine_exit"
+        )
+
         self.api_requests: APIRequests = APIRequests()
         self.state_machine_events: StateMachineEvents = StateMachineEvents()
         self.robot_service_events: RobotServiceEvents = RobotServiceEvents()

@@ -16,7 +16,7 @@ from robot_interface.models.mission.mission import Mission
 def test_transition_from_pausing_return_home_to_return_home_paused(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = PausingReturnHome(sync_state_machine)
+    sync_state_machine.current_state = PausingReturnHome(sync_state_machine.events)
 
     pausing_return_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -27,14 +27,14 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is ReturnHomePaused
 
 
 def test_resuming_paused_return_home(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = ReturnHomePaused(sync_state_machine)
+    sync_state_machine.current_state = ReturnHomePaused(sync_state_machine.events)
 
     return_home_paused_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -45,14 +45,14 @@ def test_resuming_paused_return_home(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is ResumingReturnHome
 
 
 def test_transition_from_paused_return_home_to_stopping_paused_return_home_mission(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = ReturnHomePaused(sync_state_machine)
+    sync_state_machine.current_state = ReturnHomePaused(sync_state_machine.events)
 
     return_home_paused_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -65,7 +65,7 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
 
     transition = event_handler.handler(example_mission)
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
 
     assert sync_state_machine.events.api_requests.start_mission.response.has_event()
     assert type(sync_state_machine.current_state) is StoppingPausedReturnHome
@@ -74,7 +74,7 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
 def test_stop_request_with_wrong_id_in_paused(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = Paused(sync_state_machine, "mission_id")
+    sync_state_machine.current_state = Paused(sync_state_machine.events, "mission_id")
 
     paused_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = paused_state.get_event_handler_by_name(

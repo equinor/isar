@@ -27,9 +27,8 @@ from robot_interface.models.exceptions.robot_exceptions import (
     ErrorReason,
     RobotException,
 )
-from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.mission import Mission, ReturnHomeMission
 from robot_interface.models.mission.status import MissionStatus
-from robot_interface.models.mission.task import ReturnToHome
 from tests.test_mocks.robot_interface import (
     StubRobot,
     StubRobotMissionStatusRaisesException,
@@ -51,7 +50,7 @@ def _mock_robot_exception_with_message() -> RobotException:
 def test_stopping_to_recharge_goes_to_intervention_needed(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = StoppingGoToRecharge(sync_state_machine)
+    sync_state_machine.current_state = StoppingGoToRecharge(sync_state_machine.events)
     stopping_go_to_recharge_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
         stopping_go_to_recharge_state.get_event_handler_by_name("failed_stop_event")
@@ -61,7 +60,7 @@ def test_stopping_to_recharge_goes_to_intervention_needed(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
 
     assert not sync_state_machine.events.mqtt_queue.empty()
     assert type(sync_state_machine.current_state) is InterventionNeeded
@@ -70,11 +69,9 @@ def test_stopping_to_recharge_goes_to_intervention_needed(
 def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     sync_state_machine: StateMachine,
 ) -> None:
-    example_mission: Mission = Mission(
-        name="Dummy return home misson", tasks=[ReturnToHome()]
-    )
+    example_mission: Mission = ReturnHomeMission()
     sync_state_machine.current_state = StoppingReturnHome(
-        sync_state_machine, example_mission
+        sync_state_machine.events, example_mission
     )
 
     stopping_state: State = cast(State, sync_state_machine.current_state)
@@ -85,7 +82,7 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
 
     assert type(sync_state_machine.current_state) is Monitor
 
@@ -94,7 +91,7 @@ def test_stopping_lockdown_failing_to_monitor(
     sync_state_machine: StateMachine,
 ) -> None:
     sync_state_machine.current_state = StoppingGoToLockdown(
-        sync_state_machine, "mission_id"
+        sync_state_machine.events, "mission_id"
     )
 
     stopping_go_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
@@ -112,14 +109,14 @@ def test_stopping_lockdown_failing_to_monitor(
 
     assert sync_state_machine.events.mqtt_queue.empty()
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Monitor
 
 
 def test_transition_from_pausing_to_monitor(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = Pausing(sync_state_machine, "mission_id")
+    sync_state_machine.current_state = Pausing(sync_state_machine.events, "mission_id")
 
     pausing_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = pausing_state.get_event_handler_by_name(
@@ -133,14 +130,14 @@ def test_transition_from_pausing_to_monitor(
     )
     transition = event_handler.handler(error_event)
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Monitor
 
 
 def test_transition_from_resuming_to_monitor(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = Resuming(sync_state_machine, "mission_id")
+    sync_state_machine.current_state = Resuming(sync_state_machine.events, "mission_id")
 
     resuming_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -151,7 +148,7 @@ def test_transition_from_resuming_to_monitor(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
     assert type(sync_state_machine.current_state) is Monitor
 
 
@@ -264,7 +261,7 @@ def test_robot_mission_status_exception_handling(
 def test_transition_from_monitor_to_stopping_to_recharge(
     sync_state_machine: StateMachine,
 ) -> None:
-    sync_state_machine.current_state = Monitor(sync_state_machine, "test_id")
+    sync_state_machine.current_state = Monitor(sync_state_machine.events, "test_id")
 
     paused_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = paused_state.get_event_handler_by_name(
@@ -275,7 +272,7 @@ def test_transition_from_monitor_to_stopping_to_recharge(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine)
+    sync_state_machine.current_state = transition(sync_state_machine.events)
 
     assert type(sync_state_machine.current_state) is StoppingGoToRecharge
     assert not sync_state_machine.events.api_requests.stop_mission.response.has_event()

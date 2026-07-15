@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
@@ -8,24 +8,20 @@ import isar.state_machine.states.pausing_return_home as PausingReturnHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_return_home as StoppingReturnHome
 from isar.config.settings import settings
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.mission import Mission
-
-if TYPE_CHECKING:
-    from isar.state_machine.state_machine import StateMachine
+from robot_interface.models.mission.mission import Mission, ReturnHomeMission
 
 
 class ReturningHome(State):
 
     def __init__(
         self,
-        state_machine: "StateMachine",
+        events: Events,
         retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
     ):
-        events = state_machine.events
 
         def _mission_failed_event_handler(
             error_message: ErrorMessage,
@@ -34,9 +30,6 @@ class ReturningHome(State):
             | Transition[ReturningHome]
         ):
             if retries < 1:
-                state_machine.logger.warning(
-                    f"Failed to return home after {settings.RETURN_HOME_RETRY_LIMIT} attempts."
-                )
                 return InterventionNeeded.transition(
                     f"Return home failed after {settings.RETURN_HOME_RETRY_LIMIT} attempts"
                 )
@@ -89,7 +82,7 @@ class ReturningHome(State):
         ]
         super().__init__(
             state_name=States.ReturningHome,
-            state_machine=state_machine,
+            signal_exit_event=events.signal_state_machine_exit,
             event_handler_mappings=event_handlers,
         )
 
@@ -98,23 +91,21 @@ def transition_and_start_mission(
     should_respond_to_API_request: bool = False,
     retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
 ) -> Transition[ReturningHome]:
-    def _transition(state_machine: "StateMachine") -> ReturningHome:
-        if state_machine.events.robot_service_events.mission_failed.clear_event():
-            state_machine.logger.warning("Mission failed had lingering event")
-        if state_machine.events.robot_service_events.mission_succeeded.clear_event():
-            state_machine.logger.warning("Mission succeeded had lingering event")
-        state_machine.start_return_home_mission()
+    def _transition(events: Events) -> ReturningHome:
+        events.robot_service_events.mission_failed.clear_event()
+        events.robot_service_events.mission_succeeded.clear_event()
+
+        events.state_machine_events.start_mission.trigger_event(ReturnHomeMission())
+
         if should_respond_to_API_request:
-            state_machine.events.api_requests.return_home.response.trigger_event(
-                EmptyMessage()
-            )
-        return ReturningHome(state_machine, retries=retries)
+            events.api_requests.return_home.response.trigger_event(EmptyMessage())
+        return ReturningHome(events, retries=retries)
 
     return _transition
 
 
 def transition_to_existing_mission() -> Transition[ReturningHome]:
-    def _transition(state_machine: "StateMachine") -> ReturningHome:
-        return ReturningHome(state_machine)
+    def _transition(events: Events) -> ReturningHome:
+        return ReturningHome(events)
 
     return _transition
