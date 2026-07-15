@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List
 import isar.state_machine.states.return_home_paused as ReturnHomePaused
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import ControlMissionResponse
-from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 

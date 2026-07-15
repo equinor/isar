@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, List
 
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import MaintenanceResponse
-from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 

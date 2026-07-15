@@ -5,7 +5,7 @@ import isar.state_machine.states.resuming_return_home as ResumingReturnHome
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_paused_return_home as StoppingPausedReturnHome
-from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission

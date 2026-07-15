@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.going_to_recharging_with_mission as GoingToRechargingWithMission
 import isar.state_machine.states.intervention_needed as InterventionNeeded
-from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
 from isar.state_machine.states_enum import States
 

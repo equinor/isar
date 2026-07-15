@@ -18,7 +18,7 @@ from testcontainers.mysql import MySqlContainer
 
 from isar.apis.security.authentication import Authenticator
 from isar.config.settings import settings
-from isar.eventhandlers.eventhandler import State
+from isar.eventhandlers.state import State
 from isar.models.events import Events
 from isar.modules import ApplicationContainer
 from isar.robot.function_thread import FunctionThread

@@ -6,7 +6,7 @@ import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 import isar.state_machine.states.stopping_paused_mission as StoppingPausedMission
 from isar.apis.models.models import ControlMissionResponse
-from isar.eventhandlers.eventhandler import EventHandlerMapping, State, Transition
+from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 
