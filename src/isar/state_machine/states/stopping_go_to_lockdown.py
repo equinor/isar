@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, List
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
-from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
+from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 
 if TYPE_CHECKING:

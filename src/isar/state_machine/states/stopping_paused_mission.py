@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING, List
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.paused as Paused
 from isar.apis.models.models import ControlMissionResponse
-from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
 from isar.services.utilities.mqtt_utilities import publish_mission_status
+from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus
 

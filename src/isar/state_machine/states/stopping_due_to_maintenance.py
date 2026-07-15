@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, List
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.maintenance as Maintenance
 from isar.apis.models.models import MaintenanceResponse
-from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
+from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 
 if TYPE_CHECKING:

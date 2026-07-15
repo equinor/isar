@@ -9,10 +9,10 @@ from fastapi import HTTPException
 from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
-from isar.eventhandlers.state import EventHandlerMapping, State
 from isar.models.events import EmptyMessage
 from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.monitor import Monitor

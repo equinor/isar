@@ -18,7 +18,6 @@ from testcontainers.mysql import MySqlContainer
 
 from isar.apis.security.authentication import Authenticator
 from isar.config.settings import settings
-from isar.eventhandlers.state import State
 from isar.models.events import Events
 from isar.modules import ApplicationContainer
 from isar.robot.function_thread import FunctionThread
@@ -28,6 +27,7 @@ from isar.robot.robot_service import RobotService
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.service_connections.persistent_memory import Base
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+from isar.state_machine.state import State
 from isar.state_machine.state_machine import StateMachine
 from isar.storage.uploader import Uploader
 from robot_interface.robot_interface import RobotInterface
