@@ -7,13 +7,13 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping as Stopping
 from isar.config.settings import settings
-from isar.eventhandlers.state import (
+from isar.models.events import EmptyMessage
+from isar.state_machine.state import (
     EventHandlerMapping,
     State,
     TimeoutHandlerMapping,
     Transition,
 )
-from isar.models.events import EmptyMessage
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 

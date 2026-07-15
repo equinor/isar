@@ -5,9 +5,9 @@ import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging_with_mission as RechargingWithMission
 from isar.apis.models.models import ControlMissionResponse
-from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
 from isar.services.utilities.mqtt_utilities import publish_mission_status
+from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus

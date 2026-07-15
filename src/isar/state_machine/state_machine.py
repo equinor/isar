@@ -5,7 +5,6 @@ from threading import Event
 from typing import Deque
 
 from isar.config.settings import settings
-from isar.eventhandlers.state import State
 from isar.models.events import Events, SharedState
 from isar.models.status import IsarStatus
 from isar.services.service_connections.mqtt.mqtt_client import props_expiry
@@ -17,6 +16,7 @@ from isar.services.service_connections.persistent_memory import (
     read_persistent_robot_state,
 )
 from isar.services.utilities.mqtt_utilities import publish_isar_status
+from isar.state_machine.state import State
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.maintenance import Maintenance
 from isar.state_machine.states.unknown_status import UnknownStatus

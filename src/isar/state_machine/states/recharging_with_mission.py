@@ -6,8 +6,8 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.recharging as Recharging
 from isar.apis.models.models import ControlMissionResponse
-from isar.eventhandlers.state import EventHandlerMapping, State, Transition
 from isar.models.events import AbortedMission, EmptyMessage
+from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 

@@ -1,7 +1,7 @@
 from typing import cast
 
-from isar.eventhandlers.state import EventHandlerMapping, State
 from isar.models.events import AbortedMission, EmptyMessage
+from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.going_to_recharging import GoingToRecharging
 from isar.state_machine.states.home import Home
