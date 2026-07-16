@@ -52,15 +52,14 @@ class Stopping(State):
         )
 
 
-def transition_and_trigger_stop(
-    mission_id: str, should_respond_to_API_request: bool = False
+def transition_and_trigger_stop_and_respond_to_API(
+    mission_id: str,
 ) -> Transition[Stopping]:
     def _transition(events: Events) -> Stopping:
         events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
-        if should_respond_to_API_request:
-            events.api_requests.stop_mission.response.trigger_event(
-                ControlMissionResponse(success=True)
-            )
+        events.api_requests.stop_mission.response.trigger_event(
+            ControlMissionResponse(success=True)
+        )
         return Stopping(events, mission_id)
 
     return _transition
