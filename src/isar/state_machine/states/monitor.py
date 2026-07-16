@@ -43,7 +43,9 @@ class Monitor(State):
             stop_mission_id: str,
         ) -> Transition[Stopping.Stopping] | None:
             if mission_id == stop_mission_id or stop_mission_id == "":
-                return Stopping.transition_and_trigger_stop(mission_id, True)
+                return Stopping.transition_and_trigger_stop_and_respond_to_API(
+                    mission_id
+                )
             else:
                 events.api_requests.stop_mission.response.trigger_event(
                     ControlMissionResponse(

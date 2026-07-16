@@ -5,6 +5,7 @@ class States(str, Enum):
     Monitor = "monitor"
     ReturningHome = "returning_home"
     Stopping = "stopping"
+    StoppingUnknownMission = "stopping_unknown_mission"
     StoppingReturnHome = "stopping_return_home"
     Paused = "paused"
     Pausing = "pausing"

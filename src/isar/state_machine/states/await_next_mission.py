@@ -38,8 +38,8 @@ class AwaitNextMission(State):
             EventHandlerMapping[str](
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
-                handler=lambda mission_id: Stopping.transition_and_trigger_stop(
-                    mission_id, True
+                handler=lambda mission_id: Stopping.transition_and_trigger_stop_and_respond_to_API(
+                    mission_id
                 ),
             ),
             EventHandlerMapping[EmptyMessage](

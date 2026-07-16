@@ -5,6 +5,7 @@ import isar.state_machine.states.home as Home
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.stopping as Stopping
+import isar.state_machine.states.stopping_unknown_mission as StoppingUnknownMission
 from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
@@ -22,7 +23,7 @@ class UnknownStatus(State):
             | Transition[AwaitNextMission.AwaitNextMission]
             | Transition[Offline.Offline]
             | Transition[Maintenance.Maintenance]
-            | Transition[Stopping.Stopping]
+            | Transition[StoppingUnknownMission.StoppingUnknownMission]
             | None
         ):
             if robot_status == RobotStatus.Home:
@@ -49,15 +50,15 @@ class UnknownStatus(State):
                 self.logger.info(
                     "Got robot status busy while in unknown status state. Leaving unknown status state."
                 )
-                return Stopping.transition_and_trigger_stop("")
+                return StoppingUnknownMission.transition()
             return None
 
         event_handlers: List[EventHandlerMapping] = [
             EventHandlerMapping[str](
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
-                handler=lambda mission_id: Stopping.transition_and_trigger_stop(
-                    mission_id, True
+                handler=lambda mission_id: Stopping.transition_and_trigger_stop_and_respond_to_API(
+                    mission_id
                 ),
             ),
             EventHandlerMapping[RobotStatus](
