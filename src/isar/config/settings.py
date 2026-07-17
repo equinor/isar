@@ -119,6 +119,17 @@ class Settings(BaseSettings):
         print("Using environment variable for AZURE_CLIENT_ID")
         AZURE_CLIENT_ID = os.environ[azure_client_id_name]
 
+    # Ordered, comma-separated list of credential types that may be used to
+    # acquire an Entra-ID access token for the Postgres database connection.
+    # Allowed values: "WorkloadIdentity", "ClientSecret". When more than one
+    # method is configured, the order determines the priority inside the
+    # resulting ChainedTokenCredential (e.g.
+    # ALLOWED_AUTH_METHODS=WorkloadIdentity,ClientSecret). Default is
+    # "ClientSecret" so existing deployments keep working until the federated
+    # identity credential and service-account annotation are migrated to
+    # ISARAuth<Env> (tracked in equinor/robotics-infrastructure#755).
+    ALLOWED_AUTH_METHODS: str = Field(default="ClientSecret")
+
     # MQTT username
     # The username and password is set by the MQTT broker and must be known in advance
     # The password should be set as an environment variable "MQTT_PASSWORD"
@@ -238,6 +249,11 @@ class Settings(BaseSettings):
     @classmethod
     def prefix_isar_topics(cls, v: Any, info: ValidationInfo) -> str:
         return f"isar/{info.data['ISAR_ID']}/{v}"
+
+    @property
+    def allowed_auth_methods(self) -> List[str]:
+        """Parse the comma-separated ALLOWED_AUTH_METHODS string into a list."""
+        return [m.strip() for m in self.ALLOWED_AUTH_METHODS.split(",") if m.strip()]
 
     model_config = SettingsConfigDict(
         env_prefix="ISAR_",
