@@ -1,4 +1,3 @@
-import time
 from collections import deque
 from typing import cast
 
@@ -26,6 +25,7 @@ from tests.test_mocks.state_machine_mocks import (
     UploaderThreadMock,
 )
 from tests.test_mocks.task import StubTask
+from tests.wait import wait_until
 
 
 def test_state_machine_with_successful_mission_stop(
@@ -54,13 +54,16 @@ def test_state_machine_with_successful_mission_stop(
     state_machine_thread.start()
     robot_service_thread.start()
     uploader_thread.start()
-    time.sleep(1)
+    wait_until(
+        lambda: States.Home in state_machine_thread.state_machine.transitions_list
+    )
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(0.5)
+    wait_until(
+        lambda: state_machine_thread.state_machine.current_state.name == States.Monitor
+    )
     scheduling_utilities.stop_mission(mission_id=mission.id)
-    time.sleep(3)  # Allow enough time to stop the mission
 
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.UnknownStatus,
             States.Home,
@@ -68,6 +71,10 @@ def test_state_machine_with_successful_mission_stop(
             States.Stopping,
             States.AwaitNextMission,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread.state_machine.transitions_list
+        == expected_transitions
     )
 
 

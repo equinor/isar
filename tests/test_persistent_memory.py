@@ -1,4 +1,3 @@
-import time
 from collections import deque
 from http import HTTPStatus
 
@@ -27,6 +26,7 @@ from tests.test_mocks.state_machine_mocks import (
     RobotServiceThreadMock,
     StateMachineThreadMock,
 )
+from tests.wait import wait_until
 
 
 def test_persistent_storage_schema() -> None:
@@ -79,20 +79,18 @@ def test_lockdown_mode(
     )
 
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
-
-    t_start = time.time()
-    while (
-        state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
-        != RobotStatus.Home
-    ):
-        if time.time() - t_start > 10:
-            raise Exception("Robot did not come Home within expected time")
-        time.sleep(0.5)
+    wait_until(
+        lambda: state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
+        == RobotStatus.Home,
+        timeout=10.0,
+    )
 
     response = client.post(url="/schedule/release-maintenance-mode")
     assert response.status_code == HTTPStatus.OK
-    time.sleep(1)  # Give time to write to database
-    assert state_machine_thread_with_db.state_machine.current_state.name == States.Home
+    wait_until(
+        lambda: state_machine_thread_with_db.state_machine.current_state.name
+        == States.Home
+    )
 
     mocker.patch.object(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
@@ -117,7 +115,11 @@ def test_lockdown_mode(
         StubRobot, "mission_status", return_value=MissionStatus.Successful
     )
 
-    time.sleep(3)
+    wait_until(
+        lambda: state_machine_thread_with_db.state_machine.current_state.name
+        == States.Lockdown,
+        timeout=10.0,
+    )
 
     response = client.post(
         url="/schedule/start-mission",
@@ -129,9 +131,7 @@ def test_lockdown_mode(
     )
     assert response.status_code == HTTPStatus.CONFLICT
 
-    time.sleep(10)  # Give the state machine enough time to stop the mission
-
-    assert state_machine_thread_with_db.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.Maintenance,
             States.UnknownStatus,
@@ -141,6 +141,11 @@ def test_lockdown_mode(
             States.GoingToLockdown,
             States.Lockdown,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread_with_db.state_machine.transitions_list
+        == expected_transitions,
+        timeout=10.0,
     )
 
     robot_startup_mode = read_or_create_persistent_mode()
@@ -175,19 +180,18 @@ def test_maintenance_mode(
     assert response.status_code == HTTPStatus.CONFLICT
 
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
-    t_start = time.time()
-    while (
-        state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
-        != RobotStatus.Home
-    ):
-        if time.time() - t_start > 10:
-            raise Exception("Robot did not come Home within expected time")
-        time.sleep(0.5)
+    wait_until(
+        lambda: state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
+        == RobotStatus.Home,
+        timeout=10.0,
+    )
 
     response = client.post(url="/schedule/release-maintenance-mode")
     assert response.status_code == HTTPStatus.OK
-    time.sleep(1)  # Give time to write to database
-    assert state_machine_thread_with_db.state_machine.current_state.name == States.Home
+    wait_until(
+        lambda: state_machine_thread_with_db.state_machine.current_state.name
+        == States.Home
+    )
 
     mocker.patch.object(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
@@ -218,9 +222,7 @@ def test_maintenance_mode(
     )
     assert response.status_code == HTTPStatus.CONFLICT
 
-    time.sleep(5)  # Give the state machine enough time to stop the mission
-
-    assert state_machine_thread_with_db.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.Maintenance,
             States.UnknownStatus,
@@ -229,6 +231,11 @@ def test_maintenance_mode(
             States.StoppingDueToMaintenance,
             States.Maintenance,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread_with_db.state_machine.transitions_list
+        == expected_transitions,
+        timeout=10.0,
     )
 
 
@@ -248,28 +255,26 @@ def test_release_maintenance_mode(
     )
 
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
-    t_start = time.time()
-    while (
-        state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
-        != RobotStatus.Home
-    ):
-        if time.time() - t_start > 10:
-            raise Exception("Robot did not come Home within expected time")
-        time.sleep(0.5)
+    wait_until(
+        lambda: state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
+        == RobotStatus.Home,
+        timeout=10.0,
+    )
 
     response = client.post(url="/schedule/release-maintenance-mode")
     assert response.status_code == HTTPStatus.OK
-    time.sleep(1)  # Give time to write to database
-    assert state_machine_thread_with_db.state_machine.current_state.name == States.Home
+    wait_until(
+        lambda: read_persistent_robot_state(settings.ISAR_ID) == RobotStartupMode.Normal
+    )
 
-    robotStartUpMode = read_persistent_robot_state(settings.ISAR_ID)
-
-    assert robotStartUpMode == RobotStartupMode.Normal
-
-    assert state_machine_thread_with_db.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.Maintenance,
             States.UnknownStatus,
             States.Home,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread_with_db.state_machine.transitions_list
+        == expected_transitions
     )

@@ -25,6 +25,7 @@ from tests.test_mocks.state_machine_mocks import (
     UploaderThreadMock,
 )
 from tests.test_mocks.task import StubTask
+from tests.wait import wait_until
 
 
 def test_state_machine_transitions_when_running_full_mission(
@@ -38,7 +39,11 @@ def test_state_machine_transitions_when_running_full_mission(
 
     state_machine_thread.start()
     robot_service_thread.start()
-    time.sleep(1)
+    wait_until(
+        lambda: States.UnknownStatus
+        in state_machine_thread.state_machine.transitions_list
+        and robot_service_thread.robot_service.status_thread is not None
+    )
     # Setting the poll interval to a lower value to ensure that the robot status is
     # updated during the mission. This value needs to be set after the robot service
     # thread has been started.
@@ -55,9 +60,8 @@ def test_state_machine_transitions_when_running_full_mission(
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(3)  # Allow enough time to run mission and return home
 
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.UnknownStatus,
             States.AwaitNextMission,
@@ -66,6 +70,10 @@ def test_state_machine_transitions_when_running_full_mission(
             States.ReturningHome,
             States.Home,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread.state_machine.transitions_list
+        == expected_transitions
     )
 
 
@@ -88,12 +96,14 @@ def test_state_machine_failed_dependency(
 
     state_machine_thread.start()
     robot_service_thread.start()
-    time.sleep(1)
+    wait_until(
+        lambda: States.UnknownStatus
+        in state_machine_thread.state_machine.transitions_list
+    )
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(5)  # Allow the state machine to transition through the mission
 
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.UnknownStatus,
             States.AwaitNextMission,
@@ -106,6 +116,11 @@ def test_state_machine_failed_dependency(
             States.ReturningHome,
             States.InterventionNeeded,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread.state_machine.transitions_list
+        == expected_transitions,
+        timeout=10.0,
     )
 
 
@@ -135,13 +150,13 @@ def test_state_machine_with_successful_collection(
     uploader_thread.start()
 
     robot_service_thread.start()
-    time.sleep(1)
+    wait_until(
+        lambda: States.UnknownStatus
+        in state_machine_thread.state_machine.transitions_list
+    )
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(3)  # Allow enough time to run mission and return home
 
-    expected_stored_items = 1
-    assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.UnknownStatus,
             States.Home,
@@ -150,6 +165,11 @@ def test_state_machine_with_successful_collection(
             States.ReturningHome,
             States.Home,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread.state_machine.transitions_list
+        == expected_transitions
+        and len(storage_mock.stored_inspections) == 1  # type: ignore
     )
 
 
@@ -175,16 +195,14 @@ def test_state_machine_with_unsuccessful_collection(
     state_machine_thread.start()
     robot_service_thread.start()
     uploader_thread.start()
-    time.sleep(1)
+    wait_until(
+        lambda: States.Home in state_machine_thread.state_machine.transitions_list
+    )
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(3)  # Allow enough time to run mission and return home
 
-    expected_stored_items = 0
-    assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
-
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.UnknownStatus,
             States.Home,
@@ -194,6 +212,15 @@ def test_state_machine_with_unsuccessful_collection(
             States.Home,
         ]
     )
+    wait_until(
+        lambda: state_machine_thread.state_machine.transitions_list
+        == expected_transitions
+    )
+    # Mission completion is observable, but confirming no delayed upload requires
+    # a bounded quiet window.
+    time.sleep(0.1)
+    expected_stored_items = 0
+    assert len(storage_mock.stored_inspections) == expected_stored_items  # type: ignore
 
 
 def test_state_machine_with_mission_start_during_return_home_without_queueing_stop_response(
@@ -213,12 +240,17 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
 
     state_machine_thread.start()
     robot_service_thread.start()
-    time.sleep(1)
+    wait_until(
+        lambda: States.UnknownStatus
+        in state_machine_thread.state_machine.transitions_list
+    )
     scheduling_utilities.return_home()
-    time.sleep(1)
+    wait_until(
+        lambda: state_machine_thread.state_machine.current_state.name
+        == States.ReturningHome
+    )
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(1)
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.UnknownStatus,
             States.Home,
@@ -226,6 +258,10 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
             States.StoppingReturnHome,
             States.Monitor,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread.state_machine.transitions_list
+        == expected_transitions
     )
     assert (
         not state_machine_thread.state_machine.events.api_requests.start_mission.request.has_event()
@@ -252,12 +288,14 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
     robot_service_thread.start()
 
     # TODO: check mqtt
-    time.sleep(1)
+    wait_until(
+        lambda: States.UnknownStatus
+        in state_machine_thread.state_machine.transitions_list
+    )
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(3)  # Allow the state machine to transition through the mission
 
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.UnknownStatus,
             States.AwaitNextMission,
@@ -270,6 +308,11 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
             States.ReturningHome,
             States.InterventionNeeded,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread.state_machine.transitions_list
+        == expected_transitions,
+        timeout=10.0,
     )
 
 
@@ -286,12 +329,15 @@ def test_state_machine_battery_too_low_to_start_mission(
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     mocker.patch.object(StubRobot, "get_battery_level", return_value=10.0)
     robot_service_thread.start()
-    time.sleep(1)
 
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.UnknownStatus,
             States.Home,
             States.Recharging,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread.state_machine.transitions_list
+        == expected_transitions
     )

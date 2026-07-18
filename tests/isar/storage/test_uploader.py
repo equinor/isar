@@ -1,6 +1,6 @@
 import json
 import time
-from typing import Callable, Tuple
+from typing import Tuple
 from uuid import uuid4
 
 from alitra import Frame, Orientation, Pose, Position
@@ -14,19 +14,9 @@ from tests.test_mocks.blob_storage import StorageEmptyBlobPathsFake, StorageFake
 from tests.test_mocks.inspection import stub_image_metadata
 from tests.test_mocks.mqtt_client import MqttPublisherFake
 from tests.test_mocks.state_machine_mocks import UploaderThreadMock
+from tests.wait import wait_until
 
 MISSION_ID = "some-mission-id"
-
-
-def _wait_until(
-    predicate: Callable[[], bool], timeout: float = 5.0, interval: float = 0.01
-) -> None:
-    deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        if predicate():
-            return
-        time.sleep(interval)
-    raise AssertionError(f"Timed out after {timeout}s waiting for predicate")
 
 
 def test_should_upload_from_queue(
@@ -66,7 +56,7 @@ def test_should_upload_from_queue(
     storage_handler: StorageFake = uploader.storage_handlers[0]  # type: ignore
 
     uploader.upload_queue.put(message)
-    _wait_until(lambda: inspection in storage_handler.stored_inspections)
+    wait_until(lambda: inspection in storage_handler.stored_inspections)
 
 
 def test_should_retry_failed_upload_from_queue(
@@ -97,7 +87,7 @@ def test_should_retry_failed_upload_from_queue(
     storage_handler.will_fail = False
 
     # Retry succeeds once exponential backoff elapses
-    _wait_until(lambda: storage_handler.blob_exists(inspection), timeout=5.0)
+    wait_until(lambda: storage_handler.blob_exists(inspection), timeout=5.0)
 
 
 def test_should_not_publish_when_blob_paths_are_empty(
@@ -123,7 +113,7 @@ def test_should_not_publish_when_blob_paths_are_empty(
         mission,
     )
     uploader.upload_queue.put(message)
-    _wait_until(lambda: inspection in storage_handler.stored)
+    wait_until(lambda: inspection in storage_handler.stored)
 
     # Brief quiet period to confirm no MQTT publish follows the store
     time.sleep(0.1)
@@ -155,7 +145,7 @@ def test_publishes_required_analysis_when_present(
     mqtt_fake = _put_inspection_with_analysis_types(
         container, ["anonymize", "thermal-reading"]
     )
-    _wait_until(lambda: mqtt_fake.count() == 1)
+    wait_until(lambda: mqtt_fake.count() == 1)
 
     payload = json.loads(mqtt_fake.last()["payload"])
     assert payload["required_analysis"] == ["anonymize", "thermal-reading"]
@@ -166,7 +156,7 @@ def test_publishes_null_required_analysis_when_absent(
 ) -> None:
     uploader_thread.start()
     mqtt_fake = _put_inspection_with_analysis_types(container, None)
-    _wait_until(lambda: mqtt_fake.count() == 1)
+    wait_until(lambda: mqtt_fake.count() == 1)
 
     payload = json.loads(mqtt_fake.last()["payload"])
     assert payload["required_analysis"] is None
