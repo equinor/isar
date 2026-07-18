@@ -1,4 +1,3 @@
-import time
 from collections import deque
 from http import HTTPStatus
 from typing import cast
@@ -38,6 +37,7 @@ from tests.test_mocks.state_machine_mocks import (
     StateMachineThreadMock,
 )
 from tests.test_mocks.task import StubTask
+from tests.wait import wait_until
 
 
 def _mock_robot_exception_with_message() -> RobotException:
@@ -171,13 +171,17 @@ def test_state_machine_with_unsuccessful_mission_stop(
 
     state_machine_thread.start()
     robot_service_thread.start()
-    time.sleep(1)
+    wait_until(
+        lambda: States.UnknownStatus
+        in state_machine_thread.state_machine.transitions_list
+    )
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(0.5)
+    wait_until(
+        lambda: state_machine_thread.state_machine.current_state.name == States.Monitor
+    )
     scheduling_utilities.stop_mission()
-    time.sleep(2)
 
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.UnknownStatus,
             States.AwaitNextMission,
@@ -185,6 +189,10 @@ def test_state_machine_with_unsuccessful_mission_stop(
             States.Stopping,
             States.Monitor,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread.state_machine.transitions_list
+        == expected_transitions
     )
 
 
@@ -213,7 +221,9 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
     robot_service_thread.start()
 
     scheduling_utilities.start_mission(mission=mission)
-    time.sleep(1)
+    wait_until(
+        lambda: state_machine_thread.state_machine.current_state.name == States.Monitor
+    )
     with pytest.raises(HTTPException) as exception_details:
         scheduling_utilities.stop_mission(str(uuid4()))
 
@@ -246,15 +256,17 @@ def test_robot_mission_status_exception_handling(
 
     scheduling_utilities.start_mission(mission=mission)
 
-    time.sleep(1)
-
-    assert state_machine_thread.state_machine.transitions_list == deque(
+    expected_transitions = deque(
         [
             States.UnknownStatus,
             States.AwaitNextMission,
             States.Monitor,
             States.AwaitNextMission,
         ]
+    )
+    wait_until(
+        lambda: state_machine_thread.state_machine.transitions_list
+        == expected_transitions
     )
 
 
