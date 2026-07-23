@@ -1,7 +1,5 @@
-from typing import cast
-
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State
+from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.pausing_return_home import PausingReturnHome
 from isar.state_machine.states.resuming_return_home import ResumingReturnHome
@@ -17,9 +15,8 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
 ) -> None:
     current_state = PausingReturnHome(events)
 
-    pausing_return_home_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        pausing_return_home_state.get_event_handler_by_name("successful_pause_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "successful_pause_event"
     )
 
     assert event_handler is not None
@@ -33,9 +30,8 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
 def test_resuming_paused_return_home(events: Events) -> None:
     current_state = ReturnHomePaused(events)
 
-    return_home_paused_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        return_home_paused_state.get_event_handler_by_name("resume_return_home_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "resume_return_home_event"
     )
 
     assert event_handler is not None
@@ -51,9 +47,8 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
 ) -> None:
     current_state = ReturnHomePaused(events)
 
-    return_home_paused_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        return_home_paused_state.get_event_handler_by_name("start_mission_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "start_mission_event"
     )
 
     assert event_handler is not None
@@ -71,8 +66,7 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
 def test_stop_request_with_wrong_id_in_paused(events: Events) -> None:
     current_state = Paused(events, "mission_id")
 
-    paused_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = paused_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
         "stop_mission_event"
     )
 
