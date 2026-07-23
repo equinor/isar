@@ -21,7 +21,7 @@ from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
 from isar.services.service_connections.mqtt.robot_info_publisher import (
     RobotInfoPublisher,
 )
-from isar.state_machine.state_machine import StateMachine, main
+from isar.state_machine.state_machine import StateMachine
 from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -101,7 +101,7 @@ def start() -> None:
     api.wait_for_api_server_ready()
 
     state_machine_thread: Thread = Thread(
-        target=main, name="ISAR State Machine", args=[state_machine], daemon=True
+        target=state_machine.run, name="ISAR State Machine", daemon=True
     )
     state_machine_thread.start()
     threads.append(state_machine_thread)

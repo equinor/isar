@@ -2,14 +2,14 @@ from threading import Thread
 
 from isar.modules import ApplicationContainer
 from isar.robot.robot_service import RobotService
-from isar.state_machine.state_machine import StateMachine, main
+from isar.state_machine.state_machine import StateMachine
 from isar.storage.uploader import Uploader
 
 
 class StateMachineThreadMock(object):
     def __init__(self, container: ApplicationContainer) -> None:
         self.state_machine: StateMachine = container.state_machine()
-        self._thread: Thread = Thread(target=main, args=[self.state_machine])
+        self._thread: Thread = Thread(target=self.state_machine.run)
 
     def start(self) -> None:
         self._thread.start()
