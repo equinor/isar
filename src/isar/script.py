@@ -68,9 +68,7 @@ def print_startup_info() -> None:
         "Blob storage account metadata", settings.BLOB_STORAGE_ACCOUNT_METADATA
     )
     print_setting("Using async inspection uploading", settings.UPLOAD_INSPECTIONS_ASYNC)
-    print_setting("Plant code", settings.PLANT_CODE)
-    print_setting("Plant name", settings.PLANT_NAME)
-    print_setting("Plant shortname", settings.PLANT_SHORT_NAME)
+    print_setting("Installation code", settings.PLANT_SHORT_NAME)
     print_setting("Robot capabilities", robot_settings.CAPABILITIES)
 
 
