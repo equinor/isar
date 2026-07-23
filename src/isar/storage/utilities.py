@@ -28,12 +28,7 @@ def construct_metadata_file(
     inspection: Inspection, mission: Mission, filename: str
 ) -> bytes:
     data: dict = {
-        "coordinate_reference_system": settings.COORDINATE_REFERENCE_SYSTEM,
-        "vertical_reference_system": settings.VERTICAL_REFERENCE_SYSTEM,
-        "data_classification": settings.DATA_CLASSIFICATION,
-        "source_url": None,
-        "plant_code": settings.PLANT_CODE,
-        "media_orientation_reference_system": settings.MEDIA_ORIENTATION_REFERENCE_SYSTEM,  # noqa: E501
+        "installation_code": settings.PLANT_SHORT_NAME,
         "additional_meta": {
             "inspection_id": inspection.id,
             "mission_id": mission.id,
@@ -41,7 +36,6 @@ def construct_metadata_file(
             "mission_date": datetime.now(timezone.utc)
             .date()
             .strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "plant_name": settings.PLANT_NAME,
             "isar_id": settings.ISAR_ID,
             "robot_name": settings.ROBOT_NAME,
             "inspection_description": inspection.metadata.inspection_description,
