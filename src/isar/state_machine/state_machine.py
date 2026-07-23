@@ -186,8 +186,3 @@ def read_or_create_persistent_mode() -> RobotStartupMode:
             f"Created new persistent robot state for robot id {settings.ISAR_ID}. It is now set to: {startup_mode}."
         )
     return startup_mode
-
-
-def main(state_machine: StateMachine) -> None:
-    """Starts a state machine instance."""
-    state_machine.run()
