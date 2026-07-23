@@ -1,8 +1,7 @@
 from typing import cast
 
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State
-from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.stopping_paused_return_home import (
@@ -13,11 +12,11 @@ from tests.test_mocks.task import StubTask
 
 
 def test_transition_to_stopping_paused_return_home_replies_to_API(
-    sync_state_machine: StateMachine,
+    events: Events,
 ) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
-    sync_state_machine.current_state = ReturnHomePaused(sync_state_machine.events)
-    return_home_paused_state: State = cast(State, sync_state_machine.current_state)
+    current_state = ReturnHomePaused(events)
+    return_home_paused_state: State = cast(State, current_state)
     event_handler: EventHandlerMapping | None = (
         return_home_paused_state.get_event_handler_by_name("start_mission_event")
     )
@@ -26,21 +25,15 @@ def test_transition_to_stopping_paused_return_home_replies_to_API(
 
     transition = event_handler.handler(mission)
 
-    sync_state_machine.current_state = transition(sync_state_machine.events)
-    assert type(sync_state_machine.current_state) is StoppingPausedReturnHome
-    assert sync_state_machine.events.api_requests.start_mission.response.has_event()
+    current_state = transition(events)
+    assert type(current_state) is StoppingPausedReturnHome
+    assert events.api_requests.start_mission.response.has_event()
 
 
-def test_stopping_paused_return_home_mission_fails(
-    sync_state_machine: StateMachine,
-) -> None:
+def test_stopping_paused_return_home_mission_fails(events: Events) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
-    sync_state_machine.current_state = StoppingPausedReturnHome(
-        sync_state_machine.events, mission
-    )
-    stopping_paused_return_home_state: State = cast(
-        State, sync_state_machine.current_state
-    )
+    current_state = StoppingPausedReturnHome(events, mission)
+    stopping_paused_return_home_state: State = cast(State, current_state)
     event_handler: EventHandlerMapping | None = (
         stopping_paused_return_home_state.get_event_handler_by_name("failed_stop_event")
     )
@@ -49,22 +42,16 @@ def test_stopping_paused_return_home_mission_fails(
 
     transition = event_handler.handler(EmptyMessage())
 
-    assert not sync_state_machine.events.api_requests.start_mission.response.has_event()
+    assert not events.api_requests.start_mission.response.has_event()
 
-    sync_state_machine.current_state = transition(sync_state_machine.events)
-    assert type(sync_state_machine.current_state) is ReturnHomePaused
+    current_state = transition(events)
+    assert type(current_state) is ReturnHomePaused
 
 
-def test_stopping_paused_return_home_mission_succeeds(
-    sync_state_machine: StateMachine,
-) -> None:
+def test_stopping_paused_return_home_mission_succeeds(events: Events) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
-    sync_state_machine.current_state = StoppingPausedReturnHome(
-        sync_state_machine.events, mission
-    )
-    stopping_paused_return_home_state: State = cast(
-        State, sync_state_machine.current_state
-    )
+    current_state = StoppingPausedReturnHome(events, mission)
+    stopping_paused_return_home_state: State = cast(State, current_state)
     event_handler: EventHandlerMapping | None = (
         stopping_paused_return_home_state.get_event_handler_by_name(
             "successful_stop_event"
@@ -75,5 +62,5 @@ def test_stopping_paused_return_home_mission_succeeds(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine.events)
-    assert type(sync_state_machine.current_state) is Monitor
+    current_state = transition(events)
+    assert type(current_state) is Monitor

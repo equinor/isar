@@ -4,10 +4,10 @@ from typing import cast
 from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
+from isar.models.events import Events
 from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state import EventHandlerMapping, State
-from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.resuming import Resuming
@@ -78,12 +78,10 @@ def test_state_machine_with_successful_mission_stop(
     )
 
 
-def test_transition_from_resuming_to_paused(
-    sync_state_machine: StateMachine,
-) -> None:
-    sync_state_machine.current_state = Resuming(sync_state_machine.events, "mission_id")
+def test_transition_from_resuming_to_paused(events: Events) -> None:
+    current_state = Resuming(events, "mission_id")
 
-    resuming_state: State = cast(State, sync_state_machine.current_state)
+    resuming_state: State = cast(State, current_state)
     event_handler: EventHandlerMapping | None = (
         resuming_state.get_event_handler_by_name("failed_resume_event")
     )
@@ -96,16 +94,16 @@ def test_transition_from_resuming_to_paused(
         )
     )
 
-    sync_state_machine.current_state = transition(sync_state_machine.events)
-    assert type(sync_state_machine.current_state) is Paused
+    current_state = transition(events)
+    assert type(current_state) is Paused
 
 
 def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_available(
-    sync_state_machine: StateMachine,
+    events: Events,
 ) -> None:
-    sync_state_machine.current_state = UnknownStatus(sync_state_machine.events)
+    current_state = UnknownStatus(events)
 
-    unknown_status_state: State = cast(State, sync_state_machine.current_state)
+    unknown_status_state: State = cast(State, current_state)
 
     event_handler: EventHandlerMapping | None = (
         unknown_status_state.get_event_handler_by_name("robot_status_event")
@@ -114,16 +112,16 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
 
     transition = event_handler.handler(RobotStatus.Available)
 
-    sync_state_machine.current_state = transition(sync_state_machine.events)
-    assert type(sync_state_machine.current_state) is AwaitNextMission
+    current_state = transition(events)
+    assert type(current_state) is AwaitNextMission
 
 
 def test_transition_from_resuming_return_home_to_await_next_mission(
-    sync_state_machine: StateMachine,
+    events: Events,
 ) -> None:
-    sync_state_machine.current_state = ResumingReturnHome(sync_state_machine.events)
+    current_state = ResumingReturnHome(events)
 
-    resuming_return_home_state: State = cast(State, sync_state_machine.current_state)
+    resuming_return_home_state: State = cast(State, current_state)
     event_handler: EventHandlerMapping | None = (
         resuming_return_home_state.get_event_handler_by_name("failed_resume_event")
     )
@@ -136,5 +134,5 @@ def test_transition_from_resuming_return_home_to_await_next_mission(
         )
     )
 
-    sync_state_machine.current_state = transition(sync_state_machine.events)
-    assert type(sync_state_machine.current_state) is ReturnHomePaused
+    current_state = transition(events)
+    assert type(current_state) is ReturnHomePaused
