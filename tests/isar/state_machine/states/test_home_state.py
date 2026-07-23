@@ -1,7 +1,5 @@
-from typing import cast
-
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State
+from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.home import Home
 from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.lockdown import Lockdown
@@ -14,9 +12,8 @@ from robot_interface.models.mission.status import RobotStatus
 def test_lockdown_transitions_to_home(events: Events) -> None:
     current_state = Lockdown(events)
 
-    lockdown_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        lockdown_state.get_event_handler_by_name("release_from_lockdown")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "release_from_lockdown"
     )
 
     assert event_handler is not None
@@ -33,12 +30,11 @@ def test_state_machine_with_return_home_failure_successful_retries(
 ) -> None:
     current_state = ReturningHome(events)
 
-    returning_home_state: State = cast(State, current_state)
     event_handler_success: EventHandlerMapping | None = (
-        returning_home_state.get_event_handler_by_name("mission_succeeded_event")
+        current_state.get_event_handler_by_name("mission_succeeded_event")
     )
     event_handler_failure: EventHandlerMapping | None = (
-        returning_home_state.get_event_handler_by_name("mission_failed_event")
+        current_state.get_event_handler_by_name("mission_failed_event")
     )
 
     assert event_handler_success is not None
@@ -65,9 +61,8 @@ def test_intervention_needed_transitions_to_home_if_robot_is_home(
 ) -> None:
     current_state = InterventionNeeded(events)
 
-    intervention_needed_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        intervention_needed_state.get_event_handler_by_name("robot_status_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "robot_status_event"
     )
     assert event_handler is not None
 
@@ -82,11 +77,8 @@ def test_intervention_needed_transitions_to_home_if_robot_is_home(
 def test_recharging_goes_to_home_when_battery_high(events: Events) -> None:
     current_state = Recharging(events)
 
-    recharging_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        recharging_state.get_event_handler_by_name(
-            "robot_battery_above_recharge_threshold_event"
-        )
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "robot_battery_above_recharge_threshold_event"
     )
 
     assert event_handler is not None

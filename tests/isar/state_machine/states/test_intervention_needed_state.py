@@ -1,8 +1,6 @@
-from typing import cast
-
 from isar.config.settings import settings
 from isar.models.events import Events
-from isar.state_machine.state import EventHandlerMapping, State
+from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.going_to_recharging import GoingToRecharging
 from isar.state_machine.states.intervention_needed import InterventionNeeded
@@ -13,9 +11,8 @@ from robot_interface.models.mission.status import RobotStatus
 
 def test_going_to_recharging_goes_to_intervention_needed(events: Events) -> None:
     current_state = GoingToRecharging(events)
-    going_to_recharging_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        going_to_recharging_state.get_event_handler_by_name("mission_failed_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "mission_failed_event"
     )
 
     assert event_handler is not None
@@ -36,9 +33,8 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
 ) -> None:
     current_state = GoingToLockdown(events)
 
-    going_to_lockdown_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        going_to_lockdown_state.get_event_handler_by_name("mission_failed_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "mission_failed_event"
     )
 
     assert event_handler is not None
@@ -59,9 +55,8 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
 ) -> None:
     current_state = GoingToLockdown(events)
 
-    going_to_lockdown_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        going_to_lockdown_state.get_event_handler_by_name("mission_failed_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "mission_failed_event"
     )
 
     assert event_handler is not None
@@ -117,9 +112,8 @@ def test_intervention_needed_transitions_does_not_transition_if_status_is_not_ho
 ) -> None:
     current_state = InterventionNeeded(events)
 
-    intervention_needed_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        intervention_needed_state.get_event_handler_by_name("robot_status_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "robot_status_event"
     )
     assert event_handler is not None
 

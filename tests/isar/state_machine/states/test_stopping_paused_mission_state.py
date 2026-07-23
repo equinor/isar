@@ -1,7 +1,5 @@
-from typing import cast
-
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State
+from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.stopping_paused_mission import StoppingPausedMission
@@ -10,9 +8,8 @@ from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, Err
 
 def test_stopping_paused_mission_fails(events: Events) -> None:
     current_state = StoppingPausedMission(events, "mission_id")
-    stopping_paused_mission_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        stopping_paused_mission_state.get_event_handler_by_name("failed_stop_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "failed_stop_event"
     )
 
     assert event_handler is not None
@@ -29,9 +26,8 @@ def test_stopping_paused_mission_fails(events: Events) -> None:
 
 def test_stopping_paused_mission_succeeds(events: Events) -> None:
     current_state = StoppingPausedMission(events, "mission_id")
-    stopping_paused_mission_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        stopping_paused_mission_state.get_event_handler_by_name("successful_stop_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "successful_stop_event"
     )
 
     assert event_handler is not None

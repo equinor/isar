@@ -1,5 +1,4 @@
 from collections import deque
-from typing import cast
 
 from pytest_mock import MockerFixture
 
@@ -7,7 +6,7 @@ from isar.config.settings import settings
 from isar.models.events import Events
 from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from isar.state_machine.state import EventHandlerMapping, State
+from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.resuming import Resuming
@@ -81,9 +80,8 @@ def test_state_machine_with_successful_mission_stop(
 def test_transition_from_resuming_to_paused(events: Events) -> None:
     current_state = Resuming(events, "mission_id")
 
-    resuming_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        resuming_state.get_event_handler_by_name("failed_resume_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "failed_resume_event"
     )
 
     assert event_handler is not None
@@ -103,10 +101,8 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
 ) -> None:
     current_state = UnknownStatus(events)
 
-    unknown_status_state: State = cast(State, current_state)
-
-    event_handler: EventHandlerMapping | None = (
-        unknown_status_state.get_event_handler_by_name("robot_status_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "robot_status_event"
     )
     assert event_handler is not None
 
@@ -121,9 +117,8 @@ def test_transition_from_resuming_return_home_to_await_next_mission(
 ) -> None:
     current_state = ResumingReturnHome(events)
 
-    resuming_return_home_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        resuming_return_home_state.get_event_handler_by_name("failed_resume_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "failed_resume_event"
     )
 
     assert event_handler is not None

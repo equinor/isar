@@ -1,7 +1,5 @@
-from typing import cast
-
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State
+from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.stopping_paused_return_home import (
@@ -16,9 +14,8 @@ def test_transition_to_stopping_paused_return_home_replies_to_API(
 ) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     current_state = ReturnHomePaused(events)
-    return_home_paused_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        return_home_paused_state.get_event_handler_by_name("start_mission_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "start_mission_event"
     )
 
     assert event_handler is not None
@@ -33,9 +30,8 @@ def test_transition_to_stopping_paused_return_home_replies_to_API(
 def test_stopping_paused_return_home_mission_fails(events: Events) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     current_state = StoppingPausedReturnHome(events, mission)
-    stopping_paused_return_home_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        stopping_paused_return_home_state.get_event_handler_by_name("failed_stop_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "failed_stop_event"
     )
 
     assert event_handler is not None
@@ -51,11 +47,8 @@ def test_stopping_paused_return_home_mission_fails(events: Events) -> None:
 def test_stopping_paused_return_home_mission_succeeds(events: Events) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     current_state = StoppingPausedReturnHome(events, mission)
-    stopping_paused_return_home_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        stopping_paused_return_home_state.get_event_handler_by_name(
-            "successful_stop_event"
-        )
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "successful_stop_event"
     )
 
     assert event_handler is not None

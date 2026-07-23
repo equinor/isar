@@ -1,7 +1,5 @@
-from typing import cast
-
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State
+from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping_return_home import StoppingReturnHome
@@ -13,9 +11,8 @@ from tests.test_mocks.task import StubTask
 def test_return_home_cancelled_when_new_mission_received(events: Events) -> None:
     current_state = ReturningHome(events)
 
-    returning_home_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        returning_home_state.get_event_handler_by_name("start_mission_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "start_mission_event"
     )
 
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
@@ -31,9 +28,8 @@ def test_return_home_cancelled_when_new_mission_received(events: Events) -> None
 def test_transition_to_stopping_return_home_replies_to_API(events: Events) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     current_state = ReturningHome(events)
-    returning_home_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        returning_home_state.get_event_handler_by_name("start_mission_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "start_mission_event"
     )
 
     assert event_handler is not None
@@ -48,9 +44,8 @@ def test_transition_to_stopping_return_home_replies_to_API(events: Events) -> No
 def test_stopping_return_home_mission_fails(events: Events) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     current_state = StoppingReturnHome(events, mission)
-    stopping_return_home_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        stopping_return_home_state.get_event_handler_by_name("failed_stop_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "failed_stop_event"
     )
 
     assert event_handler is not None
@@ -68,9 +63,8 @@ def test_stopping_return_home_mission_fails(events: Events) -> None:
 def test_stopping_return_home_mission_succeeds(events: Events) -> None:
     mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
     current_state = StoppingReturnHome(events, mission)
-    stopping_return_home_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        stopping_return_home_state.get_event_handler_by_name("successful_stop_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "successful_stop_event"
     )
 
     assert event_handler is not None

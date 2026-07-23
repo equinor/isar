@@ -1,6 +1,5 @@
 from collections import deque
 from http import HTTPStatus
-from typing import cast
 from uuid import uuid4
 
 import pytest
@@ -11,7 +10,7 @@ from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Events
 from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from isar.state_machine.state import EventHandlerMapping, State
+from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.pausing import Pausing
@@ -48,9 +47,8 @@ def _mock_robot_exception_with_message() -> RobotException:
 
 def test_stopping_to_recharge_goes_to_intervention_needed(events: Events) -> None:
     current_state = StoppingGoToRecharge(events)
-    stopping_go_to_recharge_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        stopping_go_to_recharge_state.get_event_handler_by_name("failed_stop_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "failed_stop_event"
     )
 
     assert event_handler is not None
@@ -69,9 +67,8 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     example_mission: Mission = ReturnHomeMission()
     current_state = StoppingReturnHome(events, example_mission)
 
-    stopping_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        stopping_state.get_event_handler_by_name("successful_stop_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "successful_stop_event"
     )
 
     assert event_handler is not None
@@ -85,9 +82,8 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
 def test_stopping_lockdown_failing_to_monitor(events: Events) -> None:
     current_state = StoppingGoToLockdown(events, "mission_id")
 
-    stopping_go_to_lockdown_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        stopping_go_to_lockdown_state.get_event_handler_by_name("failed_stop_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "failed_stop_event"
     )
 
     assert event_handler is not None
@@ -105,8 +101,7 @@ def test_stopping_lockdown_failing_to_monitor(events: Events) -> None:
 def test_transition_from_pausing_to_monitor(events: Events) -> None:
     current_state = Pausing(events, "mission_id")
 
-    pausing_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = pausing_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
         "failed_pause_event"
     )
 
@@ -124,9 +119,8 @@ def test_transition_from_pausing_to_monitor(events: Events) -> None:
 def test_transition_from_resuming_to_monitor(events: Events) -> None:
     current_state = Resuming(events, "mission_id")
 
-    resuming_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        resuming_state.get_event_handler_by_name("successful_resume_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "successful_resume_event"
     )
 
     assert event_handler is not None
@@ -226,7 +220,6 @@ def test_robot_mission_status_exception_handling(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
-    mocker: MockerFixture,
 ) -> None:
     mission = Mission(
         name="Dummy mission",
@@ -258,8 +251,7 @@ def test_robot_mission_status_exception_handling(
 def test_transition_from_monitor_to_stopping_to_recharge(events: Events) -> None:
     current_state = Monitor(events, "test_id")
 
-    paused_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = paused_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
         "robot_battery_below_threshold_event"
     )
 

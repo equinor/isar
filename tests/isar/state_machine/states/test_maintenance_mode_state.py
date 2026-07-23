@@ -1,7 +1,5 @@
-from typing import cast
-
 from isar.models.events import Events
-from isar.state_machine.state import EventHandlerMapping, State
+from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.home import Home
 from isar.state_machine.states.maintenance import Maintenance
 from isar.state_machine.states.offline import Offline
@@ -14,9 +12,8 @@ def test_home_transitions_to_maintenance_mode_when_teleoperating(
 ) -> None:
     current_state = Home(events)
 
-    intervention_needed_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        intervention_needed_state.get_event_handler_by_name("robot_status_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "robot_status_event"
     )
     assert event_handler is not None
 
@@ -33,9 +30,8 @@ def test_unknown_status_transitions_to_maintenance_mode_when_teleoperating(
 ) -> None:
     current_state = UnknownStatus(events)
 
-    intervention_needed_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        intervention_needed_state.get_event_handler_by_name("robot_status_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "robot_status_event"
     )
     assert event_handler is not None
 
@@ -52,9 +48,8 @@ def test_offline_transitions_to_maintenance_mode_when_teleoperating(
 ) -> None:
     current_state = Offline(events)
 
-    intervention_needed_state: State = cast(State, current_state)
-    event_handler: EventHandlerMapping | None = (
-        intervention_needed_state.get_event_handler_by_name("robot_status_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "robot_status_event"
     )
     assert event_handler is not None
 
