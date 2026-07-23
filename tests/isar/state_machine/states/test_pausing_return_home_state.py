@@ -1,18 +1,15 @@
 from typing import cast
 
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State
-from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states.pausing_return_home import PausingReturnHome
 from isar.state_machine.states.returning_home import ReturningHome
 
 
-def test_transition_from_returning_home_to_pausing_return_home(
-    sync_state_machine: StateMachine,
-) -> None:
-    sync_state_machine.current_state = ReturningHome(sync_state_machine.events)
+def test_transition_from_returning_home_to_pausing_return_home(events: Events) -> None:
+    current_state = ReturningHome(events)
 
-    returning_home_state: State = cast(State, sync_state_machine.current_state)
+    returning_home_state: State = cast(State, current_state)
     event_handler: EventHandlerMapping | None = (
         returning_home_state.get_event_handler_by_name("pause_mission_event")
     )
@@ -21,5 +18,5 @@ def test_transition_from_returning_home_to_pausing_return_home(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine.events)
-    assert type(sync_state_machine.current_state) is PausingReturnHome
+    current_state = transition(events)
+    assert type(current_state) is PausingReturnHome

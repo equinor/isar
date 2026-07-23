@@ -27,7 +27,6 @@ from isar.robot.robot_service import RobotService
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.service_connections.persistent_memory import Base
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from isar.state_machine.state import State
 from isar.state_machine.state_machine import StateMachine
 from isar.storage.uploader import Uploader
 from robot_interface.robot_interface import RobotInterface
@@ -129,25 +128,16 @@ def access_token() -> str:
 
 
 @pytest.fixture()
+def events(container: ApplicationContainer) -> Events:
+    """Fixture to provide a test with the global event queues."""
+    return container.events()
+
+
+@pytest.fixture()
 def state_machine(
     container: ApplicationContainer, robot: RobotInterface, mocker: MockerFixture
 ) -> StateMachine:
     """Fixture to provide the StateMachine instance."""
-    mocker.patch.object(settings, "USE_DB", False)
-    return StateMachine(
-        events=container.events(),
-        shared_state=container.shared_state(),
-        robot=robot,
-        mqtt_publisher=container.mqtt_client(),
-    )
-
-
-@pytest.fixture()
-def sync_state_machine(
-    container: ApplicationContainer, robot: RobotInterface, mocker: MockerFixture
-) -> StateMachine:
-    """Fixture to provide the StateMachine instance without running the state loops."""
-    mocker.patch.object(State, "run", return_value=lambda: None)
     mocker.patch.object(settings, "USE_DB", False)
     return StateMachine(
         events=container.events(),
