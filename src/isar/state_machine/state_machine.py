@@ -72,7 +72,7 @@ class StateMachine(object):
 
     def run(self) -> None:
         """Runs the state machine loop."""
-        current_state = self.starting_state
+        current_state: State = self.starting_state
         self.state_metrics_publisher: StateMetricsPublisher = StateMetricsPublisher(
             current_state_provider=lambda: current_state.name
         )
@@ -87,8 +87,7 @@ class StateMachine(object):
                     )
                     break
 
-                next_state: State | None = transition(self.events)
-                current_state = next_state
+                current_state = transition(self.events)
         except Exception as e:
             self.logger.error(f"Unhandled exception in state machine: {str(e)}")
 
