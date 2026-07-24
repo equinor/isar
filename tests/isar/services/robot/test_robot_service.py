@@ -293,7 +293,7 @@ def test_mission_succeeds_to_resume(
 
 
 def test_start_mission_reports_robot_already_home(
-    mocked_robot_service: RobotService, mocker: MockerFixture
+    mocked_robot_service: RobotService,
 ) -> None:
     r_service = mocked_robot_service
 
@@ -307,4 +307,4 @@ def test_start_mission_reports_robot_already_home(
     success = r_service._start_mission_handler(mission)
 
     assert not success
-    assert r_service.robot_service_events.robot_already_home.has_event()
+    assert r_service.robot_service_events.mission_succeeded.has_event()

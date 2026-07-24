@@ -1,21 +1,15 @@
-from typing import cast
-
-from isar.models.events import EmptyMessage
-from isar.state_machine.state import EventHandlerMapping, State
-from isar.state_machine.state_machine import StateMachine
+from isar.models.events import EmptyMessage, Events
+from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.lockdown import Lockdown
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.stopping_go_to_lockdown import StoppingGoToLockdown
 
 
-def test_mission_stopped_when_going_to_lockdown(
-    sync_state_machine: StateMachine,
-) -> None:
-    sync_state_machine.current_state = Monitor(sync_state_machine.events, "mission_id")
+def test_mission_stopped_when_going_to_lockdown(events: Events) -> None:
+    current_state = Monitor(events, "mission_id")
 
-    monitor_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: EventHandlerMapping | None = monitor_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
         "send_to_lockdown_event"
     )
 
@@ -23,23 +17,20 @@ def test_mission_stopped_when_going_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine.events)
-    assert type(sync_state_machine.current_state) is StoppingGoToLockdown
+    current_state = transition(events)
+    assert type(current_state) is StoppingGoToLockdown
 
 
-def test_going_to_lockdown_transitions_to_lockdown(
-    sync_state_machine: StateMachine,
-) -> None:
-    sync_state_machine.current_state = GoingToLockdown(sync_state_machine.events)
+def test_going_to_lockdown_transitions_to_lockdown(events: Events) -> None:
+    current_state = GoingToLockdown(events)
 
-    going_to_lockdown_state: State = cast(State, sync_state_machine.current_state)
-    event_handler: EventHandlerMapping | None = (
-        going_to_lockdown_state.get_event_handler_by_name("mission_succeeded_event")
+    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+        "mission_succeeded_event"
     )
 
     assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
-    sync_state_machine.current_state = transition(sync_state_machine.events)
-    assert type(sync_state_machine.current_state) is Lockdown
+    current_state = transition(events)
+    assert type(current_state) is Lockdown

@@ -7,7 +7,6 @@ from isar.models.events import (
     EmptyMessage,
     Events,
     RobotServiceEvents,
-    SharedState,
     StateMachineEvents,
 )
 from isar.robot.robot_battery import RobotBatteryThread
@@ -30,14 +29,12 @@ class RobotService:
         self,
         events: Events,
         robot: RobotInterface,
-        shared_state: SharedState,
         mqtt_publisher: MqttClientInterface,
     ) -> None:
         self.logger = logging.getLogger("robot")
         self.state_machine_events: StateMachineEvents = events.state_machine_events
         self.robot_service_events: RobotServiceEvents = events.robot_service_events
         self.mqtt_publisher: MqttClientInterface = mqtt_publisher
-        self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.battery_thread: RobotBatteryThread | None = None
         self.status_thread: RobotStatusThread | None = None
@@ -61,13 +58,15 @@ class RobotService:
             error_message
             and error_message.error_reason == ErrorReason.RobotAlreadyHomeException
         ):
-            self.robot_service_events.robot_already_home.trigger_event(EmptyMessage())
+            self.logger.info("Did not start return home, since robot was already home")
+            self.robot_service_events.mission_succeeded.trigger_event(EmptyMessage())
             return False
         elif error_message:
             mission.status = MissionStatus.Failed
             error_message.error_description = (
                 f"Failed to initiate due to: {error_message.error_description}"
             )
+            self.logger.warning(f"Failed to start mission. {error_message}")
             self.robot_service_events.mission_failed.trigger_event(error_message)
             return False
         if not mission._is_return_to_home_mission():
@@ -186,7 +185,6 @@ class RobotService:
         self.status_thread = RobotStatusThread(
             robot=self.robot,
             signal_exit=self.signal_exit,
-            shared_state=self.shared_state,
             state_machine_events=self.state_machine_events,
             robot_service_events=self.robot_service_events,
         )

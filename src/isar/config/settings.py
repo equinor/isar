@@ -50,11 +50,8 @@ class Settings(BaseSettings):
     # issues
     REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY: float = Field(default=10)
 
-    # Number of attempts for state transitions resume and pause if failed
-    STATE_TRANSITION_NUM_RETIRES: int = Field(default=10)
-
-    # Number of attempts to stop the robot before giving up
-    STOP_ROBOT_ATTEMPTS_LIMIT: int = Field(default=3)
+    # Number of attempts for requests to the robot interface
+    ROBOT_REQUEST_ATTEMPTS_LIMIT: int = Field(default=3)
 
     # Number of attempts to stop the robot before giving up
     UPLOAD_FAILURE_ATTEMPTS_LIMIT: int = Field(default=10)
@@ -144,12 +141,6 @@ class Settings(BaseSettings):
     # The configuration of this section is tightly coupled with the metadata that is
     # submitted with the results once they have been uploaded.
 
-    # Four-digit code indicating facility
-    PLANT_CODE: str = Field(default="1210")
-
-    # Name of the facility the robot is operating in
-    PLANT_NAME: str = Field(default="Huldra")
-
     # Shortname of the facility the robot is operating in
     PLANT_SHORT_NAME: str = Field(default="HUA")
 
@@ -164,22 +155,6 @@ class Settings(BaseSettings):
 
     # Info about robot documentation
     DOCUMENTATION: List[DocumentInfo] = Field(default=[])
-
-    # Coordinate reference system of facility
-    COORDINATE_REFERENCE_SYSTEM: str = Field(default="EQUINOR:4100001")
-
-    # Vertical reference system of facility
-    VERTICAL_REFERENCE_SYSTEM: str = Field(default="MSL")
-
-    # Rotational representations of reported results
-    # Options [quaternion]
-    MEDIA_ORIENTATION_REFERENCE_SYSTEM: str = Field(default="quaternion")
-
-    # Timezone
-    TIMEZONE: str = Field(default="UTC+00:00")
-
-    # Data classification
-    DATA_CLASSIFICATION: str = Field(default="internal")
 
     # List of MQTT Topics
     TOPIC_ISAR_STATUS: str = Field(default="status", validate_default=True)

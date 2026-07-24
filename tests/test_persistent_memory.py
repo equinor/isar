@@ -74,7 +74,7 @@ def test_lockdown_mode(
     robot_service_thread.start()
 
     assert (
-        state_machine_thread_with_db.state_machine.current_state.name
+        state_machine_thread_with_db.state_machine.state_event.check()
         == States.Maintenance
     )
 
@@ -88,7 +88,7 @@ def test_lockdown_mode(
     response = client.post(url="/schedule/release-maintenance-mode")
     assert response.status_code == HTTPStatus.OK
     wait_until(
-        lambda: state_machine_thread_with_db.state_machine.current_state.name
+        lambda: state_machine_thread_with_db.state_machine.state_event.check()
         == States.Home
     )
 
@@ -106,7 +106,7 @@ def test_lockdown_mode(
     assert response.status_code == HTTPStatus.OK
 
     assert (
-        state_machine_thread_with_db.state_machine.current_state.name == States.Monitor
+        state_machine_thread_with_db.state_machine.state_event.check() == States.Monitor
     )
     response = client.post(url="/schedule/lockdown")
     assert response.status_code == HTTPStatus.OK
@@ -116,7 +116,7 @@ def test_lockdown_mode(
     )
 
     wait_until(
-        lambda: state_machine_thread_with_db.state_machine.current_state.name
+        lambda: state_machine_thread_with_db.state_machine.state_event.check()
         == States.Lockdown,
         timeout=10.0,
     )
@@ -164,7 +164,7 @@ def test_maintenance_mode(
     robot_service_thread.start()
 
     assert (
-        state_machine_thread_with_db.state_machine.current_state.name
+        state_machine_thread_with_db.state_machine.state_event.check()
         == States.Maintenance
     )
 
@@ -189,7 +189,7 @@ def test_maintenance_mode(
     response = client.post(url="/schedule/release-maintenance-mode")
     assert response.status_code == HTTPStatus.OK
     wait_until(
-        lambda: state_machine_thread_with_db.state_machine.current_state.name
+        lambda: state_machine_thread_with_db.state_machine.state_event.check()
         == States.Home
     )
 
@@ -207,7 +207,7 @@ def test_maintenance_mode(
     assert response.status_code == HTTPStatus.OK
 
     assert (
-        state_machine_thread_with_db.state_machine.current_state.name == States.Monitor
+        state_machine_thread_with_db.state_machine.state_event.check() == States.Monitor
     )
     response = client.post(url="/schedule/maintenance-mode")
     assert response.status_code == HTTPStatus.OK
@@ -250,7 +250,7 @@ def test_release_maintenance_mode(
     robot_service_thread.start()
 
     assert (
-        state_machine_thread_with_db.state_machine.current_state.name
+        state_machine_thread_with_db.state_machine.state_event.check()
         == States.Maintenance
     )
 
