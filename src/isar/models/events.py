@@ -189,7 +189,6 @@ class RobotServiceEvents:
         self.request_inspection_upload: Event[Tuple[InspectionTask, Mission]] = Event(
             "request_inspection_upload"
         )
-        self.robot_already_home: Event[EmptyMessage] = Event("robot_already_home")
         self.battery_below_mission_threshold: Event[EmptyMessage] = Event(
             "battery_below_mission_threshold"
         )

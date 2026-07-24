@@ -58,13 +58,15 @@ class RobotService:
             error_message
             and error_message.error_reason == ErrorReason.RobotAlreadyHomeException
         ):
-            self.robot_service_events.robot_already_home.trigger_event(EmptyMessage())
+            self.logger.info("Did not start return home, since robot was already home")
+            self.robot_service_events.mission_succeeded.trigger_event(EmptyMessage())
             return False
         elif error_message:
             mission.status = MissionStatus.Failed
             error_message.error_description = (
                 f"Failed to initiate due to: {error_message.error_description}"
             )
+            self.logger.warning(f"Failed to start mission. {error_message}")
             self.robot_service_events.mission_failed.trigger_event(error_message)
             return False
         if not mission._is_return_to_home_mission():
