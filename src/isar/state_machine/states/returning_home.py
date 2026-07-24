@@ -74,11 +74,6 @@ class ReturningHome(State):
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
             ),
-            EventHandlerMapping[EmptyMessage](
-                name="robot_already_home",
-                event=events.robot_service_events.robot_already_home,
-                handler=lambda _: Home.transition(),
-            ),
         ]
         super().__init__(
             state_name=States.ReturningHome,
