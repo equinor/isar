@@ -11,10 +11,10 @@ from isar.models.events import (
     APIEvent,
     APIRequests,
     EmptyMessage,
+    Event,
     EventConflictError,
     Events,
     EventTimeoutError,
-    SharedState,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
@@ -32,10 +32,9 @@ class SchedulingUtilities:
     def __init__(
         self,
         events: Events,
-        shared_state: SharedState,
     ):
         self.api_events: APIRequests = events.api_requests
-        self.shared_state: SharedState = shared_state
+        self.state_event: Event[States] = events.state
         self.logger = logging.getLogger("api")
 
     def get_state(self) -> States:
@@ -46,7 +45,7 @@ class SchedulingUtilities:
         HTTPException 500 Internal Server Error
             If the current state is not available on the queue
         """
-        current_state = self.shared_state.state.check()
+        current_state = self.state_event.check()
         if current_state is None:
             error_message: str = (
                 "Internal Server Error - Current state of the state machine is unknown"
