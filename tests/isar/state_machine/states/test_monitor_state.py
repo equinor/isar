@@ -156,7 +156,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
     )
     scheduling_utilities.start_mission(mission=mission)
     wait_until(
-        lambda: state_machine_thread.state_machine.current_state.name == States.Monitor
+        lambda: state_machine_thread.state_machine.state_event.check() == States.Monitor
     )
     scheduling_utilities.stop_mission()
 
@@ -201,7 +201,7 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
 
     scheduling_utilities.start_mission(mission=mission)
     wait_until(
-        lambda: state_machine_thread.state_machine.current_state.name == States.Monitor
+        lambda: state_machine_thread.state_machine.state_event.check() == States.Monitor
     )
     with pytest.raises(HTTPException) as exception_details:
         scheduling_utilities.stop_mission(str(uuid4()))

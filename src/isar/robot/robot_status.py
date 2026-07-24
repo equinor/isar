@@ -3,7 +3,7 @@ import time
 from threading import Event, Thread
 
 from isar.config.settings import settings
-from isar.models.events import RobotServiceEvents, SharedState, StateMachineEvents
+from isar.models.events import RobotServiceEvents, StateMachineEvents
 from robot_interface.models.exceptions.robot_exceptions import RobotException
 from robot_interface.robot_interface import RobotInterface
 
@@ -13,12 +13,10 @@ class RobotStatusThread(Thread):
         self,
         robot: RobotInterface,
         signal_exit: Event,
-        shared_state: SharedState,
         robot_service_events: RobotServiceEvents,
         state_machine_events: StateMachineEvents,
     ):
         self.logger = logging.getLogger("robot")
-        self.shared_state: SharedState = shared_state
         self.robot_service_events: RobotServiceEvents = robot_service_events
         self.state_machine_events: StateMachineEvents = state_machine_events
         self.robot: RobotInterface = robot

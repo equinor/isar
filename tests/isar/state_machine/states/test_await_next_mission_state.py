@@ -58,7 +58,7 @@ def test_state_machine_with_successful_mission_stop(
     )
     scheduling_utilities.start_mission(mission=mission)
     wait_until(
-        lambda: state_machine_thread.state_machine.current_state.name == States.Monitor
+        lambda: state_machine_thread.state_machine.state_event.check() == States.Monitor
     )
     scheduling_utilities.stop_mission(mission_id=mission.id)
 

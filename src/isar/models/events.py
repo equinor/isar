@@ -102,6 +102,8 @@ class Events:
 
         self.mqtt_queue: Queue[MQTTQueueType] = Queue[MQTTQueueType]()
 
+        self.state: Event[States] = Event("state")
+
 
 class APIEvent(Generic[T1, T2]):
     """
@@ -194,11 +196,6 @@ class RobotServiceEvents:
         self.battery_above_recharge_threshold_event: Event[EmptyMessage] = Event(
             "battery_above_recharge_threshold"
         )
-
-
-class SharedState:
-    def __init__(self) -> None:
-        self.state: Event[States] = Event("state")
 
 
 class EventTimeoutError(Exception):

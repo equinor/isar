@@ -7,7 +7,6 @@ from isar.models.events import (
     EmptyMessage,
     Events,
     RobotServiceEvents,
-    SharedState,
     StateMachineEvents,
 )
 from isar.robot.robot_battery import RobotBatteryThread
@@ -30,14 +29,12 @@ class RobotService:
         self,
         events: Events,
         robot: RobotInterface,
-        shared_state: SharedState,
         mqtt_publisher: MqttClientInterface,
     ) -> None:
         self.logger = logging.getLogger("robot")
         self.state_machine_events: StateMachineEvents = events.state_machine_events
         self.robot_service_events: RobotServiceEvents = events.robot_service_events
         self.mqtt_publisher: MqttClientInterface = mqtt_publisher
-        self.shared_state: SharedState = shared_state
         self.robot: RobotInterface = robot
         self.battery_thread: RobotBatteryThread | None = None
         self.status_thread: RobotStatusThread | None = None
@@ -186,7 +183,6 @@ class RobotService:
         self.status_thread = RobotStatusThread(
             robot=self.robot,
             signal_exit=self.signal_exit,
-            shared_state=self.shared_state,
             state_machine_events=self.state_machine_events,
             robot_service_events=self.robot_service_events,
         )

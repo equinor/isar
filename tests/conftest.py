@@ -29,7 +29,6 @@ from isar.services.service_connections.persistent_memory import Base
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
 from isar.storage.uploader import Uploader
-from robot_interface.robot_interface import RobotInterface
 from tests.test_mocks.blob_storage import StorageFake
 from tests.test_mocks.robot_interface import StubRobot
 from tests.test_mocks.state_machine_mocks import (
@@ -77,7 +76,7 @@ def container() -> ApplicationContainer:
             RobotService,
             events=container.events(),
             robot=container.robot_interface(),
-            shared_state=container.shared_state(),
+            mqtt_publisher=container.mqtt_client(),
         )
     )
     container.inspection_service.override(
@@ -135,14 +134,12 @@ def events(container: ApplicationContainer) -> Events:
 
 @pytest.fixture()
 def state_machine(
-    container: ApplicationContainer, robot: RobotInterface, mocker: MockerFixture
+    container: ApplicationContainer, mocker: MockerFixture
 ) -> StateMachine:
     """Fixture to provide the StateMachine instance."""
     mocker.patch.object(settings, "USE_DB", False)
     return StateMachine(
         events=container.events(),
-        shared_state=container.shared_state(),
-        robot=robot,
         mqtt_publisher=container.mqtt_client(),
     )
 
@@ -209,7 +206,6 @@ def robot_service_thread(
     robot_service: RobotService = RobotService(
         events=container.events(),
         robot=container.robot_interface(),
-        shared_state=container.shared_state(),
         mqtt_publisher=container.mqtt_client(),
     )
 
@@ -245,7 +241,6 @@ def mocked_robot_service(
     robot_service: RobotService = RobotService(
         events=container.events(),
         robot=container.robot_interface(),
-        shared_state=container.shared_state(),
         mqtt_publisher=container.mqtt_client(),
     )
 
