@@ -34,6 +34,7 @@ def test_to_isar_mission() -> None:
         orientation=InputOrientation(x=1, y=1, z=1, w=1),
     )
     task_definition = StartMissionTaskDefinition(
+        id="test-id",
         type=TaskType.Inspection,
         pose=task_pose,
         inspection=inspection_definition,
@@ -54,7 +55,7 @@ def test_to_isar_mission() -> None:
     assert isinstance(first_task, TakeImage)
 
     assert first_task.target == Position(x=1, y=1, z=1, frame=Frame(name="robot"))
-    assert len(first_task.inspection_id) > 1
+    assert len(first_task.id) > 1
     assert first_task.robot_pose == Pose(
         position=Position(x=1, y=1, z=1, frame=Frame(name="robot")),
         orientation=Orientation(x=1, y=1, z=1, w=1, frame=Frame(name="robot")),
@@ -93,6 +94,7 @@ def _build_mission_with_inspection_payload(inspection_payload: dict) -> Mission:
         "name": "mission",
         "tasks": [
             {
+                "id": "dummy_id",
                 "type": "inspection",
                 "pose": {
                     "position": {"x": 0, "y": 0, "z": 0},

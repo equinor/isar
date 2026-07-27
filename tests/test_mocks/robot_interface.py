@@ -65,7 +65,7 @@ class StubRobot(RobotInterface):
     def get_inspection(self, task: InspectionTask) -> Inspection:
         return Image(
             metadata=stub_image_metadata(),
-            id=task.inspection_id,
+            id=task.id,
             data=b"Some binary image data",
         )
 

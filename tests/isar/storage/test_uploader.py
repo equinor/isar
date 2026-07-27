@@ -43,9 +43,7 @@ def test_should_upload_from_queue(
     mission: Mission = Mission(name="Dummy misson", tasks=[take_image_task])
 
     assert isinstance(mission.tasks[0], TakeImage)
-    inspection = InspectionBlob(
-        metadata=stub_image_metadata(), id=mission.tasks[0].inspection_id
-    )
+    inspection = InspectionBlob(metadata=stub_image_metadata(), id=mission.tasks[0].id)
 
     message: Tuple[Inspection, Mission] = (
         inspection,
