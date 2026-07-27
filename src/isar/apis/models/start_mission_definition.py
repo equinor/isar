@@ -2,7 +2,6 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Type
-from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
@@ -68,7 +67,7 @@ class StartMissionTaskDefinition(BaseModel):
 
 
 class StartMissionDefinition(BaseModel):
-    id: str | None = None
+    id: str = Field()
     tasks: List[StartMissionTaskDefinition]
     name: str | None = None
 
@@ -99,10 +98,8 @@ def to_isar_mission(
         else _build_mission_name()
     )
 
-    id = start_mission_definition.id if start_mission_definition.id else str(uuid4())
-
     return Mission(
-        id=id,
+        id=start_mission_definition.id,
         tasks=isar_tasks,
         name=isar_mission_name,
     )
