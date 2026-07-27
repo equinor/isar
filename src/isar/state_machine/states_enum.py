@@ -33,3 +33,35 @@ class States(str, Enum):
 
     def __repr__(self) -> str:
         return self.value
+
+
+STATE_TO_CODE: dict["States", int] = {
+    States.Home: 0,
+    States.AwaitNextMission: 1,
+    States.Monitor: 2,
+    States.ReturningHome: 3,
+    States.Offline: 4,
+    States.InterventionNeeded: 5,
+    States.Maintenance: 6,
+    States.Paused: 7,
+    States.Pausing: 8,
+    States.Resuming: 9,
+    States.PausingReturnHome: 10,
+    States.ResumingReturnHome: 11,
+    States.ReturnHomePaused: 12,
+    States.Stopping: 13,
+    States.StoppingUnknownMission: 14,
+    States.StoppingReturnHome: 15,
+    States.StoppingPausedMission: 16,
+    States.StoppingPausedReturnHome: 17,
+    States.StoppingDueToMaintenance: 18,
+    States.StoppingGoToLockdown: 19,
+    States.StoppingGoToRecharge: 20,
+    States.Recharging: 21,
+    States.RechargingWithMission: 22,
+    States.GoingToRecharging: 23,
+    States.GoingToRechargingWithMission: 24,
+    States.GoingToLockdown: 25,
+    States.Lockdown: 26,
+    States.UnknownStatus: 27,
+}

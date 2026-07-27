@@ -14,6 +14,7 @@ from isar.services.service_connections.persistent_memory import (
 )
 from isar.services.utilities.mqtt_utilities import publish_isar_status
 from isar.state_machine.state import State, Transition
+from isar.state_machine.state_metrics import StateMetricsPublisher
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.maintenance import Maintenance
 from isar.state_machine.states.unknown_status import UnknownStatus
@@ -69,6 +70,10 @@ class StateMachine(object):
 
         self.transitions_list: Deque[States] = deque(
             [], settings.STATE_TRANSITIONS_LOG_LENGTH
+        )
+
+        self.state_metrics_publisher: StateMetricsPublisher = StateMetricsPublisher(
+            current_state_provider=lambda: self.current_state.name
         )
 
     #################################################################################
