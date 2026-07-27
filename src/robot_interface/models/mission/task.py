@@ -57,7 +57,7 @@ class Task(BaseModel):
     status: TaskStatus = Field(default=TaskStatus.NotStarted)
     error_message: ErrorMessage | None = Field(default=None)
     tag_id: str | None = Field(default=None)
-    id: str = Field(default_factory=lambda: str(uuid4()), frozen=True)
+    id: str = Field(frozen=True)
 
 
 class InspectionTask(Task):
@@ -80,6 +80,7 @@ class ReturnToHome(Task):
     Task which cases the robot to return home
     """
 
+    id: str = str(uuid4())
     type: Literal[TaskTypes.ReturnToHome] = TaskTypes.ReturnToHome
 
 

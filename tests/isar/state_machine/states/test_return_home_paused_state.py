@@ -61,7 +61,7 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
 
     assert event_handler is not None
 
-    example_mission: Mission = Mission(name="Dummy misson", tasks=[])
+    example_mission: Mission = Mission(id="id", name="Dummy misson", tasks=[])
 
     transition = event_handler.handler(example_mission)
 

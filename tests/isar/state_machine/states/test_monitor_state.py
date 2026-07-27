@@ -159,7 +159,9 @@ def test_state_machine_with_unsuccessful_mission_stop(
     robot_service_thread: RobotServiceThreadMock,
 ) -> None:
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
-    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    mission: Mission = Mission(
+        id="id", name="Dummy misson", tasks=[StubTask.take_image()]
+    )
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     mocker.patch.object(
@@ -205,7 +207,9 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
     mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
-    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    mission: Mission = Mission(
+        id="id", name="Dummy misson", tasks=[StubTask.take_image()]
+    )
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     mocker.patch.object(
@@ -241,9 +245,9 @@ def test_robot_mission_status_exception_handling(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
-    mocker: MockerFixture,
 ) -> None:
     mission = Mission(
+        id="id",
         name="Dummy mission",
         tasks=[StubTask.take_image()],
     )

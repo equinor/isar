@@ -13,4 +13,6 @@ class StubTask:
             orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame("robot")),
             frame=Frame("robot"),
         )
-        return TakeImage(target=target_pose, robot_pose=robot_pose, status=status)
+        return TakeImage(
+            id="dummy-id", target=target_pose, robot_pose=robot_pose, status=status
+        )

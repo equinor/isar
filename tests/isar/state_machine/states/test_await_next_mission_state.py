@@ -46,7 +46,9 @@ def test_state_machine_with_successful_mission_stop(
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 15)
 
     mission: Mission = Mission(
-        name="Dummy misson", tasks=[StubTask.take_image() for _ in range(0, 20)]
+        id="id",
+        name="Dummy misson",
+        tasks=[StubTask.take_image() for _ in range(0, 20)],
     )
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()

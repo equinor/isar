@@ -54,9 +54,13 @@ def test_state_machine_transitions_when_running_full_mission(
         )
     )
 
-    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
-    task_2: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
-    mission: Mission = Mission(name="Dummy mission", tasks=[task_1, task_2])
+    task_1: Task = TakeImage(
+        id="id", target=stub_pose().position, robot_pose=stub_pose()
+    )
+    task_2: Task = TakeImage(
+        id="id", target=stub_pose().position, robot_pose=stub_pose()
+    )
+    mission: Mission = Mission(id="id", name="Dummy mission", tasks=[task_1, task_2])
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
@@ -87,9 +91,13 @@ def test_state_machine_failed_dependency(
     mocker.patch.object(settings, "RETURN_HOME_RETRY_LIMIT", 3)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
-    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
-    task_2: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
-    mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
+    task_1: Task = TakeImage(
+        id="id", target=stub_pose().position, robot_pose=stub_pose()
+    )
+    task_2: Task = TakeImage(
+        id="id", target=stub_pose().position, robot_pose=stub_pose()
+    )
+    mission: Mission = Mission(id="id", name="Dummy misson", tasks=[task_1, task_2])
 
     mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.Failed)
     mocker.patch.object(StubRobot, "mission_status", return_value=MissionStatus.Failed)
@@ -142,7 +150,9 @@ def test_state_machine_with_successful_collection(
     mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
-    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    mission: Mission = Mission(
+        id="id", name="Dummy misson", tasks=[StubTask.take_image()]
+    )
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
 
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
@@ -198,7 +208,9 @@ def test_state_machine_with_unsuccessful_collection(
     wait_until(
         lambda: States.Home in state_machine_thread.state_machine.transitions_list
     )
-    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    mission: Mission = Mission(
+        id="id", name="Dummy misson", tasks=[StubTask.take_image()]
+    )
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
 
@@ -230,7 +242,9 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
     robot_service_thread: RobotServiceThreadMock,
 ) -> None:
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
-    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    mission: Mission = Mission(
+        id="id", name="Dummy misson", tasks=[StubTask.take_image()]
+    )
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     mocker.patch.object(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
@@ -280,9 +294,13 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
 
     robot_service_thread.robot_service.robot = StubRobotInitiateMissionRaisesException()
 
-    task_1: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
-    task_2: Task = TakeImage(target=stub_pose().position, robot_pose=stub_pose())
-    mission: Mission = Mission(name="Dummy misson", tasks=[task_1, task_2])
+    task_1: Task = TakeImage(
+        id="id", target=stub_pose().position, robot_pose=stub_pose()
+    )
+    task_2: Task = TakeImage(
+        id="id", target=stub_pose().position, robot_pose=stub_pose()
+    )
+    mission: Mission = Mission(id="id", name="Dummy misson", tasks=[task_1, task_2])
 
     state_machine_thread.start()
     robot_service_thread.start()
