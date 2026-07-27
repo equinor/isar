@@ -138,8 +138,7 @@ Here is an example body:
             'zoom': None
          }
       ],
-      'name': 'Example name',
-      'start_pose': None
+      'name': 'Example name'
    }
 }
 

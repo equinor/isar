@@ -107,7 +107,6 @@ class RobotService:
                         id=aborted_mission.id,
                         name=aborted_mission.name,
                         tasks=unfinished_tasks,
-                        start_pose=aborted_mission.start_pose,
                     )
                     self.robot_service_events.mission_successfully_stopped.trigger_event(
                         continued_mission
