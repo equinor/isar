@@ -65,7 +65,6 @@ class InspectionTask(Task):
     Base class for all inspection tasks which produce results to be uploaded.
     """
 
-    inspection_id: str = Field(default_factory=lambda: str(uuid4()), frozen=True)
     robot_pose: Pose = Field()
     inspection_description: str | None = Field(default=None)
     zoom: ZoomDescription | None = Field(default=None)

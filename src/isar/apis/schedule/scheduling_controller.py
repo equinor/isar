@@ -19,7 +19,7 @@ from isar.config.settings import robot_settings
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.task import TASKS, InspectionTask
+from robot_interface.models.mission.task import TASKS
 
 tracer = trace.get_tracer(__name__)
 
@@ -261,11 +261,4 @@ class SchedulingController:
         )
 
     def _task_api_response(self, task: TASKS) -> TaskResponse:
-        if isinstance(task, InspectionTask):
-            inspection_id = task.inspection_id
-        else:
-            inspection_id = None
-
-        return TaskResponse(
-            id=task.id, tag_id=task.tag_id, inspection_id=inspection_id, type=task.type
-        )
+        return TaskResponse(id=task.id, tag_id=task.tag_id, type=task.type)

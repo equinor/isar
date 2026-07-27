@@ -27,9 +27,9 @@ def robot_upload_inspection(
 ) -> None:
     try:
         inspection: Inspection = robot.get_inspection(task=task)
-        if task.inspection_id != inspection.id:
+        if task.id != inspection.id:
             logger.warning(
-                f"The inspection_id of task ({task.inspection_id}) "
+                f"The id of task ({task.id}) "
                 f"and result ({inspection.id}) is not matching. "
                 f"This may lead to confusions when accessing the inspection later"
             )

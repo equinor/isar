@@ -55,7 +55,7 @@ class DummyMissionDefinition:
     dummy_task_response_take_image = TaskResponse(
         id=dummy_task_take_image.id,
         tag_id=dummy_task_take_image.tag_id,
-        inspection_id=dummy_task_take_image.inspection_id,
+        inspection_id=dummy_task_take_image.id,
         type=dummy_task_take_image.type,
     )
 
@@ -66,6 +66,7 @@ class DummyMissionDefinition:
     dummy_start_mission_definition = StartMissionDefinition(
         tasks=[
             StartMissionTaskDefinition(
+                id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
                 inspection=dummy_start_mission_inspection_definition,
@@ -75,11 +76,13 @@ class DummyMissionDefinition:
     dummy_start_mission_definition_image_and_thermal = StartMissionDefinition(
         tasks=[
             StartMissionTaskDefinition(
+                id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
                 inspection=dummy_start_mission_inspection_definition,
             ),
             StartMissionTaskDefinition(
+                id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
                 inspection=dummy_start_mission_inspection_definition_thermal_image,
@@ -89,16 +92,19 @@ class DummyMissionDefinition:
     dummy_start_mission_definition_task_ids = StartMissionDefinition(
         tasks=[
             StartMissionTaskDefinition(
+                id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
                 inspection=dummy_start_mission_inspection_definition,
             ),
             StartMissionTaskDefinition(
+                id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
                 inspection=dummy_start_mission_inspection_definition,
             ),
             StartMissionTaskDefinition(
+                id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
                 inspection=dummy_start_mission_inspection_definition,

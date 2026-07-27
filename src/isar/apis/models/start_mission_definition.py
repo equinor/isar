@@ -59,7 +59,7 @@ class StartMissionInspectionDefinition(BaseModel):
 
 
 class StartMissionTaskDefinition(BaseModel):
-    id: str | None = None
+    id: str = Field()
     type: TaskType = Field(default=TaskType.Inspection)
     pose: InputPose
     inspection: StartMissionInspectionDefinition | None = None
@@ -170,7 +170,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
         )
 
     kwargs: dict = {
-        "id": task_definition.id if task_definition.id else str(uuid4()),
+        "id": task_definition.id,
         "robot_pose": task_definition.pose.to_alitra_pose(),
         "tag_id": task_definition.tag,
         "inspection_description": inspection_definition.inspection_description,
