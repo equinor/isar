@@ -71,7 +71,6 @@ class StartMissionDefinition(BaseModel):
     id: str | None = None
     tasks: List[StartMissionTaskDefinition]
     name: str | None = None
-    start_pose: InputPose | None = None
 
 
 class StopMissionDefinition(BaseModel):
@@ -100,17 +99,12 @@ def to_isar_mission(
         else _build_mission_name()
     )
 
-    start_pose = None
-    if start_mission_definition.start_pose:
-        start_pose = start_mission_definition.start_pose.to_alitra_pose()
-
     id = start_mission_definition.id if start_mission_definition.id else str(uuid4())
 
     return Mission(
         id=id,
         tasks=isar_tasks,
         name=isar_mission_name,
-        start_pose=start_pose,
     )
 
 

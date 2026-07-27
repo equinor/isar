@@ -1,7 +1,6 @@
 from typing import List
 from uuid import uuid4
 
-from alitra import Pose
 from pydantic import BaseModel, Field
 
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
@@ -13,7 +12,6 @@ class Mission(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()), frozen=True)
     tasks: List[TASKS] = Field(default_factory=list, frozen=True)
     name: str = Field(frozen=True)
-    start_pose: Pose | None = Field(default=None, frozen=True)
     status: MissionStatus = MissionStatus.NotStarted
     error_message: ErrorMessage | None = Field(default=None)
 
