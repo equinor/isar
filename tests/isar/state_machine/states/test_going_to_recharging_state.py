@@ -41,7 +41,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
 
     assert event_handler is not None
 
-    transition = event_handler.handler(AbortedMission(name="test"))
+    transition = event_handler.handler(AbortedMission(id="id", name="test"))
 
     assert sync_state_machine.events.mqtt_queue.empty()
 

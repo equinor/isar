@@ -21,7 +21,9 @@ def test_return_home_cancelled_when_new_mission_received(
         returning_home_state.get_event_handler_by_name("start_mission_event")
     )
 
-    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    mission: Mission = Mission(
+        id="id", name="Dummy misson", tasks=[StubTask.take_image()]
+    )
 
     assert event_handler is not None
 
@@ -34,7 +36,9 @@ def test_return_home_cancelled_when_new_mission_received(
 def test_transition_to_stopping_return_home_replies_to_API(
     sync_state_machine: StateMachine,
 ) -> None:
-    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    mission: Mission = Mission(
+        id="id", name="Dummy misson", tasks=[StubTask.take_image()]
+    )
     sync_state_machine.current_state = ReturningHome(sync_state_machine.events)
     returning_home_state: State = cast(State, sync_state_machine.current_state)
     event_handler: EventHandlerMapping | None = (
@@ -53,7 +57,9 @@ def test_transition_to_stopping_return_home_replies_to_API(
 def test_stopping_return_home_mission_fails(
     sync_state_machine: StateMachine,
 ) -> None:
-    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    mission: Mission = Mission(
+        id="id", name="Dummy misson", tasks=[StubTask.take_image()]
+    )
     sync_state_machine.current_state = StoppingReturnHome(
         sync_state_machine.events, mission
     )
@@ -77,7 +83,9 @@ def test_stopping_return_home_mission_fails(
 def test_stopping_return_home_mission_succeeds(
     sync_state_machine: StateMachine,
 ) -> None:
-    mission: Mission = Mission(name="Dummy misson", tasks=[StubTask.take_image()])
+    mission: Mission = Mission(
+        id="id", name="Dummy misson", tasks=[StubTask.take_image()]
+    )
     sync_state_machine.current_state = StoppingReturnHome(
         sync_state_machine.events, mission
     )

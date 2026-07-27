@@ -40,7 +40,7 @@ def test_should_upload_from_queue(
         target=pose.position,
         zoom=None,
     )
-    mission: Mission = Mission(name="Dummy misson", tasks=[take_image_task])
+    mission: Mission = Mission(id="id", name="Dummy misson", tasks=[take_image_task])
 
     assert isinstance(mission.tasks[0], TakeImage)
     inspection = InspectionBlob(metadata=stub_image_metadata(), id=mission.tasks[0].id)
@@ -64,7 +64,7 @@ def test_should_retry_failed_upload_from_queue(
 
     INSPECTION_ID = "123-456"
     inspection = InspectionBlob(metadata=stub_image_metadata(), id=INSPECTION_ID)
-    mission: Mission = Mission(name="Dummy Mission")
+    mission: Mission = Mission(id="id", name="Dummy Mission")
 
     message: Tuple[Inspection, Mission] = (
         inspection,
@@ -93,7 +93,7 @@ def test_should_not_publish_when_blob_paths_are_empty(
 ) -> None:
     uploader_thread.start()
 
-    mission: Mission = Mission(name="Dummy mission")
+    mission: Mission = Mission(id="id", name="Dummy mission")
     inspection: Inspection = InspectionBlob(
         metadata=stub_image_metadata(), id="blob-empty"
     )
@@ -125,7 +125,7 @@ def _put_inspection_with_analysis_types(
     inspection = InspectionBlob(
         metadata=stub_image_metadata(analysis_types=analysis_types), id=str(uuid4())
     )
-    mission = Mission(name="m")
+    mission = Mission(id="id", name="m")
 
     uploader: Uploader = container.uploader()
     mqtt_fake = MqttPublisherFake()

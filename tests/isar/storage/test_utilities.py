@@ -15,7 +15,9 @@ def test_construct_metadata_file_acoustic_includes_result_block() -> None:
     )
 
     raw = construct_metadata_file(
-        inspection=inspection, mission=Mission(name="m", tasks=[]), filename="f"
+        inspection=inspection,
+        mission=Mission(id="id", name="m", tasks=[]),
+        filename="f",
     )
     data = json.loads(raw)
 
@@ -36,7 +38,9 @@ def test_construct_metadata_file_non_acoustic_excludes_acoustic_result() -> None
     inspection = Image(id="image-1", metadata=stub_image_metadata())
 
     raw = construct_metadata_file(
-        inspection=inspection, mission=Mission(name="m", tasks=[]), filename="f"
+        inspection=inspection,
+        mission=Mission(id="id", name="m", tasks=[]),
+        filename="f",
     )
     data = json.loads(raw)
 

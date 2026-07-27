@@ -9,7 +9,7 @@ from robot_interface.models.mission.task import TASKS, ReturnToHome, TaskTypes
 
 
 class Mission(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid4()), frozen=True)
+    id: str = Field(frozen=True)
     tasks: List[TASKS] = Field(default_factory=list, frozen=True)
     name: str = Field(frozen=True)
     status: MissionStatus = MissionStatus.NotStarted
@@ -37,5 +37,6 @@ class Mission(BaseModel):
 
 
 class ReturnHomeMission(Mission):
+    id: str = str(uuid4())
     tasks: List[TASKS] = Field(default_factory=lambda: [ReturnToHome()])
     name: str = "Return Home"
