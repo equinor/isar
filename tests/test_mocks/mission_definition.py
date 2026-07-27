@@ -64,6 +64,7 @@ class DummyMissionDefinition:
         tasks=[dummy_task_response_take_image],
     )
     dummy_start_mission_definition = StartMissionDefinition(
+        id="test-id",
         tasks=[
             StartMissionTaskDefinition(
                 id="dummy_id",
@@ -71,9 +72,10 @@ class DummyMissionDefinition:
                 tag="dummy_tag",
                 inspection=dummy_start_mission_inspection_definition,
             ),
-        ]
+        ],
     )
     dummy_start_mission_definition_image_and_thermal = StartMissionDefinition(
+        id="test-id",
         tasks=[
             StartMissionTaskDefinition(
                 id="dummy_id",
@@ -87,9 +89,10 @@ class DummyMissionDefinition:
                 tag="dummy_tag",
                 inspection=dummy_start_mission_inspection_definition_thermal_image,
             ),
-        ]
+        ],
     )
     dummy_start_mission_definition_task_ids = StartMissionDefinition(
+        id="test-id",
         tasks=[
             StartMissionTaskDefinition(
                 id="dummy_id",
@@ -109,5 +112,5 @@ class DummyMissionDefinition:
                 tag="dummy_tag",
                 inspection=dummy_start_mission_inspection_definition,
             ),
-        ]
+        ],
     )

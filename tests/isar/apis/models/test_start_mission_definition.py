@@ -40,7 +40,7 @@ def test_to_isar_mission() -> None:
         inspection=inspection_definition,
     )
     mission_definition = StartMissionDefinition(
-        tasks=[task_definition], name=DUMMY_MISSION_NAME
+        tasks=[task_definition], name=DUMMY_MISSION_NAME, id="test-id2"
     )
 
     isar_mission: Mission = to_isar_mission(mission_definition)
@@ -91,6 +91,7 @@ def test_mission_definition_from_json_to_isar_mission() -> None:
 
 def _build_mission_with_inspection_payload(inspection_payload: dict) -> Mission:
     payload = {
+        "id": "dummy_mission_id",
         "name": "mission",
         "tasks": [
             {
