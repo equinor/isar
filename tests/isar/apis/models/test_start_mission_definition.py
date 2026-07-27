@@ -10,7 +10,6 @@ from isar.apis.models.start_mission_definition import (
     StartMissionDefinition,
     StartMissionInspectionDefinition,
     StartMissionTaskDefinition,
-    TaskType,
     to_isar_mission,
 )
 from robot_interface.models.mission.mission import Mission
@@ -35,7 +34,6 @@ def test_to_isar_mission() -> None:
     )
     task_definition = StartMissionTaskDefinition(
         id="test-id",
-        type=TaskType.Inspection,
         pose=task_pose,
         inspection=inspection_definition,
     )

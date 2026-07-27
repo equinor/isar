@@ -13,7 +13,6 @@ from robot_interface.models.mission.task import (
     AcousticDetectionType,
     InspectionTask,
     RecordAudio,
-    ReturnToHome,
     Roi,
     TakeAcousticMeasurement,
     TakeCO2Measurement,
@@ -35,11 +34,6 @@ class InspectionTypes(str, Enum):
     acoustic_measurement = "AcousticMeasurement"
 
 
-class TaskType(str, Enum):
-    Inspection = "inspection"
-    ReturnToHome = "return_to_home"
-
-
 class AcousticInspectionParameters(BaseModel):
     frequency_from: float
     frequency_to: float
@@ -59,7 +53,6 @@ class StartMissionInspectionDefinition(BaseModel):
 
 class StartMissionTaskDefinition(BaseModel):
     id: str = Field()
-    type: TaskType = Field(default=TaskType.Inspection)
     pose: InputPose
     inspection: StartMissionInspectionDefinition | None = None
     tag: str | None = None
@@ -86,7 +79,7 @@ def to_isar_mission(
     isar_tasks: List[TASKS] = []
 
     for task_definition in start_mission_definition.tasks:
-        task: TASKS = to_isar_task(task_definition)
+        task: TASKS = to_inspection_task(task_definition)
         isar_tasks.append(task)
 
     if not isar_tasks:
@@ -103,17 +96,6 @@ def to_isar_mission(
         tasks=isar_tasks,
         name=isar_mission_name,
     )
-
-
-def to_isar_task(task_definition: StartMissionTaskDefinition) -> TASKS:
-    if task_definition.type == TaskType.Inspection:
-        return to_inspection_task(task_definition)
-    elif task_definition.type == TaskType.ReturnToHome:
-        return ReturnToHome()
-    else:
-        raise MissionFormatError(
-            f"Failed to create task: '{task_definition.type}' is not a valid"
-        )
 
 
 @dataclass(frozen=True)
