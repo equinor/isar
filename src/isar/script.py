@@ -10,7 +10,7 @@ from isar.apis.api import API
 from isar.config.log import setup_loggers
 from isar.config.open_telemetry import instrument_fastapi, setup_open_telemetry
 from isar.config.settings import robot_settings, settings
-from isar.models.events import Events, InspectionQueueTuple
+from isar.models.events import Events
 from isar.modules import ApplicationContainer, get_injector
 from isar.robot.robot_inspection_service import RobotInspectionService
 from isar.robot.robot_service import RobotService
@@ -22,7 +22,6 @@ from isar.services.service_connections.mqtt.robot_info_publisher import (
     RobotInfoPublisher,
 )
 from isar.state_machine.state_machine import StateMachine
-from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.robot_interface import RobotInterface
@@ -83,7 +82,6 @@ def start() -> None:
     print_startup_info()
 
     state_machine: StateMachine = injector.state_machine()
-    uploader: Uploader = injector.uploader()
     robot_interface: RobotInterface = injector.robot_interface()
     events: Events = injector.events()
     robot: RobotService = injector.robot()
@@ -110,12 +108,6 @@ def start() -> None:
     inspection_service_thread.start()
     threads.append(inspection_service_thread)
 
-    uploader_thread: Thread = Thread(
-        target=uploader.run, name="ISAR Uploader", daemon=True
-    )
-    uploader_thread.start()
-    threads.append(uploader_thread)
-
     robot_service_thread: Thread = Thread(
         target=robot.run, name="Robot service", daemon=True
     )
@@ -125,11 +117,7 @@ def start() -> None:
     if settings.UPLOAD_INSPECTIONS_ASYNC:
 
         def inspections_callback(inspection: Inspection, mission: Mission) -> None:
-            message: InspectionQueueTuple = (
-                inspection,
-                mission,
-            )
-            state_machine.events.upload_queue.put(message)
+            state_machine.events.upload_queue.trigger_event((inspection, mission))
 
         inspection_service.register_and_monitor_inspection_callback(
             inspections_callback

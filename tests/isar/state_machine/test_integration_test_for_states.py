@@ -22,7 +22,6 @@ from tests.test_mocks.robot_interface import (
 from tests.test_mocks.state_machine_mocks import (
     RobotServiceThreadMock,
     StateMachineThreadMock,
-    UploaderThreadMock,
 )
 from tests.test_mocks.task import StubTask
 from tests.wait import wait_until
@@ -136,7 +135,6 @@ def test_state_machine_with_successful_collection(
     container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
-    uploader_thread: UploaderThreadMock,
     robot_inspection_service_thread: Thread,
     mocker: MockerFixture,
 ) -> None:
@@ -157,7 +155,6 @@ def test_state_machine_with_successful_collection(
 
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
     state_machine_thread.start()
-    uploader_thread.start()
 
     robot_service_thread.start()
     wait_until(
@@ -188,7 +185,6 @@ def test_state_machine_with_unsuccessful_collection(
     mocker: MockerFixture,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
-    uploader_thread: UploaderThreadMock,
 ) -> None:
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
 
@@ -204,7 +200,6 @@ def test_state_machine_with_unsuccessful_collection(
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
     state_machine_thread.start()
     robot_service_thread.start()
-    uploader_thread.start()
     wait_until(
         lambda: States.Home in state_machine_thread.state_machine.transitions_list
     )

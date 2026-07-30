@@ -21,7 +21,6 @@ from tests.test_mocks.robot_interface import StubRobot
 from tests.test_mocks.state_machine_mocks import (
     RobotServiceThreadMock,
     StateMachineThreadMock,
-    UploaderThreadMock,
 )
 from tests.test_mocks.task import StubTask
 from tests.wait import wait_until
@@ -31,7 +30,6 @@ def test_state_machine_with_successful_mission_stop(
     container: ApplicationContainer,
     robot_service_thread: RobotServiceThreadMock,
     state_machine_thread: StateMachineThreadMock,
-    uploader_thread: UploaderThreadMock,
     mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
@@ -54,7 +52,6 @@ def test_state_machine_with_successful_mission_stop(
 
     state_machine_thread.start()
     robot_service_thread.start()
-    uploader_thread.start()
     wait_until(
         lambda: States.Home in state_machine_thread.state_machine.transitions_list
     )

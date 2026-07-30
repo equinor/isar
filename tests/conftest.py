@@ -34,7 +34,6 @@ from tests.test_mocks.robot_interface import StubRobot
 from tests.test_mocks.state_machine_mocks import (
     RobotServiceThreadMock,
     StateMachineThreadMock,
-    UploaderThreadMock,
 )
 
 
@@ -66,7 +65,6 @@ def container() -> ApplicationContainer:
     container.uploader.override(
         providers.Singleton(
             Uploader,
-            container.events(),
             container.storage_handlers(),
             container.mqtt_client(),
         )
@@ -151,6 +149,12 @@ def robot() -> StubRobot:
 
 
 @pytest.fixture()
+def uploader(container: ApplicationContainer) -> Uploader:
+    """Fixture to provide a mock robot instance."""
+    return container.uploader()
+
+
+@pytest.fixture()
 def scheduling_utilities(
     container: ApplicationContainer,
 ) -> SchedulingUtilities:
@@ -191,15 +195,6 @@ def state_machine_thread_with_db(
 
 
 @pytest.fixture
-def uploader_thread(
-    container: ApplicationContainer,
-) -> Generator[UploaderThreadMock, None, None]:
-    uploader_thread: UploaderThreadMock = UploaderThreadMock(container=container)
-    yield uploader_thread
-    uploader_thread.join()
-
-
-@pytest.fixture
 def robot_service_thread(
     container: ApplicationContainer,
 ) -> Generator[RobotServiceThreadMock, None, None]:
@@ -223,7 +218,7 @@ def robot_inspection_service_thread(
     robot_inspection_service: RobotInspectionService = RobotInspectionService(
         events=container.events(),
         robot=container.robot_interface(),
-        mqtt_publisher=container.mqtt_client(),
+        uploader=container.uploader(),
     )
 
     robot_inspection_service_thread: Thread = Thread(

@@ -11,7 +11,7 @@ from robot_interface.models.mission.mission import Mission
 
 
 class StorageFake(StorageInterface):
-    will_fail: bool = False
+    failure_count: int = 0
 
     def __init__(self) -> None:
         self.stored_inspections: List[Inspection] = []
@@ -19,7 +19,8 @@ class StorageFake(StorageInterface):
     def store(
         self, inspection: InspectionBlob, mission: Mission
     ) -> StoragePaths[BlobStoragePath]:
-        if self.will_fail:
+        if self.failure_count > 1:
+            self.failure_count -= 1
             raise StorageException("Fake failed on purpose")
         self.stored_inspections.append(inspection)
         path = BlobStoragePath(

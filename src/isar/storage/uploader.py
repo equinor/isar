@@ -1,12 +1,9 @@
 import logging
+import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from queue import Empty, Queue
-from threading import Event
 from typing import List
 
 from isar.config.settings import settings
-from isar.models.events import Events, InspectionQueueTuple
 from isar.services.service_connections.mqtt.mqtt_client import props_expiry
 from isar.storage.storage_interface import (
     BlobStoragePath,
@@ -42,45 +39,11 @@ class UploaderQueueItem:
     mission: Mission
 
 
-@dataclass
-class ValueItem(UploaderQueueItem):
-    inspection: InspectionValue
-
-
-@dataclass
-class BlobItem(UploaderQueueItem):
-    inspection: InspectionBlob
-    storage_handler: StorageInterface
-    _retry_count: int
-    _next_retry_time: datetime = datetime.now(timezone.utc)
-
-    def increment_retry(self, max_wait_time: int) -> None:
-        self._retry_count += 1
-        seconds_until_retry: int = min(2**self._retry_count, max_wait_time)
-        self._next_retry_time = datetime.now(timezone.utc) + timedelta(
-            seconds=seconds_until_retry
-        )
-
-    def get_retry_count(self) -> int:
-        return self._retry_count
-
-    def is_ready_for_upload(self) -> bool:
-        return datetime.now(timezone.utc) >= self._next_retry_time
-
-    def seconds_until_retry(self) -> int:
-        return max(
-            0, int((self._next_retry_time - datetime.now(timezone.utc)).total_seconds())
-        )
-
-
 class Uploader:
     def __init__(
         self,
-        events: Events,
         storage_handlers: List[StorageInterface],
         mqtt_publisher: MqttClientInterface,
-        max_wait_time: int = settings.UPLOAD_FAILURE_MAX_WAIT,
-        max_retry_attempts: int = settings.UPLOAD_FAILURE_ATTEMPTS_LIMIT,
     ) -> None:
         """Initializes the uploader.
 
@@ -95,192 +58,135 @@ class Uploader:
         max_retry_attempts : int
             Maximum attempts to retry an upload when it fails
         """
-        self.upload_queue: Queue[InspectionQueueTuple] = events.upload_queue
         self.storage_handlers: List[StorageInterface] = storage_handlers
         self.mqtt_publisher = mqtt_publisher
-
-        self.max_wait_time = max_wait_time
-        self.max_retry_attempts = max_retry_attempts
-        self._internal_upload_queue: List[UploaderQueueItem] = []
-
-        self.signal_exit: Event = Event()
-
         self.logger = logging.getLogger("uploader")
 
-    def stop(self) -> None:
-        self.signal_exit.set()
+    def upload_inspection(self, inspection: Inspection, mission: Mission) -> None:
+        if isinstance(inspection, InspectionValue):
+            _publish_inspection_value(self.mqtt_publisher, inspection)
+            self.logger.info(f"Published value for inspection {str(inspection.id)[:8]}")
 
-    def run(self) -> None:
-        self.logger.info("Started uploader")
-        while not self.signal_exit.wait(0):
-            inspection: Inspection
-            mission: Mission
-            try:
-                if self._internal_upload_queue:
-                    self._process_upload_queue()
+        elif isinstance(inspection, InspectionBlob):
+            for storage_handler in self.storage_handlers:
+                inspection_paths: StoragePaths | None = _upload(
+                    self.logger, storage_handler, inspection, mission
+                )
 
-                inspection, mission = self.upload_queue.get(timeout=1)
-
-                if not mission:
-                    self.logger.warning(
-                        "Failed to upload missing mission from upload queue"
-                    )
+                if inspection_paths is None:
                     continue
 
-                new_item: UploaderQueueItem
-                if isinstance(inspection, InspectionValue):
-                    new_item = ValueItem(inspection, mission)
-                    self._internal_upload_queue.append(new_item)
-
-                elif isinstance(inspection, InspectionBlob):
-                    # If new item from thread queue, add one per handler to internal queue:
-                    for storage_handler in self.storage_handlers:
-                        new_item = BlobItem(
-                            inspection, mission, storage_handler, _retry_count=-1
-                        )
-                        self._internal_upload_queue.append(new_item)
-                else:
+                if isinstance(inspection_paths.data_path, LocalStoragePath):
+                    self.logger.info("Skipping publishing when using local storage")
+                elif isinstance(
+                    inspection_paths.data_path, BlobStoragePath
+                ) and has_empty_blob_storage_path(inspection_paths):
                     self.logger.warning(
-                        f"Unable to add UploaderQueueItem as its type {type(inspection).__name__} is unsupported"
+                        "Skipping publishing: Blob storage paths are empty for inspection %s",
+                        str(inspection.id)[:8],
                     )
-            except Empty:
-                continue
-            except Exception as e:
-                self.logger.error(f"Unexpected error in uploader thread: {e}")
-                continue
+                else:
+                    _publish_inspection_result(
+                        self.mqtt_publisher,
+                        inspection=inspection,
+                        inspection_paths=inspection_paths,
+                    )
 
-    def _upload(self, item: BlobItem) -> StoragePaths:
-        inspection_paths: StoragePaths
+        else:
+            self.logger.warning(
+                f"Unable to add UploaderQueueItem as its type {type(inspection).__name__} is unsupported"
+            )
+
+
+def _upload(
+    logger: logging.Logger,
+    storage_handler: StorageInterface,
+    inspection: Inspection,
+    mission: Mission,
+) -> StoragePaths | None:
+    inspection_paths: StoragePaths
+    upload_attempts: int = 0
+    while upload_attempts < settings.UPLOAD_FAILURE_ATTEMPTS_LIMIT:
         try:
-            inspection_paths = item.storage_handler.store(
-                inspection=item.inspection, mission=item.mission
+            inspection_paths = storage_handler.store(
+                inspection=inspection, mission=mission
             )
-            self.logger.info(
-                f"Storage handler: {type(item.storage_handler).__name__} "
-                f"uploaded inspection {str(item.inspection.id)[:8]}"
+            logger.info(
+                f"Storage handler: {type(storage_handler).__name__} "
+                f"uploaded inspection {str(inspection.id)[:8]}"
             )
-            self._internal_upload_queue.remove(item)
-        except StorageException as e:
-            if item.get_retry_count() < self.max_retry_attempts:
-                item.increment_retry(self.max_wait_time)
-                self.logger.warning(
-                    f"Storage handler: {type(item.storage_handler).__name__} "
+            return inspection_paths
+        except StorageException:
+            upload_attempts += 1
+
+            if upload_attempts < settings.UPLOAD_FAILURE_ATTEMPTS_LIMIT:
+                sleep_length = min(2**upload_attempts, settings.UPLOAD_FAILURE_MAX_WAIT)
+                logger.warning(
+                    f"Storage handler: {type(storage_handler).__name__} "
                     f"failed to upload inspection: "
-                    f"{str(item.inspection.id)[:8]}. "
-                    f"Retrying in {item.seconds_until_retry()}s."
+                    f"{str(inspection.id)[:8]}. "
+                    f"Retrying in {sleep_length}s."
                 )
-            else:
-                self.logger.error(
-                    f"Storage handler: {type(item.storage_handler).__name__} "
-                    f"exceeded max retries to upload inspection: "
-                    f"{str(item.inspection.id)[:8]}. Aborting upload."
-                )
-                self._internal_upload_queue.remove(item)
-            raise e
-        return inspection_paths
-
-    def _process_upload_queue(self) -> None:
-        def should_upload(_item: UploaderQueueItem) -> bool:
-            if isinstance(_item, ValueItem):
-                return True
-            if isinstance(_item, BlobItem) and _item.is_ready_for_upload():
-                return True
-            return False
-
-        ready_items: List[UploaderQueueItem] = [
-            item for item in self._internal_upload_queue if should_upload(item)
-        ]
-        for item in ready_items:
-            if isinstance(item, ValueItem):
-                self._publish_inspection_value(item.inspection)
-                self.logger.info(
-                    f"Published value for inspection {str(item.inspection.id)[:8]}"
-                )
-                self._internal_upload_queue.remove(item)
-            elif isinstance(item, BlobItem):
-                try:
-                    inspection_paths = self._upload(item)
-                    if isinstance(inspection_paths.data_path, LocalStoragePath):
-                        self.logger.info("Skipping publishing when using local storage")
-                    elif isinstance(
-                        inspection_paths.data_path, BlobStoragePath
-                    ) and has_empty_blob_storage_path(inspection_paths):
-                        self.logger.warning(
-                            "Skipping publishing: Blob storage paths are empty for inspection %s",
-                            str(item.inspection.id)[:8],
-                        )
-                    else:
-                        self._publish_inspection_result(
-                            inspection=item.inspection,
-                            inspection_paths=inspection_paths,
-                        )
-                except StorageException:
-                    pass
-            else:
-                self.logger.warning(
-                    f"Unable to process upload item as its type {type(item).__name__} is not supported"
-                )
-
-    def _publish_inspection_value(self, inspection: InspectionValue) -> None:
-        if not self.mqtt_publisher:
-            return
-
-        if not isinstance(inspection, InspectionValue):
-            logging.warning(
-                f"Excpected type InspectionValue but got {type(inspection).__name__} instead"
-            )
-            return
-
-        payload: InspectionValuePayload = InspectionValuePayload(
-            isar_id=settings.ISAR_ID,
-            robot_name=settings.ROBOT_NAME,
-            inspection_id=inspection.id,
-            installation_code=settings.PLANT_SHORT_NAME,
-            tag_id=inspection.metadata.tag_id,
-            inspection_type=type(inspection).__name__,
-            inspection_description=inspection.metadata.inspection_description,
-            value=inspection.value,
-            unit=inspection.unit,
-            x=inspection.metadata.robot_pose.position.x,
-            y=inspection.metadata.robot_pose.position.y,
-            z=inspection.metadata.robot_pose.position.z,
-            timestamp=inspection.metadata.start_time,
+                time.sleep(sleep_length)
+        logger.error(
+            f"Storage handler: {type(storage_handler).__name__} "
+            f"exceeded max retries to upload inspection: "
+            f"{str(inspection.id)[:8]}. Aborting upload."
         )
-        self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_INSPECTION_VALUE,
-            payload=payload.model_dump_json(),
-            qos=1,
-            retain=True,
-            properties=props_expiry(settings.MQTT_MISSION_TASK_AND_STATUS_EXPIRY),
-        )
+    return None
 
-    def _publish_inspection_result(
-        self,
-        inspection: InspectionBlob,
-        inspection_paths: StoragePaths[BlobStoragePath],
-    ) -> None:
-        if not self.mqtt_publisher:
-            return
 
-        payload: InspectionResultPayload = InspectionResultPayload(
-            isar_id=settings.ISAR_ID,
-            robot_name=settings.ROBOT_NAME,
-            inspection_id=inspection.id,
-            blob_storage_data_path=inspection_paths.data_path,
-            blob_storage_metadata_path=inspection_paths.metadata_path,
-            installation_code=settings.PLANT_SHORT_NAME,
-            tag_id=inspection.metadata.tag_id,
-            inspection_type=type(inspection).__name__,
-            inspection_description=inspection.metadata.inspection_description,
-            required_analysis=inspection.metadata.analysis_types,
-            timestamp=inspection.metadata.start_time,
-            robot_pose=inspection.metadata.robot_pose,
-            target_position=inspection.metadata.target_position,
-        )
-        self.mqtt_publisher.publish(
-            topic=settings.TOPIC_ISAR_INSPECTION_RESULT,
-            payload=payload.model_dump_json(),
-            qos=1,
-            retain=True,
-            properties=props_expiry(settings.MQTT_MISSION_TASK_AND_STATUS_EXPIRY),
-        )
+def _publish_inspection_value(
+    mqtt_publisher: MqttClientInterface, inspection: InspectionValue
+) -> None:
+    payload: InspectionValuePayload = InspectionValuePayload(
+        isar_id=settings.ISAR_ID,
+        robot_name=settings.ROBOT_NAME,
+        inspection_id=inspection.id,
+        installation_code=settings.PLANT_SHORT_NAME,
+        tag_id=inspection.metadata.tag_id,
+        inspection_type=type(inspection).__name__,
+        inspection_description=inspection.metadata.inspection_description,
+        value=inspection.value,
+        unit=inspection.unit,
+        x=inspection.metadata.robot_pose.position.x,
+        y=inspection.metadata.robot_pose.position.y,
+        z=inspection.metadata.robot_pose.position.z,
+        timestamp=inspection.metadata.start_time,
+    )
+    mqtt_publisher.publish(
+        topic=settings.TOPIC_ISAR_INSPECTION_VALUE,
+        payload=payload.model_dump_json(),
+        qos=1,
+        retain=True,
+        properties=props_expiry(settings.MQTT_MISSION_TASK_AND_STATUS_EXPIRY),
+    )
+
+
+def _publish_inspection_result(
+    mqtt_publisher: MqttClientInterface,
+    inspection: InspectionBlob,
+    inspection_paths: StoragePaths[BlobStoragePath],
+) -> None:
+    payload: InspectionResultPayload = InspectionResultPayload(
+        isar_id=settings.ISAR_ID,
+        robot_name=settings.ROBOT_NAME,
+        inspection_id=inspection.id,
+        blob_storage_data_path=inspection_paths.data_path,
+        blob_storage_metadata_path=inspection_paths.metadata_path,
+        installation_code=settings.PLANT_SHORT_NAME,
+        tag_id=inspection.metadata.tag_id,
+        inspection_type=type(inspection).__name__,
+        inspection_description=inspection.metadata.inspection_description,
+        required_analysis=inspection.metadata.analysis_types,
+        timestamp=inspection.metadata.start_time,
+        robot_pose=inspection.metadata.robot_pose,
+        target_position=inspection.metadata.target_position,
+    )
+    mqtt_publisher.publish(
+        topic=settings.TOPIC_ISAR_INSPECTION_RESULT,
+        payload=payload.model_dump_json(),
+        qos=1,
+        retain=True,
+        properties=props_expiry(settings.MQTT_MISSION_TASK_AND_STATUS_EXPIRY),
+    )

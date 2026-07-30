@@ -22,9 +22,6 @@ T1 = TypeVar("T1")
 T2 = TypeVar("T2")
 
 
-InspectionQueueTuple = Tuple[Inspection, Mission]
-
-
 class EmptyMessage:
     def __str__(self) -> str:
         return "Empty message"
@@ -34,8 +31,8 @@ AbortedMission = Mission
 
 
 class Event(Queue[T]):
-    def __init__(self, name: str) -> None:
-        super().__init__(maxsize=1)
+    def __init__(self, name: str, maxsize: int = 1) -> None:
+        super().__init__(maxsize=maxsize)
         self.name = name
 
     def trigger_event(self, data: T, timeout: int | None = None) -> None:
@@ -96,8 +93,8 @@ class Events:
         self.state_machine_events: StateMachineEvents = StateMachineEvents()
         self.robot_service_events: RobotServiceEvents = RobotServiceEvents()
 
-        self.upload_queue: Queue[InspectionQueueTuple] = Queue[InspectionQueueTuple](
-            maxsize=10
+        self.upload_queue: Event[Tuple[Inspection, Mission]] = Event(
+            "uploader", maxsize=10
         )
 
         self.mqtt_queue: Queue[MQTTQueueType] = Queue[MQTTQueueType]()
