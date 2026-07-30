@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List
 
-from alitra import Pose
+from alitra import Pose, Position
 from pydantic import BaseModel
 
 from isar.models.status import IsarStatus
@@ -116,6 +116,8 @@ class InspectionResultPayload(BaseModel):
     inspection_description: str | None = None
     required_analysis: list[str] | None = None
     timestamp: datetime
+    robot_pose: Pose
+    target_position: Position | None = None
 
 
 class InspectionValuePayload(BaseModel):

@@ -274,6 +274,8 @@ class Uploader:
             inspection_description=inspection.metadata.inspection_description,
             required_analysis=inspection.metadata.analysis_types,
             timestamp=inspection.metadata.start_time,
+            robot_pose=inspection.metadata.robot_pose,
+            target_position=inspection.metadata.target_position,
         )
         self.mqtt_publisher.publish(
             topic=settings.TOPIC_ISAR_INSPECTION_RESULT,
