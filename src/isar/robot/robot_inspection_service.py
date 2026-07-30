@@ -1,18 +1,12 @@
 import logging
 from collections.abc import Callable
-from queue import Queue
 from threading import Event as ThreadEvent
 from threading import Thread
 
 from isar.config.settings import settings
-from isar.models.events import (
-    EventConflictError,
-    Events,
-    EventTimeoutError,
-    RobotServiceEvents,
-    StateMachineEvents,
-)
+from isar.models.events import Event, EventConflictError, Events, EventTimeoutError
 from isar.robot.function_thread import FunctionThread
+from isar.storage.uploader import Uploader
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotException,
     RobotRetrieveInspectionException,
@@ -21,18 +15,17 @@ from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.robot_interface import RobotInterface
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 
-def robot_upload_inspection(
-    robot: RobotInterface,
+def fetch_and_upload_inspection(
+    get_inspection_function: Callable[[InspectionTask], Inspection],
     logger: logging.Logger,
+    upload_function: Callable[[Inspection, Mission], None],
     task: InspectionTask,
     mission: Mission,
-    upload_queue: Queue,
 ) -> None:
     try:
-        inspection: Inspection = robot.get_inspection(task=task)
+        inspection: Inspection = get_inspection_function(task)
         if task.id != inspection.id:
             logger.warning(
                 f"The id of task ({task.id}) "
@@ -45,19 +38,13 @@ def robot_upload_inspection(
         return
 
     if not inspection:
-        logger.warning(
-            f"No inspection result data retrieved for task {str(task.id)[:8]}"
-        )
+        logger.error(f"No inspection result data retrieved for task {str(task.id)[:8]}")
+        return
 
     inspection.metadata.tag_id = task.tag_id
     inspection.metadata.analysis_types = task.analysis_types
 
-    message: tuple[Inspection, Mission] = (
-        inspection,
-        mission,
-    )
-    upload_queue.put(message)
-    logger.info(f"Inspection result: {str(inspection.id)[:8]} queued for upload")
+    upload_function(inspection, mission)
 
 
 class RobotInspectionService:
@@ -65,13 +52,16 @@ class RobotInspectionService:
         self,
         events: Events,
         robot: RobotInterface,
-        mqtt_publisher: MqttClientInterface,
+        uploader: Uploader,
     ) -> None:
         self.logger = logging.getLogger("uploader")
-        self.state_machine_events: StateMachineEvents = events.state_machine_events
-        self.robot_service_events: RobotServiceEvents = events.robot_service_events
-        self.mqtt_publisher: MqttClientInterface = mqtt_publisher
-        self.upload_queue: Queue = events.upload_queue
+        self.upload_task_event: Event[tuple[InspectionTask, Mission]] = (
+            events.robot_service_events.request_inspection_upload
+        )
+        self.upload_inspection_event: Event[tuple[Inspection, Mission]] = (
+            events.upload_event
+        )
+        self.uploader: Uploader = uploader
         self.robot: RobotInterface = robot
         self.upload_inspection_threads: list[FunctionThread] = []
         self.signal_exit: ThreadEvent = ThreadEvent()
@@ -107,7 +97,7 @@ class RobotInspectionService:
 
     def register_and_monitor_inspection_callback(
         self,
-        callback_function: Callable,
+        callback_function: Callable[[Inspection, Mission], None],
     ) -> None:
         self.inspection_callback_function = callback_function
 
@@ -121,18 +111,33 @@ class RobotInspectionService:
     def run(self) -> None:
         try:
             while not self.signal_exit.wait(0):
-                upload_request: tuple[(InspectionTask, Mission)] | None = (
-                    self.robot_service_events.request_inspection_upload.consume_event()
+
+                upload_task_request: tuple[(InspectionTask, Mission)] | None = (
+                    self.upload_task_event.consume_event()
                 )
-                if upload_request is not None:
+
+                if upload_task_request is not None:
                     self.upload_inspection_threads.append(
                         FunctionThread(
-                            robot_upload_inspection,
-                            self.robot,
+                            fetch_and_upload_inspection,
+                            self.robot.get_inspection,
                             self.logger,
-                            upload_request[0],
-                            upload_request[1],
-                            self.upload_queue,
+                            self.uploader.upload_inspection,
+                            upload_task_request[0],
+                            upload_task_request[1],
+                        )
+                    )
+
+                upload_inspection_request: tuple[Inspection, Mission] | None = (
+                    self.upload_inspection_event.consume_event()
+                )
+
+                if upload_inspection_request is not None:
+                    self.upload_inspection_threads.append(
+                        FunctionThread(
+                            self.uploader.upload_inspection,
+                            upload_inspection_request[0],
+                            upload_inspection_request[1],
                         )
                     )
 
