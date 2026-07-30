@@ -16,8 +16,6 @@ from robot_interface.models.mission.status import RobotStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.telemetry.mqtt_client import MQTTQueueType
 
-InspectionQueueTuple = tuple[Inspection, Mission]
-
 
 class EmptyMessage:
     def __str__(self) -> str:
@@ -28,8 +26,8 @@ AbortedMission = Mission
 
 
 class Event[T](Queue[T]):
-    def __init__(self, name: str) -> None:
-        super().__init__(maxsize=1)
+    def __init__(self, name: str, maxsize: int = 1) -> None:
+        super().__init__(maxsize=maxsize)
         self.name = name
 
     def trigger_event(self, data: T, timeout: int | None = None) -> None:
@@ -90,8 +88,8 @@ class Events:
         self.state_machine_events: StateMachineEvents = StateMachineEvents()
         self.robot_service_events: RobotServiceEvents = RobotServiceEvents()
 
-        self.upload_queue: Queue[InspectionQueueTuple] = Queue[InspectionQueueTuple](
-            maxsize=10
+        self.upload_event: Event[tuple[Inspection, Mission]] = Event(
+            "uploader", maxsize=10
         )
 
         self.mqtt_queue: Queue[MQTTQueueType] = Queue[MQTTQueueType]()

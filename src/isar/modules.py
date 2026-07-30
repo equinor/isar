@@ -85,20 +85,16 @@ class ApplicationContainer(containers.DeclarativeContainer):
         mqtt_publisher=mqtt_client,
     )
 
-    # Inspection data service
-    inspection_service = providers.Singleton(
-        RobotInspectionService,
-        events=events,
-        robot=robot_interface,
-        mqtt_publisher=mqtt_client,
-    )
-
     # Uploader
     uploader = providers.Singleton(
         Uploader,
-        events=events,
         storage_handlers=storage_handlers,
         mqtt_publisher=mqtt_client,
+    )
+
+    # Inspection data service
+    inspection_service = providers.Singleton(
+        RobotInspectionService, events=events, robot=robot_interface, uploader=uploader
     )
 
 
