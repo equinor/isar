@@ -108,7 +108,7 @@ class InspectionResultPayload(BaseModel):
     isar_id: str
     robot_name: str
     inspection_id: str
-    mission_id: str | None = None
+    mission_id: str
     blob_storage_data_path: BlobStoragePath
     blob_storage_metadata_path: BlobStoragePath
     installation_code: str
