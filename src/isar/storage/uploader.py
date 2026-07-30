@@ -213,6 +213,7 @@ class Uploader:
                         self._publish_inspection_result(
                             inspection=item.inspection,
                             inspection_paths=inspection_paths,
+                            mission=item.mission,
                         )
                 except StorageException:
                     pass
@@ -258,6 +259,7 @@ class Uploader:
         self,
         inspection: InspectionBlob,
         inspection_paths: StoragePaths[BlobStoragePath],
+        mission: Mission,
     ) -> None:
         if not self.mqtt_publisher:
             return
@@ -266,6 +268,7 @@ class Uploader:
             isar_id=settings.ISAR_ID,
             robot_name=settings.ROBOT_NAME,
             inspection_id=inspection.id,
+            mission_id=mission.id,
             blob_storage_data_path=inspection_paths.data_path,
             blob_storage_metadata_path=inspection_paths.metadata_path,
             installation_code=settings.PLANT_SHORT_NAME,
