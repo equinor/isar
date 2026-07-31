@@ -63,8 +63,8 @@ def test_persistent_storage_schema() -> None:
 
 
 def test_lockdown_mode(
-    client: TestClient,
     state_machine_thread_with_db: StateMachineThreadMock,
+    client: TestClient,
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
 ) -> None:
@@ -154,8 +154,8 @@ def test_lockdown_mode(
 
 
 def test_maintenance_mode(
-    client: TestClient,
     state_machine_thread_with_db: StateMachineThreadMock,
+    client: TestClient,
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
 ) -> None:
@@ -240,8 +240,8 @@ def test_maintenance_mode(
 
 
 def test_release_maintenance_mode(
-    client: TestClient,
     state_machine_thread_with_db: StateMachineThreadMock,
+    client: TestClient,
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
 ) -> None:

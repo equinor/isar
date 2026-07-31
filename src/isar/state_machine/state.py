@@ -64,6 +64,10 @@ class State(ABC):
         )
         return filtered_timers[0] if len(filtered_timers) > 0 else None
 
+    def handles_event(self, event: Event) -> bool:
+        allowed_events: list[Event] = [m.event for m in self.event_handler_mappings]
+        return event in allowed_events
+
     def run(self) -> Transition | None:
         timers = deepcopy(self.timers)
         entered_time = time.time()

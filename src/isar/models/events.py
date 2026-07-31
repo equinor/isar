@@ -105,9 +105,14 @@ class APIEvent[T1, T2]:
     api to state machine while the response is from state machine to api.
     """
 
-    def __init__(self, name: str):
+    prioritized: bool
+
+    def __init__(self, name: str, prioritized: bool = False):
         self.request: Event[T1] = Event("api-" + name + "-request")
         self.response: Event[T2] = Event("api-" + name + "-request")
+        self.prioritized = (
+            prioritized  # For when we want to try even if the statemachine is not ready
+        )
         self.lock: Lock = Lock()
 
 
@@ -130,13 +135,13 @@ class APIRequests:
             APIEvent("release_intervention_needed")
         )
         self.send_to_lockdown: APIEvent[EmptyMessage, LockdownResponse] = APIEvent(
-            "send_to_lockdown"
+            "send_to_lockdown", prioritized=True
         )
         self.release_from_lockdown: APIEvent[EmptyMessage, EmptyMessage] = APIEvent(
             "release_from_lockdown"
         )
         self.set_maintenance_mode: APIEvent[EmptyMessage, MaintenanceResponse] = (
-            APIEvent("set_maintenance_mode")
+            APIEvent("set_maintenance_mode", prioritized=True)
         )
         self.release_from_maintenance_mode: APIEvent[EmptyMessage, EmptyMessage] = (
             APIEvent("release_from_maintenance_mode")

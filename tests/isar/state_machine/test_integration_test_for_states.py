@@ -33,15 +33,16 @@ def test_state_machine_transitions_when_running_full_mission(
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
 ) -> None:
-    mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 5.0)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
     state_machine_thread.start()
     robot_service_thread.start()
     wait_until(
-        lambda: States.UnknownStatus
+        lambda: States.AwaitNextMission
         in state_machine_thread.state_machine.transitions_list
-        and robot_service_thread.robot_service.status_thread is not None
+        and robot_service_thread.robot_service.status_thread is not None,
+        timeout=10,
     )
     # Setting the poll interval to a lower value to ensure that the robot status is
     # updated during the mission. This value needs to be set after the robot service
@@ -76,7 +77,8 @@ def test_state_machine_transitions_when_running_full_mission(
     )
     wait_until(
         lambda: state_machine_thread.state_machine.transitions_list
-        == expected_transitions
+        == expected_transitions,
+        timeout=15.0,
     )
 
 
@@ -86,7 +88,7 @@ def test_state_machine_failed_dependency(
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
 ) -> None:
-    mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 5.0)
     mocker.patch.object(settings, "RETURN_HOME_RETRY_LIMIT", 3)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
@@ -104,8 +106,9 @@ def test_state_machine_failed_dependency(
     state_machine_thread.start()
     robot_service_thread.start()
     wait_until(
-        lambda: States.UnknownStatus
-        in state_machine_thread.state_machine.transitions_list
+        lambda: States.AwaitNextMission
+        in state_machine_thread.state_machine.transitions_list,
+        timeout=10,
     )
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
@@ -154,14 +157,14 @@ def test_state_machine_with_successful_collection(
     )
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
 
-    mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 2.0)
     state_machine_thread.start()
     uploader_thread.start()
 
     robot_service_thread.start()
     wait_until(
-        lambda: States.UnknownStatus
-        in state_machine_thread.state_machine.transitions_list
+        lambda: States.Home in state_machine_thread.state_machine.transitions_list,
+        timeout=10,
     )
     scheduling_utilities.start_mission(mission=mission)
 
@@ -254,8 +257,8 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
     state_machine_thread.start()
     robot_service_thread.start()
     wait_until(
-        lambda: States.UnknownStatus
-        in state_machine_thread.state_machine.transitions_list
+        lambda: States.Home in state_machine_thread.state_machine.transitions_list,
+        timeout=10,
     )
     scheduling_utilities.return_home()
     wait_until(
@@ -289,7 +292,7 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
 ) -> None:
     mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
-    mocker.patch.object(settings, "RETURN_HOME_DELAY", 0.01)
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 10.0)
 
     robot_service_thread.robot_service.robot = StubRobotInitiateMissionRaisesException()
 
@@ -306,9 +309,11 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
 
     # TODO: check mqtt
     wait_until(
-        lambda: States.UnknownStatus
-        in state_machine_thread.state_machine.transitions_list
+        lambda: States.AwaitNextMission
+        in state_machine_thread.state_machine.transitions_list,
+        timeout=10,
     )
+
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
 
@@ -329,12 +334,11 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
     wait_until(
         lambda: state_machine_thread.state_machine.transitions_list
         == expected_transitions,
-        timeout=10.0,
+        timeout=20.0,
     )
 
 
 def test_state_machine_battery_too_low_to_start_mission(
-    container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,

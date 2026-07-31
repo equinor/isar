@@ -17,7 +17,6 @@ from isar.apis.models.start_mission_definition import (
 )
 from isar.config.settings import robot_settings
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TASKS
 
@@ -54,9 +53,6 @@ class SchedulingController:
                 detail=error_message_no_mission_definition,
             )
 
-        state: States = self.scheduling_utilities.get_state()
-        self.scheduling_utilities.verify_state_machine_ready_to_receive_mission(state)
-
         try:
             mission: Mission = to_isar_mission(
                 start_mission_definition=mission_definition
@@ -81,31 +77,11 @@ class SchedulingController:
     def return_home(self) -> None:
         self.logger.info("Received request to return home")
 
-        state: States = self.scheduling_utilities.get_state()
-        self.scheduling_utilities.verify_state_machine_ready_to_receive_return_home_mission(
-            state
-        )
-
         self.scheduling_utilities.return_home()
 
     @tracer.start_as_current_span("pause_mission")
     def pause_mission(self) -> ControlMissionResponse:
         self.logger.info("Received request to pause current mission")
-
-        state: States = self.scheduling_utilities.get_state()
-
-        if state not in [
-            States.Monitor,
-            States.ReturningHome,
-        ]:
-            error_message = (
-                f"Conflict - Pause command received in invalid state - State: {state}"
-            )
-            self.logger.warning(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT,
-                detail=error_message,
-            )
 
         pause_mission_response: ControlMissionResponse = (
             self.scheduling_utilities.pause_mission()
@@ -115,15 +91,6 @@ class SchedulingController:
     @tracer.start_as_current_span("resume_mission")
     def resume_mission(self) -> ControlMissionResponse:
         self.logger.info("Received request to resume current mission")
-
-        state: States = self.scheduling_utilities.get_state()
-
-        if state not in [States.Paused, States.ReturnHomePaused]:
-            error_message = (
-                f"Conflict - Resume command received in invalid state - State: {state}"
-            )
-            self.logger.warning(error_message)
-            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
         resume_mission_response: ControlMissionResponse = (
             self.scheduling_utilities.resume_mission()
@@ -143,25 +110,6 @@ class SchedulingController:
 
         self.logger.info("Received request to stop current mission")
 
-        state: States = self.scheduling_utilities.get_state()
-
-        if (
-            state == States.UnknownStatus
-            or state == States.Stopping
-            or state == States.Offline
-            or state == States.Home
-            or state == States.ReturningHome
-            or state == States.GoingToLockdown
-            or state == States.GoingToRecharging
-            or state == States.Recharging
-            or state == States.Maintenance
-        ):
-            error_message = (
-                f"Conflict - Stop command received in invalid state - State: {state}"
-            )
-            self.logger.warning(error_message)
-            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
-
         stop_mission_response: ControlMissionResponse = (
             self.scheduling_utilities.stop_mission(
                 mission_id.mission_id if mission_id.mission_id else ""
@@ -173,32 +121,12 @@ class SchedulingController:
     def release_intervention_needed(self) -> None:
         self.logger.info("Received request to release intervention needed state")
 
-        state: States = self.scheduling_utilities.get_state()
-
-        if state != States.InterventionNeeded:
-            error_message = f"Conflict - Release intervention needed command received in invalid state - State: {state}"
-            self.logger.warning(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT,
-                detail=error_message,
-            )
-
         self.scheduling_utilities.release_intervention_needed()
         self.logger.info("Released intervention needed state successfully")
 
     @tracer.start_as_current_span("lockdown")
     def lockdown(self) -> None:
         self.logger.info("Received request to lockdown robot")
-
-        state: States = self.scheduling_utilities.get_state()
-
-        if state == States.Lockdown:
-            error_message = "Conflict - Lockdown command received in lockdown state"
-            self.logger.warning(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT,
-                detail=error_message,
-            )
 
         self.scheduling_utilities.lock_down_robot()
         self.logger.info("Lockdown started successfully")
@@ -207,16 +135,6 @@ class SchedulingController:
     def release_lockdown(self) -> None:
         self.logger.info("Received request to release robot lockdown")
 
-        state: States = self.scheduling_utilities.get_state()
-
-        if state != States.Lockdown:
-            error_message = f"Conflict - Release lockdown command received in invalid state - State: {state}"
-            self.logger.warning(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT,
-                detail=error_message,
-            )
-
         self.scheduling_utilities.release_robot_lockdown()
         self.logger.info("Released lockdown successfully")
 
@@ -224,32 +142,12 @@ class SchedulingController:
     def set_maintenance_mode(self) -> None:
         self.logger.info("Received request to set maintenance_mode")
 
-        state: States = self.scheduling_utilities.get_state()
-
-        if state == States.Maintenance or state == States.StoppingDueToMaintenance:
-            message = f"Conflict - Call to set maintenance mode was given while in state {state}."
-            self.logger.info(message)
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT,
-                detail=message,
-            )
-
         self.scheduling_utilities.set_maintenance_mode()
         self.logger.info("Maintenance mode has been set")
 
     @tracer.start_as_current_span("release_maintenance_mode")
     def release_maintenance_mode(self) -> None:
         self.logger.info("Received request to release robot from maintenance mode")
-
-        state: States = self.scheduling_utilities.get_state()
-
-        if state != States.Maintenance:
-            message = f"Conflict - Release maintenance mode command received in invalid state - State: {state}"
-            self.logger.info(message)
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT,
-                detail=message,
-            )
 
         self.scheduling_utilities.release_maintenance_mode()
         self.logger.info("Maintenance mode successfully released")

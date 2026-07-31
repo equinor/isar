@@ -87,6 +87,13 @@ def container() -> ApplicationContainer:
             mqtt_publisher=container.mqtt_client(),
         )
     )
+    container.state_machine.override(
+        providers.Singleton(
+            StateMachine,
+            events=container.events,
+            mqtt_publisher=container.mqtt_client(),
+        )
+    )
     return container
 
 
@@ -133,15 +140,9 @@ def events(container: ApplicationContainer) -> Events:
 
 
 @pytest.fixture()
-def state_machine(
-    container: ApplicationContainer, mocker: MockerFixture
-) -> StateMachine:
+def state_machine(container: ApplicationContainer) -> StateMachine:
     """Fixture to provide the StateMachine instance."""
-    mocker.patch.object(settings, "USE_DB", False)
-    return StateMachine(
-        events=container.events(),
-        mqtt_publisher=container.mqtt_client(),
-    )
+    return container.state_machine()
 
 
 @pytest.fixture()
@@ -155,7 +156,10 @@ def scheduling_utilities(
     container: ApplicationContainer,
 ) -> SchedulingUtilities:
     """Fixture to provide the SchedulingUtilities instance."""
-    return container.scheduling_utilities()
+    return SchedulingUtilities(
+        events=container.events(),
+        state_machine=container.state_machine(),
+    )
 
 
 @pytest.fixture

@@ -11,12 +11,11 @@ from isar.models.events import (
     APIEvent,
     APIRequests,
     EmptyMessage,
-    Event,
     EventConflictError,
     Events,
     EventTimeoutError,
 )
-from isar.state_machine.states_enum import States
+from isar.state_machine.state_machine import StateMachine
 from robot_interface.models.mission.mission import Mission
 
 T1 = TypeVar("T1")
@@ -32,29 +31,11 @@ class SchedulingUtilities:
     def __init__(
         self,
         events: Events,
+        state_machine: StateMachine,
     ):
         self.api_events: APIRequests = events.api_requests
-        self.state_event: Event[States] = events.state
+        self.state_machine: StateMachine = state_machine
         self.logger = logging.getLogger("api")
-
-    def get_state(self) -> States:
-        """Return the current state of the state machine
-
-        Raises
-        ------
-        HTTPException 500 Internal Server Error
-            If the current state is not available on the queue
-        """
-        current_state = self.state_event.check()
-        if current_state is None:
-            error_message: str = (
-                "Internal Server Error - Current state of the state machine is unknown"
-            )
-            self.logger.error(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
-        return current_state
 
     def verify_robot_capable_of_mission(
         self, mission: Mission, robot_capabilities: list[str]
@@ -82,45 +63,6 @@ class SchedulingUtilities:
             )
 
         return True
-
-    def verify_state_machine_ready_to_receive_mission(self, state: States) -> bool:
-        """Verify that the state machine is ready to receive a mission
-
-        Raises
-        ------
-        HTTPException 409 Conflict
-            If state machine is not home, robot standing still, awaiting next mission
-            return home paused or returning home and therefore cannot start a new mission
-        """
-        if (
-            state == States.Home
-            or state == States.AwaitNextMission
-            or state == States.ReturningHome
-            or state == States.ReturnHomePaused
-        ):
-            return True
-
-        error_message = f"Conflict - Robot is not home, robot standing still, awaiting next mission or returning home - State: {state}"
-        self.logger.warning(error_message)
-        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
-
-    def verify_state_machine_ready_to_receive_return_home_mission(
-        self, state: States
-    ) -> bool:
-        """Verify that the state machine is ready to receive a return home mission
-
-        Raises
-        ------
-        HTTPException 409 Conflict
-            If state machine is not home, robot standing still or awaiting next mission
-            and therefore cannot start a new return home mission
-        """
-        if state == States.Home or state == States.AwaitNextMission:
-            return True
-
-        error_message = f"Conflict - Robot is not home, robot standing still or awaiting next mission - State: {state}"
-        self.logger.warning(error_message)
-        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
     def log_mission_overview(self, mission: Mission) -> None:
         """Log an overview of the tasks in a mission"""
@@ -433,7 +375,20 @@ class SchedulingUtilities:
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
 
+    def _verify_valid_state(self, api_event: APIEvent) -> None:
+        if (
+            not api_event.prioritized
+            and not self.state_machine.current_state_handles_event(api_event.request)
+        ):
+            error_message = (
+                "Conflict - Robot is not in a state where it can handle the request"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
+        self._verify_valid_state(api_event)
+
         if not api_event.lock.acquire(blocking=False):
             raise EventConflictError("API event has already been sent")
 
