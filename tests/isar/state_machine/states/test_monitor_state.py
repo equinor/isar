@@ -153,8 +153,9 @@ def test_state_machine_with_unsuccessful_mission_stop(
     state_machine_thread.start()
     robot_service_thread.start()
     wait_until(
-        lambda: States.UnknownStatus
-        in state_machine_thread.state_machine.transitions_list
+        lambda: States.AwaitNextMission
+        in state_machine_thread.state_machine.transitions_list,
+        timeout=10,
     )
     scheduling_utilities.start_mission(mission=mission)
     wait_until(
@@ -203,6 +204,12 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
     state_machine_thread.start()
     robot_service_thread.start()
 
+    wait_until(
+        lambda: States.AwaitNextMission
+        in state_machine_thread.state_machine.transitions_list,
+        timeout=10,
+    )
+
     scheduling_utilities.start_mission(mission=mission)
     wait_until(
         lambda: state_machine_thread.state_machine.state_event.check() == States.Monitor
@@ -236,6 +243,12 @@ def test_robot_mission_status_exception_handling(
 
     state_machine_thread.start()
     robot_service_thread.start()
+
+    wait_until(
+        lambda: States.AwaitNextMission
+        in state_machine_thread.state_machine.transitions_list,
+        timeout=10,
+    )
 
     scheduling_utilities.start_mission(mission=mission)
 

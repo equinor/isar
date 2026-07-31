@@ -45,7 +45,7 @@ class StateMachine:
         self.state_event: Event[States] = events.state
         self.mqtt_publisher: MqttClientInterface | None = mqtt_publisher
 
-        self.starting_state: State = UnknownStatus(self.events)
+        self.current_state: State = UnknownStatus(self.events)
 
         if not settings.USE_DB:
             self.logger.warning(
@@ -57,28 +57,31 @@ class StateMachine:
                 f"Connected to robot status database and the startup mode was: {robot_startup_mode}. "
             )
             if robot_startup_mode == RobotStartupMode.Maintenance:
-                self.starting_state = Maintenance(self.events)
+                self.current_state = Maintenance(self.events)
             elif robot_startup_mode == RobotStartupMode.Lockdown:
-                self.starting_state = GoingToLockdown(self.events)
+                self.current_state = GoingToLockdown(self.events)
 
         self.transitions_list: deque[States] = deque(
             [], settings.STATE_TRANSITIONS_LOG_LENGTH
         )
 
-        self.state_event.update(self.starting_state.name)
+        self.state_event.update(self.current_state.name)
+
+        self.state_metrics_publisher: StateMetricsPublisher = StateMetricsPublisher(
+            current_state_provider=lambda: self.current_state.name
+        )
 
     #################################################################################
 
+    def current_state_handles_event(self, event: Event) -> bool:
+        return self.current_state.handles_event(event)
+
     def run(self) -> None:
         """Runs the state machine loop."""
-        current_state: State = self.starting_state
-        self.state_metrics_publisher: StateMetricsPublisher = StateMetricsPublisher(
-            current_state_provider=lambda: current_state.name
-        )
         try:
             while True:
-                self.update_state(current_state)
-                transition: Transition | None = current_state.run()
+                self.update_state(self.current_state)
+                transition: Transition | None = self.current_state.run()
 
                 if transition is None:  # Expected when the thread is killed
                     self.logger.warning(
@@ -86,7 +89,7 @@ class StateMachine:
                     )
                     break
 
-                current_state = transition(self.events)
+                self.current_state = transition(self.events)
         except Exception as e:  # noqa: BLE001
             self.logger.error(f"Unhandled exception in state machine: {str(e)}")
 
