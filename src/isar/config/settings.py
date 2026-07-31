@@ -122,6 +122,19 @@ class Settings(BaseSettings):
     # ChainedTokenCredential (e.g. "WorkloadIdentity,ClientSecret").
     ALLOWED_AUTH_METHODS: str = Field(default="ClientSecret")
 
+    # Override the OpenID Connect discovery document URL used to validate access
+    # tokens. When unset (the default), the URL is derived from AZURE_TENANT_ID and
+    # points at Azure Entra ID. Set this to point ISAR at a different OpenID
+    # provider, such as a local mock issuer used by the integration tests.
+    OPENID_CONFIG_URL: str | None = Field(default=None)
+
+    # Override the authorization and token URLs advertised in the generated OpenAPI
+    # document, so that Swagger's "Authorize" button does not point at
+    # login.microsoftonline.com when a non-Azure issuer is configured. Only affect
+    # the API documentation; token validation is governed by OPENID_CONFIG_URL.
+    OPENAPI_AUTHORIZATION_URL: str | None = Field(default=None)
+    OPENAPI_TOKEN_URL: str | None = Field(default=None)
+
     # MQTT username
     # The username and password is set by the MQTT broker and must be known in advance
     # The password should be set as an environment variable "MQTT_PASSWORD"
