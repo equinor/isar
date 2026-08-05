@@ -270,21 +270,46 @@ option in the dictionary.
 
 ## API authentication
 
-The API has an option to include user authentication. This can be enabled by setting the environment variable
+The API validates OAuth2 access tokens. Authentication is controlled by
 
 ```
 ISAR_AUTHENTICATION_ENABLED = true
 ```
 
-By default, the `local` storage module is used and API authentication is disabled. If using Azure Blob Storage a set of
-environment variables must be available which gives access to an app registration that may use the storage account.
-Enabling API authentication also requires the same environment variables. The required variables are
+which is **enabled by default**; set it to `false` to turn authentication off.
+
+A token is accepted when its issuer matches the configured OpenID provider, its audience equals
+`ISAR_AZURE_CLIENT_ID`, its signature and lifetime are valid, and it carries the role named by
+`ISAR_REQUIRED_ROLE` (default `Mission.Control`) in a top-level `roles` claim.
+
+### Azure Entra ID (default)
+
+Requires an app registration, configured through
 
 ```
-AZURE_CLIENT_ID
-AZURE_TENANT_ID
-AZURE_CLIENT_SECRET
+ISAR_AZURE_CLIENT_ID
+ISAR_AZURE_TENANT_ID
 ```
+
+The same app registration is used for Azure Blob Storage, which additionally needs the bare
+`AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_CLIENT_SECRET` variables that
+`EnvironmentCredential` reads.
+
+### Any other OpenID Connect provider
+
+`ISAR_OPENID_CONFIG_URL` points ISAR at a different provider, such as a Keycloak realm:
+
+```
+ISAR_OPENID_CONFIG_URL = http://localhost:8080/realms/robotics/.well-known/openid-configuration
+ISAR_AZURE_CLIENT_ID   = isar-test          # the expected audience
+ISAR_OPENID_SCOPE      = isar-api           # the scope Swagger requests
+ISAR_OPENAPI_AUTHORIZATION_URL = http://localhost:8080/realms/robotics/protocol/openid-connect/auth
+ISAR_OPENAPI_TOKEN_URL         = http://localhost:8080/realms/robotics/protocol/openid-connect/token
+```
+
+The last three variables only affect Swagger's "Authorize" button. The provider must emit `nbf`
+and a `ver` claim of `"1.0"` or `"2.0"`, place roles in a flat top-level `roles` array, and
+issue `aud` as a single string rather than the array form RFC 7519 also permits.
 
 ## MQTT communication
 

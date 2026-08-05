@@ -122,6 +122,18 @@ class Settings(BaseSettings):
     # ChainedTokenCredential (e.g. "WorkloadIdentity,ClientSecret").
     ALLOWED_AUTH_METHODS: str = Field(default="ClientSecret")
 
+    # OpenID Connect discovery document URL. Unset means Azure Entra ID, derived
+    # from AZURE_TENANT_ID. Set it to use another provider, such as Keycloak.
+    OPENID_CONFIG_URL: str | None = Field(default=None)
+
+    # Swagger's "Authorize" button only. Validation is unaffected.
+    OPENAPI_AUTHORIZATION_URL: str | None = Field(default=None)
+    OPENAPI_TOKEN_URL: str | None = Field(default=None)
+
+    # The scope Swagger requests. Entra derives the audience from the scope, hence
+    # the "api://<client id>/user_impersonation" default; other providers do not.
+    OPENID_SCOPE: str | None = Field(default=None)
+
     # MQTT username
     # The username and password is set by the MQTT broker and must be known in advance
     # The password should be set as an environment variable "MQTT_PASSWORD"
