@@ -44,14 +44,6 @@ def robot_resume_mission(
             time.sleep(settings.FSM_SLEEP_TIME)
             retries += 1
             continue
-        except Exception as e:
-            logger.error(
-                f"Unhandled exception in robot resume mission service: {str(e)}"
-            )
-            return ErrorMessage(
-                error_reason=ErrorReason.RobotUnknownErrorException,
-                error_description=str(e),
-            )
 
     assert error is not None
     error_description = (

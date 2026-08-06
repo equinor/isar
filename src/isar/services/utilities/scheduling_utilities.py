@@ -177,12 +177,6 @@ class SchedulingUtilities:
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
-        except Exception as e:
-            error_message = "Unexpected error while sending mission to state machine"
-            self.logger.error(f"{error_message}. Exception: {e}")
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
         self.log_mission_overview(mission)
         self.logger.info("OK - Mission start successfully initiated")
 
@@ -213,12 +207,6 @@ class SchedulingUtilities:
             error_message = "State machine has entered a state which cannot start a return home mission"
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
-        except Exception as e:
-            error_message = "Unexpected error while sending return home command"
-            self.logger.error(f"{error_message}. Exception: {e}")
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
         self.logger.info("OK - Return home mission start successfully initiated")
 
     def pause_mission(self) -> ControlMissionResponse:
@@ -253,12 +241,6 @@ class SchedulingUtilities:
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
-        except Exception as e:
-            error_message = "Unexpected error while pausing mission"
-            self.logger.error(f"{error_message}. Exception: {e}")
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
 
     def resume_mission(self) -> ControlMissionResponse:
         """Resume mission
@@ -285,12 +267,6 @@ class SchedulingUtilities:
         except EventTimeoutError:
             error_message = "Internal Server Error - Failed to resume mission"
             self.logger.error(error_message)
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
-        except Exception as e:
-            error_message = "Unexpected error while resuming mission"
-            self.logger.error(f"{error_message}. Exception: {e}")
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
             )
@@ -336,12 +312,6 @@ class SchedulingUtilities:
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except HTTPException as e:
             raise e
-        except Exception as e:
-            error_message = "Unexpected error while stopping mission"
-            self.logger.error(f"{error_message}. Exception: {e}")
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
         self.logger.info("OK - Stop mission successfully initiated")
         return stop_mission_response
 
@@ -372,12 +342,6 @@ class SchedulingUtilities:
             error_message = "Cannot release intervention needed as it is not in intervention needed state"
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
-        except Exception as e:
-            error_message = "Unexpected error while releasing intervention needed state"
-            self.logger.error(f"{error_message}. Exception: {e}")
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
 
     def lock_down_robot(self) -> None:
         """Lock down robot
@@ -400,12 +364,6 @@ class SchedulingUtilities:
             error_message = "Cannot send robot to lockdown as it is already in lockdown"
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
-        except Exception as e:
-            error_message = "Unexpected error while locking down robot"
-            self.logger.error(f"{error_message}. Exception: {e}")
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
 
     def release_robot_lockdown(self) -> None:
         """Release robot from lockdown
@@ -432,12 +390,6 @@ class SchedulingUtilities:
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
-        except Exception as e:
-            error_message = "Unexpected error while releasing robot from lockdown"
-            self.logger.error(f"{error_message}. Exception: {e}")
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
 
     def set_maintenance_mode(self) -> None:
         """Set maintenance mode"""
@@ -462,12 +414,6 @@ class SchedulingUtilities:
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
-        except Exception as e:
-            error_message = "Unexpected error while setting maintenance mode"
-            self.logger.error(f"{error_message} Exception: {e}")
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
 
     def release_maintenance_mode(self) -> None:
         """Release robot from maintenance mode"""
@@ -486,12 +432,6 @@ class SchedulingUtilities:
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
-        except Exception as e:
-            error_message = "Unexpected error while releasing maintenance mode"
-            self.logger.error(f"{error_message} Exception: {e}")
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=error_message
-            )
 
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
         if not api_event.lock.acquire(blocking=False):

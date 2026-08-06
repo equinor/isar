@@ -1,5 +1,5 @@
 from collections import deque
-from queue import Empty, Queue
+from queue import Empty, Full, Queue, ShutDown
 from threading import Lock
 from typing import Generic, TypeVar
 
@@ -43,7 +43,7 @@ class Event(Queue[T]):
             # We always want a timeout when blocking for results, so that
             # the thread will never get stuck waiting for a result
             self.put(data, block=timeout is not None, timeout=timeout)
-        except Exception:
+        except Full, ShutDown, ValueError:
             if timeout is not None:
                 raise EventTimeoutError
             return
@@ -55,7 +55,7 @@ class Event(Queue[T]):
             if timeout is not None:
                 raise EventTimeoutError
             return None
-        except ValueError:
+        except ValueError, ShutDown:
             raise EventConflictError
 
     def clear_event(self) -> bool:

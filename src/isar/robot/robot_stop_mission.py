@@ -41,12 +41,6 @@ def robot_stop_mission(
             )
             time.sleep(settings.FSM_SLEEP_TIME)
             continue
-        except Exception as e:
-            logger.error(f"Unhandled exception in robot stop mission service: {str(e)}")
-            return ErrorMessage(
-                error_reason=ErrorReason.RobotUnknownErrorException,
-                error_description=str(e),
-            )
         return None
 
     assert error is not None
