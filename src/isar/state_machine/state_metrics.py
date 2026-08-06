@@ -1,4 +1,4 @@
-from typing import Callable, List
+from collections.abc import Callable
 
 from opentelemetry import metrics
 from opentelemetry.metrics import CallbackOptions, Meter, Observation
@@ -20,7 +20,7 @@ class StateMetricsPublisher:
             description="Current state of the ISAR state machine (see STATE_TO_CODE)",
         )
 
-    def _observe_state(self, _: CallbackOptions) -> List[Observation]:
+    def _observe_state(self, _: CallbackOptions) -> list[Observation]:
         state: States = self._current_state_provider()
         code: int = STATE_TO_CODE.get(state, UNKNOWN_STATE_CODE)
         return [

@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import MissionStartResponse
@@ -13,7 +11,7 @@ class StoppingReturnHome(State):
 
     def __init__(self, events: Events, mission: Mission):
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="failed_stop_event",
                 event=events.robot_service_events.mission_failed_to_stop,

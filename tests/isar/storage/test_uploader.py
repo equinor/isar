@@ -1,6 +1,5 @@
 import json
 import time
-from typing import Tuple
 from uuid import uuid4
 
 from alitra import Frame, Orientation, Pose, Position
@@ -45,7 +44,7 @@ def test_should_upload_from_queue(
     assert isinstance(mission.tasks[0], TakeImage)
     inspection = InspectionBlob(metadata=stub_image_metadata(), id=mission.tasks[0].id)
 
-    message: Tuple[Inspection, Mission] = (
+    message: tuple[Inspection, Mission] = (
         inspection,
         mission,
     )
@@ -66,7 +65,7 @@ def test_should_retry_failed_upload_from_queue(
     inspection = InspectionBlob(metadata=stub_image_metadata(), id=INSPECTION_ID)
     mission: Mission = Mission(id="id", name="Dummy Mission")
 
-    message: Tuple[Inspection, Mission] = (
+    message: tuple[Inspection, Mission] = (
         inspection,
         mission,
     )
@@ -106,7 +105,7 @@ def test_should_not_publish_when_blob_paths_are_empty(
     mqtt_fake = MqttPublisherFake()
     uploader.mqtt_publisher = mqtt_fake
 
-    message: Tuple[Inspection, Mission] = (
+    message: tuple[Inspection, Mission] = (
         inspection,
         mission,
     )
@@ -131,7 +130,7 @@ def _put_inspection_with_analysis_types(
     mqtt_fake = MqttPublisherFake()
     uploader.mqtt_publisher = mqtt_fake
 
-    message: Tuple[Inspection, Mission] = (inspection, mission)
+    message: tuple[Inspection, Mission] = (inspection, mission)
     uploader.upload_queue.put(message)
     return mqtt_fake
 

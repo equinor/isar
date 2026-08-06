@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.pausing as Pausing
 import isar.state_machine.states.stopping as Stopping
@@ -59,7 +57,7 @@ class Monitor(State):
                 events.mqtt_queue, mission_id, MissionStatus.InProgress, None
             )
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="mission_started_event",
                 event=events.robot_service_events.mission_started_successfully,

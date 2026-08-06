@@ -1,6 +1,5 @@
 import logging
 from collections import deque
-from typing import Deque
 
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Event, Events
@@ -62,7 +61,7 @@ class StateMachine(object):
             elif robot_startup_mode == RobotStartupMode.Lockdown:
                 self.starting_state = GoingToLockdown(self.events)
 
-        self.transitions_list: Deque[States] = deque(
+        self.transitions_list: deque[States] = deque(
             [], settings.STATE_TRANSITIONS_LOG_LENGTH
         )
 

@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.going_to_recharging_with_mission as GoingToRechargingWithMission
 import isar.state_machine.states.intervention_needed as InterventionNeeded
@@ -12,7 +10,7 @@ class StoppingGoToRecharge(State):
 
     def __init__(self, events: Events):
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="failed_stop_event",
                 event=events.robot_service_events.mission_failed_to_stop,

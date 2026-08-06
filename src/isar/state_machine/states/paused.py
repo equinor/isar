@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.resuming as Resuming
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
@@ -30,7 +28,7 @@ class Paused(State):
                 )
                 return None
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[str](
                 name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,

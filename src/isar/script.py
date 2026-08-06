@@ -3,7 +3,7 @@ import sys
 import time
 from logging import Logger
 from threading import Thread
-from typing import Any, List
+from typing import Any
 
 import isar
 from isar.apis.api import API
@@ -89,7 +89,7 @@ def start() -> None:
     robot: RobotService = injector.robot()
     inspection_service: RobotInspectionService = injector.inspection_service()
 
-    threads: List[Thread] = []
+    threads: list[Thread] = []
 
     api: API = injector.api()
     api_thread: Thread = Thread(target=api.server.run, name="ISAR API", daemon=True)
@@ -166,7 +166,7 @@ def start() -> None:
     robot_heartbeat_thread.start()
     threads.append(robot_heartbeat_thread)
 
-    publishers: List[Thread] = robot_interface.get_telemetry_publishers(
+    publishers: list[Thread] = robot_interface.get_telemetry_publishers(
         queue=events.mqtt_queue,
         robot_name=settings.ROBOT_NAME,
         isar_id=settings.ISAR_ID,

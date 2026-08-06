@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
 
 from alitra import Pose, Position
 from pydantic import BaseModel
@@ -61,10 +60,10 @@ class RobotInfoPayload(BaseModel):
     robot_model: str
     robot_serial_number: str
     robot_asset: str
-    documentation: List[DocumentInfo]
+    documentation: list[DocumentInfo]
     host: str
     port: int
-    capabilities: List[str]
+    capabilities: list[str]
     timestamp: datetime
 
 

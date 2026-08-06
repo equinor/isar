@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import MaintenanceResponse
 from isar.models.events import EmptyMessage, Events
@@ -20,7 +18,7 @@ class Maintenance(State):
 
             return UnknownStatus.transition()
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="release_from_maintenance",
                 event=events.api_requests.release_from_maintenance_mode.request,

@@ -1,5 +1,3 @@
-from typing import List
-
 from alitra import Frame, Orientation, Pose, Position
 from pydantic import BaseModel, Field
 
@@ -14,7 +12,7 @@ class TaskResponse(BaseModel):
 
 class StartMissionResponse(BaseModel):
     id: str
-    tasks: List[TaskResponse]
+    tasks: list[TaskResponse]
 
 
 class ControlMissionResponse(BaseModel):
@@ -42,7 +40,7 @@ class RobotInfoResponse(BaseModel):
     robot_package: str
     isar_id: str
     robot_name: str
-    robot_capabilities: List[str]
+    robot_capabilities: list[str]
     robot_map_name: str
     plant_short_name: str
 

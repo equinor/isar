@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.returning_home as ReturningHome
@@ -33,7 +31,7 @@ class InterventionNeeded(State):
                 return Home.transition()
             return None
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="return_home_event",
                 event=events.api_requests.return_home.request,

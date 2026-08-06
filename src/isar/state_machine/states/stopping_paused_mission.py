@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.paused as Paused
 from isar.apis.models.models import ControlMissionResponse
@@ -22,7 +20,7 @@ class StoppingPausedMission(State):
             )
             return AwaitNextMission.transition()
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="failed_stop_event",
                 event=events.robot_service_events.mission_failed_to_stop,

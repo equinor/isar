@@ -1,7 +1,7 @@
 from collections import deque
 from queue import Empty, Queue
 from threading import Lock
-from typing import Generic, Tuple, TypeVar
+from typing import Generic, TypeVar
 
 from isar.apis.models.models import (
     ControlMissionResponse,
@@ -22,7 +22,7 @@ T1 = TypeVar("T1")
 T2 = TypeVar("T2")
 
 
-InspectionQueueTuple = Tuple[Inspection, Mission]
+InspectionQueueTuple = tuple[Inspection, Mission]
 
 
 class EmptyMessage:
@@ -186,7 +186,7 @@ class RobotServiceEvents:
         self.mission_successfully_resumed: Event[EmptyMessage] = Event(
             "mission_successfully_resumed"
         )
-        self.request_inspection_upload: Event[Tuple[InspectionTask, Mission]] = Event(
+        self.request_inspection_upload: Event[tuple[InspectionTask, Mission]] = Event(
             "request_inspection_upload"
         )
         self.battery_below_mission_threshold: Event[EmptyMessage] = Event(

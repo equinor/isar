@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.lockdown as Lockdown
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.monitor as Monitor
@@ -42,7 +40,7 @@ class RechargingWithMission(State):
                 )
                 return None
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="robot_battery_above_recharging_threshold_event",
                 event=events.robot_service_events.battery_above_recharge_threshold_event,

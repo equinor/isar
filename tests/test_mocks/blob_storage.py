@@ -1,5 +1,3 @@
-from typing import List
-
 from isar.storage.storage_interface import (
     BlobStoragePath,
     StorageException,
@@ -14,7 +12,7 @@ class StorageFake(StorageInterface):
     will_fail: bool = False
 
     def __init__(self) -> None:
-        self.stored_inspections: List[Inspection] = []
+        self.stored_inspections: list[Inspection] = []
 
     def store(
         self, inspection: InspectionBlob, mission: Mission
@@ -34,7 +32,7 @@ class StorageFake(StorageInterface):
 class StorageEmptyBlobPathsFake(StorageInterface):
 
     def __init__(self) -> None:
-        self.stored: List[Inspection] = []
+        self.stored: list[Inspection] = []
         self.fail: bool = False
 
     def store(

@@ -1,4 +1,3 @@
-from typing import List
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -10,7 +9,7 @@ from robot_interface.models.mission.task import TASKS, ReturnToHome, TaskTypes
 
 class Mission(BaseModel):
     id: str = Field(frozen=True)
-    tasks: List[TASKS] = Field(default_factory=list, frozen=True)
+    tasks: list[TASKS] = Field(default_factory=list, frozen=True)
     name: str = Field(frozen=True)
     status: MissionStatus = MissionStatus.NotStarted
     error_message: ErrorMessage | None = Field(default=None)
@@ -22,7 +21,7 @@ class Mission(BaseModel):
             return False
         return True
 
-    def _get_unfinished_tasks(self) -> List[TASKS]:
+    def _get_unfinished_tasks(self) -> list[TASKS]:
         return list(
             filter(
                 lambda task: task.status
@@ -38,5 +37,5 @@ class Mission(BaseModel):
 
 class ReturnHomeMission(Mission):
     id: str = str(uuid4())
-    tasks: List[TASKS] = Field(default_factory=lambda: [ReturnToHome()])
+    tasks: list[TASKS] = Field(default_factory=lambda: [ReturnToHome()])
     name: str = "Return Home"

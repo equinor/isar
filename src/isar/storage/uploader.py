@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from queue import Empty, Queue
 from threading import Event
-from typing import List
 
 from isar.config.settings import settings
 from isar.models.events import Events, InspectionQueueTuple
@@ -77,7 +76,7 @@ class Uploader:
     def __init__(
         self,
         events: Events,
-        storage_handlers: List[StorageInterface],
+        storage_handlers: list[StorageInterface],
         mqtt_publisher: MqttClientInterface,
         max_wait_time: int = settings.UPLOAD_FAILURE_MAX_WAIT,
         max_retry_attempts: int = settings.UPLOAD_FAILURE_ATTEMPTS_LIMIT,
@@ -96,12 +95,12 @@ class Uploader:
             Maximum attempts to retry an upload when it fails
         """
         self.upload_queue: Queue[InspectionQueueTuple] = events.upload_queue
-        self.storage_handlers: List[StorageInterface] = storage_handlers
+        self.storage_handlers: list[StorageInterface] = storage_handlers
         self.mqtt_publisher = mqtt_publisher
 
         self.max_wait_time = max_wait_time
         self.max_retry_attempts = max_retry_attempts
-        self._internal_upload_queue: List[UploaderQueueItem] = []
+        self._internal_upload_queue: list[UploaderQueueItem] = []
 
         self.signal_exit: Event = Event()
 
@@ -187,7 +186,7 @@ class Uploader:
                 return True
             return False
 
-        ready_items: List[UploaderQueueItem] = [
+        ready_items: list[UploaderQueueItem] = [
             item for item in self._internal_upload_queue if should_upload(item)
         ]
         for item in ready_items:

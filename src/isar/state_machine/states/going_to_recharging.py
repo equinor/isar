@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging as Recharging
@@ -14,7 +12,7 @@ class GoingToRecharging(State):
 
     def __init__(self, events: Events):
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
                 name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,

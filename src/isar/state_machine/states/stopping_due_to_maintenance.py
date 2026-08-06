@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.maintenance as Maintenance
 from isar.apis.models.models import MaintenanceResponse
@@ -37,7 +35,7 @@ class StoppingDueToMaintenance(State):
                 )
             return Maintenance.transition_and_reply_to_API()
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="failed_stop_event",
                 event=events.robot_service_events.mission_failed_to_stop,

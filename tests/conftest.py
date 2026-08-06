@@ -4,9 +4,9 @@
 
 import logging
 import shutil
+from collections.abc import Generator
 from pathlib import Path
 from threading import Thread
-from typing import Generator
 
 import pytest
 import sqlalchemy
