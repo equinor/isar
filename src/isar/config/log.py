@@ -52,8 +52,8 @@ def setup_loggers() -> None:
 
 def load_log_config() -> dict[str, Any]:
     source = files("isar").joinpath("config").joinpath("logging.conf")
-    with as_file(source) as f:
-        log_config = yaml.safe_load(open(f))
+    with as_file(source) as file_path, open(file_path) as f:
+        log_config = yaml.safe_load(f)
     return log_config
 
 

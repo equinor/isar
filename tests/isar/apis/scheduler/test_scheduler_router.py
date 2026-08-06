@@ -1,5 +1,6 @@
 import re
 from http import HTTPStatus
+from typing import ClassVar
 from unittest import mock
 from uuid import uuid4
 
@@ -52,8 +53,10 @@ class TestStartMission:
     dummy_start_mission_definition = (
         DummyMissionDefinition.dummy_start_mission_definition
     )
-    dummy_start_mission_content = {"mission_definition": dummy_start_mission_definition}
-    dummy_start_mission_definition_image_and_thermal = {
+    dummy_start_mission_content: ClassVar[dict] = {
+        "mission_definition": dummy_start_mission_definition
+    }
+    dummy_start_mission_definition_image_and_thermal: ClassVar[dict] = {
         "mission_definition": DummyMissionDefinition.dummy_start_mission_definition_image_and_thermal
     }
 
@@ -165,7 +168,7 @@ class TestResumeMission:
 
 class TestStopMission:
     schedule_stop_mission_path = "/schedule/stop-mission"
-    valid_states = [
+    valid_states: ClassVar[list] = [
         States.AwaitNextMission,
         States.Monitor,
         States.Paused,

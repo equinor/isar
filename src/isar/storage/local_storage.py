@@ -43,7 +43,7 @@ class LocalStorage(StorageInterface):
             ):
                 file.write(inspection.data)
                 metadata_file.write(metadata_bytes)
-        except IOError as e:
+        except OSError as e:
             self.logger.warning(
                 f"Failed open/write for one of the following files: \n"
                 f"{data_path}\n{metadata_path}"

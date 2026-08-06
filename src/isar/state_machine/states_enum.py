@@ -35,7 +35,7 @@ class States(str, Enum):
         return self.value
 
 
-STATE_TO_CODE: dict["States", int] = {
+STATE_TO_CODE: dict[States, int] = {
     States.Home: 0,
     States.AwaitNextMission: 1,
     States.Monitor: 2,
