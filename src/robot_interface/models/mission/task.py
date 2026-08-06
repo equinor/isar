@@ -1,3 +1,4 @@
+import builtins
 from enum import Enum
 from typing import Literal
 from uuid import uuid4
@@ -93,7 +94,7 @@ class TakeImage(InspectionTask):
     type: Literal[TaskTypes.TakeImage] = TaskTypes.TakeImage
 
     @staticmethod
-    def get_inspection_type() -> type[Inspection]:
+    def get_inspection_type() -> builtins.type[Inspection]:
         return Image
 
 
@@ -106,7 +107,7 @@ class TakeThermalImage(InspectionTask):
     type: Literal[TaskTypes.TakeThermalImage] = TaskTypes.TakeThermalImage
 
     @staticmethod
-    def get_inspection_type() -> type[Inspection]:
+    def get_inspection_type() -> builtins.type[Inspection]:
         return ThermalImage
 
 
@@ -122,7 +123,7 @@ class TakeVideo(InspectionTask):
     type: Literal[TaskTypes.TakeVideo] = TaskTypes.TakeVideo
 
     @staticmethod
-    def get_inspection_type() -> type[Inspection]:
+    def get_inspection_type() -> builtins.type[Inspection]:
         return Video
 
 
@@ -138,7 +139,7 @@ class TakeThermalVideo(InspectionTask):
     type: Literal[TaskTypes.TakeThermalVideo] = TaskTypes.TakeThermalVideo
 
     @staticmethod
-    def get_inspection_type() -> type[Inspection]:
+    def get_inspection_type() -> builtins.type[Inspection]:
         return ThermalVideo
 
 
@@ -154,7 +155,7 @@ class RecordAudio(InspectionTask):
     type: Literal[TaskTypes.RecordAudio] = TaskTypes.RecordAudio
 
     @staticmethod
-    def get_inspection_type() -> type[Inspection]:
+    def get_inspection_type() -> builtins.type[Inspection]:
         return Audio
 
 
@@ -166,7 +167,7 @@ class TakeCO2Measurement(InspectionTask):
     type: Literal[TaskTypes.TakeCO2Measurement] = TaskTypes.TakeCO2Measurement
 
     @staticmethod
-    def get_inspection_type() -> type[Inspection]:
+    def get_inspection_type() -> builtins.type[Inspection]:
         return CO2Measurement
 
 
@@ -198,7 +199,7 @@ class TakeAcousticMeasurement(InspectionTask):
         return self
 
     @staticmethod
-    def get_inspection_type() -> type[Inspection]:
+    def get_inspection_type() -> builtins.type[Inspection]:
         return AcousticMeasurement
 
 

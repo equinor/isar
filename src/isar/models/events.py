@@ -46,7 +46,7 @@ class Event(Queue[T]):
         except Exception:
             if timeout is not None:
                 raise EventTimeoutError
-            return None
+            return
 
     def consume_event(self, timeout: int | None = None) -> T | None:
         try:

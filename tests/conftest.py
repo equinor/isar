@@ -162,7 +162,7 @@ def scheduling_utilities(
 def state_machine_thread(
     container: ApplicationContainer,
     mocker: MockerFixture,
-) -> Generator[StateMachineThreadMock, None, None]:
+) -> Generator[StateMachineThreadMock]:
     mocker.patch.object(settings, "USE_DB", False)
     state_machine_thread: StateMachineThreadMock = StateMachineThreadMock(
         container=container,
@@ -176,7 +176,7 @@ def state_machine_thread_with_db(
     setup_db_connection_string: str,
     container: ApplicationContainer,
     mocker: MockerFixture,
-) -> Generator[StateMachineThreadMock, None, None]:
+) -> Generator[StateMachineThreadMock]:
     mocker.patch.object(settings, "USE_DB", True)
     # read_persistent_robot_state
     mocker.patch(
@@ -193,7 +193,7 @@ def state_machine_thread_with_db(
 @pytest.fixture
 def uploader_thread(
     container: ApplicationContainer,
-) -> Generator[UploaderThreadMock, None, None]:
+) -> Generator[UploaderThreadMock]:
     uploader_thread: UploaderThreadMock = UploaderThreadMock(container=container)
     yield uploader_thread
     uploader_thread.join()
@@ -202,7 +202,7 @@ def uploader_thread(
 @pytest.fixture
 def robot_service_thread(
     container: ApplicationContainer,
-) -> Generator[RobotServiceThreadMock, None, None]:
+) -> Generator[RobotServiceThreadMock]:
     robot_service: RobotService = RobotService(
         events=container.events(),
         robot=container.robot_interface(),
@@ -219,7 +219,7 @@ def robot_service_thread(
 @pytest.fixture
 def robot_inspection_service_thread(
     container: ApplicationContainer,
-) -> Generator[Thread, None, None]:
+) -> Generator[Thread]:
     robot_inspection_service: RobotInspectionService = RobotInspectionService(
         events=container.events(),
         robot=container.robot_interface(),
@@ -256,7 +256,7 @@ def mocked_robot_service(
 
 
 @pytest.fixture(autouse=True)
-def run_before_and_after_tests() -> Generator[None, None, None]:
+def run_before_and_after_tests() -> Generator[None]:
     results_folder: Path = Path("tests/results")
     yield
 
@@ -267,7 +267,7 @@ def run_before_and_after_tests() -> Generator[None, None, None]:
 
 
 @pytest.fixture()
-def setup_db_connection_string() -> Generator[str, None, None]:
+def setup_db_connection_string() -> Generator[str]:
     with MySqlContainer("mysql:9.4.0", dialect="pymysql") as mysql:
         connection_url = mysql.get_connection_url()
 

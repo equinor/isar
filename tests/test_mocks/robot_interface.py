@@ -45,7 +45,6 @@ class StubRobot(RobotInterface):
     def initiate_mission(self, mission: Mission) -> None:
         time.sleep(self.initiate_mission_delay)
         self.mission = mission
-        return
 
     def task_status(self, task_id: str) -> TaskStatus:
         return self.task_status_return_value
