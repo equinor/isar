@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from isar.config.settings import settings
@@ -32,9 +32,7 @@ def construct_metadata_file(
             "inspection_id": inspection.id,
             "mission_id": mission.id,
             "mission_name": mission.name,
-            "mission_date": datetime.now(timezone.utc)
-            .date()
-            .strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "mission_date": datetime.now(UTC).date().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "isar_id": settings.ISAR_ID,
             "robot_name": settings.ROBOT_NAME,
             "inspection_description": inspection.metadata.inspection_description,
@@ -84,7 +82,7 @@ def construct_metadata_file(
 
 
 def get_filename(inspection: Inspection) -> str:
-    utc_time: str = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    utc_time: str = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     tag: str = inspection.metadata.tag_id if inspection.metadata.tag_id else "no-tag"
     inspection_type: str = type(inspection).__name__
     inspection_description: str = (
@@ -96,6 +94,6 @@ def get_filename(inspection: Inspection) -> str:
 
 
 def get_foldername(mission: Mission) -> str:
-    utc_date: str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    utc_date: str = datetime.now(UTC).strftime("%Y-%m-%d")
     mission_name: str = mission.name.replace(" ", "-")
     return f"{utc_date}__{settings.PLANT_SHORT_NAME}__{mission_name}__{mission.id}"

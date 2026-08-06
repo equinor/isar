@@ -2,8 +2,8 @@ import json
 import logging
 import time
 from abc import ABCMeta, abstractmethod
-from datetime import datetime, timezone
 from collections.abc import Callable
+from datetime import UTC, datetime
 from logging import Logger
 from queue import Queue
 
@@ -117,7 +117,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
                     CloudHealthPayload(
                         isar_id=isar_id,
                         robot_name=robot_name,
-                        timestamp=datetime.now(timezone.utc),
+                        timestamp=datetime.now(UTC),
                     )
                 )
                 topic = self.cloud_health_topic

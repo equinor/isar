@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from queue import Empty, Queue
 from threading import Event
 
@@ -51,12 +51,12 @@ class BlobItem(UploaderQueueItem):
     inspection: InspectionBlob
     storage_handler: StorageInterface
     _retry_count: int
-    _next_retry_time: datetime = datetime.now(timezone.utc)
+    _next_retry_time: datetime = datetime.now(UTC)
 
     def increment_retry(self, max_wait_time: int) -> None:
         self._retry_count += 1
         seconds_until_retry: int = min(2**self._retry_count, max_wait_time)
-        self._next_retry_time = datetime.now(timezone.utc) + timedelta(
+        self._next_retry_time = datetime.now(UTC) + timedelta(
             seconds=seconds_until_retry
         )
 
@@ -64,12 +64,10 @@ class BlobItem(UploaderQueueItem):
         return self._retry_count
 
     def is_ready_for_upload(self) -> bool:
-        return datetime.now(timezone.utc) >= self._next_retry_time
+        return datetime.now(UTC) >= self._next_retry_time
 
     def seconds_until_retry(self) -> int:
-        return max(
-            0, int((self._next_retry_time - datetime.now(timezone.utc)).total_seconds())
-        )
+        return max(0, int((self._next_retry_time - datetime.now(UTC)).total_seconds()))
 
 
 class Uploader:
