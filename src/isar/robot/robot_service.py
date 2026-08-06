@@ -200,51 +200,46 @@ class RobotService:
     async def _run_main_event_loop(self) -> None:
         monitor_mission_task: asyncio.Task[AbortedMission | None] | None = None
 
-        try:
-            while not self.signal_exit.wait(0):
-                start_mission_request = (
-                    self.state_machine_events.start_mission.consume_event()
-                )
-                if start_mission_request:
-                    success = self._start_mission_handler(start_mission_request)
-                    if success:
-                        monitor_mission_task = asyncio.create_task(
-                            self._monitor_mission_handler(start_mission_request)
-                        )
+        while not self.signal_exit.wait(0):
+            start_mission_request = (
+                self.state_machine_events.start_mission.consume_event()
+            )
+            if start_mission_request:
+                success = self._start_mission_handler(start_mission_request)
+                if success:
+                    monitor_mission_task = asyncio.create_task(
+                        self._monitor_mission_handler(start_mission_request)
+                    )
 
-                pause_mission_request = (
-                    self.state_machine_events.pause_mission.consume_event()
-                )
-                if pause_mission_request:
-                    self._pause_mission_handler()
+            pause_mission_request = (
+                self.state_machine_events.pause_mission.consume_event()
+            )
+            if pause_mission_request:
+                self._pause_mission_handler()
 
-                resume_mission_request = (
-                    self.state_machine_events.resume_mission.consume_event()
-                )
-                if resume_mission_request:
-                    self._resume_mission_handler()
+            resume_mission_request = (
+                self.state_machine_events.resume_mission.consume_event()
+            )
+            if resume_mission_request:
+                self._resume_mission_handler()
 
-                stop_mission_request = (
-                    self.state_machine_events.stop_mission.consume_event()
-                )
-                if stop_mission_request:
-                    await self._stop_mission_handler(monitor_mission_task)
-                    monitor_mission_task = None
+            stop_mission_request = (
+                self.state_machine_events.stop_mission.consume_event()
+            )
+            if stop_mission_request:
+                await self._stop_mission_handler(monitor_mission_task)
+                monitor_mission_task = None
 
-                if monitor_mission_task is not None and monitor_mission_task.done():
-                    try:
-                        await monitor_mission_task
-                    except asyncio.CancelledError:  # This is not expected
-                        self.logger.warning(
-                            "Mission monitor task was cancelled outside stop mission handler"
-                        )
-                    monitor_mission_task = None
+            if monitor_mission_task is not None and monitor_mission_task.done():
+                try:
+                    await monitor_mission_task
+                except asyncio.CancelledError:  # This is not expected
+                    self.logger.warning(
+                        "Mission monitor task was cancelled outside stop mission handler"
+                    )
+                monitor_mission_task = None
 
-                await asyncio.sleep(0)
-
-        except Exception as e:
-            self.logger.error(f"Unhandled exception in robot service: {str(e)}")
-        self.logger.info("Exiting robot service main thread")
+            await asyncio.sleep(0)
 
     def run(self) -> None:
 

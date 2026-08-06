@@ -5,7 +5,13 @@ from threading import Event as ThreadEvent
 from threading import Thread
 
 from isar.config.settings import settings
-from isar.models.events import Events, RobotServiceEvents, StateMachineEvents
+from isar.models.events import (
+    EventConflictError,
+    Events,
+    EventTimeoutError,
+    RobotServiceEvents,
+    StateMachineEvents,
+)
 from isar.robot.function_thread import FunctionThread
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotException,
@@ -36,9 +42,6 @@ def robot_upload_inspection(
 
     except (RobotRetrieveInspectionException, RobotException) as e:
         logger.error(f"Failed to retrieve inspections because: {e.error_description}")
-        return
-    except Exception as e:
-        logger.error(f"Failed to retrieve inspections because of unexpected error: {e}")
         return
 
     if not inspection:
@@ -97,7 +100,10 @@ class RobotInspectionService:
         ):
             self.logger.warning("Inspection callback thread died - restarting")
             self.inspection_callback_thread.join()
-            self.inspection_callback_thread.start()
+            try:
+                self.inspection_callback_thread.start()
+            except RuntimeError as e:
+                self.logger.error(f"Could not restart inspection callback thread: {e}")
 
     def register_and_monitor_inspection_callback(
         self,
@@ -134,6 +140,6 @@ class RobotInspectionService:
 
                 if settings.UPLOAD_INSPECTIONS_ASYNC:
                     self._restart_inspection_thread_if_stopped()
-        except Exception as e:
-            self.logger.error(f"Unhandled exception in robot service: {str(e)}")
+        except (EventTimeoutError, EventConflictError) as e:
+            self.logger.error(f"An error occurred with the event queue: {str(e)}")
         self.logger.info("Exiting robot service main thread")

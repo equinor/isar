@@ -6,7 +6,6 @@ from isar.config.settings import settings
 from isar.services.utilities.mqtt_utilities import publish_task_status
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
-    ErrorReason,
     RobotCommunicationException,
     RobotCommunicationTimeoutException,
     RobotException,
@@ -80,13 +79,6 @@ async def get_task_status(
             )
             break
 
-        except Exception as e:
-            failed_task_error = ErrorMessage(
-                error_reason=ErrorReason.RobotUnknownErrorException,
-                error_description=str(e),
-            )
-            break
-
         return task_status
 
     assert failed_task_error is not None
@@ -127,13 +119,6 @@ async def get_mission_status(
             failed_mission_error = ErrorMessage(
                 error_reason=e.error_reason,
                 error_description=e.error_description,
-            )
-            break
-
-        except Exception as e:
-            failed_mission_error = ErrorMessage(
-                error_reason=ErrorReason.RobotUnknownErrorException,
-                error_description=str(e),
             )
             break
 

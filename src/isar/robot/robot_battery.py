@@ -85,9 +85,4 @@ class RobotBatteryThread(Thread):
             except RobotException as e:
                 self.logger.error(f"Failed to retrieve robot battery level: {e}")
                 continue
-            except Exception as e:
-                self.logger.error(
-                    f"Unhandled exception in robot battery service: {str(e)}"
-                )
-                continue
         self.logger.info("Exiting robot battery thread")

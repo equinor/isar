@@ -40,14 +40,6 @@ def robot_pause_mission(
             )
             time.sleep(settings.FSM_SLEEP_TIME)
             continue
-        except Exception as e:
-            logger.error(
-                f"\nAn unexpected error occurred while pausing the robot: {str(e)}"
-            )
-            return ErrorMessage(
-                error_reason=ErrorReason.RobotUnknownErrorException,
-                error_description=str(e),
-            )
         return None
 
     assert error is not None

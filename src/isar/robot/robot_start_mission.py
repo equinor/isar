@@ -46,10 +46,4 @@ def robot_start_mission(
             error_reason=e.error_reason,
             error_description=e.error_description,
         )
-    except Exception as e:
-        logger.warning(f"Initiating mission failed due to unknown exception: {e}")
-        return ErrorMessage(
-            error_reason=ErrorReason.RobotUnknownErrorException,
-            error_description=str(e),
-        )
     return None

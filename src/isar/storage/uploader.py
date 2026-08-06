@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from queue import Empty, Queue
+from queue import Empty, Queue, ShutDown
 from threading import Event
 
 from isar.config.settings import settings
@@ -142,8 +142,10 @@ class Uploader:
                     )
             except Empty:
                 continue
-            except Exception as e:
-                self.logger.error(f"Unexpected error in uploader thread: {e}")
+            except (ShutDown, ValueError) as e:
+                self.logger.error(
+                    f"Unexpected event queue error in uploader thread: {e}"
+                )
                 continue
 
     def _upload(self, item: BlobItem) -> StoragePaths:

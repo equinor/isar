@@ -41,12 +41,12 @@ class BlobStorage(StorageInterface):
                 storage_connection_string
             )
             if blob_service_client.account_name != account_name:
-                raise Exception(
+                raise StorageException(
                     f"The blob storage in the connection string does not match the settings for blob storage account {account_name}"
                 )
-        except Exception as e:
+        except (StorageException, ValueError) as e:
             self.logger.error("Unable to retrieve blob service client. Error: %s", e)
-            raise e
+            raise
 
         container_client: ContainerClient = blob_service_client.get_container_client(
             settings.BLOB_CONTAINER
