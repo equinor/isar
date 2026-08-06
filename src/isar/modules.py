@@ -60,7 +60,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
     )
 
     # Storage
-    storage_handlers_temp = []
+    storage_handlers_temp: list = []  # noqa: RUF012
     if settings.STORAGE_LOCAL_ENABLED:
         local_storage = providers.Singleton(LocalStorage)
         storage_handlers_temp.append(local_storage)

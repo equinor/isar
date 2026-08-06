@@ -121,7 +121,7 @@ class MqttTelemetryPublisher(MqttClientInterface):
                     )
                 )
                 topic = self.cloud_health_topic
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 self.logger.error(f"Unexpected error in MQTT telemetry publisher: {e}")
                 time.sleep(self.interval)
                 continue

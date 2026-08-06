@@ -100,3 +100,11 @@ use_parentheses = true
 
 [tool.black]
 line_length = 88
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Body",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Depends",
+]
