@@ -53,8 +53,6 @@ class RobotCommunicationException(RobotException):
             error_description=error_description,
         )
 
-    pass
-
 
 # An exception which should be thrown by the robot package if it is unable to
 # complete a request as there is no ongoing mission.
@@ -64,8 +62,6 @@ class RobotNoMissionRunningException(RobotException):
             error_reason=ErrorReason.RobotNoMissionRunningException,
             error_description=error_description,
         )
-
-    pass
 
 
 # An exception which should be thrown by the robot package if the communication has timed
@@ -77,8 +73,6 @@ class RobotCommunicationTimeoutException(RobotException):
             error_description=error_description,
         )
 
-    pass
-
 
 # An exception which should be thrown by the robot package if it is unable to start the
 # current task.
@@ -88,8 +82,6 @@ class RobotInfeasibleTaskException(RobotException):
             error_reason=ErrorReason.RobotInfeasibleTaskException,
             error_description=error_description,
         )
-
-    pass
 
 
 # An exception which should be thrown by the robot package if it is unable to start the
@@ -101,8 +93,6 @@ class RobotInfeasibleMissionException(RobotException):
             error_description=error_description,
         )
 
-    pass
-
 
 class RobotUnreliableDockingStatusException(RobotException):
     def __init__(self, error_description: str) -> None:
@@ -110,8 +100,6 @@ class RobotUnreliableDockingStatusException(RobotException):
             error_reason=ErrorReason.RobotUnreliableDockingStatusException,
             error_description=error_description,
         )
-
-    pass
 
 
 # An exception which should be thrown by the robot package if it is unable to collect
@@ -123,8 +111,6 @@ class RobotMissionStatusException(RobotException):
             error_description=error_description,
         )
 
-    pass
-
 
 # An exception which should be thrown by the robot package if it is unable to collect
 # the status of the current task.
@@ -134,8 +120,6 @@ class RobotTaskStatusException(RobotException):
             error_reason=ErrorReason.RobotTaskStatusException,
             error_description=error_description,
         )
-
-    pass
 
 
 # An exception which should be thrown by the robot package if it is able to communicate
@@ -148,8 +132,6 @@ class RobotAPIException(RobotException):
             error_description=error_description,
         )
 
-    pass
-
 
 # An exception which should be thrown by the robot package if it is unable to perform a
 # requested action. For example the package is unable to stop the robot.
@@ -159,8 +141,6 @@ class RobotActionException(RobotException):
             error_reason=ErrorReason.RobotActionException,
             error_description=error_description,
         )
-
-    pass
 
 
 # An exception which should be thrown by the robot package if it is unable to retrieve
@@ -173,8 +153,6 @@ class RobotRetrieveDataException(RobotException):
             error_description=error_description,
         )
 
-    pass
-
 
 # An exception which should be thrown by the robot package if it is unable to collect
 # the inspections that were generated for the currently executing task or mission.
@@ -184,8 +162,6 @@ class RobotRetrieveInspectionException(RobotException):
             error_reason=ErrorReason.RobotRetrieveInspectionException,
             error_description=error_description,
         )
-
-    pass
 
 
 # An exception which should be thrown by the robot package if it is still starting the
@@ -198,8 +174,6 @@ class RobotStillStartingMissionException(RobotException):
             error_description=error_description,
         )
 
-    pass
-
 
 # An exception which should be thrown by the robot package if it is unable to retrieve
 # telemetry data. It should be used exclusively by the telemetry publishers and their
@@ -211,8 +185,6 @@ class RobotTelemetryException(RobotException):
             error_description=error_description,
         )
 
-    pass
-
 
 # An exception which should be thrown by the robot package if it is unable to retrieve
 # telemetry pose data. It should be used exclusively by the telemetry pose publisher.
@@ -223,8 +195,6 @@ class RobotTelemetryPoseException(RobotException):
             error_description=error_description,
         )
 
-    pass
-
 
 # An exception which should be thrown by the robot package if there is no new telemetry update.
 class RobotTelemetryNoUpdateException(RobotException):
@@ -233,8 +203,6 @@ class RobotTelemetryNoUpdateException(RobotException):
             error_reason=ErrorReason.RobotTelemetryNoUpdateException,
             error_description=error_description,
         )
-
-    pass
 
 
 # An exception which should be thrown by the robot package if it is unable to load the
@@ -248,8 +216,6 @@ class RobotMapException(RobotException):
             error_description=error_description,
         )
 
-    pass
-
 
 # An exception which should be thrown by the robot package if it is unable to transform
 # the coordinates correctly between asset and robot frame.
@@ -259,8 +225,6 @@ class RobotTransformException(RobotException):
             error_reason=ErrorReason.RobotTransformException,
             error_description=error_description,
         )
-
-    pass
 
 
 # An exception which should be thrown by the robot package if something occurred that
@@ -272,8 +236,6 @@ class RobotUnknownErrorException(RobotException):
             error_description=error_description,
         )
 
-    pass
-
 
 # An exception which should be thrown by the robot package if the robot is not connected to the cloud
 class RobotDisconnectedException(RobotException):
@@ -282,8 +244,6 @@ class RobotDisconnectedException(RobotException):
             error_reason=ErrorReason.RobotDisconnectedException,
             error_description=error_description,
         )
-
-    pass
 
 
 # An exception which should be thrown by the robot package if the robot receives a command
@@ -294,5 +254,3 @@ class RobotAlreadyHomeException(RobotException):
             error_reason=ErrorReason.RobotAlreadyHomeException,
             error_description=error_description,
         )
-
-    pass

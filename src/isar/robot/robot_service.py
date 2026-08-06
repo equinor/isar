@@ -238,7 +238,6 @@ class RobotService:
                         self.logger.warning(
                             "Mission monitor task was cancelled outside stop mission handler"
                         )
-                        pass
                     monitor_mission_task = None
 
                 await asyncio.sleep(0)

@@ -6,7 +6,7 @@ from isar.state_machine.state_machine import StateMachine
 from isar.storage.uploader import Uploader
 
 
-class StateMachineThreadMock(object):
+class StateMachineThreadMock:
     def __init__(self, container: ApplicationContainer) -> None:
         self.state_machine: StateMachine = container.state_machine()
         self._thread: Thread = Thread(target=self.state_machine.run)
@@ -19,7 +19,7 @@ class StateMachineThreadMock(object):
         self._thread.join()
 
 
-class UploaderThreadMock(object):
+class UploaderThreadMock:
     def __init__(self, container: ApplicationContainer) -> None:
         self.uploader: Uploader = container.uploader()
         self._thread: Thread = Thread(target=self.uploader.run)
@@ -32,7 +32,7 @@ class UploaderThreadMock(object):
         self._thread.join()
 
 
-class RobotServiceThreadMock(object):
+class RobotServiceThreadMock:
     def __init__(self, robot_service: RobotService) -> None:
         self.robot_service: RobotService = robot_service
 

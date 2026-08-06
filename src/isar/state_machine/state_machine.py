@@ -21,7 +21,7 @@ from isar.state_machine.states_enum import States
 from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 
-class StateMachine(object):
+class StateMachine:
     """Handles state transitions for supervisory robot control."""
 
     def __init__(

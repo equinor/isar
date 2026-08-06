@@ -52,7 +52,6 @@ class MqttClientInterface(metaclass=ABCMeta):
         Returns
         -------
         """
-        pass
 
 
 class MqttPublisher(MqttClientInterface):

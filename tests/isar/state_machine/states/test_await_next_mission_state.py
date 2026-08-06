@@ -47,7 +47,7 @@ def test_state_machine_with_successful_mission_stop(
     mission: Mission = Mission(
         id="id",
         name="Dummy misson",
-        tasks=[StubTask.take_image() for _ in range(0, 20)],
+        tasks=[StubTask.take_image() for _ in range(20)],
     )
 
     scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()

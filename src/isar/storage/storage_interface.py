@@ -47,7 +47,6 @@ class StorageInterface(metaclass=ABCMeta):
         StorageException
             An error occurred when storing the inspection.
         """
-        pass
 
 
 class StorageException(Exception):
