@@ -87,7 +87,7 @@ class StateMachine:
                     break
 
                 current_state = transition(self.events)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.logger.error(f"Unhandled exception in state machine: {str(e)}")
 
     def terminate(self) -> None:

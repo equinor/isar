@@ -19,6 +19,13 @@ from robot_interface.models.robots.media import MediaConfig, MediaConnectionType
 from robot_interface.robot_interface import RobotInterface
 from tests.test_mocks.inspection import stub_image_metadata
 
+_ROBOT_FRAME = Frame(name="robot")
+_DEFAULT_POSITION = Position(x=0, y=0, z=0, frame=_ROBOT_FRAME)
+_DEFAULT_ORIENTATION = Orientation(x=0, y=0, z=0, w=1, frame=_ROBOT_FRAME)
+_DEFAULT_POSE = Pose(
+    position=_DEFAULT_POSITION, orientation=_DEFAULT_ORIENTATION, frame=_ROBOT_FRAME
+)
+
 
 class StubRobot(RobotInterface):
     def __init__(
@@ -26,11 +33,7 @@ class StubRobot(RobotInterface):
         mission_status: MissionStatus = MissionStatus.Successful,
         task_status: TaskStatus = TaskStatus.Successful,
         stop: bool = True,
-        pose: Pose = Pose(
-            position=Position(x=0, y=0, z=0, frame=Frame("robot")),
-            orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame("robot")),
-            frame=Frame("robot"),
-        ),
+        pose: Pose = _DEFAULT_POSE,
         robot_status: RobotStatus = RobotStatus.Available,
         initiate_mission_delay: float = 0.0,
     ) -> None:
