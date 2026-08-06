@@ -70,8 +70,8 @@ def construct_metadata_file(
             "snr_value": inspection.metadata.snr_value,
             "leak_rate": inspection.metadata.leak_rate,
             "leak_rate_unit": inspection.metadata.leak_rate_unit,
-            "sound_pressure_level_at_sensor_db": inspection.metadata.sound_pressure_level_at_sensor_db,  # noqa: E501
-            "sound_pressure_level_at_source_db": inspection.metadata.sound_pressure_level_at_source_db,  # noqa: E501
+            "sound_pressure_level_at_sensor_db": inspection.metadata.sound_pressure_level_at_sensor_db,
+            "sound_pressure_level_at_source_db": inspection.metadata.sound_pressure_level_at_source_db,
             "distance_to_source": inspection.metadata.distance_to_source,
             "result": inspection.metadata.result,
             "frequency_from": inspection.metadata.frequency_from,

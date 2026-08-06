@@ -1,5 +1,5 @@
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from queue import Empty, Queue, ShutDown
 from threading import Event
@@ -51,7 +51,7 @@ class BlobItem(UploaderQueueItem):
     inspection: InspectionBlob
     storage_handler: StorageInterface
     _retry_count: int
-    _next_retry_time: datetime = datetime.now(UTC)
+    _next_retry_time: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def increment_retry(self, max_wait_time: int) -> None:
         self._retry_count += 1
@@ -159,7 +159,7 @@ class Uploader:
                 f"uploaded inspection {str(item.inspection.id)[:8]}"
             )
             self._internal_upload_queue.remove(item)
-        except StorageException as e:
+        except StorageException:
             if item.get_retry_count() < self.max_retry_attempts:
                 item.increment_retry(self.max_wait_time)
                 self.logger.warning(
@@ -175,7 +175,7 @@ class Uploader:
                     f"{str(item.inspection.id)[:8]}. Aborting upload."
                 )
                 self._internal_upload_queue.remove(item)
-            raise e
+            raise
         return inspection_paths
 
     def _process_upload_queue(self) -> None:
@@ -226,7 +226,7 @@ class Uploader:
             return
 
         if not isinstance(inspection, InspectionValue):
-            logging.warning(
+            self.logger.warning(
                 f"Excpected type InspectionValue but got {type(inspection).__name__} instead"
             )
             return

@@ -310,8 +310,8 @@ class SchedulingUtilities:
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
-        except HTTPException as e:
-            raise e
+        except HTTPException:
+            raise
         self.logger.info("OK - Stop mission successfully initiated")
         return stop_mission_response
 
@@ -453,11 +453,11 @@ class SchedulingUtilities:
 
             api_event.request.trigger_event(input, timeout=1)
             return api_event.response.consume_event(timeout=settings.QUEUE_TIMEOUT)
-        except EventTimeoutError as e:
+        except EventTimeoutError:
             self.logger.error("Queue timed out")
             api_event.request.clear_event()
             self.logger.error("No output received for command to state machine")
-            raise e
+            raise
         finally:
             api_event.request.clear_event()
             api_event.response.clear_event()

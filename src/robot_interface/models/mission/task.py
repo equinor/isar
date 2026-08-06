@@ -185,7 +185,7 @@ class TakeAcousticMeasurement(InspectionTask):
     type: Literal[TaskTypes.TakeAcousticMeasurement] = TaskTypes.TakeAcousticMeasurement
 
     @model_validator(mode="after")
-    def _validate_frequency_range(self) -> "TakeAcousticMeasurement":
+    def _validate_frequency_range(self) -> TakeAcousticMeasurement:
         if (
             not 0
             <= self.frequency_from

@@ -97,7 +97,7 @@ class Home(State):
         )
 
 
-def transition() -> Transition["Home"]:
+def transition() -> Transition[Home]:
     def _transition(events: Events) -> Home:
         # This clears the current robot status value, so we don't read an outdated value
         events.robot_service_events.robot_status_update.clear_event()

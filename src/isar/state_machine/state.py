@@ -12,8 +12,8 @@ from isar.state_machine.states_enum import States
 
 T = TypeVar("T")
 
-T_state = TypeVar("T_state", bound="State", covariant=True)
-Transition = Callable[[Events], T_state]
+T_state_co = TypeVar("T_state_co", bound="State", covariant=True)
+Transition = Callable[[Events], T_state_co]
 
 
 @dataclass
@@ -36,13 +36,13 @@ class State(ABC):
         signal_exit_event: Event[EmptyMessage],
         state_name: States,
         event_handler_mappings: list[EventHandlerMapping],
-        timers: list[TimeoutHandlerMapping] = [],
+        timers: list[TimeoutHandlerMapping] | None = None,
     ) -> None:
         self.name = state_name
         self.logger = logging.getLogger("state_machine")
         self.signal_exit_event = signal_exit_event
         self.event_handler_mappings = event_handler_mappings
-        self.timers = timers
+        self.timers = timers if timers is not None else []
 
     def get_event_handler_by_name(
         self, event_handler_name: str

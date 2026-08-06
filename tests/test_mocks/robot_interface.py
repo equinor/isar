@@ -179,11 +179,11 @@ class StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(StubRobot):
         current_state = self.current_state.check()
         if current_state is None:
             raise RobotCommunicationException("Could not read state machine state")
-        if current_state == States.Home:
-            return RobotStatus.Home
-        elif current_state == States.UnknownStatus:
-            return RobotStatus.Home
-        elif self.return_home_mission_just_finished_successfully:
+        if (
+            current_state == States.Home
+            or current_state == States.UnknownStatus
+            or self.return_home_mission_just_finished_successfully
+        ):
             return RobotStatus.Home
 
         return RobotStatus.Busy
