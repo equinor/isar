@@ -1,9 +1,10 @@
 import logging
 import time
 from abc import ABC
+from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Callable, Generic, List, TypeVar
+from typing import Any, Generic, TypeVar
 
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Event, Events
@@ -34,8 +35,8 @@ class State(ABC):
         self,
         signal_exit_event: Event[EmptyMessage],
         state_name: States,
-        event_handler_mappings: List[EventHandlerMapping],
-        timers: List[TimeoutHandlerMapping] = [],
+        event_handler_mappings: list[EventHandlerMapping],
+        timers: list[TimeoutHandlerMapping] = [],
     ) -> None:
         self.name = state_name
         self.logger = logging.getLogger("state_machine")

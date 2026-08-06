@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.lockdown as Lockdown
 import isar.state_machine.states.maintenance as Maintenance
@@ -51,7 +49,7 @@ class Home(State):
             )
             return UnknownStatus.transition()
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[Mission](
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,

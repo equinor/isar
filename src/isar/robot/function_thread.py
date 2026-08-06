@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from threading import Thread
-from typing import Callable, ParamSpec
+from typing import ParamSpec
 
 P = ParamSpec("P")
 

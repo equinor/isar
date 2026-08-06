@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.maintenance as Maintenance
@@ -22,7 +20,7 @@ class AwaitNextMission(State):
 
     def __init__(self, events: Events):
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[Mission](
                 name="start_mission_event",
                 event=events.api_requests.start_mission.request,
@@ -59,7 +57,7 @@ class AwaitNextMission(State):
             ),
         ]
 
-        timers: List[TimeoutHandlerMapping] = [
+        timers: list[TimeoutHandlerMapping] = [
             TimeoutHandlerMapping(
                 name="should_return_home_timer",
                 timeout_in_seconds=settings.RETURN_HOME_DELAY,

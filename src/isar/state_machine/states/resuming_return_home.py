@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.return_home_paused as ReturnHomePaused
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import ControlMissionResponse
@@ -12,7 +10,7 @@ class ResumingReturnHome(State):
 
     def __init__(self, events: Events):
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="failed_resume_event",
                 event=events.robot_service_events.mission_failed_to_resume,

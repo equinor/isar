@@ -1,7 +1,7 @@
 import time
+from collections.abc import Callable
 from queue import Queue
 from threading import Thread
-from typing import Callable, List
 
 from alitra import Frame, Orientation, Pose, Position
 
@@ -83,7 +83,7 @@ class StubRobot(RobotInterface):
 
     def get_telemetry_publishers(
         self, queue: Queue, isar_id: str, robot_name: str
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         return []
 
     def robot_status(self) -> RobotStatus:

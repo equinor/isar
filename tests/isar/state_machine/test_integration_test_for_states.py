@@ -1,7 +1,6 @@
 import time
 from collections import deque
 from threading import Thread
-from typing import List
 
 from pytest_mock import MockerFixture
 
@@ -143,7 +142,7 @@ def test_state_machine_with_successful_collection(
     robot_inspection_service_thread.start()
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
 
-    storage_mock: StorageInterface = container.storage_handlers(List[StorageInterface])[
+    storage_mock: StorageInterface = container.storage_handlers(list[StorageInterface])[
         0
     ]
 
@@ -192,7 +191,7 @@ def test_state_machine_with_unsuccessful_collection(
 ) -> None:
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
 
-    storage_mock: StorageInterface = container.storage_handlers(List[StorageInterface])[
+    storage_mock: StorageInterface = container.storage_handlers(list[StorageInterface])[
         0
     ]
 

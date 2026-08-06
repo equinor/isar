@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.home as Home
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.maintenance as Maintenance
@@ -47,7 +45,7 @@ class Offline(State):
             )
             return UnknownStatus.transition()
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[RobotStatus](
                 name="robot_status_event",
                 event=events.robot_service_events.robot_status_update,

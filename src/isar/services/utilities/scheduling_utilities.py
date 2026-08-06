@@ -1,7 +1,7 @@
 import logging
 from copy import deepcopy
 from http import HTTPStatus
-from typing import List, TypeVar
+from typing import TypeVar
 
 from fastapi import HTTPException
 
@@ -57,7 +57,7 @@ class SchedulingUtilities:
         return current_state
 
     def verify_robot_capable_of_mission(
-        self, mission: Mission, robot_capabilities: List[str]
+        self, mission: Mission, robot_capabilities: list[str]
     ) -> bool:
         """Verify that the robot is capable of performing this mission
 
@@ -124,7 +124,7 @@ class SchedulingUtilities:
 
     def log_mission_overview(self, mission: Mission) -> None:
         """Log an overview of the tasks in a mission"""
-        log_statements: List[str] = []
+        log_statements: list[str] = []
         for task in mission.tasks:
             log_statements.append(
                 f"{type(task).__name__:<20} {str(task.id)[:8]:<32} -- {task.status}"

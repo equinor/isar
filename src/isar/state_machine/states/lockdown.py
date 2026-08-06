@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.home as Home
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import EmptyMessage, Events
@@ -19,7 +17,7 @@ class Lockdown(State):
             )
             return Home.transition()
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="release_from_lockdown",
                 event=events.api_requests.release_from_lockdown.request,

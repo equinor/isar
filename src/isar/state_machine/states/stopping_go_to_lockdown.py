@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
@@ -32,7 +30,7 @@ class StoppingGoToLockdown(State):
             )
             return GoingToLockdown.transition_and_start_mission_and_report_to_api()
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="failed_stop_event",
                 event=events.robot_service_events.mission_failed_to_stop,

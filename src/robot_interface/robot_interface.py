@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
+from collections.abc import Callable
 from queue import Queue
 from threading import Thread
-from typing import Callable, List
 
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -216,7 +216,7 @@ class RobotInterface(metaclass=ABCMeta):
     @abstractmethod
     def get_telemetry_publishers(
         self, queue: Queue, isar_id: str, robot_name: str
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         """
         Set up telemetry publisher threads to publish regular updates for pose, battery
         level etc. from the robot to the MQTT broker. The publishers on the robot side

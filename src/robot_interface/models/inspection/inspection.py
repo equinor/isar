@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Type
 
 from alitra import Pose, Position
 from pydantic import BaseModel, Field
@@ -57,7 +56,7 @@ class Inspection(BaseModel):
     id: str = Field(frozen=True)
 
     @staticmethod
-    def get_metadata_type() -> Type[InspectionMetadata]:
+    def get_metadata_type() -> type[InspectionMetadata]:
         return InspectionMetadata
 
 
@@ -74,7 +73,7 @@ class Image(InspectionBlob):
     metadata: ImageMetadata  # type: ignore
 
     @staticmethod
-    def get_metadata_type() -> Type[InspectionMetadata]:
+    def get_metadata_type() -> type[InspectionMetadata]:
         return ImageMetadata
 
 
@@ -82,7 +81,7 @@ class ThermalImage(InspectionBlob):
     metadata: ThermalImageMetadata  # type: ignore
 
     @staticmethod
-    def get_metadata_type() -> Type[InspectionMetadata]:
+    def get_metadata_type() -> type[InspectionMetadata]:
         return ThermalImageMetadata
 
 
@@ -90,7 +89,7 @@ class Video(InspectionBlob):
     metadata: VideoMetadata  # type: ignore
 
     @staticmethod
-    def get_metadata_type() -> Type[InspectionMetadata]:
+    def get_metadata_type() -> type[InspectionMetadata]:
         return VideoMetadata
 
 
@@ -98,7 +97,7 @@ class ThermalVideo(InspectionBlob):
     metadata: ThermalVideoMetadata  # type: ignore
 
     @staticmethod
-    def get_metadata_type() -> Type[InspectionMetadata]:
+    def get_metadata_type() -> type[InspectionMetadata]:
         return ThermalVideoMetadata
 
 
@@ -106,7 +105,7 @@ class Audio(InspectionBlob):
     metadata: AudioMetadata  # type: ignore
 
     @staticmethod
-    def get_metadata_type() -> Type[InspectionMetadata]:
+    def get_metadata_type() -> type[InspectionMetadata]:
         return AudioMetadata
 
 
@@ -114,7 +113,7 @@ class GasMeasurement(InspectionValue):
     metadata: GasMeasurementMetadata  # type: ignore
 
     @staticmethod
-    def get_metadata_type() -> Type[InspectionMetadata]:
+    def get_metadata_type() -> type[InspectionMetadata]:
         return GasMeasurementMetadata
 
 
@@ -126,5 +125,5 @@ class AcousticMeasurement(InspectionBlob):
     metadata: AcousticMeasurementMetadata  # type: ignore
 
     @staticmethod
-    def get_metadata_type() -> Type[InspectionMetadata]:
+    def get_metadata_type() -> type[InspectionMetadata]:
         return AcousticMeasurementMetadata

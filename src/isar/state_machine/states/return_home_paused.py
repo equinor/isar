@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.resuming_return_home as ResumingReturnHome
 import isar.state_machine.states.returning_home as ReturningHome
@@ -22,7 +20,7 @@ class ReturnHomePaused(State):
 
             return GoingToLockdown.transition_to_existing_mission_and_report_to_api()
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="resume_return_home_event",
                 event=events.api_requests.resume_mission.request,

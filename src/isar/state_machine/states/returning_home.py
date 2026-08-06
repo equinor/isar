@@ -1,5 +1,3 @@
-from typing import List
-
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.home as Home
@@ -36,7 +34,7 @@ class ReturningHome(State):
             else:
                 return transition_and_start_mission(False, retries - 1)
 
-        event_handlers: List[EventHandlerMapping] = [
+        event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 name="pause_mission_event",
                 event=events.api_requests.pause_mission.request,

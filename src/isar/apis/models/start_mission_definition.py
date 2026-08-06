@@ -1,7 +1,6 @@
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Type
 
 from pydantic import BaseModel, Field
 
@@ -61,7 +60,7 @@ class StartMissionTaskDefinition(BaseModel):
 
 class StartMissionDefinition(BaseModel):
     id: str = Field()
-    tasks: List[StartMissionTaskDefinition]
+    tasks: list[StartMissionTaskDefinition]
     name: str | None = None
 
 
@@ -76,7 +75,7 @@ class MissionFormatError(Exception):
 def to_isar_mission(
     start_mission_definition: StartMissionDefinition,
 ) -> Mission:
-    isar_tasks: List[TASKS] = []
+    isar_tasks: list[TASKS] = []
 
     for task_definition in start_mission_definition.tasks:
         task: TASKS = to_inspection_task(task_definition)
@@ -100,7 +99,7 @@ def to_isar_mission(
 
 @dataclass(frozen=True)
 class _InspectionSpec:
-    cls: Type[InspectionTask]
+    cls: type[InspectionTask]
     needs_target: bool = True
     needs_zoom: bool = False
     needs_duration: bool = False

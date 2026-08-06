@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Callable, Iterator, Optional, Tuple
+from collections.abc import Callable, Iterator
 
 from isar.config.settings import settings
 from isar.services.utilities.mqtt_utilities import publish_task_status
@@ -50,7 +50,7 @@ async def get_task_status(
     task_id: str,
 ) -> TaskStatus:
     task_status: TaskStatus = TaskStatus.NotStarted
-    failed_task_error: Optional[ErrorMessage] = None
+    failed_task_error: ErrorMessage | None = None
     request_status_failure_counter: int = 0
 
     while (
@@ -100,7 +100,7 @@ async def get_mission_status(
     mission_id: str,
 ) -> MissionStatus:
     mission_status: MissionStatus = MissionStatus.NotStarted
-    failed_mission_error: Optional[ErrorMessage] = None
+    failed_mission_error: ErrorMessage | None = None
     request_status_failure_counter: int = 0
 
     while (
@@ -190,13 +190,13 @@ async def robot_monitor_mission(
     request_inspection_upload: Callable[[InspectionTask], None],
     mqtt_publisher: MqttClientInterface,
     should_report_task_status: bool,
-) -> Tuple[ErrorMessage | None, Mission, bool]:
+) -> tuple[ErrorMessage | None, Mission, bool]:
     logger = logging.getLogger("robot")
     logger.info(f"Started monitoring mission {mission.name}")
-    error_message: Optional[ErrorMessage] = None
+    error_message: ErrorMessage | None = None
 
     task_iterator: Iterator[TASKS] = iter(mission.tasks)
-    current_task: Optional[TASKS] = get_next_task(task_iterator)
+    current_task: TASKS | None = get_next_task(task_iterator)
     current_task.status = TaskStatus.NotStarted  # type: ignore
 
     mission_status: MissionStatus = MissionStatus.InProgress
