@@ -1,6 +1,6 @@
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from http import HTTPStatus
 from logging import Logger
 from typing import Any
@@ -365,7 +365,7 @@ class API:
 
         payload: StartUpMessagePayload = StartUpMessagePayload(
             isar_id=settings.ISAR_ID,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
 
         self.logger.info("Publishing startup message to MQTT broker")

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from alitra import Frame, Orientation, Pose, Position
 
@@ -20,7 +20,7 @@ def stub_image_metadata(
     analysis_types: list[str] | None = None,
 ) -> ImageMetadata:
     return ImageMetadata(
-        start_time=datetime.now(),
+        start_time=datetime.now(UTC),
         robot_pose=stub_pose(),
         target_position=Position(x=0, y=0, z=0, frame=Frame("asset")),
         file_type="jpg",
@@ -30,7 +30,7 @@ def stub_image_metadata(
 
 def stub_acoustic_measurement_metadata() -> AcousticMeasurementMetadata:
     return AcousticMeasurementMetadata(
-        start_time=datetime.now(),
+        start_time=datetime.now(UTC),
         robot_pose=stub_pose(),
         target_position=Position(x=0, y=0, z=0, frame=Frame("asset")),
         file_type="mp4",

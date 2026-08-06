@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from queue import Queue
 
 from isar.config.settings import settings
@@ -37,7 +37,7 @@ def publish_task_status(
         task_type=task.type if task else None,
         error_reason=error_message.error_reason if error_message else None,
         error_description=(error_message.error_description if error_message else None),
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )
 
     mqtt_publisher.publish(
@@ -65,7 +65,7 @@ def publish_mission_status(
         status=mission_status,
         error_reason=error_message.error_reason if error_message else None,
         error_description=(error_message.error_description if error_message else None),
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )
 
     mqtt_publisher.publish(
@@ -84,7 +84,7 @@ def publish_isar_status(
         isar_id=settings.ISAR_ID,
         robot_name=settings.ROBOT_NAME,
         status=status,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )
 
     mqtt_publisher.publish(
@@ -106,7 +106,7 @@ def publish_mission_aborted(
         robot_name=settings.ROBOT_NAME,
         mission_id=current_mission_id,
         reason=reason,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )
 
     mqtt_publisher.publish(
@@ -128,7 +128,7 @@ def publish_intervention_needed(
         isar_id=settings.ISAR_ID,
         robot_name=settings.ROBOT_NAME,
         reason=error_message,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )
 
     mqtt_publisher.publish(
