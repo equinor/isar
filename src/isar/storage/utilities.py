@@ -1,7 +1,6 @@
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Tuple
 
 from isar.config.settings import settings
 from robot_interface.models.inspection.inspection import (
@@ -11,7 +10,7 @@ from robot_interface.models.inspection.inspection import (
 from robot_interface.models.mission.mission import Mission
 
 
-def construct_paths(inspection: Inspection, mission: Mission) -> Tuple[Path, Path]:
+def construct_paths(inspection: Inspection, mission: Mission) -> tuple[Path, Path]:
     folder: Path = Path(get_foldername(mission=mission))
     filename: str = get_filename(inspection=inspection)
 

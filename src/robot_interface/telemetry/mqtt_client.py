@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 from datetime import datetime, timezone
 from logging import Logger
 from queue import Queue
-from typing import Callable, Tuple
+from typing import Callable
 
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.properties import Properties
@@ -18,7 +18,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.telemetry.payloads import CloudHealthPayload
 
-MQTTQueueType = Tuple[str, str, int, bool, Properties | None]
+MQTTQueueType = tuple[str, str, int, bool, Properties | None]
 
 
 def props_expiry(seconds: int) -> Properties:
@@ -67,7 +67,7 @@ class MqttPublisher(MqttClientInterface):
         retain: bool = False,
         properties: Properties | None = None,
     ) -> None:
-        queue_message: Tuple[str, str, int, bool, Properties | None] = (
+        queue_message: tuple[str, str, int, bool, Properties | None] = (
             topic,
             payload,
             qos,

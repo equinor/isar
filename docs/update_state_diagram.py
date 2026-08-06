@@ -1,6 +1,5 @@
 import ast
 import os
-from typing import List
 
 from python_to_mermaid import MermaidDiagram
 
@@ -21,7 +20,7 @@ def get_imports(source_code: str) -> tuple[str | None, list]:
     return own_class_name, imported_states
 
 
-def get_all_state_file_paths() -> List[str]:
+def get_all_state_file_paths() -> list[str]:
     cwd = os.getcwd()
     states_folder = os.path.join(cwd, "src", "isar", "state_machine", "states")
     state_files = []

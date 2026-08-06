@@ -2,7 +2,7 @@ import logging
 from queue import Queue
 from threading import Event as ThreadEvent
 from threading import Thread
-from typing import Callable, List, Tuple
+from typing import Callable
 
 from isar.config.settings import settings
 from isar.models.events import Events, RobotServiceEvents, StateMachineEvents
@@ -49,7 +49,7 @@ def robot_upload_inspection(
     inspection.metadata.tag_id = task.tag_id
     inspection.metadata.analysis_types = task.analysis_types
 
-    message: Tuple[Inspection, Mission] = (
+    message: tuple[Inspection, Mission] = (
         inspection,
         mission,
     )
@@ -70,7 +70,7 @@ class RobotInspectionService:
         self.mqtt_publisher: MqttClientInterface = mqtt_publisher
         self.upload_queue: Queue = events.upload_queue
         self.robot: RobotInterface = robot
-        self.upload_inspection_threads: List[FunctionThread] = []
+        self.upload_inspection_threads: list[FunctionThread] = []
         self.signal_exit: ThreadEvent = ThreadEvent()
         self.inspection_callback_thread: Thread | None = None
 
@@ -115,7 +115,7 @@ class RobotInspectionService:
     def run(self) -> None:
         try:
             while not self.signal_exit.wait(0):
-                upload_request: Tuple[(InspectionTask, Mission)] | None = (
+                upload_request: tuple[(InspectionTask, Mission)] | None = (
                     self.robot_service_events.request_inspection_upload.consume_event()
                 )
                 if upload_request is not None:

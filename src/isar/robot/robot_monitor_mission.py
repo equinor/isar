@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Callable, Iterator, Optional, Tuple
+from typing import Callable, Iterator, Optional
 
 from isar.config.settings import settings
 from isar.services.utilities.mqtt_utilities import publish_task_status
@@ -190,7 +190,7 @@ async def robot_monitor_mission(
     request_inspection_upload: Callable[[InspectionTask], None],
     mqtt_publisher: MqttClientInterface,
     should_report_task_status: bool,
-) -> Tuple[ErrorMessage | None, Mission, bool]:
+) -> tuple[ErrorMessage | None, Mission, bool]:
     logger = logging.getLogger("robot")
     logger.info(f"Started monitoring mission {mission.name}")
     error_message: Optional[ErrorMessage] = None

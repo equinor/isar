@@ -1,6 +1,6 @@
 import os
 from importlib.resources import as_file, files
-from typing import Any, List
+from typing import Any
 
 from dotenv import load_dotenv
 from pydantic import Field, ValidationInfo, field_validator
@@ -160,7 +160,7 @@ class Settings(BaseSettings):
     SERIAL_NUMBER: str = Field(default="0001")
 
     # Info about robot documentation
-    DOCUMENTATION: List[DocumentInfo] = Field(default=[])
+    DOCUMENTATION: list[DocumentInfo] = Field(default=[])
 
     # List of MQTT Topics
     TOPIC_ISAR_STATUS: str = Field(default="status", validate_default=True)
@@ -221,7 +221,7 @@ class Settings(BaseSettings):
         return f"isar/{info.data['ISAR_ID']}/{v}"
 
     @property
-    def allowed_auth_methods(self) -> List[str]:
+    def allowed_auth_methods(self) -> list[str]:
         return [m.strip() for m in self.ALLOWED_AUTH_METHODS.split(",") if m.strip()]
 
     model_config = SettingsConfigDict(
@@ -257,7 +257,7 @@ class RobotSettings(BaseSettings):
 
     # ISAR steps the robot is capable of performing
     # This should be set in the robot package settings.env file
-    CAPABILITIES: List[str] = Field(default=["take_image"])
+    CAPABILITIES: list[str] = Field(default=["take_image"])
 
     # Model of the robot which ISAR is connected to
     # This should be set in the robot package settings.env file

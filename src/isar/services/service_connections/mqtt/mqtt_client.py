@@ -2,7 +2,7 @@ import logging
 import os
 import time
 from queue import Empty, Queue
-from typing import Any, Dict, Tuple
+from typing import Any, Dict
 
 import backoff
 from backoff.types import Details
@@ -93,7 +93,7 @@ class MqttClient(MqttClientInterface):
                 time.sleep(0)  # avoid CPU spin
                 continue
             try:
-                item: Tuple[str, str, int, bool, Properties | None] = (
+                item: tuple[str, str, int, bool, Properties | None] = (
                     self.mqtt_queue.get(timeout=1)
                 )
                 if len(item) == 4:
