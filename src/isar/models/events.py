@@ -1,7 +1,6 @@
 from collections import deque
 from queue import Empty, Full, Queue, ShutDown
 from threading import Lock
-from typing import Generic, TypeVar
 
 from isar.apis.models.models import (
     ControlMissionResponse,
@@ -17,11 +16,6 @@ from robot_interface.models.mission.status import RobotStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.telemetry.mqtt_client import MQTTQueueType
 
-T = TypeVar("T")
-T1 = TypeVar("T1")
-T2 = TypeVar("T2")
-
-
 InspectionQueueTuple = tuple[Inspection, Mission]
 
 
@@ -33,7 +27,7 @@ class EmptyMessage:
 AbortedMission = Mission
 
 
-class Event(Queue[T]):
+class Event[T](Queue[T]):
     def __init__(self, name: str) -> None:
         super().__init__(maxsize=1)
         self.name = name
@@ -105,7 +99,7 @@ class Events:
         self.state: Event[States] = Event("state")
 
 
-class APIEvent(Generic[T1, T2]):
+class APIEvent[T1, T2]:
     """
     Creates request and response event. The events are defined such that the request is from
     api to state machine while the response is from state machine to api.
