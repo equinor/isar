@@ -21,7 +21,7 @@ class LocalStoragePath(BaseModel):
 TPath = TypeVar("TPath", BlobStoragePath, LocalStoragePath)
 
 
-class StoragePaths(BaseModel, Generic[TPath]):
+class StoragePaths(BaseModel, Generic[TPath]):  # noqa: UP046
     data_path: TPath
     metadata_path: TPath
 
