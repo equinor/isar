@@ -1,8 +1,7 @@
 from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping
-from isar.state_machine.states.await_next_mission import AwaitNextMission
-from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.stopping import Stopping
+from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 
 
@@ -21,7 +20,7 @@ def test_mqtt_mission_status_sent_on_mission_stopped(events: Events) -> None:
 
     current_state = transition(events)
 
-    assert type(current_state) is AwaitNextMission
+    assert current_state.name is States.AwaitNextMission
 
 
 def test_stopping_mission_fails(events: Events) -> None:
@@ -37,4 +36,4 @@ def test_stopping_mission_fails(events: Events) -> None:
     assert events.mqtt_queue.empty()
 
     current_state = transition(events)
-    assert type(current_state) is Monitor
+    assert current_state.name is States.Monitor

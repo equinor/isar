@@ -1,11 +1,11 @@
 from isar.models.events import AbortedMission, EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping
-from isar.state_machine.states.going_to_recharging import GoingToRecharging
 from isar.state_machine.states.going_to_recharging_with_mission import (
     GoingToRechargingWithMission,
 )
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRecharge
+from isar.state_machine.states_enum import States
 
 
 def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_tasks(
@@ -19,7 +19,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_task
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is GoingToRecharging
+    assert current_state.name is States.GoingToRecharging
 
 
 def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
@@ -35,7 +35,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
     assert events.mqtt_queue.empty()
 
     current_state = transition(events)
-    assert type(current_state) is GoingToRechargingWithMission
+    assert current_state.name is States.GoingToRechargingWithMission
 
 
 def test_return_home_goes_to_recharging_when_battery_low(events: Events) -> None:
@@ -47,7 +47,7 @@ def test_return_home_goes_to_recharging_when_battery_low(events: Events) -> None
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is GoingToRecharging
+    assert current_state.name is States.GoingToRecharging
 
 
 def test_cancelling_mission_when_going_home_to_recharge(events: Events) -> None:
@@ -61,4 +61,4 @@ def test_cancelling_mission_when_going_home_to_recharge(events: Events) -> None:
     transition = event_handler.handler("test_id")
 
     current_state = transition(events)
-    assert type(current_state) is GoingToRecharging
+    assert current_state.name is States.GoingToRecharging

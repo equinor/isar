@@ -5,35 +5,33 @@ from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 
 
-class StoppingUnknownMission(State):
+def StoppingUnknownMission(events: Events) -> State:
 
-    def __init__(self, events: Events):
-
-        event_handlers: list[EventHandlerMapping] = [
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_failed_to_stop,
-                handler=lambda _: InterventionNeeded.transition(
-                    "Failed to stop unknown mission"
-                ),
+    event_handlers: list[EventHandlerMapping] = [
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_failed_to_stop,
+            handler=lambda _: InterventionNeeded.transition(
+                "Failed to stop unknown mission"
             ),
-            EventHandlerMapping[AbortedMission](
-                event=events.robot_service_events.mission_successfully_stopped,
-                handler=lambda _: AwaitNextMission.transition(),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.stopped_mission_already_done,
-                handler=lambda _: AwaitNextMission.transition(),
-            ),
-        ]
-        super().__init__(
-            state_name=States.StoppingUnknownMission,
-            signal_exit_event=events.signal_state_machine_exit,
-            event_handler_mappings=event_handlers,
-        )
+        ),
+        EventHandlerMapping[AbortedMission](
+            event=events.robot_service_events.mission_successfully_stopped,
+            handler=lambda _: AwaitNextMission.transition(),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.stopped_mission_already_done,
+            handler=lambda _: AwaitNextMission.transition(),
+        ),
+    ]
+    return State(
+        state_name=States.StoppingUnknownMission,
+        signal_exit_event=events.signal_state_machine_exit,
+        event_handler_mappings=event_handlers,
+    )
 
 
-def transition() -> Transition[StoppingUnknownMission]:
-    def _transition(events: Events) -> StoppingUnknownMission:
+def transition() -> Transition:
+    def _transition(events: Events) -> State:
         events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
         return StoppingUnknownMission(events)
 

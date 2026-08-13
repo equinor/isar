@@ -8,39 +8,37 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus
 
 
-class Resuming(State):
+def Resuming(events: Events, mission_id: str) -> State:
 
-    def __init__(self, events: Events, mission_id: str):
-
-        def _successful_resume_event_handler(
-            _: EmptyMessage,
-        ) -> Transition[Monitor.Monitor]:
-            publish_mission_status(
-                events.mqtt_queue, mission_id, MissionStatus.InProgress, None
-            )
-            return Monitor.transition_with_existing_mission(mission_id)
-
-        event_handlers: list[EventHandlerMapping] = [
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_failed_to_resume,
-                handler=lambda _: Paused.transition(mission_id),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_successfully_resumed,
-                handler=_successful_resume_event_handler,
-            ),
-        ]
-        super().__init__(
-            state_name=States.Resuming,
-            signal_exit_event=events.signal_state_machine_exit,
-            event_handler_mappings=event_handlers,
+    def _successful_resume_event_handler(
+        _: EmptyMessage,
+    ) -> Transition:
+        publish_mission_status(
+            events.mqtt_queue, mission_id, MissionStatus.InProgress, None
         )
+        return Monitor.transition_with_existing_mission(mission_id)
+
+    event_handlers: list[EventHandlerMapping] = [
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_failed_to_resume,
+            handler=lambda _: Paused.transition(mission_id),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_successfully_resumed,
+            handler=_successful_resume_event_handler,
+        ),
+    ]
+    return State(
+        state_name=States.Resuming,
+        signal_exit_event=events.signal_state_machine_exit,
+        event_handler_mappings=event_handlers,
+    )
 
 
 def transition_resume_mission_and_respond_to_API(
     mission_id: str,
-) -> Transition[Resuming]:
-    def _transition(events: Events) -> Resuming:
+) -> Transition:
+    def _transition(events: Events) -> State:
         events.api_requests.resume_mission.response.trigger_event(
             ControlMissionResponse(success=True)
         )

@@ -13,71 +13,65 @@ from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission, ReturnHomeMission
 
 
-class ReturningHome(State):
+def ReturningHome(
+    events: Events,
+    retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
+) -> State:
 
-    def __init__(
-        self,
-        events: Events,
-        retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
-    ):
+    def _mission_failed_event_handler(
+        _: ErrorMessage,
+    ) -> Transition:
+        if retries < 1:
+            return InterventionNeeded.transition(
+                f"Return home failed after {settings.RETURN_HOME_RETRY_LIMIT} attempts"
+            )
+        else:
+            return transition_and_start_mission(False, retries - 1)
 
-        def _mission_failed_event_handler(
-            _: ErrorMessage,
-        ) -> (
-            Transition[InterventionNeeded.InterventionNeeded]
-            | Transition[ReturningHome]
-        ):
-            if retries < 1:
-                return InterventionNeeded.transition(
-                    f"Return home failed after {settings.RETURN_HOME_RETRY_LIMIT} attempts"
-                )
-            else:
-                return transition_and_start_mission(False, retries - 1)
-
-        event_handlers: list[EventHandlerMapping] = [
-            EventHandlerMapping[EmptyMessage](
-                event=events.api_requests.pause_mission.request,
-                handler=lambda _: PausingReturnHome.transition_and_pause_mission_and_reply_to_API(),
+    event_handlers: list[EventHandlerMapping] = [
+        EventHandlerMapping[EmptyMessage](
+            event=events.api_requests.pause_mission.request,
+            handler=lambda _: PausingReturnHome.transition_and_pause_mission_and_reply_to_API(),
+        ),
+        EventHandlerMapping[ErrorMessage](
+            event=events.robot_service_events.mission_failed,
+            handler=_mission_failed_event_handler,
+        ),
+        EventHandlerMapping[Mission](
+            event=events.api_requests.start_mission.request,
+            handler=lambda mission: StoppingReturnHome.transition_and_stop_return_home_and_reply_to_API(
+                mission
             ),
-            EventHandlerMapping[ErrorMessage](
-                event=events.robot_service_events.mission_failed,
-                handler=_mission_failed_event_handler,
-            ),
-            EventHandlerMapping[Mission](
-                event=events.api_requests.start_mission.request,
-                handler=lambda mission: StoppingReturnHome.transition_and_stop_return_home_and_reply_to_API(
-                    mission
-                ),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_succeeded,
-                handler=lambda _: Home.transition(),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.battery_below_mission_threshold,
-                handler=lambda _: GoingToRecharging.transition_to_existing_mission(),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.api_requests.send_to_lockdown.request,
-                handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.api_requests.set_maintenance_mode.request,
-                handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
-            ),
-        ]
-        super().__init__(
-            state_name=States.ReturningHome,
-            signal_exit_event=events.signal_state_machine_exit,
-            event_handler_mappings=event_handlers,
-        )
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_succeeded,
+            handler=lambda _: Home.transition(),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.battery_below_mission_threshold,
+            handler=lambda _: GoingToRecharging.transition_to_existing_mission(),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.api_requests.send_to_lockdown.request,
+            handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.api_requests.set_maintenance_mode.request,
+            handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
+        ),
+    ]
+    return State(
+        state_name=States.ReturningHome,
+        signal_exit_event=events.signal_state_machine_exit,
+        event_handler_mappings=event_handlers,
+    )
 
 
 def transition_and_start_mission(
     should_respond_to_API_request: bool = False,
     retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
-) -> Transition[ReturningHome]:
-    def _transition(events: Events) -> ReturningHome:
+) -> Transition:
+    def _transition(events: Events) -> State:
         events.robot_service_events.mission_failed.clear_event()
         events.robot_service_events.mission_succeeded.clear_event()
 
@@ -90,8 +84,8 @@ def transition_and_start_mission(
     return _transition
 
 
-def transition_to_existing_mission() -> Transition[ReturningHome]:
-    def _transition(events: Events) -> ReturningHome:
+def transition_to_existing_mission() -> Transition:
+    def _transition(events: Events) -> State:
         return ReturningHome(events)
 
     return _transition

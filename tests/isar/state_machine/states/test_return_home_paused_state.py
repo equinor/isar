@@ -2,11 +2,8 @@ from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.pausing_return_home import PausingReturnHome
-from isar.state_machine.states.resuming_return_home import ResumingReturnHome
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
-from isar.state_machine.states.stopping_paused_return_home import (
-    StoppingPausedReturnHome,
-)
+from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
 
@@ -22,7 +19,7 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is ReturnHomePaused
+    assert current_state.name is States.ReturnHomePaused
 
 
 def test_resuming_paused_return_home(events: Events) -> None:
@@ -35,7 +32,7 @@ def test_resuming_paused_return_home(events: Events) -> None:
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is ResumingReturnHome
+    assert current_state.name is States.ResumingReturnHome
 
 
 def test_transition_from_paused_return_home_to_stopping_paused_return_home_mission(
@@ -54,7 +51,7 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
     current_state = transition(events)
 
     assert events.api_requests.start_mission.response.has_event()
-    assert type(current_state) is StoppingPausedReturnHome
+    assert current_state.name is States.StoppingPausedReturnHome
 
 
 def test_stop_request_with_wrong_id_in_paused(events: Events) -> None:

@@ -1,9 +1,8 @@
 from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State
-from isar.state_machine.states.await_next_mission import AwaitNextMission
-from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.stopping_unknown_mission import StoppingUnknownMission
 from isar.state_machine.states.unknown_status import UnknownStatus
+from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.status import RobotStatus
 
@@ -23,7 +22,7 @@ def test_unknown_mission_successfully_stopped(events: Events) -> None:
 
     current_state = transition(events)
 
-    assert type(current_state) is AwaitNextMission
+    assert current_state.name is States.AwaitNextMission
 
 
 def test_unknown_mission_successfully_stopped_with_no_mission_found(
@@ -43,7 +42,7 @@ def test_unknown_mission_successfully_stopped_with_no_mission_found(
 
     current_state = transition(events)
 
-    assert type(current_state) is AwaitNextMission
+    assert current_state.name is States.AwaitNextMission
 
 
 def test_unknown_mission_successfully_aborted_on_isar_restart(events: Events) -> None:
@@ -60,7 +59,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(events: Events) ->
     current_state = transition(events)
 
     assert current_state is not None
-    assert type(current_state) is StoppingUnknownMission
+    assert current_state.name is States.StoppingUnknownMission
 
     stopping_state_event_handler: EventHandlerMapping = (
         current_state.get_event_handler_by_event(
@@ -72,7 +71,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(events: Events) ->
 
     current_state = transition(events)
 
-    assert type(current_state) is AwaitNextMission
+    assert current_state.name is States.AwaitNextMission
 
 
 def test_stopping_mission_fails(events: Events) -> None:
@@ -88,4 +87,4 @@ def test_stopping_mission_fails(events: Events) -> None:
     assert events.mqtt_queue.empty()
 
     current_state = transition(events)
-    assert type(current_state) is InterventionNeeded
+    assert current_state.name is States.InterventionNeeded

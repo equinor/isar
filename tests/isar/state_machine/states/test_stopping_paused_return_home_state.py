@@ -1,10 +1,10 @@
 from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping
-from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.stopping_paused_return_home import (
     StoppingPausedReturnHome,
 )
+from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from tests.test_mocks.task import StubTask
 
@@ -23,7 +23,7 @@ def test_transition_to_stopping_paused_return_home_replies_to_API(
     transition = event_handler.handler(mission)
 
     current_state = transition(events)
-    assert type(current_state) is StoppingPausedReturnHome
+    assert current_state.name is States.StoppingPausedReturnHome
     assert events.api_requests.start_mission.response.has_event()
 
 
@@ -41,7 +41,7 @@ def test_stopping_paused_return_home_mission_fails(events: Events) -> None:
     assert not events.api_requests.start_mission.response.has_event()
 
     current_state = transition(events)
-    assert type(current_state) is ReturnHomePaused
+    assert current_state.name is States.ReturnHomePaused
 
 
 def test_stopping_paused_return_home_mission_succeeds(events: Events) -> None:
@@ -56,4 +56,4 @@ def test_stopping_paused_return_home_mission_succeeds(events: Events) -> None:
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is Monitor
+    assert current_state.name is States.Monitor

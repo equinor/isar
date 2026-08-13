@@ -8,37 +8,33 @@ from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import ReturnHomeMission
 
 
-class GoingToLockdown(State):
+def GoingToLockdown(events: Events) -> State:
 
-    def __init__(self, events: Events):
-
-        event_handlers: list[EventHandlerMapping] = [
-            EventHandlerMapping[ErrorMessage](
-                event=events.robot_service_events.mission_failed,
-                handler=lambda _: InterventionNeeded.transition(
-                    "Lockdown mission failed"
-                ),
+    event_handlers: list[EventHandlerMapping] = [
+        EventHandlerMapping[ErrorMessage](
+            event=events.robot_service_events.mission_failed,
+            handler=lambda _: InterventionNeeded.transition("Lockdown mission failed"),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_failed_to_resume,
+            handler=lambda _: InterventionNeeded.transition(
+                "Failed to resume return to home mission"
             ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_failed_to_resume,
-                handler=lambda _: InterventionNeeded.transition(
-                    "Failed to resume return to home mission"
-                ),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_succeeded,
-                handler=lambda _: Lockdown.transition_without_responding_to_api(),
-            ),
-        ]
-        super().__init__(
-            state_name=States.GoingToLockdown,
-            signal_exit_event=events.signal_state_machine_exit,
-            event_handler_mappings=event_handlers,
-        )
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_succeeded,
+            handler=lambda _: Lockdown.transition_without_responding_to_api(),
+        ),
+    ]
+    return State(
+        state_name=States.GoingToLockdown,
+        signal_exit_event=events.signal_state_machine_exit,
+        event_handler_mappings=event_handlers,
+    )
 
 
-def transition_and_start_mission_and_report_to_api() -> Transition[GoingToLockdown]:
-    def _transition(events: Events) -> GoingToLockdown:
+def transition_and_start_mission_and_report_to_api() -> Transition:
+    def _transition(events: Events) -> State:
         events.api_requests.send_to_lockdown.response.trigger_event(
             LockdownResponse(lockdown_started=True)
         )
@@ -52,8 +48,8 @@ def transition_and_start_mission_and_report_to_api() -> Transition[GoingToLockdo
     return _transition
 
 
-def transition_to_existing_mission_and_report_to_api() -> Transition[GoingToLockdown]:
-    def _transition(events: Events) -> GoingToLockdown:
+def transition_to_existing_mission_and_report_to_api() -> Transition:
+    def _transition(events: Events) -> State:
         events.api_requests.send_to_lockdown.response.trigger_event(
             LockdownResponse(lockdown_started=True)
         )

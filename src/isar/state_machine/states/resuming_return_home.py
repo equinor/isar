@@ -6,29 +6,27 @@ from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 
 
-class ResumingReturnHome(State):
+def ResumingReturnHome(events: Events) -> State:
 
-    def __init__(self, events: Events):
-
-        event_handlers: list[EventHandlerMapping] = [
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_failed_to_resume,
-                handler=lambda _: ReturnHomePaused.transition(),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_successfully_resumed,
-                handler=lambda _: ReturningHome.transition_to_existing_mission(),
-            ),
-        ]
-        super().__init__(
-            state_name=States.ResumingReturnHome,
-            signal_exit_event=events.signal_state_machine_exit,
-            event_handler_mappings=event_handlers,
-        )
+    event_handlers: list[EventHandlerMapping] = [
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_failed_to_resume,
+            handler=lambda _: ReturnHomePaused.transition(),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_successfully_resumed,
+            handler=lambda _: ReturningHome.transition_to_existing_mission(),
+        ),
+    ]
+    return State(
+        state_name=States.ResumingReturnHome,
+        signal_exit_event=events.signal_state_machine_exit,
+        event_handler_mappings=event_handlers,
+    )
 
 
-def transition_and_resume_mission_and_reply_to_API() -> Transition[ResumingReturnHome]:
-    def _transition(events: Events) -> ResumingReturnHome:
+def transition_and_resume_mission_and_reply_to_API() -> Transition:
+    def _transition(events: Events) -> State:
         events.api_requests.resume_mission.response.trigger_event(
             ControlMissionResponse(success=True)
         )
