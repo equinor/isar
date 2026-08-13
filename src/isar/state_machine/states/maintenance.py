@@ -10,7 +10,7 @@ class Maintenance(State):
     def __init__(self, events: Events):
 
         def _release_from_maintenance_handler(
-            should_release_from_maintenance: EmptyMessage,
+            _: EmptyMessage,
         ) -> Transition[UnknownStatus.UnknownStatus]:
             events.api_requests.release_from_maintenance_mode.response.trigger_event(
                 EmptyMessage()

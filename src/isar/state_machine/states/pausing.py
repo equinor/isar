@@ -13,7 +13,7 @@ class Pausing(State):
     def __init__(self, events: Events, mission_id: str):
 
         def _successful_pause_event_handler(
-            successful_pause: EmptyMessage,
+            _: EmptyMessage,
         ) -> Transition[Paused.Paused]:
             publish_mission_status(
                 events.mqtt_queue, mission_id, MissionStatus.Paused, None

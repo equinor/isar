@@ -14,7 +14,7 @@ class Stopping(State):
     def __init__(self, events: Events, mission_id: str):
 
         def _successful_stop_event_handler(
-            successful_stop: AbortedMission | EmptyMessage,
+            _: AbortedMission | EmptyMessage,
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
             publish_mission_status(
                 events.mqtt_queue,

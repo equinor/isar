@@ -29,7 +29,7 @@ class AwaitNextMission(State):
             ),
             EventHandlerMapping[EmptyMessage](
                 event=events.api_requests.return_home.request,
-                handler=lambda event: ReturningHome.transition_and_start_mission(True),
+                handler=lambda _: ReturningHome.transition_and_start_mission(True),
             ),
             EventHandlerMapping[str](
                 event=events.api_requests.stop_mission.request,

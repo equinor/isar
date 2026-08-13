@@ -18,15 +18,11 @@ class StoppingReturnHome(State):
             ),
             EventHandlerMapping[AbortedMission](
                 event=events.robot_service_events.mission_successfully_stopped,
-                handler=lambda event: Monitor.transition_and_start_mission(
-                    mission, True
-                ),
+                handler=lambda _: Monitor.transition_and_start_mission(mission, True),
             ),
             EventHandlerMapping[EmptyMessage](
                 event=events.robot_service_events.stopped_mission_already_done,
-                handler=lambda event: Monitor.transition_and_start_mission(
-                    mission, True
-                ),
+                handler=lambda _: Monitor.transition_and_start_mission(mission, True),
             ),
         ]
         super().__init__(

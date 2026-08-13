@@ -14,7 +14,7 @@ class InterventionNeeded(State):
     def __init__(self, events: Events):
 
         def release_intervention_needed_handler(
-            should_release: EmptyMessage,
+            _: EmptyMessage,
         ) -> Transition[UnknownStatus.UnknownStatus]:
             events.api_requests.release_intervention_needed.response.trigger_event(
                 EmptyMessage()
@@ -31,7 +31,7 @@ class InterventionNeeded(State):
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 event=events.api_requests.return_home.request,
-                handler=lambda event: ReturningHome.transition_and_start_mission(True),
+                handler=lambda _: ReturningHome.transition_and_start_mission(True),
             ),
             EventHandlerMapping[EmptyMessage](
                 event=events.api_requests.release_intervention_needed.request,

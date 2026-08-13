@@ -22,7 +22,7 @@ class ReturningHome(State):
     ):
 
         def _mission_failed_event_handler(
-            error_message: ErrorMessage,
+            _: ErrorMessage,
         ) -> (
             Transition[InterventionNeeded.InterventionNeeded]
             | Transition[ReturningHome]

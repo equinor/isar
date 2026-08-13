@@ -13,7 +13,7 @@ class Resuming(State):
     def __init__(self, events: Events, mission_id: str):
 
         def _successful_resume_event_handler(
-            successful_resume: EmptyMessage,
+            _: EmptyMessage,
         ) -> Transition[Monitor.Monitor]:
             publish_mission_status(
                 events.mqtt_queue, mission_id, MissionStatus.InProgress, None
