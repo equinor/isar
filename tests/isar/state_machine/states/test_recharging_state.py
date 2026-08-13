@@ -36,7 +36,7 @@ def test_continuing_mission_when_battery_high(events: Events) -> None:
         events, mission=AbortedMission(name="test", id="test_id")
     )
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.battery_above_recharge_threshold_event
+        events.robot_service_events.battery_above_recharge_threshold
     )
 
     transition = event_handler.handler(EmptyMessage())

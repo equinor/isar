@@ -191,7 +191,7 @@ class RobotServiceEvents:
         self.battery_below_mission_threshold: Event[EmptyMessage] = Event(
             "battery_below_mission_threshold"
         )
-        self.battery_above_recharge_threshold_event: Event[EmptyMessage] = Event(
+        self.battery_above_recharge_threshold: Event[EmptyMessage] = Event(
             "battery_above_recharge_threshold"
         )
 
