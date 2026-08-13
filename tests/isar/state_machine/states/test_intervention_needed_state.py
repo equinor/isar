@@ -11,11 +11,9 @@ from robot_interface.models.mission.status import RobotStatus
 
 def test_going_to_recharging_goes_to_intervention_needed(events: Events) -> None:
     current_state = GoingToRecharging(events)
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "mission_failed_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(
         ErrorMessage(
@@ -33,11 +31,9 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
 ) -> None:
     current_state = GoingToLockdown(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "mission_failed_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(
         ErrorMessage(
@@ -55,11 +51,9 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
 ) -> None:
     current_state = GoingToLockdown(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "mission_failed_event"
     )
-
-    assert event_handler is not None
 
     # The type of error reason is not important for this test
     transition = event_handler.handler(
@@ -73,7 +67,7 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
 def test_state_machine_with_return_home_failure(events: Events) -> None:
     current_state = ReturningHome(events)
 
-    failure_event_handler: EventHandlerMapping | None
+    failure_event_handler: EventHandlerMapping
 
     for i in range(settings.RETURN_HOME_RETRY_LIMIT - 1):
 
@@ -112,10 +106,9 @@ def test_intervention_needed_transitions_does_not_transition_if_status_is_not_ho
 ) -> None:
     current_state = InterventionNeeded(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "robot_status_event"
     )
-    assert event_handler is not None
 
     statuses = [
         RobotStatus.Available,

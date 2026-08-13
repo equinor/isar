@@ -9,11 +9,9 @@ from isar.state_machine.states.stopping_go_to_lockdown import StoppingGoToLockdo
 def test_mission_stopped_when_going_to_lockdown(events: Events) -> None:
     current_state = Monitor(events, "mission_id")
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "send_to_lockdown_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
@@ -24,11 +22,9 @@ def test_mission_stopped_when_going_to_lockdown(events: Events) -> None:
 def test_going_to_lockdown_transitions_to_lockdown(events: Events) -> None:
     current_state = GoingToLockdown(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "mission_succeeded_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 

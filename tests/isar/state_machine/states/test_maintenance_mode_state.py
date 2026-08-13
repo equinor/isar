@@ -12,10 +12,9 @@ def test_home_transitions_to_maintenance_mode_when_teleoperating(
 ) -> None:
     current_state = Home(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "robot_status_event"
     )
-    assert event_handler is not None
 
     transition = event_handler.handler(RobotStatus.TeleOperation)
 
@@ -30,10 +29,9 @@ def test_unknown_status_transitions_to_maintenance_mode_when_teleoperating(
 ) -> None:
     current_state = UnknownStatus(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "robot_status_event"
     )
-    assert event_handler is not None
 
     transition = event_handler.handler(RobotStatus.TeleOperation)
 
@@ -48,10 +46,9 @@ def test_offline_transitions_to_maintenance_mode_when_teleoperating(
 ) -> None:
     current_state = Offline(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "robot_status_event"
     )
-    assert event_handler is not None
 
     transition = event_handler.handler(RobotStatus.TeleOperation)
 

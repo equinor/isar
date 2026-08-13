@@ -15,11 +15,9 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
 ) -> None:
     current_state = PausingReturnHome(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "successful_pause_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
@@ -30,11 +28,9 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
 def test_resuming_paused_return_home(events: Events) -> None:
     current_state = ReturnHomePaused(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "resume_return_home_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
@@ -47,11 +43,9 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
 ) -> None:
     current_state = ReturnHomePaused(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "start_mission_event"
     )
-
-    assert event_handler is not None
 
     example_mission: Mission = Mission(id="id", name="Dummy misson", tasks=[])
 
@@ -66,11 +60,9 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
 def test_stop_request_with_wrong_id_in_paused(events: Events) -> None:
     current_state = Paused(events, "mission_id")
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "stop_mission_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler("wrong_test_id")
 

@@ -82,11 +82,9 @@ def test_state_machine_with_successful_mission_stop(
 def test_transition_from_resuming_to_paused(events: Events) -> None:
     current_state = Resuming(events, "mission_id")
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "failed_resume_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(
         ErrorMessage(
@@ -103,10 +101,9 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
 ) -> None:
     current_state = UnknownStatus(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "robot_status_event"
     )
-    assert event_handler is not None
 
     transition = event_handler.handler(RobotStatus.Available)
 
@@ -119,11 +116,9 @@ def test_transition_from_resuming_return_home_to_await_next_mission(
 ) -> None:
     current_state = ResumingReturnHome(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "failed_resume_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(
         ErrorMessage(

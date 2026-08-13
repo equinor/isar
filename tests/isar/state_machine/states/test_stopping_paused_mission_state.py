@@ -8,11 +8,9 @@ from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, Err
 
 def test_stopping_paused_mission_fails(events: Events) -> None:
     current_state = StoppingPausedMission(events, "mission_id")
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "failed_stop_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(
         ErrorMessage(error_description="", error_reason=ErrorReason.RobotAPIException)
@@ -26,11 +24,9 @@ def test_stopping_paused_mission_fails(events: Events) -> None:
 
 def test_stopping_paused_mission_succeeds(events: Events) -> None:
     current_state = StoppingPausedMission(events, "mission_id")
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "successful_stop_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 

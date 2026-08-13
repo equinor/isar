@@ -42,27 +42,25 @@ class State(ABC):
         self.event_handler_mappings = event_handler_mappings
         self.timers = timers if timers is not None else []
 
-    def get_event_handler_by_name(
-        self, event_handler_name: str
-    ) -> EventHandlerMapping | None:
+    def get_event_handler_by_name(self, event_handler_name: str) -> EventHandlerMapping:
         filtered_handlers = list(
             filter(
                 lambda mapping: mapping.name == event_handler_name,
                 self.event_handler_mappings,
             )
         )
-        return filtered_handlers[0] if len(filtered_handlers) > 0 else None
+        assert len(filtered_handlers) > 0
+        return filtered_handlers[0]
 
-    def get_event_timer_by_name(
-        self, event_timer_name: str
-    ) -> TimeoutHandlerMapping | None:
+    def get_event_timer_by_name(self, event_timer_name: str) -> TimeoutHandlerMapping:
         filtered_timers = list(
             filter(
                 lambda mapping: mapping.name == event_timer_name,
                 self.timers,
             )
         )
-        return filtered_timers[0] if len(filtered_timers) > 0 else None
+        assert len(filtered_timers) > 0
+        return filtered_timers[0]
 
     def handles_event(self, event: Event) -> bool:
         allowed_events: list[Event] = [m.event for m in self.event_handler_mappings]
