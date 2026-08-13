@@ -24,25 +24,13 @@ class Offline(State):
             if robot_status == RobotStatus.Offline:
                 return None
             elif robot_status == RobotStatus.Home:
-                self.logger.info(
-                    "Got robot status home while in offline state. Leaving offline state."
-                )
                 return Home.transition()
             elif robot_status == RobotStatus.Available:
-                self.logger.info(
-                    "Got robot status available while in offline state. Leaving offline state."
-                )
                 return InterventionNeeded.transition(
                     "Robot not home after going online. Localisation likely needed"
                 )
             elif robot_status == RobotStatus.TeleOperation:
-                self.logger.info(
-                    "Got robot status teleoperation while in offline state. Leaving offline state."
-                )
                 return Maintenance.transition_without_replying_to_API()
-            self.logger.info(
-                f"Got unexpected status {robot_status} while in offline state. Leaving offline state."
-            )
             return UnknownStatus.transition()
 
         event_handlers: list[EventHandlerMapping] = [
