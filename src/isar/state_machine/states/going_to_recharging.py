@@ -14,19 +14,16 @@ class GoingToRecharging(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
-                name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
                 handler=lambda _: InterventionNeeded.transition(
                     "Return home to recharge failed"
                 ),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="mission_succeeded_event",
                 event=events.robot_service_events.mission_succeeded,
                 handler=lambda _: Recharging.transition(),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
             ),

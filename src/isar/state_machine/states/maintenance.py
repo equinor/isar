@@ -20,7 +20,6 @@ class Maintenance(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
-                name="release_from_maintenance",
                 event=events.api_requests.release_from_maintenance_mode.request,
                 handler=_release_from_maintenance_handler,
             ),

@@ -11,8 +11,8 @@ from robot_interface.models.mission.status import RobotStatus
 
 def test_going_to_recharging_goes_to_intervention_needed(events: Events) -> None:
     current_state = GoingToRecharging(events)
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "mission_failed_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_failed
     )
 
     transition = event_handler.handler(
@@ -31,8 +31,8 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
 ) -> None:
     current_state = GoingToLockdown(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "mission_failed_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_failed
     )
 
     transition = event_handler.handler(
@@ -51,8 +51,8 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
 ) -> None:
     current_state = GoingToLockdown(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "mission_failed_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_failed
     )
 
     # The type of error reason is not important for this test
@@ -71,8 +71,8 @@ def test_state_machine_with_return_home_failure(events: Events) -> None:
 
     for i in range(settings.RETURN_HOME_RETRY_LIMIT - 1):
 
-        failure_event_handler = current_state.get_event_handler_by_name(
-            "mission_failed_event"
+        failure_event_handler = current_state.get_event_handler_by_event(
+            events.robot_service_events.mission_failed
         )
 
         transition = failure_event_handler.handler(
@@ -86,8 +86,8 @@ def test_state_machine_with_return_home_failure(events: Events) -> None:
         current_state = transition(events)
         assert type(current_state) is ReturningHome
 
-    failure_event_handler = current_state.get_event_handler_by_name(
-        "mission_failed_event"
+    failure_event_handler = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_failed
     )
 
     transition = failure_event_handler.handler(
@@ -106,8 +106,8 @@ def test_intervention_needed_transitions_does_not_transition_if_status_is_not_ho
 ) -> None:
     current_state = InterventionNeeded(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "robot_status_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.robot_status_update
     )
 
     statuses = [

@@ -36,39 +36,32 @@ class ReturningHome(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
-                name="pause_mission_event",
                 event=events.api_requests.pause_mission.request,
                 handler=lambda _: PausingReturnHome.transition_and_pause_mission_and_reply_to_API(),
             ),
             EventHandlerMapping[ErrorMessage](
-                name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
             EventHandlerMapping[Mission](
-                name="start_mission_event",
                 event=events.api_requests.start_mission.request,
                 handler=lambda mission: StoppingReturnHome.transition_and_stop_return_home_and_reply_to_API(
                     mission
                 ),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="mission_succeeded_event",
                 event=events.robot_service_events.mission_succeeded,
                 handler=lambda _: Home.transition(),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="robot_battery_below_threshold_event",
                 event=events.robot_service_events.battery_below_mission_threshold,
                 handler=lambda _: GoingToRecharging.transition_to_existing_mission(),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
             ),

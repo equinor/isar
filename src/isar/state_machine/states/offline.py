@@ -47,12 +47,10 @@ class Offline(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[RobotStatus](
-                name="robot_status_event",
                 event=events.robot_service_events.robot_status_update,
                 handler=_robot_status_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](
-                name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),

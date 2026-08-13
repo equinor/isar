@@ -9,8 +9,8 @@ from isar.state_machine.states.recharging_with_mission import RechargingWithMiss
 
 def test_going_to_recharging_goes_to_recharge(events: Events) -> None:
     current_state = GoingToRecharging(events)
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "mission_succeeded_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_succeeded
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -21,8 +21,8 @@ def test_going_to_recharging_goes_to_recharge(events: Events) -> None:
 
 def test_home_goes_to_recharging_when_battery_low(events: Events) -> None:
     current_state = Home(events)
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "robot_battery_below_threshold_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.battery_below_mission_threshold
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -35,8 +35,8 @@ def test_continuing_mission_when_battery_high(events: Events) -> None:
     current_state = RechargingWithMission(
         events, mission=AbortedMission(name="test", id="test_id")
     )
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "robot_battery_above_recharging_threshold_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.battery_above_recharge_threshold_event
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -49,8 +49,8 @@ def test_cancelling_mission_when_recharging_with_mission(events: Events) -> None
     current_state = RechargingWithMission(
         events, mission=AbortedMission(name="test", id="test_id")
     )
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "stop_mission_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.api_requests.stop_mission.request
     )
 
     transition = event_handler.handler("test_id")

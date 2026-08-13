@@ -22,12 +22,10 @@ class Pausing(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
-                name="failed_pause_event",
                 event=events.robot_service_events.mission_failed_to_pause,
                 handler=lambda _: Monitor.transition_with_existing_mission(mission_id),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="successful_pause_event",
                 event=events.robot_service_events.mission_successfully_paused,
                 handler=_successful_pause_event_handler,
             ),

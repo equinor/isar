@@ -13,17 +13,14 @@ class StoppingPausedReturnHome(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
-                name="failed_stop_event",
                 event=events.robot_service_events.mission_failed_to_stop,
                 handler=lambda _: ReturnHomePaused.transition(),
             ),
             EventHandlerMapping[AbortedMission](
-                name="successful_stop_event",
                 event=events.robot_service_events.mission_successfully_stopped,
                 handler=lambda _: Monitor.transition_and_start_mission(mission, True),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="mission_already_done_event",
                 event=events.robot_service_events.stopped_mission_already_done,
                 handler=lambda _: Monitor.transition_and_start_mission(mission, True),
             ),

@@ -30,31 +30,26 @@ class Paused(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[str](
-                name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
                 handler=_stop_mission_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](
-                name="resume_mission_event",
                 event=events.api_requests.resume_mission.request,
                 handler=lambda _: Resuming.transition_resume_mission_and_respond_to_API(
                     mission_id
                 ),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="robot_battery_below_threshold_event",
                 event=events.robot_service_events.battery_below_mission_threshold,
                 handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=lambda _: StoppingGoToLockdown.transition_and_stop_mission(
                     mission_id
                 ),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(
                     mission_id

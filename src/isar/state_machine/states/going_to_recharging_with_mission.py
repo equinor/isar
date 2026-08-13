@@ -45,22 +45,18 @@ class GoingToRechargingWithMission(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
-                name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](
-                name="mission_succeeded_event",
                 event=events.robot_service_events.mission_succeeded,
                 handler=lambda _: RechargingWithMission.transition(mission),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
             ),
             EventHandlerMapping[str](
-                name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
                 handler=_stop_mission_event_handler,
             ),

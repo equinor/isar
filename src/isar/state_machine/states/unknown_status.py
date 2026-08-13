@@ -53,19 +53,16 @@ class UnknownStatus(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[str](
-                name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
                 handler=lambda mission_id: Stopping.transition_and_trigger_stop_and_respond_to_API(
                     mission_id
                 ),
             ),
             EventHandlerMapping[RobotStatus](
-                name="robot_status_event",
                 event=events.robot_service_events.robot_status_update,
                 handler=_robot_status_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](
-                name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),

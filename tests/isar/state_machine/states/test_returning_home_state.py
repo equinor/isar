@@ -17,8 +17,8 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
     example_mission: Mission = ReturnHomeMission()
     current_state = StoppingReturnHome(events, example_mission)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "successful_stop_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_successfully_stopped
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -30,8 +30,8 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
 def test_transition_from_pausing_return_home_to_returning_home(events: Events) -> None:
     current_state = PausingReturnHome(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "failed_pause_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_failed_to_pause
     )
 
     error_event = ErrorMessage(
@@ -48,8 +48,8 @@ def test_transition_from_resuming_return_home_to_returning_home_state(
 ) -> None:
     current_state = ResumingReturnHome(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "successful_resume_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_successfully_resumed
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -63,8 +63,8 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
 ) -> None:
     current_state: State = ReturningHome(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "mission_succeeded_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_succeeded
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -74,7 +74,9 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
     assert not events.robot_service_events.robot_status_update.check()
 
     event_handler_robot_status: EventHandlerMapping = (
-        current_state.get_event_handler_by_name("robot_status_event")
+        current_state.get_event_handler_by_event(
+            events.robot_service_events.robot_status_update
+        )
     )
 
     assert not event_handler_robot_status.event.has_event()

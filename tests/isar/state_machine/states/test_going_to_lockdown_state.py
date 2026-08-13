@@ -16,8 +16,8 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
 ) -> None:
     current_state: State = ReturnHomePaused(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "send_to_lockdown_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.api_requests.send_to_lockdown.request
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -28,7 +28,9 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
     assert type(current_state) is GoingToLockdown
 
     lockdown_event_handler: EventHandlerMapping = (
-        current_state.get_event_handler_by_name("mission_failed_to_resume")
+        current_state.get_event_handler_by_event(
+            events.robot_service_events.mission_failed_to_resume
+        )
     )
 
     transition = lockdown_event_handler.handler(
@@ -45,8 +47,8 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
 def test_stopping_lockdown_transitions_to_going_to_lockdown(events: Events) -> None:
     current_state = StoppingGoToLockdown(events, "mission_id")
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "successful_stop_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_successfully_stopped
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -66,8 +68,8 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(events: Events) -> N
 def test_return_home_transitions_to_going_to_lockdown(events: Events) -> None:
     current_state = ReturningHome(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "send_to_lockdown_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.api_requests.send_to_lockdown.request
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -79,8 +81,8 @@ def test_return_home_transitions_to_going_to_lockdown(events: Events) -> None:
 def test_recharging_transitions_to_going_to_lockdown(events: Events) -> None:
     current_state = GoingToRecharging(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "send_to_lockdown_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.api_requests.send_to_lockdown.request
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -92,8 +94,8 @@ def test_recharging_transitions_to_going_to_lockdown(events: Events) -> None:
 def test_await_next_mission_transitions_to_going_to_lockdown(events: Events) -> None:
     current_state = AwaitNextMission(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "send_to_lockdown_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.api_requests.send_to_lockdown.request
     )
 
     transition = event_handler.handler(EmptyMessage())
