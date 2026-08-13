@@ -12,7 +12,7 @@ class StoppingDueToMaintenance(State):
     def __init__(self, events: Events, mission_id: str | None = None):
 
         def _failed_stop_event_handler(
-            empty_event: EmptyMessage,
+            _: EmptyMessage,
         ) -> Transition[InterventionNeeded.InterventionNeeded]:
             events.api_requests.set_maintenance_mode.response.trigger_event(
                 MaintenanceResponse(
@@ -25,7 +25,7 @@ class StoppingDueToMaintenance(State):
             )
 
         def _successful_stop_event_handler(
-            successful_stop: AbortedMission | EmptyMessage,
+            _: AbortedMission | EmptyMessage,
         ) -> Transition[Maintenance.Maintenance]:
             if mission_id:
                 publish_mission_aborted(

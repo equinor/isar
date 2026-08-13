@@ -14,7 +14,7 @@ class ReturnHomePaused(State):
     def __init__(self, events: Events):
 
         def _send_to_lockdown_event_handler(
-            should_lockdown: EmptyMessage,
+            _: EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
             events.state_machine_events.resume_mission.trigger_event(EmptyMessage())
 

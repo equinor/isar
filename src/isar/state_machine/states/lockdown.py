@@ -10,7 +10,7 @@ class Lockdown(State):
     def __init__(self, events: Events):
 
         def _release_from_lockdown_handler(
-            should_release_from_lockdown: EmptyMessage,
+            _: EmptyMessage,
         ) -> Transition[Home.Home]:
             events.api_requests.release_from_lockdown.response.trigger_event(
                 EmptyMessage()

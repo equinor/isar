@@ -19,7 +19,7 @@ class Monitor(State):
     def __init__(self, events: Events, mission_id: str):
 
         def _mission_success_event_handler(
-            success: EmptyMessage,
+            _: EmptyMessage,
         ) -> Transition[AwaitNextMission.AwaitNextMission]:
             publish_mission_status(
                 events.mqtt_queue, mission_id, MissionStatus.Successful, None
@@ -52,15 +52,12 @@ class Monitor(State):
                 )
                 return None
 
-        def _mission_started_event_handler(mission_started: EmptyMessage) -> None:
-            publish_mission_status(
-                events.mqtt_queue, mission_id, MissionStatus.InProgress, None
-            )
-
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 event=events.robot_service_events.mission_started_successfully,
-                handler=_mission_started_event_handler,
+                handler=lambda _: publish_mission_status(
+                    events.mqtt_queue, mission_id, MissionStatus.InProgress, None
+                ),
             ),
             EventHandlerMapping[str](
                 event=events.api_requests.stop_mission.request,

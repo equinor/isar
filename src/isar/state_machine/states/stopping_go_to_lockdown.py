@@ -12,7 +12,7 @@ class StoppingGoToLockdown(State):
     def __init__(self, events: Events, mission_id: str):
 
         def _failed_stop_event_handler(
-            empty_event: EmptyMessage,
+            _: EmptyMessage,
         ) -> Transition[Monitor.Monitor]:
             events.api_requests.send_to_lockdown.response.trigger_event(
                 LockdownResponse(
@@ -23,7 +23,7 @@ class StoppingGoToLockdown(State):
             return Monitor.transition_with_existing_mission(mission_id)
 
         def _successful_stop_event_handler(
-            successful_stop: AbortedMission | EmptyMessage,
+            _: AbortedMission | EmptyMessage,
         ) -> Transition[GoingToLockdown.GoingToLockdown]:
             publish_mission_aborted(
                 events.mqtt_queue, mission_id, "Robot being sent to lockdown"
