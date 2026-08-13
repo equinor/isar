@@ -14,16 +14,6 @@ class RechargingWithMission(State):
 
     def __init__(self, events: Events, mission: AbortedMission):
 
-        def robot_offline_handler(
-            robot_status: RobotStatus,
-        ) -> Transition[Offline.Offline] | None:
-            if robot_status == RobotStatus.Offline:
-                self.logger.info(
-                    "Got robot status offline while in recharging state. Leaving recharging state."
-                )
-                return Offline.transition()
-            return None
-
         def _stop_mission_event_handler(
             stop_mission_id: str,
         ) -> Transition[Recharging.Recharging] | None:
@@ -49,7 +39,11 @@ class RechargingWithMission(State):
             ),
             EventHandlerMapping[RobotStatus](
                 event=events.robot_service_events.robot_status_update,
-                handler=robot_offline_handler,
+                handler=lambda robot_status: (
+                    Offline.transition()
+                    if robot_status == RobotStatus.Offline
+                    else None
+                ),
             ),
             EventHandlerMapping[EmptyMessage](
                 event=events.api_requests.send_to_lockdown.request,

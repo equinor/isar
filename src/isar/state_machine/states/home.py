@@ -30,23 +30,11 @@ class Home(State):
             if robot_status == RobotStatus.Home:
                 return None
             elif robot_status == RobotStatus.Available:
-                self.logger.info(
-                    "Got robot status available while in home state. Leaving home state."
-                )
                 return AwaitNextMission.transition()
             elif robot_status == RobotStatus.Offline:
-                self.logger.info(
-                    "Got robot status offline while in home state. Leaving home state."
-                )
                 return Offline.transition()
             elif robot_status == RobotStatus.TeleOperation:
-                self.logger.info(
-                    "Got robot status teleoperation while in home state. Going to maintenance."
-                )
                 return Maintenance.transition_without_replying_to_API()
-            self.logger.info(
-                f"Got unexpected status {robot_status} while in home state. Leaving home state."
-            )
             return UnknownStatus.transition()
 
         event_handlers: list[EventHandlerMapping] = [

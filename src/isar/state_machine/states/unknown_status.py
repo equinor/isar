@@ -25,29 +25,14 @@ class UnknownStatus(State):
             | None
         ):
             if robot_status == RobotStatus.Home:
-                self.logger.info(
-                    "Got robot status home while in unknown status state. Leaving unknown status state."
-                )
                 return Home.transition()
             elif robot_status == RobotStatus.Available:
-                self.logger.info(
-                    "Got robot status available while in unknown status state. Leaving unknown status state."
-                )
                 return AwaitNextMission.transition()
             elif robot_status == RobotStatus.Offline:
-                self.logger.info(
-                    "Got robot status offline while in unknown status state. Leaving unknown status state."
-                )
                 return Offline.transition()
             elif robot_status == RobotStatus.TeleOperation:
-                self.logger.info(
-                    "Got robot status teleoperation while in unknown status state. Leaving unknown status state."
-                )
                 return Maintenance.transition_without_replying_to_API()
             elif robot_status == RobotStatus.Busy:
-                self.logger.info(
-                    "Got robot status busy while in unknown status state. Leaving unknown status state."
-                )
                 return StoppingUnknownMission.transition()
             return None
 

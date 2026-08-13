@@ -25,9 +25,6 @@ class InterventionNeeded(State):
             robot_status: RobotStatus,
         ) -> Transition[Home.Home] | None:
             if robot_status == RobotStatus.Home:
-                self.logger.info(
-                    "Got robot status home while in intervention needed state. Leaving intervention needed state."
-                )
                 return Home.transition()
             return None
 

@@ -12,16 +12,6 @@ class Recharging(State):
 
     def __init__(self, events: Events):
 
-        def robot_offline_handler(
-            robot_status: RobotStatus,
-        ) -> Transition[Offline.Offline] | None:
-            if robot_status == RobotStatus.Offline:
-                self.logger.info(
-                    "Got robot status offline while in recharging state. Leaving recharging state."
-                )
-                return Offline.transition()
-            return None
-
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
                 event=events.robot_service_events.battery_above_recharge_threshold_event,
@@ -29,7 +19,11 @@ class Recharging(State):
             ),
             EventHandlerMapping[RobotStatus](
                 event=events.robot_service_events.robot_status_update,
-                handler=robot_offline_handler,
+                handler=lambda robot_status: (
+                    Offline.transition()
+                    if robot_status == RobotStatus.Offline
+                    else None
+                ),
             ),
             EventHandlerMapping[EmptyMessage](
                 event=events.api_requests.send_to_lockdown.request,
