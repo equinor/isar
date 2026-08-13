@@ -43,6 +43,8 @@ def robot_stop_mission(
             continue
         return None
 
+    # error is always set when the loop exits without returning — every iteration
+    # either returns early or assigns error before continuing
     assert error is not None
     error_description = (
         f"\nFailed to stop the robot after {retries} attempts because: "

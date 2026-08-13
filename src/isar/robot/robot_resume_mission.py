@@ -45,6 +45,8 @@ def robot_resume_mission(
             retries += 1
             continue
 
+    # error is always set when the loop exits without returning — every iteration
+    # either returns early or assigns error before continuing
     assert error is not None
     error_description = (
         f"\nFailed to resume the robot after {retries + 1} attempts because: "
