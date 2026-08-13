@@ -6,11 +6,9 @@ from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRechar
 
 def test_monitor_goes_to_return_home_when_battery_low(events: Events) -> None:
     current_state = Monitor(events, "mission_id")
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "robot_battery_below_threshold_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 

@@ -11,10 +11,9 @@ from robot_interface.models.mission.status import RobotStatus
 def test_unknown_mission_successfully_stopped(events: Events) -> None:
     current_state = StoppingUnknownMission(events)
 
-    stopping_state_event_handler: EventHandlerMapping | None = (
+    stopping_state_event_handler: EventHandlerMapping = (
         current_state.get_event_handler_by_name("successful_stop_event")
     )
-    assert stopping_state_event_handler is not None
 
     transition = stopping_state_event_handler.handler(EmptyMessage())
 
@@ -30,10 +29,9 @@ def test_unknown_mission_successfully_stopped_with_no_mission_found(
 ) -> None:
     current_state = StoppingUnknownMission(events)
 
-    stopping_state_event_handler: EventHandlerMapping | None = (
+    stopping_state_event_handler: EventHandlerMapping = (
         current_state.get_event_handler_by_name("mission_already_done_event")
     )
-    assert stopping_state_event_handler is not None
 
     transition = stopping_state_event_handler.handler(EmptyMessage())
 
@@ -47,10 +45,9 @@ def test_unknown_mission_successfully_stopped_with_no_mission_found(
 def test_unknown_mission_successfully_aborted_on_isar_restart(events: Events) -> None:
     current_state: State = UnknownStatus(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "robot_status_event"
     )
-    assert event_handler is not None
 
     transition = event_handler.handler(RobotStatus.Busy)
 
@@ -61,10 +58,9 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(events: Events) ->
     assert current_state is not None
     assert type(current_state) is StoppingUnknownMission
 
-    stopping_state_event_handler: EventHandlerMapping | None = (
+    stopping_state_event_handler: EventHandlerMapping = (
         current_state.get_event_handler_by_name("successful_stop_event")
     )
-    assert stopping_state_event_handler is not None
 
     transition = stopping_state_event_handler.handler(EmptyMessage())
 
@@ -75,11 +71,9 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(events: Events) ->
 
 def test_stopping_mission_fails(events: Events) -> None:
     current_state = StoppingUnknownMission(events)
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "failed_stop_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(
         ErrorMessage(error_description="", error_reason=ErrorReason.RobotAPIException)

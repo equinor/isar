@@ -9,11 +9,9 @@ from isar.state_machine.states.stopping_paused_mission import StoppingPausedMiss
 def test_transition_from_pausing_to_paused(events: Events) -> None:
     current_state = Pausing(events, "mission_id")
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "successful_pause_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
@@ -24,11 +22,9 @@ def test_transition_from_pausing_to_paused(events: Events) -> None:
 def test_transition_from_paused_to_stopping_paused_mission(events: Events) -> None:
     current_state = Paused(events, "test_id")
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "stop_mission_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler("test_id")
 
@@ -41,11 +37,9 @@ def test_transition_from_paused_to_stopping_paused_mission(events: Events) -> No
 def test_transition_from_paused_to_stopping_to_recharge(events: Events) -> None:
     current_state = Paused(events, "test_id")
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "robot_battery_below_threshold_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
@@ -59,11 +53,9 @@ def test_transition_from_paused_to_stopping_to_recharge(events: Events) -> None:
 def test_stop_request_with_wrong_id_in_paused(events: Events) -> None:
     current_state = Paused(events, "test_id")
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "stop_mission_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler("wrong_test_id")
 

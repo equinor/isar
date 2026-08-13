@@ -17,11 +17,9 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
     example_mission: Mission = ReturnHomeMission()
     current_state = StoppingReturnHome(events, example_mission)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "successful_stop_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
     current_state = transition(events)
@@ -32,11 +30,9 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
 def test_transition_from_pausing_return_home_to_returning_home(events: Events) -> None:
     current_state = PausingReturnHome(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "failed_pause_event"
     )
-
-    assert event_handler is not None
 
     error_event = ErrorMessage(
         error_reason=ErrorReason.RobotUnknownErrorException, error_description=""
@@ -52,11 +48,9 @@ def test_transition_from_resuming_return_home_to_returning_home_state(
 ) -> None:
     current_state = ResumingReturnHome(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "successful_resume_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
@@ -69,11 +63,9 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
 ) -> None:
     current_state: State = ReturningHome(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "mission_succeeded_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
@@ -81,11 +73,9 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
     assert type(current_state) is Home
     assert not events.robot_service_events.robot_status_update.check()
 
-    event_handler_robot_status: EventHandlerMapping | None = (
+    event_handler_robot_status: EventHandlerMapping = (
         current_state.get_event_handler_by_name("robot_status_event")
     )
-
-    assert event_handler_robot_status is not None
 
     assert not event_handler_robot_status.event.has_event()
 
@@ -93,11 +83,9 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
 def test_return_home_starts_when_battery_is_low(events: Events) -> None:
     current_state = AwaitNextMission(events)
 
-    timer: TimeoutHandlerMapping | None = current_state.get_event_timer_by_name(
+    timer: TimeoutHandlerMapping = current_state.get_event_timer_by_name(
         "should_return_home_timer"
     )
-
-    assert timer is not None
 
     transition = timer.handler()
 

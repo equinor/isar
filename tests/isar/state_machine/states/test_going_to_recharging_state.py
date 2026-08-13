@@ -12,11 +12,9 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_task
     events: Events,
 ) -> None:
     current_state = StoppingGoToRecharge(events)
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "mission_already_done_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
@@ -28,11 +26,9 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
     events: Events,
 ) -> None:
     current_state = StoppingGoToRecharge(events)
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "successful_stop_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(AbortedMission(id="id", name="test"))
 
@@ -44,11 +40,9 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
 
 def test_return_home_goes_to_recharging_when_battery_low(events: Events) -> None:
     current_state = ReturningHome(events)
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "robot_battery_below_threshold_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
@@ -60,11 +54,9 @@ def test_cancelling_mission_when_going_home_to_recharge(events: Events) -> None:
     current_state = GoingToRechargingWithMission(
         events, mission=AbortedMission(name="test", id="test_id")
     )
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "stop_mission_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler("test_id")
 

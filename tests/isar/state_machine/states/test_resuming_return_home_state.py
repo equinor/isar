@@ -9,11 +9,9 @@ def test_transition_from_return_home_paused_to_resuming_return_home(
 ) -> None:
     current_state = ReturnHomePaused(events)
 
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "resume_return_home_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 

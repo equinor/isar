@@ -16,11 +16,9 @@ def test_transition_to_stopping_paused_return_home_replies_to_API(
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
     current_state = ReturnHomePaused(events)
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "start_mission_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(mission)
 
@@ -34,11 +32,9 @@ def test_stopping_paused_return_home_mission_fails(events: Events) -> None:
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
     current_state = StoppingPausedReturnHome(events, mission)
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "failed_stop_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
@@ -53,11 +49,9 @@ def test_stopping_paused_return_home_mission_succeeds(events: Events) -> None:
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
     current_state = StoppingPausedReturnHome(events, mission)
-    event_handler: EventHandlerMapping | None = current_state.get_event_handler_by_name(
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
         "successful_stop_event"
     )
-
-    assert event_handler is not None
 
     transition = event_handler.handler(EmptyMessage())
 
