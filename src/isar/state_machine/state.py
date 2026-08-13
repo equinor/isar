@@ -1,17 +1,15 @@
 import logging
 import time
-from abc import ABC
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any
 
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Event, Events
 from isar.state_machine.states_enum import States
 
-T_state_co = TypeVar("T_state_co", bound="State", covariant=True)
-Transition = Callable[[Events], T_state_co]
+Transition = Callable[[Events], "State"]
 
 
 @dataclass
@@ -27,7 +25,7 @@ class TimeoutHandlerMapping:
     handler: Callable[[], Transition | None]
 
 
-class State(ABC):
+class State:
     def __init__(
         self,
         signal_exit_event: Event[EmptyMessage],

@@ -12,66 +12,64 @@ from robot_interface.models.mission.mission import ReturnHomeMission
 from robot_interface.models.mission.status import MissionStatus
 
 
-class GoingToRechargingWithMission(State):
+def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> State:
 
-    def __init__(self, events: Events, mission: AbortedMission):
-
-        def _mission_failed_event_handler(
-            error_message: ErrorMessage,
-        ) -> Transition[InterventionNeeded.InterventionNeeded]:
-            publish_mission_status(
-                events.mqtt_queue,
-                mission.id,
-                MissionStatus.Failed,
-                error_message,
-            )
-            return InterventionNeeded.transition("Return home to recharge failed")
-
-        def _stop_mission_event_handler(
-            stop_mission_id: str,
-        ) -> Transition[GoingToRecharging.GoingToRecharging] | None:
-            if mission.id == stop_mission_id or stop_mission_id == "":
-                events.api_requests.stop_mission.response.trigger_event(
-                    ControlMissionResponse(success=True)
-                )
-                return GoingToRecharging.transition_to_existing_mission()
-            else:
-                events.api_requests.stop_mission.response.trigger_event(
-                    ControlMissionResponse(
-                        success=False, failure_reason="Mission not found"
-                    )
-                )
-                return None
-
-        event_handlers: list[EventHandlerMapping] = [
-            EventHandlerMapping[ErrorMessage](
-                event=events.robot_service_events.mission_failed,
-                handler=_mission_failed_event_handler,
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_succeeded,
-                handler=lambda _: RechargingWithMission.transition(mission),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.api_requests.send_to_lockdown.request,
-                handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
-            ),
-            EventHandlerMapping[str](
-                event=events.api_requests.stop_mission.request,
-                handler=_stop_mission_event_handler,
-            ),
-        ]
-        super().__init__(
-            state_name=States.GoingToRechargingWithMission,
-            signal_exit_event=events.signal_state_machine_exit,
-            event_handler_mappings=event_handlers,
+    def _mission_failed_event_handler(
+        error_message: ErrorMessage,
+    ) -> Transition:
+        publish_mission_status(
+            events.mqtt_queue,
+            mission.id,
+            MissionStatus.Failed,
+            error_message,
         )
+        return InterventionNeeded.transition("Return home to recharge failed")
+
+    def _stop_mission_event_handler(
+        stop_mission_id: str,
+    ) -> Transition | None:
+        if mission.id == stop_mission_id or stop_mission_id == "":
+            events.api_requests.stop_mission.response.trigger_event(
+                ControlMissionResponse(success=True)
+            )
+            return GoingToRecharging.transition_to_existing_mission()
+        else:
+            events.api_requests.stop_mission.response.trigger_event(
+                ControlMissionResponse(
+                    success=False, failure_reason="Mission not found"
+                )
+            )
+            return None
+
+    event_handlers: list[EventHandlerMapping] = [
+        EventHandlerMapping[ErrorMessage](
+            event=events.robot_service_events.mission_failed,
+            handler=_mission_failed_event_handler,
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_succeeded,
+            handler=lambda _: RechargingWithMission.transition(mission),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.api_requests.send_to_lockdown.request,
+            handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
+        ),
+        EventHandlerMapping[str](
+            event=events.api_requests.stop_mission.request,
+            handler=_stop_mission_event_handler,
+        ),
+    ]
+    return State(
+        state_name=States.GoingToRechargingWithMission,
+        signal_exit_event=events.signal_state_machine_exit,
+        event_handler_mappings=event_handlers,
+    )
 
 
 def transition_and_start_return_home(
     mission: AbortedMission,
-) -> Transition[GoingToRechargingWithMission]:
-    def _transition(events: Events) -> GoingToRechargingWithMission:
+) -> Transition:
+    def _transition(events: Events) -> State:
         events.robot_service_events.mission_failed.clear_event()
         events.robot_service_events.mission_succeeded.clear_event()
 

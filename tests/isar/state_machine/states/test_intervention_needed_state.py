@@ -5,6 +5,7 @@ from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.going_to_recharging import GoingToRecharging
 from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.returning_home import ReturningHome
+from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.status import RobotStatus
 
@@ -23,7 +24,7 @@ def test_going_to_recharging_goes_to_intervention_needed(events: Events) -> None
     )
 
     current_state = transition(events)
-    assert type(current_state) is InterventionNeeded
+    assert current_state.name is States.InterventionNeeded
 
 
 def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
@@ -43,7 +44,7 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
     )
 
     current_state = transition(events)
-    assert type(current_state) is InterventionNeeded
+    assert current_state.name is States.InterventionNeeded
 
 
 def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
@@ -61,7 +62,7 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
     )
 
     current_state = transition(events)
-    assert type(current_state) is InterventionNeeded
+    assert current_state.name is States.InterventionNeeded
 
 
 def test_state_machine_with_return_home_failure(events: Events) -> None:
@@ -84,7 +85,7 @@ def test_state_machine_with_return_home_failure(events: Events) -> None:
 
         assert transition is not None  # type: ignore
         current_state = transition(events)
-        assert type(current_state) is ReturningHome
+        assert current_state.name is States.ReturningHome
 
     failure_event_handler = current_state.get_event_handler_by_event(
         events.robot_service_events.mission_failed
@@ -98,7 +99,7 @@ def test_state_machine_with_return_home_failure(events: Events) -> None:
     )
 
     current_state = transition(events)
-    assert type(current_state) is InterventionNeeded
+    assert current_state.name is States.InterventionNeeded
 
 
 def test_intervention_needed_transitions_does_not_transition_if_status_is_not_home(

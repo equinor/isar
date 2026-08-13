@@ -1,8 +1,7 @@
 from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping
-from isar.state_machine.states.await_next_mission import AwaitNextMission
-from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.stopping_paused_mission import StoppingPausedMission
+from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 
 
@@ -19,7 +18,7 @@ def test_stopping_paused_mission_fails(events: Events) -> None:
     assert events.mqtt_queue.empty()
 
     current_state = transition(events)
-    assert type(current_state) is Paused
+    assert current_state.name is States.Paused
 
 
 def test_stopping_paused_mission_succeeds(events: Events) -> None:
@@ -33,4 +32,4 @@ def test_stopping_paused_mission_succeeds(events: Events) -> None:
     assert events.mqtt_queue.qsize() == 1
 
     current_state = transition(events)
-    assert type(current_state) is AwaitNextMission
+    assert current_state.name is States.AwaitNextMission

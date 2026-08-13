@@ -8,43 +8,41 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus
 
 
-class StoppingPausedMission(State):
+def StoppingPausedMission(events: Events, mission_id: str) -> State:
 
-    def __init__(self, events: Events, mission_id: str):
-
-        def _successful_stop_event_handler(
-            _: AbortedMission | EmptyMessage,
-        ) -> Transition[AwaitNextMission.AwaitNextMission]:
-            publish_mission_status(
-                events.mqtt_queue, mission_id, MissionStatus.Cancelled, None
-            )
-            return AwaitNextMission.transition()
-
-        event_handlers: list[EventHandlerMapping] = [
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_failed_to_stop,
-                handler=lambda _: Paused.transition(mission_id),
-            ),
-            EventHandlerMapping[AbortedMission](
-                event=events.robot_service_events.mission_successfully_stopped,
-                handler=_successful_stop_event_handler,
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.stopped_mission_already_done,
-                handler=_successful_stop_event_handler,
-            ),
-        ]
-        super().__init__(
-            state_name=States.StoppingPausedMission,
-            signal_exit_event=events.signal_state_machine_exit,
-            event_handler_mappings=event_handlers,
+    def _successful_stop_event_handler(
+        _: AbortedMission | EmptyMessage,
+    ) -> Transition:
+        publish_mission_status(
+            events.mqtt_queue, mission_id, MissionStatus.Cancelled, None
         )
+        return AwaitNextMission.transition()
+
+    event_handlers: list[EventHandlerMapping] = [
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_failed_to_stop,
+            handler=lambda _: Paused.transition(mission_id),
+        ),
+        EventHandlerMapping[AbortedMission](
+            event=events.robot_service_events.mission_successfully_stopped,
+            handler=_successful_stop_event_handler,
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.stopped_mission_already_done,
+            handler=_successful_stop_event_handler,
+        ),
+    ]
+    return State(
+        state_name=States.StoppingPausedMission,
+        signal_exit_event=events.signal_state_machine_exit,
+        event_handler_mappings=event_handlers,
+    )
 
 
 def transition_and_trigger_stop(
     mission_id: str, should_respond_to_API_request: bool = False
-) -> Transition[StoppingPausedMission]:
-    def _transition(events: Events) -> StoppingPausedMission:
+) -> Transition:
+    def _transition(events: Events) -> State:
         events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
         if should_respond_to_API_request:
             events.api_requests.stop_mission.response.trigger_event(

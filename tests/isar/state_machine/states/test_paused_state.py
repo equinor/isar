@@ -2,8 +2,7 @@ from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.pausing import Pausing
-from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRecharge
-from isar.state_machine.states.stopping_paused_mission import StoppingPausedMission
+from isar.state_machine.states_enum import States
 
 
 def test_transition_from_pausing_to_paused(events: Events) -> None:
@@ -16,7 +15,7 @@ def test_transition_from_pausing_to_paused(events: Events) -> None:
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is Paused
+    assert current_state.name is States.Paused
 
 
 def test_transition_from_paused_to_stopping_paused_mission(events: Events) -> None:
@@ -30,7 +29,7 @@ def test_transition_from_paused_to_stopping_paused_mission(events: Events) -> No
 
     current_state = transition(events)
 
-    assert type(current_state) is StoppingPausedMission
+    assert current_state.name is States.StoppingPausedMission
     assert events.api_requests.stop_mission.response.has_event()
 
 
@@ -45,7 +44,7 @@ def test_transition_from_paused_to_stopping_to_recharge(events: Events) -> None:
 
     current_state = transition(events)
 
-    assert type(current_state) is StoppingGoToRecharge
+    assert current_state.name is States.StoppingGoToRecharge
     assert not events.api_requests.stop_mission.response.has_event()
     assert events.state_machine_events.stop_mission.has_event()
 

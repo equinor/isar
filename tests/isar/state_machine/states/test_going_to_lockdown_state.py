@@ -2,12 +2,11 @@ from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.states.await_next_mission import AwaitNextMission
-from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.going_to_recharging import GoingToRecharging
-from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping_go_to_lockdown import StoppingGoToLockdown
+from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 
 
@@ -25,7 +24,7 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
     current_state = transition(events)
 
     assert events.api_requests.send_to_lockdown.response.has_event()
-    assert type(current_state) is GoingToLockdown
+    assert current_state.name is States.GoingToLockdown
 
     lockdown_event_handler: EventHandlerMapping = (
         current_state.get_event_handler_by_event(
@@ -41,7 +40,7 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
     )
 
     current_state = transition(events)
-    assert type(current_state) is InterventionNeeded
+    assert current_state.name is States.InterventionNeeded
 
 
 def test_stopping_lockdown_transitions_to_going_to_lockdown(events: Events) -> None:
@@ -54,7 +53,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(events: Events) -> N
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is GoingToLockdown
+    assert current_state.name is States.GoingToLockdown
 
     assert events.api_requests.send_to_lockdown.response.check().lockdown_started
 
@@ -75,7 +74,7 @@ def test_return_home_transitions_to_going_to_lockdown(events: Events) -> None:
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is GoingToLockdown
+    assert current_state.name is States.GoingToLockdown
 
 
 def test_recharging_transitions_to_going_to_lockdown(events: Events) -> None:
@@ -88,7 +87,7 @@ def test_recharging_transitions_to_going_to_lockdown(events: Events) -> None:
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is GoingToLockdown
+    assert current_state.name is States.GoingToLockdown
 
 
 def test_await_next_mission_transitions_to_going_to_lockdown(events: Events) -> None:
@@ -101,6 +100,6 @@ def test_await_next_mission_transitions_to_going_to_lockdown(events: Events) -> 
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is GoingToLockdown
+    assert current_state.name is States.GoingToLockdown
 
     assert events.api_requests.send_to_lockdown.response.check()

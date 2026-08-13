@@ -7,11 +7,8 @@ from isar.models.events import Events
 from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state import EventHandlerMapping
-from isar.state_machine.states.await_next_mission import AwaitNextMission
-from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.resuming import Resuming
 from isar.state_machine.states.resuming_return_home import ResumingReturnHome
-from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
@@ -93,7 +90,7 @@ def test_transition_from_resuming_to_paused(events: Events) -> None:
     )
 
     current_state = transition(events)
-    assert type(current_state) is Paused
+    assert current_state.name is States.Paused
 
 
 def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_available(
@@ -108,7 +105,7 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
     transition = event_handler.handler(RobotStatus.Available)
 
     current_state = transition(events)
-    assert type(current_state) is AwaitNextMission
+    assert current_state.name is States.AwaitNextMission
 
 
 def test_transition_from_resuming_return_home_to_await_next_mission(
@@ -127,4 +124,4 @@ def test_transition_from_resuming_return_home_to_await_next_mission(
     )
 
     current_state = transition(events)
-    assert type(current_state) is ReturnHomePaused
+    assert current_state.name is States.ReturnHomePaused

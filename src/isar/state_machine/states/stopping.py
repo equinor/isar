@@ -9,48 +9,44 @@ from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, Err
 from robot_interface.models.mission.status import MissionStatus
 
 
-class Stopping(State):
+def Stopping(events: Events, mission_id: str) -> State:
 
-    def __init__(self, events: Events, mission_id: str):
-
-        def _successful_stop_event_handler(
-            _: AbortedMission | EmptyMessage,
-        ) -> Transition[AwaitNextMission.AwaitNextMission]:
-            publish_mission_status(
-                events.mqtt_queue,
-                mission_id,
-                MissionStatus.Cancelled,
-                ErrorMessage(
-                    ErrorReason.RobotActionException, "Mission stopped by user"
-                ),
-            )
-            return AwaitNextMission.transition()
-
-        event_handlers: list[EventHandlerMapping] = [
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_failed_to_stop,
-                handler=lambda _: Monitor.transition_with_existing_mission(mission_id),
-            ),
-            EventHandlerMapping[AbortedMission](
-                event=events.robot_service_events.mission_successfully_stopped,
-                handler=_successful_stop_event_handler,
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.stopped_mission_already_done,
-                handler=_successful_stop_event_handler,
-            ),
-        ]
-        super().__init__(
-            state_name=States.Stopping,
-            signal_exit_event=events.signal_state_machine_exit,
-            event_handler_mappings=event_handlers,
+    def _successful_stop_event_handler(
+        _: AbortedMission | EmptyMessage,
+    ) -> Transition:
+        publish_mission_status(
+            events.mqtt_queue,
+            mission_id,
+            MissionStatus.Cancelled,
+            ErrorMessage(ErrorReason.RobotActionException, "Mission stopped by user"),
         )
+        return AwaitNextMission.transition()
+
+    event_handlers: list[EventHandlerMapping] = [
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_failed_to_stop,
+            handler=lambda _: Monitor.transition_with_existing_mission(mission_id),
+        ),
+        EventHandlerMapping[AbortedMission](
+            event=events.robot_service_events.mission_successfully_stopped,
+            handler=_successful_stop_event_handler,
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.stopped_mission_already_done,
+            handler=_successful_stop_event_handler,
+        ),
+    ]
+    return State(
+        state_name=States.Stopping,
+        signal_exit_event=events.signal_state_machine_exit,
+        event_handler_mappings=event_handlers,
+    )
 
 
 def transition_and_trigger_stop_and_respond_to_API(
     mission_id: str,
-) -> Transition[Stopping]:
-    def _transition(events: Events) -> Stopping:
+) -> Transition:
+    def _transition(events: Events) -> State:
         events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
         events.api_requests.stop_mission.response.trigger_event(
             ControlMissionResponse(success=True)

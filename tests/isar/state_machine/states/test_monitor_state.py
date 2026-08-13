@@ -11,7 +11,6 @@ from isar.models.events import EmptyMessage, Events
 from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state import EventHandlerMapping
-from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.pausing import Pausing
 from isar.state_machine.states.resuming import Resuming
@@ -56,7 +55,7 @@ def test_stopping_to_recharge_goes_to_intervention_needed(events: Events) -> Non
     current_state = transition(events)
 
     assert not events.mqtt_queue.empty()
-    assert type(current_state) is InterventionNeeded
+    assert current_state.name is States.InterventionNeeded
 
 
 def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
@@ -72,7 +71,7 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     transition = event_handler.handler(EmptyMessage())
     current_state = transition(events)
 
-    assert type(current_state) is Monitor
+    assert current_state.name is States.Monitor
 
 
 def test_stopping_lockdown_failing_to_monitor(events: Events) -> None:
@@ -89,7 +88,7 @@ def test_stopping_lockdown_failing_to_monitor(events: Events) -> None:
     assert events.mqtt_queue.empty()
 
     current_state = transition(events)
-    assert type(current_state) is Monitor
+    assert current_state.name is States.Monitor
 
 
 def test_transition_from_pausing_to_monitor(events: Events) -> None:
@@ -105,7 +104,7 @@ def test_transition_from_pausing_to_monitor(events: Events) -> None:
     transition = event_handler.handler(error_event)
 
     current_state = transition(events)
-    assert type(current_state) is Monitor
+    assert current_state.name is States.Monitor
 
 
 def test_transition_from_resuming_to_monitor(events: Events) -> None:
@@ -118,7 +117,7 @@ def test_transition_from_resuming_to_monitor(events: Events) -> None:
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is Monitor
+    assert current_state.name is States.Monitor
 
 
 def test_state_machine_with_unsuccessful_mission_stop(
@@ -267,6 +266,6 @@ def test_transition_from_monitor_to_stopping_to_recharge(events: Events) -> None
 
     current_state = transition(events)
 
-    assert type(current_state) is StoppingGoToRecharge
+    assert current_state.name is States.StoppingGoToRecharge
     assert not events.api_requests.stop_mission.response.has_event()
     assert events.state_machine_events.stop_mission.has_event()

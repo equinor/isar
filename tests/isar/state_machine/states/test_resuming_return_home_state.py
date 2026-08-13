@@ -1,7 +1,7 @@
 from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping
-from isar.state_machine.states.resuming_return_home import ResumingReturnHome
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
+from isar.state_machine.states_enum import States
 
 
 def test_transition_from_return_home_paused_to_resuming_return_home(
@@ -16,4 +16,4 @@ def test_transition_from_return_home_paused_to_resuming_return_home(
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is ResumingReturnHome
+    assert current_state.name is States.ResumingReturnHome

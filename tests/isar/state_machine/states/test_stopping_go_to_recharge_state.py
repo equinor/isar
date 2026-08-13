@@ -1,7 +1,7 @@
 from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.monitor import Monitor
-from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRecharge
+from isar.state_machine.states_enum import States
 
 
 def test_monitor_goes_to_return_home_when_battery_low(events: Events) -> None:
@@ -13,4 +13,4 @@ def test_monitor_goes_to_return_home_when_battery_low(events: Events) -> None:
     transition = event_handler.handler(EmptyMessage())
 
     current_state = transition(events)
-    assert type(current_state) is StoppingGoToRecharge
+    assert current_state.name is States.StoppingGoToRecharge

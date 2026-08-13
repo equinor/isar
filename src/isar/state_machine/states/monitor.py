@@ -14,97 +14,93 @@ from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
 
 
-class Monitor(State):
+def Monitor(events: Events, mission_id: str) -> State:
 
-    def __init__(self, events: Events, mission_id: str):
-
-        def _mission_success_event_handler(
-            _: EmptyMessage,
-        ) -> Transition[AwaitNextMission.AwaitNextMission]:
-            publish_mission_status(
-                events.mqtt_queue, mission_id, MissionStatus.Successful, None
-            )
-            return AwaitNextMission.transition()
-
-        def _mission_failed_event_handler(
-            error_message: ErrorMessage,
-        ) -> Transition[AwaitNextMission.AwaitNextMission]:
-            publish_mission_status(
-                events.mqtt_queue,
-                mission_id,
-                MissionStatus.Failed,
-                error_message,
-            )
-            return AwaitNextMission.transition()
-
-        def _stop_mission_event_handler(
-            stop_mission_id: str,
-        ) -> Transition[Stopping.Stopping] | None:
-            if mission_id == stop_mission_id or stop_mission_id == "":
-                return Stopping.transition_and_trigger_stop_and_respond_to_API(
-                    mission_id
-                )
-            else:
-                events.api_requests.stop_mission.response.trigger_event(
-                    ControlMissionResponse(
-                        success=False, failure_reason="Mission not found"
-                    )
-                )
-                return None
-
-        event_handlers: list[EventHandlerMapping] = [
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_started_successfully,
-                handler=lambda _: publish_mission_status(
-                    events.mqtt_queue, mission_id, MissionStatus.InProgress, None
-                ),
-            ),
-            EventHandlerMapping[str](
-                event=events.api_requests.stop_mission.request,
-                handler=_stop_mission_event_handler,
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.api_requests.pause_mission.request,
-                handler=lambda _: Pausing.transition_and_pause_mission_and_reply_to_API(
-                    mission_id
-                ),
-            ),
-            EventHandlerMapping[ErrorMessage](
-                event=events.robot_service_events.mission_failed,
-                handler=_mission_failed_event_handler,
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.mission_succeeded,
-                handler=_mission_success_event_handler,
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.battery_below_mission_threshold,
-                handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.api_requests.send_to_lockdown.request,
-                handler=lambda _: StoppingGoToLockdown.transition_and_stop_mission(
-                    mission_id
-                ),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.api_requests.set_maintenance_mode.request,
-                handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(
-                    mission_id
-                ),
-            ),
-        ]
-        super().__init__(
-            state_name=States.Monitor,
-            signal_exit_event=events.signal_state_machine_exit,
-            event_handler_mappings=event_handlers,
+    def _mission_success_event_handler(
+        _: EmptyMessage,
+    ) -> Transition:
+        publish_mission_status(
+            events.mqtt_queue, mission_id, MissionStatus.Successful, None
         )
+        return AwaitNextMission.transition()
+
+    def _mission_failed_event_handler(
+        error_message: ErrorMessage,
+    ) -> Transition:
+        publish_mission_status(
+            events.mqtt_queue,
+            mission_id,
+            MissionStatus.Failed,
+            error_message,
+        )
+        return AwaitNextMission.transition()
+
+    def _stop_mission_event_handler(
+        stop_mission_id: str,
+    ) -> Transition | None:
+        if mission_id == stop_mission_id or stop_mission_id == "":
+            return Stopping.transition_and_trigger_stop_and_respond_to_API(mission_id)
+        else:
+            events.api_requests.stop_mission.response.trigger_event(
+                ControlMissionResponse(
+                    success=False, failure_reason="Mission not found"
+                )
+            )
+            return None
+
+    event_handlers: list[EventHandlerMapping] = [
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_started_successfully,
+            handler=lambda _: publish_mission_status(
+                events.mqtt_queue, mission_id, MissionStatus.InProgress, None
+            ),
+        ),
+        EventHandlerMapping[str](
+            event=events.api_requests.stop_mission.request,
+            handler=_stop_mission_event_handler,
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.api_requests.pause_mission.request,
+            handler=lambda _: Pausing.transition_and_pause_mission_and_reply_to_API(
+                mission_id
+            ),
+        ),
+        EventHandlerMapping[ErrorMessage](
+            event=events.robot_service_events.mission_failed,
+            handler=_mission_failed_event_handler,
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.mission_succeeded,
+            handler=_mission_success_event_handler,
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.battery_below_mission_threshold,
+            handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.api_requests.send_to_lockdown.request,
+            handler=lambda _: StoppingGoToLockdown.transition_and_stop_mission(
+                mission_id
+            ),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.api_requests.set_maintenance_mode.request,
+            handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(
+                mission_id
+            ),
+        ),
+    ]
+    return State(
+        state_name=States.Monitor,
+        signal_exit_event=events.signal_state_machine_exit,
+        event_handler_mappings=event_handlers,
+    )
 
 
 def transition_and_start_mission(
     mission: Mission, should_respond_to_API_request: bool = False
-) -> Transition[Monitor]:
-    def _transition(events: Events) -> Monitor:
+) -> Transition:
+    def _transition(events: Events) -> State:
         publish_mission_status(
             events.mqtt_queue, mission.id, MissionStatus.NotStarted, None
         )
@@ -123,8 +119,8 @@ def transition_and_start_mission(
     return _transition
 
 
-def transition_with_existing_mission(mission_id: str) -> Transition[Monitor]:
-    def _transition(events: Events) -> Monitor:
+def transition_with_existing_mission(mission_id: str) -> Transition:
+    def _transition(events: Events) -> State:
         return Monitor(events, mission_id=mission_id)
 
     return _transition

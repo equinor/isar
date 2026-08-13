@@ -1,9 +1,9 @@
 from isar.models.events import Events
 from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.home import Home
-from isar.state_machine.states.maintenance import Maintenance
 from isar.state_machine.states.offline import Offline
 from isar.state_machine.states.unknown_status import UnknownStatus
+from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
 
@@ -21,7 +21,7 @@ def test_home_transitions_to_maintenance_mode_when_teleoperating(
     assert transition is not None
 
     current_state = transition(events)
-    assert type(current_state) is Maintenance
+    assert current_state.name is States.Maintenance
 
 
 def test_unknown_status_transitions_to_maintenance_mode_when_teleoperating(
@@ -38,7 +38,7 @@ def test_unknown_status_transitions_to_maintenance_mode_when_teleoperating(
     assert transition is not None
 
     current_state = transition(events)
-    assert type(current_state) is Maintenance
+    assert current_state.name is States.Maintenance
 
 
 def test_offline_transitions_to_maintenance_mode_when_teleoperating(
@@ -55,4 +55,4 @@ def test_offline_transitions_to_maintenance_mode_when_teleoperating(
     assert transition is not None
 
     current_state = transition(events)
-    assert type(current_state) is Maintenance
+    assert current_state.name is States.Maintenance

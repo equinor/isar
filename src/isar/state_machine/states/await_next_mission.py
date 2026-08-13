@@ -16,59 +16,55 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
 
-class AwaitNextMission(State):
+def AwaitNextMission(events: Events) -> State:
 
-    def __init__(self, events: Events):
+    event_handlers: list[EventHandlerMapping] = [
+        EventHandlerMapping[Mission](
+            event=events.api_requests.start_mission.request,
+            handler=lambda mission: Monitor.transition_and_start_mission(mission, True),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.api_requests.return_home.request,
+            handler=lambda _: ReturningHome.transition_and_start_mission(True),
+        ),
+        EventHandlerMapping[str](
+            event=events.api_requests.stop_mission.request,
+            handler=lambda mission_id: Stopping.transition_and_trigger_stop_and_respond_to_API(
+                mission_id
+            ),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.api_requests.send_to_lockdown.request,
+            handler=lambda _: GoingToLockdown.transition_and_start_mission_and_report_to_api(),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.robot_service_events.battery_below_mission_threshold,
+            handler=lambda _: GoingToRecharging.transition_and_start_return_home(),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.api_requests.set_maintenance_mode.request,
+            handler=lambda _: Maintenance.transition_and_reply_to_API(),
+        ),
+    ]
 
-        event_handlers: list[EventHandlerMapping] = [
-            EventHandlerMapping[Mission](
-                event=events.api_requests.start_mission.request,
-                handler=lambda mission: Monitor.transition_and_start_mission(
-                    mission, True
-                ),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.api_requests.return_home.request,
-                handler=lambda _: ReturningHome.transition_and_start_mission(True),
-            ),
-            EventHandlerMapping[str](
-                event=events.api_requests.stop_mission.request,
-                handler=lambda mission_id: Stopping.transition_and_trigger_stop_and_respond_to_API(
-                    mission_id
-                ),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.api_requests.send_to_lockdown.request,
-                handler=lambda _: GoingToLockdown.transition_and_start_mission_and_report_to_api(),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.battery_below_mission_threshold,
-                handler=lambda _: GoingToRecharging.transition_and_start_return_home(),
-            ),
-            EventHandlerMapping[EmptyMessage](
-                event=events.api_requests.set_maintenance_mode.request,
-                handler=lambda _: Maintenance.transition_and_reply_to_API(),
-            ),
-        ]
-
-        timers: list[TimeoutHandlerMapping] = [
-            TimeoutHandlerMapping(
-                name="should_return_home_timer",
-                timeout_in_seconds=settings.RETURN_HOME_DELAY,
-                handler=lambda: ReturningHome.transition_and_start_mission(),
-            )
-        ]
-
-        super().__init__(
-            state_name=States.AwaitNextMission,
-            signal_exit_event=events.signal_state_machine_exit,
-            event_handler_mappings=event_handlers,
-            timers=timers,
+    timers: list[TimeoutHandlerMapping] = [
+        TimeoutHandlerMapping(
+            name="should_return_home_timer",
+            timeout_in_seconds=settings.RETURN_HOME_DELAY,
+            handler=lambda: ReturningHome.transition_and_start_mission(),
         )
+    ]
+
+    return State(
+        state_name=States.AwaitNextMission,
+        signal_exit_event=events.signal_state_machine_exit,
+        event_handler_mappings=event_handlers,
+        timers=timers,
+    )
 
 
-def transition() -> Transition[AwaitNextMission]:
-    def _transition(events: Events) -> AwaitNextMission:
+def transition() -> Transition:
+    def _transition(events: Events) -> State:
         return AwaitNextMission(events)
 
     return _transition
