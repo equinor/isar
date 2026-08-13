@@ -32,7 +32,7 @@ class RechargingWithMission(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
-                event=events.robot_service_events.battery_above_recharge_threshold_event,
+                event=events.robot_service_events.battery_above_recharge_threshold,
                 handler=lambda _: Monitor.transition_and_start_mission(
                     mission, should_respond_to_API_request=False
                 ),

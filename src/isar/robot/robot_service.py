@@ -193,7 +193,7 @@ class RobotService:
             self.robot,
             self.signal_exit,
             self.robot_service_events.battery_below_mission_threshold,
-            self.robot_service_events.battery_above_recharge_threshold_event,
+            self.robot_service_events.battery_above_recharge_threshold,
         )
         self.battery_thread.start()
 
