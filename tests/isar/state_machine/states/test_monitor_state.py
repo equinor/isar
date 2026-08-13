@@ -47,8 +47,8 @@ def _mock_robot_exception_with_message() -> RobotException:
 
 def test_stopping_to_recharge_goes_to_intervention_needed(events: Events) -> None:
     current_state = StoppingGoToRecharge(events)
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "failed_stop_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_failed_to_stop
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -65,8 +65,8 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     example_mission: Mission = ReturnHomeMission()
     current_state = StoppingReturnHome(events, example_mission)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "successful_stop_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_successfully_stopped
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -78,8 +78,8 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
 def test_stopping_lockdown_failing_to_monitor(events: Events) -> None:
     current_state = StoppingGoToLockdown(events, "mission_id")
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "failed_stop_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_failed_to_stop
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -95,8 +95,8 @@ def test_stopping_lockdown_failing_to_monitor(events: Events) -> None:
 def test_transition_from_pausing_to_monitor(events: Events) -> None:
     current_state = Pausing(events, "mission_id")
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "failed_pause_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_failed_to_pause
     )
 
     error_event = ErrorMessage(
@@ -111,8 +111,8 @@ def test_transition_from_pausing_to_monitor(events: Events) -> None:
 def test_transition_from_resuming_to_monitor(events: Events) -> None:
     current_state = Resuming(events, "mission_id")
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "successful_resume_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_successfully_resumed
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -259,8 +259,8 @@ def test_robot_mission_status_exception_handling(
 def test_transition_from_monitor_to_stopping_to_recharge(events: Events) -> None:
     current_state = Monitor(events, "test_id")
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "robot_battery_below_threshold_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.battery_below_mission_threshold
     )
 
     transition = event_handler.handler(EmptyMessage())

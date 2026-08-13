@@ -7,8 +7,8 @@ from isar.state_machine.states.resuming import Resuming
 def test_transition_from_paused_to_resuming(events: Events) -> None:
     current_state = Paused(events, "mission_id")
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "resume_mission_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.api_requests.resume_mission.request
     )
 
     transition = event_handler.handler(EmptyMessage())

@@ -22,29 +22,24 @@ class ReturnHomePaused(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
-                name="resume_return_home_event",
                 event=events.api_requests.resume_mission.request,
                 handler=lambda _: ResumingReturnHome.transition_and_resume_mission_and_reply_to_API(),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="robot_battery_below_threshold_event",
                 event=events.robot_service_events.battery_below_mission_threshold,
                 handler=lambda _: ReturningHome.transition_to_existing_mission(),
             ),
             EventHandlerMapping[Mission](
-                name="start_mission_event",
                 event=events.api_requests.start_mission.request,
                 handler=lambda mission: StoppingPausedReturnHome.transition_and_stop_return_home_and_reply_to_API(
                     mission
                 ),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=_send_to_lockdown_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](
-                name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
             ),

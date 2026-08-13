@@ -59,46 +59,38 @@ class Monitor(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
-                name="mission_started_event",
                 event=events.robot_service_events.mission_started_successfully,
                 handler=_mission_started_event_handler,
             ),
             EventHandlerMapping[str](
-                name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
                 handler=_stop_mission_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](
-                name="pause_mission_event",
                 event=events.api_requests.pause_mission.request,
                 handler=lambda _: Pausing.transition_and_pause_mission_and_reply_to_API(
                     mission_id
                 ),
             ),
             EventHandlerMapping[ErrorMessage](
-                name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
                 handler=_mission_failed_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](
-                name="mission_succeeded_event",
                 event=events.robot_service_events.mission_succeeded,
                 handler=_mission_success_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](
-                name="robot_battery_below_threshold_event",
                 event=events.robot_service_events.battery_below_mission_threshold,
                 handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=lambda _: StoppingGoToLockdown.transition_and_stop_mission(
                     mission_id
                 ),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(
                     mission_id

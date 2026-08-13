@@ -14,21 +14,18 @@ class GoingToLockdown(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[ErrorMessage](
-                name="mission_failed_event",
                 event=events.robot_service_events.mission_failed,
                 handler=lambda _: InterventionNeeded.transition(
                     "Lockdown mission failed"
                 ),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="mission_failed_to_resume",
                 event=events.robot_service_events.mission_failed_to_resume,
                 handler=lambda _: InterventionNeeded.transition(
                     "Failed to resume return to home mission"
                 ),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="mission_succeeded_event",
                 event=events.robot_service_events.mission_succeeded,
                 handler=lambda _: Lockdown.transition_without_responding_to_api(),
             ),

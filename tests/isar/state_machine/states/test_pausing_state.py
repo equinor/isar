@@ -7,8 +7,8 @@ from isar.state_machine.states.pausing import Pausing
 def test_transition_from_monitor_to_pausing(events: Events) -> None:
     current_state = Monitor(events, "mission_id")
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "pause_mission_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.api_requests.pause_mission.request
     )
 
     transition = event_handler.handler(EmptyMessage())

@@ -51,41 +51,34 @@ class Home(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[Mission](
-                name="start_mission_event",
                 event=events.api_requests.start_mission.request,
                 handler=lambda mission: Monitor.transition_and_start_mission(
                     mission, True
                 ),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="return_home_event",
                 event=events.api_requests.return_home.request,
                 handler=lambda event: ReturningHome.transition_and_start_mission(True),
             ),
             EventHandlerMapping[str](
-                name="stop_mission_event",
                 event=events.api_requests.stop_mission.request,
                 handler=lambda mission_id: Stopping.transition_and_trigger_stop_and_respond_to_API(
                     mission_id
                 ),
             ),
             EventHandlerMapping[RobotStatus](
-                name="robot_status_event",
                 event=events.robot_service_events.robot_status_update,
                 handler=_robot_status_event_handler,
             ),
             EventHandlerMapping[EmptyMessage](
-                name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=lambda _: Lockdown.transition_and_respond_to_api(),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="robot_battery_below_threshold_event",
                 event=events.robot_service_events.battery_below_mission_threshold,
                 handler=lambda _: Recharging.transition(),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),

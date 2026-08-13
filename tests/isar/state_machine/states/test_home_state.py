@@ -12,8 +12,8 @@ from robot_interface.models.mission.status import RobotStatus
 def test_lockdown_transitions_to_home(events: Events) -> None:
     current_state = Lockdown(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "release_from_lockdown"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.api_requests.release_from_lockdown.request
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -29,10 +29,14 @@ def test_state_machine_with_return_home_failure_successful_retries(
     current_state = ReturningHome(events)
 
     event_handler_success: EventHandlerMapping = (
-        current_state.get_event_handler_by_name("mission_succeeded_event")
+        current_state.get_event_handler_by_event(
+            events.robot_service_events.mission_succeeded
+        )
     )
     event_handler_failure: EventHandlerMapping = (
-        current_state.get_event_handler_by_name("mission_failed_event")
+        current_state.get_event_handler_by_event(
+            events.robot_service_events.mission_failed
+        )
     )
 
     transition = event_handler_failure.handler(
@@ -56,8 +60,8 @@ def test_intervention_needed_transitions_to_home_if_robot_is_home(
 ) -> None:
     current_state = InterventionNeeded(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "robot_status_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.robot_status_update
     )
 
     transition = event_handler.handler(RobotStatus.Home)
@@ -71,8 +75,8 @@ def test_intervention_needed_transitions_to_home_if_robot_is_home(
 def test_recharging_goes_to_home_when_battery_high(events: Events) -> None:
     current_state = Recharging(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "robot_battery_above_recharge_threshold_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.battery_above_recharge_threshold_event
     )
 
     transition = event_handler.handler(EmptyMessage())

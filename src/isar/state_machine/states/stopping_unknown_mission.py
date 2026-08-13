@@ -11,19 +11,16 @@ class StoppingUnknownMission(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
-                name="failed_stop_event",
                 event=events.robot_service_events.mission_failed_to_stop,
                 handler=lambda _: InterventionNeeded.transition(
                     "Failed to stop unknown mission"
                 ),
             ),
             EventHandlerMapping[AbortedMission](
-                name="successful_stop_event",
                 event=events.robot_service_events.mission_successfully_stopped,
                 handler=lambda _: AwaitNextMission.transition(),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="mission_already_done_event",
                 event=events.robot_service_events.stopped_mission_already_done,
                 handler=lambda _: AwaitNextMission.transition(),
             ),

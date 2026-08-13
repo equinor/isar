@@ -8,8 +8,8 @@ from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, Err
 
 def test_stopping_paused_mission_fails(events: Events) -> None:
     current_state = StoppingPausedMission(events, "mission_id")
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "failed_stop_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_failed_to_stop
     )
 
     transition = event_handler.handler(
@@ -24,8 +24,8 @@ def test_stopping_paused_mission_fails(events: Events) -> None:
 
 def test_stopping_paused_mission_succeeds(events: Events) -> None:
     current_state = StoppingPausedMission(events, "mission_id")
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "successful_stop_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_successfully_stopped
     )
 
     transition = event_handler.handler(EmptyMessage())

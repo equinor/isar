@@ -33,22 +33,18 @@ class InterventionNeeded(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
-                name="return_home_event",
                 event=events.api_requests.return_home.request,
                 handler=lambda event: ReturningHome.transition_and_start_mission(True),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="release_intervention_needed_event",
                 event=events.api_requests.release_intervention_needed.request,
                 handler=release_intervention_needed_handler,
             ),
             EventHandlerMapping[EmptyMessage](
-                name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),
             EventHandlerMapping[RobotStatus](
-                name="robot_status_event",
                 event=events.robot_service_events.robot_status_update,
                 handler=_robot_status_event_handler,
             ),

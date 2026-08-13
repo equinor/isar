@@ -24,22 +24,18 @@ class Recharging(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
-                name="robot_battery_above_recharge_threshold_event",
                 event=events.robot_service_events.battery_above_recharge_threshold_event,
                 handler=lambda _: Home.transition(),
             ),
             EventHandlerMapping[RobotStatus](
-                name="robot_offline_event",
                 event=events.robot_service_events.robot_status_update,
                 handler=robot_offline_handler,
             ),
             EventHandlerMapping[EmptyMessage](
-                name="send_to_lockdown_event",
                 event=events.api_requests.send_to_lockdown.request,
                 handler=lambda _: Lockdown.transition_and_respond_to_api(),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="set_maintenance_mode",
                 event=events.api_requests.set_maintenance_mode.request,
                 handler=lambda _: Maintenance.transition_and_reply_to_API(),
             ),

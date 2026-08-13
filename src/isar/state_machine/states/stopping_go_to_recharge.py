@@ -12,21 +12,18 @@ class StoppingGoToRecharge(State):
 
         event_handlers: list[EventHandlerMapping] = [
             EventHandlerMapping[EmptyMessage](
-                name="failed_stop_event",
                 event=events.robot_service_events.mission_failed_to_stop,
                 handler=lambda _: InterventionNeeded.transition(
                     "Failed to stop mission when battery was low"
                 ),
             ),
             EventHandlerMapping[AbortedMission](
-                name="successful_stop_event",
                 event=events.robot_service_events.mission_successfully_stopped,
                 handler=lambda aborted_mission: GoingToRechargingWithMission.transition_and_start_return_home(
                     aborted_mission
                 ),
             ),
             EventHandlerMapping[EmptyMessage](
-                name="mission_already_done_event",
                 event=events.robot_service_events.stopped_mission_already_done,
                 handler=lambda _: GoingToRecharging.transition_and_start_return_home(),
             ),

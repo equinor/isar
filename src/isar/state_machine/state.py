@@ -16,7 +16,6 @@ Transition = Callable[[Events], T_state_co]
 
 @dataclass
 class EventHandlerMapping[T]:
-    name: str
     event: Event[T]
     handler: Callable[[T], Transition | None]
 
@@ -42,10 +41,10 @@ class State(ABC):
         self.event_handler_mappings = event_handler_mappings
         self.timers = timers if timers is not None else []
 
-    def get_event_handler_by_name(self, event_handler_name: str) -> EventHandlerMapping:
+    def get_event_handler_by_event(self, event: Event) -> EventHandlerMapping:
         filtered_handlers = list(
             filter(
-                lambda mapping: mapping.name == event_handler_name,
+                lambda mapping: mapping.event == event,
                 self.event_handler_mappings,
             )
         )
@@ -86,7 +85,7 @@ class State(ABC):
                 if event_value is not None:
                     transition = handler_mapping.handler(event_value)
                     self.logger.debug(
-                        f"Event '{handler_mapping.name}' triggered with input: {event_value}. "
+                        f"Event '{handler_mapping.event.name}' triggered with input: {event_value}. "
                     )
                     if transition is not None:
                         self.logger.debug(

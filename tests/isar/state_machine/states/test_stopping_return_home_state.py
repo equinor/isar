@@ -11,8 +11,8 @@ from tests.test_mocks.task import StubTask
 def test_return_home_cancelled_when_new_mission_received(events: Events) -> None:
     current_state = ReturningHome(events)
 
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "start_mission_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.api_requests.start_mission.request
     )
 
     mission: Mission = Mission(
@@ -30,8 +30,8 @@ def test_transition_to_stopping_return_home_replies_to_API(events: Events) -> No
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
     current_state = ReturningHome(events)
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "start_mission_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.api_requests.start_mission.request
     )
 
     transition = event_handler.handler(mission)
@@ -46,8 +46,8 @@ def test_stopping_return_home_mission_fails(events: Events) -> None:
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
     current_state = StoppingReturnHome(events, mission)
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "failed_stop_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_failed_to_stop
     )
 
     transition = event_handler.handler(
@@ -65,8 +65,8 @@ def test_stopping_return_home_mission_succeeds(events: Events) -> None:
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
     current_state = StoppingReturnHome(events, mission)
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_name(
-        "successful_stop_event"
+    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
+        events.robot_service_events.mission_successfully_stopped
     )
 
     transition = event_handler.handler(EmptyMessage())
