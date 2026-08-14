@@ -2,7 +2,6 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.maintenance as Maintenance
 from isar.apis.models.models import MaintenanceResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.services.utilities.mqtt_utilities import publish_mission_aborted
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 
@@ -26,8 +25,7 @@ def StoppingDueToMaintenance(events: Events, mission_id: str | None = None) -> S
         _: AbortedMission | EmptyMessage,
     ) -> Transition:
         if mission_id:
-            publish_mission_aborted(
-                events.mqtt_queue,
+            events.mqtt_queue.publish_mission_aborted(
                 mission_id,
                 "Mission aborted, robot being sent to maintenance",
             )

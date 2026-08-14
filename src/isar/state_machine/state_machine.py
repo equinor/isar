@@ -3,6 +3,7 @@ from collections import deque
 
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Event, Events
+from isar.models.mqtt_queue import MQTTQueue
 from isar.models.status import IsarStatus
 from isar.services.service_connections.persistent_memory import (
     NoSuchRobotException,
@@ -11,14 +12,12 @@ from isar.services.service_connections.persistent_memory import (
     create_persistent_robot_state,
     read_persistent_robot_state,
 )
-from isar.services.utilities.mqtt_utilities import publish_isar_status
 from isar.state_machine.state import State, Transition
 from isar.state_machine.state_metrics import StateMetricsPublisher
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.maintenance import Maintenance
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 
 class StateMachine:
@@ -27,7 +26,7 @@ class StateMachine:
     def __init__(
         self,
         events: Events,
-        mqtt_publisher: MqttClientInterface,
+        mqtt_queue: MQTTQueue,
     ):
         """Initializes the state machine.
 
@@ -35,15 +34,15 @@ class StateMachine:
         ----------
         events : Events
             Events used for API and robot service communication.
-        mqtt_publisher : MqttClientInterface
-            Instance of MQTT client interface which has a publish function
+        mqtt_queue : MQTTQueue
+            Instance of MQTT queue which has a publish function
 
         """
         self.logger = logging.getLogger("state_machine")
 
         self.events: Events = events
         self.state_event: Event[States] = events.state
-        self.mqtt_publisher: MqttClientInterface | None = mqtt_publisher
+        self.mqtt_queue: MQTTQueue = mqtt_queue
 
         self.current_state: State = UnknownStatus(self.events)
 
@@ -124,7 +123,7 @@ class StateMachine:
 
         self.transitions_list.append(current_state.name)
         self.logger.info("State: %s", current_state.name)
-        publish_isar_status(self.mqtt_publisher, state_to_status(current_state.name))
+        self.mqtt_queue.publish_isar_status(state_to_status(current_state.name))
 
 
 def state_to_status(state_name: States) -> IsarStatus:

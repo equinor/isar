@@ -3,7 +3,7 @@ import logging
 from collections.abc import Callable, Iterator
 
 from isar.config.settings import settings
-from isar.services.utilities.mqtt_utilities import publish_task_status
+from isar.models.mqtt_queue import MQTTQueue
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
     RobotCommunicationException,
@@ -16,7 +16,6 @@ from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from robot_interface.models.mission.task import TASKS, InspectionTask
 from robot_interface.robot_interface import RobotInterface
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 
 def get_next_task(task_iterator: Iterator[TASKS]) -> TASKS | None:
@@ -148,7 +147,7 @@ async def get_and_report_task_status(
     current_task: TASKS,
     robot: RobotInterface,
     mission_id: str,
-    mqtt_publisher: MqttClientInterface,
+    mqtt_queue: MQTTQueue,
 ) -> TaskStatus:
     logger = logging.getLogger("robot")
     new_task_status: TaskStatus | None = None
@@ -158,7 +157,7 @@ async def get_and_report_task_status(
         if current_task.status != new_task_status:
             current_task.status = new_task_status
             log_task_status(logger, current_task)
-            publish_task_status(mqtt_publisher, current_task, mission_id)
+            mqtt_queue.publish_task_status(current_task, mission_id)
         return new_task_status
 
     except RobotTaskStatusException as e:
@@ -173,7 +172,7 @@ async def robot_monitor_mission(
     mission: Mission,
     robot: RobotInterface,
     request_inspection_upload: Callable[[InspectionTask], None],
-    mqtt_publisher: MqttClientInterface,
+    mqtt_queue: MQTTQueue,
     should_report_task_status: bool,
 ) -> tuple[ErrorMessage | None, Mission, bool]:
     logger = logging.getLogger("robot")
@@ -227,19 +226,19 @@ async def robot_monitor_mission(
             if should_report_task_status and current_task:
                 if mission_status == MissionStatus.Cancelled:
                     current_task.status = TaskStatus.Cancelled
-                    publish_task_status(mqtt_publisher, current_task, mission.id)
+                    mqtt_queue.publish_task_status(current_task, mission.id)
                     current_task = None
                     continue
                 if mission_status == MissionStatus.Failed:
                     current_task.status = TaskStatus.Failed
-                    publish_task_status(mqtt_publisher, current_task, mission.id)
+                    mqtt_queue.publish_task_status(current_task, mission.id)
                     current_task = None
                     continue
                 task_status = await get_and_report_task_status(
                     current_task,
                     robot,
                     mission.id,
-                    mqtt_publisher,
+                    mqtt_queue,
                 )
                 if task_status is None:
                     # Currently we only stop mission monitoring after failing to get mission status
@@ -253,7 +252,7 @@ async def robot_monitor_mission(
     except asyncio.CancelledError:
         if should_report_task_status and current_task is not None:
             current_task.status = TaskStatus.Cancelled
-            publish_task_status(mqtt_publisher, current_task, mission.id)
+            mqtt_queue.publish_task_status(current_task, mission.id)
         return None, mission, True
     finally:
         logger.info("Stopped monitoring mission")

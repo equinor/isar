@@ -1,7 +1,6 @@
 import json
 import logging
 import time
-from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -34,55 +33,6 @@ def props_expiry(seconds: int) -> Properties:
     p = Properties(PacketTypes.PUBLISH)
     p.MessageExpiryInterval = seconds
     return p
-
-
-class MqttClientInterface(metaclass=ABCMeta):
-    @abstractmethod
-    def publish(
-        self,
-        topic: str,
-        payload: str,
-        qos: int = 0,
-        retain: bool = False,
-        properties: Properties | None = None,
-    ) -> None:
-        """
-        Parameters
-        ----------
-        topic : string
-            MQTT topic to publish to
-        payload : string
-            Payload to send to publish on the topic
-        qos : integer
-            Quality of Service
-        retain : boolean
-            Retain on topic
-
-        Returns
-        -------
-        """
-
-
-class MqttPublisher(MqttClientInterface):
-    def __init__(self, mqtt_queue: Queue[MQTTQueueMessage]) -> None:
-        self.mqtt_queue: Queue[MQTTQueueMessage] = mqtt_queue
-
-    def publish(
-        self,
-        topic: str,
-        payload: str,
-        qos: int = 0,
-        retain: bool = False,
-        properties: Properties | None = None,
-    ) -> None:
-        queue_message: MQTTQueueMessage = MQTTQueueMessage(
-            topic=topic,
-            payload=payload,
-            qos=qos,
-            retain=retain,
-            properties=properties,
-        )
-        self.mqtt_queue.put(queue_message)
 
 
 class MqttTelemetryPublisher(Thread):

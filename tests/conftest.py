@@ -57,7 +57,11 @@ def setup_test_environment() -> None:
 def container() -> ApplicationContainer:
     """Fixture to provide the dependency-injector container without auth."""
     container = ApplicationContainer()
+
     container.events.override(providers.Singleton(Events))
+    container.mqtt_queue.override(
+        providers.Object(container.events.provided.mqtt_queue)
+    )
     container.storage_handlers.override(
         providers.List(providers.Singleton(StorageFake))
     )
@@ -66,7 +70,7 @@ def container() -> ApplicationContainer:
         providers.Singleton(
             Uploader,
             container.storage_handlers(),
-            container.mqtt_client(),
+            container.mqtt_queue(),
         )
     )
     container.robot.override(
@@ -74,7 +78,7 @@ def container() -> ApplicationContainer:
             RobotService,
             events=container.events(),
             robot=container.robot_interface(),
-            mqtt_publisher=container.mqtt_client(),
+            mqtt_queue=container.mqtt_queue(),
         )
     )
     container.inspection_service.override(
@@ -82,14 +86,14 @@ def container() -> ApplicationContainer:
             RobotInspectionService,
             events=container.events(),
             robot=container.robot_interface(),
-            mqtt_publisher=container.mqtt_client(),
+            mqtt_queue=container.mqtt_queue(),
         )
     )
     container.state_machine.override(
         providers.Singleton(
             StateMachine,
             events=container.events,
-            mqtt_publisher=container.mqtt_client(),
+            mqtt_queue=container.mqtt_queue(),
         )
     )
     return container
@@ -205,7 +209,7 @@ def robot_service_thread(
     robot_service: RobotService = RobotService(
         events=container.events(),
         robot=container.robot_interface(),
-        mqtt_publisher=container.mqtt_client(),
+        mqtt_queue=container.mqtt_queue(),
     )
 
     robot_service_thread: RobotServiceThreadMock = RobotServiceThreadMock(
@@ -240,7 +244,7 @@ def mocked_robot_service(
     robot_service: RobotService = RobotService(
         events=container.events(),
         robot=container.robot_interface(),
-        mqtt_publisher=container.mqtt_client(),
+        mqtt_queue=container.mqtt_queue(),
     )
 
     mocker.patch.object(RobotBatteryThread, "run", return_value=lambda: None)
@@ -255,9 +259,15 @@ def mocked_robot_service(
 
 
 @pytest.fixture(autouse=True)
-def run_before_and_after_tests() -> Generator[None]:
+def run_before_and_after_tests(container: ApplicationContainer) -> Generator[None]:
     results_folder: Path = Path("tests/results")
+
     yield
+
+    container.events.reset()
+    container.mqtt_queue.override(
+        providers.Object(container.events.provides().mqtt_queue)
+    )
 
     print("Removing temporary results folder for testing")
     if results_folder.exists():
