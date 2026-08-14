@@ -3,6 +3,7 @@ import logging
 import time
 from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from logging import Logger
 from queue import Queue
@@ -19,7 +20,14 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.telemetry.payloads import CloudHealthPayload
 
-MQTTQueueType = tuple[str, str, int, bool, Properties | None]
+
+@dataclass
+class MQTTQueueMessage:
+    topic: str
+    payload: str
+    qos: int
+    retain: bool
+    properties: Properties | None
 
 
 def props_expiry(seconds: int) -> Properties:
@@ -56,8 +64,8 @@ class MqttClientInterface(metaclass=ABCMeta):
 
 
 class MqttPublisher(MqttClientInterface):
-    def __init__(self, mqtt_queue: Queue[MQTTQueueType]) -> None:
-        self.mqtt_queue: Queue[MQTTQueueType] = mqtt_queue
+    def __init__(self, mqtt_queue: Queue[MQTTQueueMessage]) -> None:
+        self.mqtt_queue: Queue[MQTTQueueMessage] = mqtt_queue
 
     def publish(
         self,
@@ -67,12 +75,12 @@ class MqttPublisher(MqttClientInterface):
         retain: bool = False,
         properties: Properties | None = None,
     ) -> None:
-        queue_message: tuple[str, str, int, bool, Properties | None] = (
-            topic,
-            payload,
-            qos,
-            retain,
-            properties,
+        queue_message: MQTTQueueMessage = MQTTQueueMessage(
+            topic=topic,
+            payload=payload,
+            qos=qos,
+            retain=retain,
+            properties=properties,
         )
         self.mqtt_queue.put(queue_message)
 
@@ -81,13 +89,13 @@ class MqttTelemetryPublisher(Thread):
     def __init__(
         self,
         name: str,
-        mqtt_queue: Queue[MQTTQueueType],
+        mqtt_queue: Queue[MQTTQueueMessage],
         telemetry_method: Callable,
         topic: str,
         interval: float,
         should_expire: bool,
     ) -> None:
-        self.mqtt_queue: Queue[MQTTQueueType] = mqtt_queue
+        self.mqtt_queue: Queue[MQTTQueueMessage] = mqtt_queue
         self.telemetry_method: Callable = telemetry_method
         self.topic: str = topic
         self.interval: float = interval
@@ -130,11 +138,11 @@ class MqttTelemetryPublisher(Thread):
             if self.should_expire:
                 properties = props_expiry(settings.MQTT_TELEMETRY_EXPIRY)
 
-            queue_message: MQTTQueueType = (
-                topic,
-                payload,
-                0,
-                False,
-                properties,
+            queue_message: MQTTQueueMessage = MQTTQueueMessage(
+                topic=topic,
+                payload=payload,
+                qos=0,
+                retain=False,
+                properties=properties,
             )
             self.mqtt_queue.put(queue_message)

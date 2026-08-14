@@ -14,7 +14,7 @@ from paho.mqtt.properties import Properties
 from paho.mqtt.reasoncodes import ReasonCode
 
 from isar.config.settings import settings
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
+from robot_interface.telemetry.mqtt_client import MqttClientInterface, MQTTQueueMessage
 
 
 def props_expiry(seconds: int) -> Properties:
@@ -44,10 +44,10 @@ def _on_giveup(data: Details) -> None:
 
 
 class MqttClient(MqttClientInterface):
-    def __init__(self, mqtt_queue: Queue) -> None:
+    def __init__(self, mqtt_queue: Queue[MQTTQueueMessage]) -> None:
         self.logger = logging.getLogger("mqtt_client")
         self.logger.setLevel("INFO")
-        self.mqtt_queue: Queue = mqtt_queue
+        self.mqtt_queue: Queue[MQTTQueueMessage] = mqtt_queue
 
         username: str = settings.MQTT_USERNAME
         password: str = ""
@@ -93,23 +93,16 @@ class MqttClient(MqttClientInterface):
                 time.sleep(0)  # avoid CPU spin
                 continue
             try:
-                item: tuple[str, str, int, bool, Properties | None] = (
-                    self.mqtt_queue.get(timeout=1)
-                )
-                if len(item) == 4:
-                    topic, payload, qos, retain = item
-                    properties = None
-                else:
-                    topic, payload, qos, retain, properties = item
+                item: MQTTQueueMessage = self.mqtt_queue.get(timeout=1)
             except Empty:
                 continue
 
             self.publish(
-                topic=topic,
-                payload=payload,
-                qos=qos,
-                retain=retain,
-                properties=properties,
+                topic=item.topic,
+                payload=item.payload,
+                qos=item.qos,
+                retain=item.retain,
+                properties=item.properties,
             )
 
     def on_connect(

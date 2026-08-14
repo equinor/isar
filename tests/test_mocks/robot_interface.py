@@ -16,7 +16,10 @@ from robot_interface.models.mission.status import MissionStatus, RobotStatus, Ta
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig, MediaConnectionType
 from robot_interface.robot_interface import RobotInterface
-from robot_interface.telemetry.mqtt_client import MqttTelemetryPublisher
+from robot_interface.telemetry.mqtt_client import (
+    MQTTQueueMessage,
+    MqttTelemetryPublisher,
+)
 from tests.test_mocks.inspection import stub_image_metadata
 
 _ROBOT_FRAME = Frame(name="robot")
@@ -84,7 +87,7 @@ class StubRobot(RobotInterface):
         return
 
     def get_telemetry_publishers(
-        self, queue: Queue, isar_id: str, robot_name: str
+        self, queue: Queue[MQTTQueueMessage], isar_id: str, robot_name: str
     ) -> list[MqttTelemetryPublisher]:
         return []
 

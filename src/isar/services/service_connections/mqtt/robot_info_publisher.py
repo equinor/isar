@@ -3,12 +3,12 @@ from datetime import UTC, datetime
 from queue import Queue
 
 from isar.config.settings import robot_settings, settings
-from robot_interface.telemetry.mqtt_client import MqttPublisher
+from robot_interface.telemetry.mqtt_client import MqttPublisher, MQTTQueueMessage
 from robot_interface.telemetry.payloads import RobotInfoPayload
 
 
 class RobotInfoPublisher:
-    def __init__(self, mqtt_queue: Queue):
+    def __init__(self, mqtt_queue: Queue[MQTTQueueMessage]):
         self.mqtt_publisher: MqttPublisher = MqttPublisher(mqtt_queue=mqtt_queue)
 
     def run(self) -> None:

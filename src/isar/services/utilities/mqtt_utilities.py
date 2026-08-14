@@ -10,7 +10,7 @@ from robot_interface.models.mission.task import TASKS
 from robot_interface.telemetry.mqtt_client import (
     MqttClientInterface,
     MqttPublisher,
-    MQTTQueueType,
+    MQTTQueueMessage,
 )
 from robot_interface.telemetry.payloads import (
     InterventionNeededPayload,
@@ -50,7 +50,7 @@ def publish_task_status(
 
 
 def publish_mission_status(
-    mqtt_queue: Queue[MQTTQueueType],
+    mqtt_queue: Queue[MQTTQueueMessage],
     mission_id: str,
     mission_status: MissionStatus,
     error_message: ErrorMessage | None,
@@ -97,7 +97,7 @@ def publish_isar_status(
 
 
 def publish_mission_aborted(
-    mqtt_queue: Queue[MQTTQueueType], current_mission_id: str | None, reason: str
+    mqtt_queue: Queue[MQTTQueueMessage], current_mission_id: str | None, reason: str
 ) -> None:
     mqtt_publisher: MqttPublisher = MqttPublisher(mqtt_queue=mqtt_queue)
 
@@ -119,7 +119,7 @@ def publish_mission_aborted(
 
 
 def publish_intervention_needed(
-    mqtt_queue: Queue[MQTTQueueType], error_message: str
+    mqtt_queue: Queue[MQTTQueueMessage], error_message: str
 ) -> None:
     """Publishes the intervention needed message to the MQTT Broker"""
     mqtt_publisher: MqttPublisher = MqttPublisher(mqtt_queue=mqtt_queue)
