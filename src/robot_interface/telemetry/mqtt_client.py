@@ -6,6 +6,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from logging import Logger
 from queue import Queue
+from threading import Thread
 
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.properties import Properties
@@ -76,41 +77,41 @@ class MqttPublisher(MqttClientInterface):
         self.mqtt_queue.put(queue_message)
 
 
-class MqttTelemetryPublisher(MqttClientInterface):
+class MqttTelemetryPublisher(Thread):
     def __init__(
         self,
+        name: str,
         mqtt_queue: Queue[MQTTQueueType],
         telemetry_method: Callable,
         topic: str,
         interval: float,
-        qos: int = 0,
-        retain: bool = False,
-        properties: Properties | None = None,
+        should_expire: bool,
     ) -> None:
         self.mqtt_queue: Queue[MQTTQueueType] = mqtt_queue
         self.telemetry_method: Callable = telemetry_method
         self.topic: str = topic
         self.interval: float = interval
-        self.qos: int = qos
-        self.retain: bool = retain
-        self.properties: Properties | None = properties
+        self.should_expire: bool = should_expire
 
         self.logger: Logger = logging.getLogger("telemetry")
 
-    def run(self, isar_id: str, robot_name: str) -> None:
-        self.cloud_health_topic: str = f"isar/{isar_id}/cloud_health"
-        self.battery_topic: str = f"isar/{isar_id}/battery"
-        self.pose_topic: str = f"isar/{isar_id}/pose"
-        self.pressure_topic: str = f"isar/{isar_id}/pressure"
+        Thread.__init__(self, name=f"Telemetry thread - {name}")
+
+    def stop(self) -> None:
+        return
+
+    def run(self) -> None:
+        robot_name = settings.ROBOT_NAME
+        isar_id = settings.ISAR_ID
         topic: str
         payload: str
 
         while True:
+            time.sleep(self.interval)
             try:
-                payload = self.telemetry_method(isar_id=isar_id, robot_name=robot_name)
+                payload = self.telemetry_method()
                 topic = self.topic
             except RobotTelemetryPoseException, RobotTelemetryNoUpdateException:
-                time.sleep(self.interval)
                 continue
             except RobotTelemetryException:
                 payload = json.dumps(
@@ -120,43 +121,20 @@ class MqttTelemetryPublisher(MqttClientInterface):
                         timestamp=datetime.now(UTC),
                     )
                 )
-                topic = self.cloud_health_topic
+                topic = f"isar/{isar_id}/cloud_health"
             except Exception as e:  # noqa: BLE001
                 self.logger.error(f"Unexpected error in MQTT telemetry publisher: {e}")
-                time.sleep(self.interval)
                 continue
 
-            publish_properties = self.properties
+            properties: Properties | None = None
+            if self.should_expire:
+                properties = props_expiry(settings.MQTT_TELEMETRY_EXPIRY)
 
-            if topic in (
-                self.battery_topic,
-                self.pose_topic,
-                self.pressure_topic,
-            ):
-                publish_properties = props_expiry(settings.MQTT_TELEMETRY_EXPIRY)
-
-            self.publish(
-                topic=topic,
-                payload=payload,
-                qos=self.qos,
-                retain=self.retain,
-                properties=publish_properties,
+            queue_message: MQTTQueueType = (
+                topic,
+                payload,
+                0,
+                False,
+                properties,
             )
-            time.sleep(self.interval)
-
-    def publish(
-        self,
-        topic: str,
-        payload: str,
-        qos: int = 0,
-        retain: bool = False,
-        properties: Properties | None = None,
-    ) -> None:
-        queue_message: MQTTQueueType = (
-            topic,
-            payload,
-            qos,
-            retain,
-            properties,
-        )
-        self.mqtt_queue.put(queue_message)
+            self.mqtt_queue.put(queue_message)
