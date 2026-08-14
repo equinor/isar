@@ -16,7 +16,6 @@ from isar.state_machine.state_machine import StateMachine
 from isar.storage.blob_storage import BlobStorage
 from isar.storage.local_storage import LocalStorage
 from isar.storage.uploader import Uploader
-from robot_interface.telemetry.mqtt_client import MqttPublisher
 
 
 class ApplicationContainer(containers.DeclarativeContainer):
@@ -34,16 +33,13 @@ class ApplicationContainer(containers.DeclarativeContainer):
     robot_utilities = providers.Singleton(RobotUtilities, robot=robot_interface)
 
     # Mqtt client
-    mqtt_client = providers.Singleton(
-        MqttPublisher,
-        mqtt_queue=providers.Callable(events.provided.mqtt_queue),
-    )
+    mqtt_queue = providers.Object(events.provided.mqtt_queue)
 
     # State machine
     state_machine = providers.Singleton(
         StateMachine,
         events=events,
-        mqtt_publisher=mqtt_client,
+        mqtt_queue=mqtt_queue(),
     )
 
     # API and controllers
@@ -64,7 +60,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         authenticator=authenticator,
         scheduling_controller=scheduling_controller,
         robot_controller=robot_controller,
-        mqtt_publisher=mqtt_client,
+        mqtt_queue=mqtt_queue(),
     )
 
     # Storage
@@ -82,14 +78,14 @@ class ApplicationContainer(containers.DeclarativeContainer):
         RobotService,
         events=events,
         robot=robot_interface,
-        mqtt_publisher=mqtt_client,
+        mqtt_queue=mqtt_queue(),
     )
 
     # Uploader
     uploader = providers.Singleton(
         Uploader,
         storage_handlers=storage_handlers,
-        mqtt_publisher=mqtt_client,
+        mqtt_queue=mqtt_queue(),
     )
 
     # Inspection data service

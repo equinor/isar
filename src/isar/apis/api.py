@@ -17,7 +17,7 @@ from isar.apis.robot_control.robot_controller import RobotController
 from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
 from isar.config.settings import settings
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
+from isar.models.mqtt_queue import MQTTQueue
 from robot_interface.telemetry.payloads import StartUpMessagePayload
 
 
@@ -27,7 +27,7 @@ class API:
         authenticator: Authenticator,
         scheduling_controller: SchedulingController,
         robot_controller: RobotController,
-        mqtt_publisher: MqttClientInterface,
+        mqtt_queue: MQTTQueue,
         port: int = settings.API_PORT,
     ) -> None:
         self.authenticator: Authenticator = authenticator
@@ -35,7 +35,7 @@ class API:
         self.robot_controller: RobotController = robot_controller
         self.host: str = "0.0.0.0"  # Locking uvicorn to use 0.0.0.0
         self.port: int = port
-        self.mqtt_publisher: MqttClientInterface = mqtt_publisher
+        self.mqtt_queue: MQTTQueue = mqtt_queue
 
         self.logger: Logger = logging.getLogger("api")
 
@@ -360,9 +360,6 @@ class API:
         )
 
     def _publish_startup_message(self) -> None:
-        if not self.mqtt_publisher:
-            return
-
         payload: StartUpMessagePayload = StartUpMessagePayload(
             isar_id=settings.ISAR_ID,
             timestamp=datetime.now(UTC),
@@ -370,7 +367,7 @@ class API:
 
         self.logger.info("Publishing startup message to MQTT broker")
 
-        self.mqtt_publisher.publish(
+        self.mqtt_queue.publish(
             topic=settings.TOPIC_ISAR_STARTUP,
             payload=payload.model_dump_json(),
             qos=1,

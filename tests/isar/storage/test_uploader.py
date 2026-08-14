@@ -11,7 +11,6 @@ from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TakeImage
 from tests.test_mocks.blob_storage import StorageEmptyBlobPathsFake, StorageFake
 from tests.test_mocks.inspection import stub_image_metadata
-from tests.test_mocks.mqtt_client import MqttPublisherFake
 
 MISSION_ID = "some-mission-id"
 
@@ -87,44 +86,35 @@ def test_should_not_publish_when_blob_paths_are_empty(uploader: Uploader) -> Non
     storage_handler: StorageEmptyBlobPathsFake() = StorageEmptyBlobPathsFake()  # type: ignore
     uploader.storage_handlers[0] = storage_handler
 
-    mqtt_fake = MqttPublisherFake()
-    uploader.mqtt_publisher = mqtt_fake
-
     uploader.upload_inspection(inspection, mission)
     assert inspection in storage_handler.stored
 
-    assert len(mqtt_fake.published) == 0
-
-
-def _put_inspection_with_analysis_types(
-    uploader: Uploader,
-    analysis_types: list[str] | None,
-) -> MqttPublisherFake:
-    inspection = InspectionBlob(
-        metadata=stub_image_metadata(analysis_types=analysis_types), id=str(uuid4())
-    )
-    mission = Mission(id="id", name="m")
-
-    mqtt_fake = MqttPublisherFake()
-    uploader.mqtt_publisher = mqtt_fake
-
-    uploader.upload_inspection(inspection, mission)
-    return mqtt_fake
+    assert uploader.mqtt_queue.qsize() == 0
 
 
 def test_publishes_required_analysis_when_present(uploader: Uploader) -> None:
-    mqtt_fake = _put_inspection_with_analysis_types(
-        uploader, ["anonymize", "thermal-reading"]
+    inspection = InspectionBlob(
+        metadata=stub_image_metadata(analysis_types=["anonymize", "thermal-reading"]),
+        id=str(uuid4()),
     )
-    assert mqtt_fake.count() == 1
+    mission = Mission(id="id", name="m")
 
-    payload = json.loads(mqtt_fake.last()["payload"])
+    uploader.upload_inspection(inspection, mission)
+
+    assert uploader.mqtt_queue.qsize() == 1
+
+    payload = json.loads(uploader.mqtt_queue.get().payload)
     assert payload["required_analysis"] == ["anonymize", "thermal-reading"]
 
 
 def test_publishes_null_required_analysis_when_absent(uploader: Uploader) -> None:
-    mqtt_fake = _put_inspection_with_analysis_types(uploader, None)
-    assert mqtt_fake.count() == 1
+    inspection = InspectionBlob(
+        metadata=stub_image_metadata(analysis_types=None), id=str(uuid4())
+    )
+    mission = Mission(id="id", name="m")
 
-    payload = json.loads(mqtt_fake.last()["payload"])
+    uploader.upload_inspection(inspection, mission)
+    assert uploader.mqtt_queue.qsize() == 1
+
+    payload = json.loads(uploader.mqtt_queue.get().payload)
     assert payload["required_analysis"] is None

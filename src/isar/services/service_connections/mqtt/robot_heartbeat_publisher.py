@@ -1,16 +1,15 @@
 import time
 from datetime import UTC, datetime
-from queue import Queue
 
 from isar.config.settings import settings
-from isar.services.service_connections.mqtt.mqtt_client import props_expiry
-from robot_interface.telemetry.mqtt_client import MqttPublisher, MQTTQueueMessage
+from isar.models.mqtt_queue import MQTTQueue
+from robot_interface.telemetry.mqtt_client import props_expiry
 from robot_interface.telemetry.payloads import RobotHeartbeatPayload
 
 
 class RobotHeartbeatPublisher:
-    def __init__(self, mqtt_queue: Queue[MQTTQueueMessage]):
-        self.mqtt_publisher: MqttPublisher = MqttPublisher(mqtt_queue=mqtt_queue)
+    def __init__(self, mqtt_queue: MQTTQueue):
+        self.mqtt_queue: MQTTQueue = mqtt_queue
 
     def run(self) -> None:
         while True:
@@ -20,7 +19,7 @@ class RobotHeartbeatPublisher:
                 timestamp=datetime.now(UTC),
             )
 
-            self.mqtt_publisher.publish(
+            self.mqtt_queue.publish(
                 topic=settings.TOPIC_ISAR_ROBOT_HEARTBEAT,
                 payload=payload.model_dump_json(),
                 retain=False,

@@ -8,7 +8,9 @@ from isar.state_machine.state_machine import StateMachine
 class StateMachineThreadMock:
     def __init__(self, container: ApplicationContainer) -> None:
         self.state_machine: StateMachine = container.state_machine()
-        self._thread: Thread = Thread(target=self.state_machine.run)
+        self._thread: Thread = Thread(
+            name="State machine mock", target=self.state_machine.run
+        )
 
     def start(self) -> None:
         self._thread.start()
@@ -23,7 +25,9 @@ class RobotServiceThreadMock:
         self.robot_service: RobotService = robot_service
 
     def start(self) -> None:
-        self._thread: Thread = Thread(target=self.robot_service.run)
+        self._thread: Thread = Thread(
+            name="Robot service mock", target=self.robot_service.run
+        )
         self._thread.start()
 
     def join(self) -> None:

@@ -9,6 +9,7 @@ from isar.models.events import (
     RobotServiceEvents,
     StateMachineEvents,
 )
+from isar.models.mqtt_queue import MQTTQueue
 from isar.robot.robot_battery import RobotBatteryThread
 from isar.robot.robot_monitor_mission import robot_monitor_mission
 from isar.robot.robot_pause_mission import robot_pause_mission
@@ -21,7 +22,6 @@ from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.robot_interface import RobotInterface
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
 
 
 class RobotService:
@@ -29,12 +29,12 @@ class RobotService:
         self,
         events: Events,
         robot: RobotInterface,
-        mqtt_publisher: MqttClientInterface,
+        mqtt_queue: MQTTQueue,
     ) -> None:
         self.logger = logging.getLogger("robot")
         self.state_machine_events: StateMachineEvents = events.state_machine_events
         self.robot_service_events: RobotServiceEvents = events.robot_service_events
-        self.mqtt_publisher: MqttClientInterface = mqtt_publisher
+        self.mqtt_queue: MQTTQueue = mqtt_queue
         self.robot: RobotInterface = robot
         self.battery_thread: RobotBatteryThread | None = None
         self.status_thread: RobotStatusThread | None = None
@@ -163,7 +163,7 @@ class RobotService:
                 mission,
                 self.robot,
                 request_inspection_upload,
-                self.mqtt_publisher,
+                self.mqtt_queue,
                 should_report_task_status,
             )
             if is_aborted:

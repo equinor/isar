@@ -8,13 +8,17 @@ from isar.apis.models.models import (
     MaintenanceResponse,
     MissionStartResponse,
 )
+from isar.models.mqtt_queue import MQTTQueue
 from isar.state_machine.states_enum import States
+from robot_interface.models.exceptions.event_exceptions import (
+    EventConflictError,
+    EventTimeoutError,
+)
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus
 from robot_interface.models.mission.task import InspectionTask
-from robot_interface.telemetry.mqtt_client import MQTTQueueMessage
 
 
 class EmptyMessage:
@@ -92,7 +96,7 @@ class Events:
             "uploader", maxsize=10
         )
 
-        self.mqtt_queue: Queue[MQTTQueueMessage] = Queue[MQTTQueueMessage]()
+        self.mqtt_queue: MQTTQueue = MQTTQueue(maxsize=30)
 
         self.state: Event[States] = Event("state")
 
@@ -192,11 +196,3 @@ class RobotServiceEvents:
         self.battery_above_recharge_threshold: Event[EmptyMessage] = Event(
             "battery_above_recharge_threshold"
         )
-
-
-class EventTimeoutError(Exception):
-    pass
-
-
-class EventConflictError(Exception):
-    pass

@@ -287,7 +287,7 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
 ) -> None:
     mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
-    mocker.patch.object(settings, "RETURN_HOME_DELAY", 10.0)
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 3.0)
 
     robot_service_thread.robot_service.robot = StubRobotInitiateMissionRaisesException()
 
@@ -299,8 +299,8 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
     )
     mission: Mission = Mission(id="id", name="Dummy misson", tasks=[task_1, task_2])
 
-    state_machine_thread.start()
     robot_service_thread.start()
+    state_machine_thread.start()
 
     # TODO: check mqtt
     wait_until(
