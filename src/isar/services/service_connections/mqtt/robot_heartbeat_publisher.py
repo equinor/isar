@@ -4,12 +4,12 @@ from queue import Queue
 
 from isar.config.settings import settings
 from isar.services.service_connections.mqtt.mqtt_client import props_expiry
-from robot_interface.telemetry.mqtt_client import MqttPublisher
+from robot_interface.telemetry.mqtt_client import MqttPublisher, MQTTQueueMessage
 from robot_interface.telemetry.payloads import RobotHeartbeatPayload
 
 
 class RobotHeartbeatPublisher:
-    def __init__(self, mqtt_queue: Queue):
+    def __init__(self, mqtt_queue: Queue[MQTTQueueMessage]):
         self.mqtt_publisher: MqttPublisher = MqttPublisher(mqtt_queue=mqtt_queue)
 
     def run(self) -> None:

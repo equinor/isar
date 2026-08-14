@@ -14,7 +14,7 @@ from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus
 from robot_interface.models.mission.task import InspectionTask
-from robot_interface.telemetry.mqtt_client import MQTTQueueType
+from robot_interface.telemetry.mqtt_client import MQTTQueueMessage
 
 
 class EmptyMessage:
@@ -92,7 +92,7 @@ class Events:
             "uploader", maxsize=10
         )
 
-        self.mqtt_queue: Queue[MQTTQueueType] = Queue[MQTTQueueType]()
+        self.mqtt_queue: Queue[MQTTQueueMessage] = Queue[MQTTQueueMessage]()
 
         self.state: Event[States] = Event("state")
 

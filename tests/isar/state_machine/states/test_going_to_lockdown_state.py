@@ -60,7 +60,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(events: Events) -> N
     assert not events.mqtt_queue.empty()
     mqtt_message = events.mqtt_queue.get(block=False)
     assert mqtt_message is not None
-    mqtt_payload_topic = mqtt_message[0]
+    mqtt_payload_topic = mqtt_message.topic
     assert mqtt_payload_topic is settings.TOPIC_ISAR_MISSION_ABORTED
 
 
