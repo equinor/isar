@@ -8,6 +8,7 @@ from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig
+from robot_interface.telemetry.mqtt_client import MqttTelemetryPublisher
 
 
 class RobotInterface(metaclass=ABCMeta):
@@ -216,7 +217,7 @@ class RobotInterface(metaclass=ABCMeta):
     @abstractmethod
     def get_telemetry_publishers(
         self, queue: Queue, isar_id: str, robot_name: str
-    ) -> list[Thread]:
+    ) -> list[MqttTelemetryPublisher]:
         """
         Set up telemetry publisher threads to publish regular updates for pose, battery
         level etc. from the robot to the MQTT broker. The publishers on the robot side
@@ -230,7 +231,7 @@ class RobotInterface(metaclass=ABCMeta):
 
         Returns
         -------
-        List[Thread]
+        List[MqttTelemetryPublisher]
             List containing all threads that will be started to publish telemetry.
 
         """
