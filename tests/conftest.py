@@ -28,6 +28,7 @@ from isar.robot.robot_status import RobotStatusThread
 from isar.services.service_connections.persistent_memory import Base
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
+from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from tests.test_mocks.blob_storage import StorageFake
 from tests.test_mocks.robot_interface import StubRobot
@@ -142,15 +143,14 @@ def events(container: ApplicationContainer) -> Events:
 
 
 @pytest.fixture()
-def state_machine(container: ApplicationContainer) -> StateMachine:
-    """Fixture to provide the StateMachine instance."""
-    return container.state_machine()
+def storage_handlers(container: ApplicationContainer) -> list[StorageInterface]:
+    return container.storage_handlers()
 
 
 @pytest.fixture()
-def robot() -> StubRobot:
-    """Fixture to provide a mock robot instance."""
-    return StubRobot()
+def state_machine(container: ApplicationContainer) -> StateMachine:
+    """Fixture to provide the StateMachine instance."""
+    return container.state_machine()
 
 
 @pytest.fixture()
@@ -170,7 +170,7 @@ def scheduling_utilities(
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def state_machine_thread(
     container: ApplicationContainer,
     mocker: MockerFixture,
@@ -183,7 +183,7 @@ def state_machine_thread(
     state_machine_thread.join()
 
 
-@pytest.fixture
+@pytest.fixture()
 def state_machine_thread_with_db(
     setup_db_connection_string: str,
     container: ApplicationContainer,
@@ -202,7 +202,7 @@ def state_machine_thread_with_db(
     state_machine_thread.join()
 
 
-@pytest.fixture
+@pytest.fixture()
 def robot_service_thread(
     container: ApplicationContainer,
 ) -> Generator[RobotServiceThreadMock]:
@@ -219,7 +219,7 @@ def robot_service_thread(
     robot_service_thread.join()
 
 
-@pytest.fixture
+@pytest.fixture()
 def robot_inspection_service_thread(
     container: ApplicationContainer,
 ) -> Generator[Thread]:
@@ -237,7 +237,7 @@ def robot_inspection_service_thread(
     robot_inspection_service_thread.join()
 
 
-@pytest.fixture
+@pytest.fixture()
 def mocked_robot_service(
     container: ApplicationContainer, mocker: MockerFixture
 ) -> RobotService:
