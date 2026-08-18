@@ -8,7 +8,6 @@ from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Events
-from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.monitor import Monitor
@@ -121,7 +120,7 @@ def test_transition_from_resuming_to_monitor(events: Events) -> None:
 
 
 def test_state_machine_with_unsuccessful_mission_stop(
-    container: ApplicationContainer,
+    scheduling_utilities: SchedulingUtilities,
     mocker: MockerFixture,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
@@ -131,7 +130,6 @@ def test_state_machine_with_unsuccessful_mission_stop(
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
 
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     mocker.patch.object(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
     )
@@ -168,7 +166,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
 
 
 def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
-    container: ApplicationContainer,
+    scheduling_utilities: SchedulingUtilities,
     mocker: MockerFixture,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
@@ -180,7 +178,6 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
 
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     mocker.patch.object(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
     )
@@ -217,7 +214,7 @@ def test_state_machine_with_unsuccessful_mission_stop_with_mission_id(
 
 
 def test_robot_mission_status_exception_handling(
-    container: ApplicationContainer,
+    scheduling_utilities: SchedulingUtilities,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
 ) -> None:
@@ -226,7 +223,6 @@ def test_robot_mission_status_exception_handling(
         name="Dummy mission",
         tasks=[StubTask.take_image()],
     )
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
 
     robot_service_thread.robot_service.robot = StubRobotMissionStatusRaisesException()
 

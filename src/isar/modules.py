@@ -32,7 +32,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
     )
     robot_utilities = providers.Singleton(RobotUtilities, robot=robot_interface)
 
-    # Mqtt client
+    # Mqtt queue
     mqtt_queue = providers.Object(events.provided.mqtt_queue)
 
     # State machine
