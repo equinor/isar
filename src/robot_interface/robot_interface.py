@@ -238,6 +238,20 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
+    def get_utility_threads(self) -> list[Thread]:
+        """
+        Set up utility threads that can be used to update internal values in the robot
+        interface implementation, but which will not be published to MQTT.
+
+        Returns
+        -------
+        List[Thread]
+            List containing threads that will be started when running ISAR
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def robot_status(self) -> RobotStatus:
         """
         Method which returns an enum indicating the status of the robot.
