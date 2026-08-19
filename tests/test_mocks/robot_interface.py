@@ -1,5 +1,6 @@
 import time
 from collections.abc import Callable
+from threading import Thread
 
 from alitra import Frame, Orientation, Pose, Position
 
@@ -86,6 +87,9 @@ class StubRobot(RobotInterface):
     def get_telemetry_publishers(
         self, queue: MQTTQueue, isar_id: str, robot_name: str
     ) -> list[MqttTelemetryPublisher]:
+        return []
+
+    def get_utility_threads(self) -> list[Thread]:
         return []
 
     def robot_status(self) -> RobotStatus:

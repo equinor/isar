@@ -164,6 +164,11 @@ def start() -> None:
         publisher.start()
         threads.append(publisher)
 
+    utility_threads: list[Thread] = robot_interface.get_utility_threads()
+    for utility_thread in utility_threads:
+        utility_thread.start()
+        threads.append(utility_thread)
+
     while True:
         for thread in threads:
             if not thread.is_alive():
