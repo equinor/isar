@@ -3,15 +3,13 @@ from collections.abc import Callable
 from queue import Queue
 from threading import Thread
 
+from isar.models.mqtt_queue import MQTTQueueMessage
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig
-from robot_interface.telemetry.mqtt_client import (
-    MQTTQueueMessage,
-    MqttTelemetryPublisher,
-)
+from robot_interface.telemetry.mqtt_client import MqttTelemetryPublisher
 
 
 class RobotInterface(metaclass=ABCMeta):

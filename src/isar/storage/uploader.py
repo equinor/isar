@@ -2,7 +2,7 @@ import logging
 import time
 
 from isar.config.settings import settings
-from isar.models.mqtt_queue import MQTTQueue
+from isar.models.mqtt_queue import MQTTQueue, props_expiry
 from isar.storage.storage_interface import (
     BlobStoragePath,
     LocalStoragePath,
@@ -16,7 +16,6 @@ from robot_interface.models.inspection.inspection import (
     InspectionValue,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.telemetry.mqtt_client import props_expiry
 from robot_interface.telemetry.payloads import (
     InspectionResultPayload,
     InspectionValuePayload,
