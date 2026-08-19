@@ -1,11 +1,10 @@
 import time
 from collections.abc import Callable
-from queue import Queue
 
 from alitra import Frame, Orientation, Pose, Position
 
 from isar.models.events import Event
-from isar.models.mqtt_queue import MQTTQueueMessage
+from isar.models.mqtt_queue import MQTTQueue
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotCommunicationException,
@@ -85,7 +84,7 @@ class StubRobot(RobotInterface):
         return
 
     def get_telemetry_publishers(
-        self, queue: Queue[MQTTQueueMessage], isar_id: str, robot_name: str
+        self, queue: MQTTQueue, isar_id: str, robot_name: str
     ) -> list[MqttTelemetryPublisher]:
         return []
 

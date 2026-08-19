@@ -4,13 +4,12 @@ import time
 from collections.abc import Callable
 from datetime import UTC, datetime
 from logging import Logger
-from queue import Queue
 from threading import Thread
 
 from paho.mqtt.properties import Properties
 
 from isar.config.settings import settings
-from isar.models.mqtt_queue import MQTTQueueMessage, props_expiry
+from isar.models.mqtt_queue import MQTTQueue, props_expiry
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotTelemetryException,
     RobotTelemetryNoUpdateException,
@@ -23,13 +22,13 @@ class MqttTelemetryPublisher(Thread):
     def __init__(
         self,
         name: str,
-        mqtt_queue: Queue[MQTTQueueMessage],
+        mqtt_queue: MQTTQueue,
         telemetry_method: Callable,
         topic: str,
         interval: float,
         should_expire: bool,
     ) -> None:
-        self.mqtt_queue: Queue[MQTTQueueMessage] = mqtt_queue
+        self.mqtt_queue: MQTTQueue = mqtt_queue
         self.telemetry_method: Callable = telemetry_method
         self.topic: str = topic
         self.interval: float = interval
@@ -72,11 +71,10 @@ class MqttTelemetryPublisher(Thread):
             if self.should_expire:
                 properties = props_expiry(settings.MQTT_TELEMETRY_EXPIRY)
 
-            queue_message: MQTTQueueMessage = MQTTQueueMessage(
+            self.mqtt_queue.publish(
                 topic=topic,
                 payload=payload,
                 qos=0,
                 retain=False,
                 properties=properties,
             )
-            self.mqtt_queue.put(queue_message)
