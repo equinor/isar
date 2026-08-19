@@ -5,7 +5,6 @@ from threading import Thread
 from alitra import Frame, Orientation, Pose, Position
 
 from isar.models.events import Event
-from isar.models.mqtt_queue import MQTTQueue
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotCommunicationException,
@@ -17,7 +16,7 @@ from robot_interface.models.mission.status import MissionStatus, RobotStatus, Ta
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig, MediaConnectionType
 from robot_interface.robot_interface import RobotInterface
-from robot_interface.telemetry.mqtt_client import MqttTelemetryPublisher
+from robot_interface.telemetry.mqtt_client import TelemetryParameters
 from tests.test_mocks.inspection import stub_image_metadata
 
 _ROBOT_FRAME = Frame(name="robot")
@@ -84,9 +83,7 @@ class StubRobot(RobotInterface):
     ) -> None:
         return
 
-    def get_telemetry_publishers(
-        self, queue: MQTTQueue, isar_id: str, robot_name: str
-    ) -> list[MqttTelemetryPublisher]:
+    def get_telemetry_publishers(self) -> list[TelemetryParameters]:
         return []
 
     def get_utility_threads(self) -> list[Thread]:

@@ -2,13 +2,12 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
 from threading import Thread
 
-from isar.models.mqtt_queue import MQTTQueue
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig
-from robot_interface.telemetry.mqtt_client import MqttTelemetryPublisher
+from robot_interface.telemetry.mqtt_client import TelemetryParameters
 
 
 class RobotInterface(metaclass=ABCMeta):
@@ -215,9 +214,7 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_telemetry_publishers(
-        self, queue: MQTTQueue, isar_id: str, robot_name: str
-    ) -> list[MqttTelemetryPublisher]:
+    def get_telemetry_publishers(self) -> list[TelemetryParameters]:
         """
         Set up telemetry publisher threads to publish regular updates for pose, battery
         level etc. from the robot to the MQTT broker. The publishers on the robot side
@@ -231,8 +228,8 @@ class RobotInterface(metaclass=ABCMeta):
 
         Returns
         -------
-        List[MqttTelemetryPublisher]
-            List containing all threads that will be started to publish telemetry.
+        List[TelemetryParameters]
+            List containing all parameters needed to start the telemetry threads.
 
         """
         raise NotImplementedError

@@ -25,7 +25,10 @@ from isar.state_machine.state_machine import StateMachine
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.robot_interface import RobotInterface
-from robot_interface.telemetry.mqtt_client import MqttTelemetryPublisher
+from robot_interface.telemetry.mqtt_client import (
+    MqttTelemetryPublisher,
+    TelemetryParameters,
+)
 
 
 def print_setting(
@@ -155,14 +158,15 @@ def start() -> None:
     robot_heartbeat_thread.start()
     threads.append(robot_heartbeat_thread)
 
-    publishers: list[MqttTelemetryPublisher] = robot_interface.get_telemetry_publishers(
-        queue=events.mqtt_queue,
-        robot_name=settings.ROBOT_NAME,
-        isar_id=settings.ISAR_ID,
+    telemetry_params: list[TelemetryParameters] = (
+        robot_interface.get_telemetry_publishers()
     )
-    for publisher in publishers:
-        publisher.start()
-        threads.append(publisher)
+    for telemetry_parameter in telemetry_params:
+        telemetry_thread = MqttTelemetryPublisher(
+            events.mqtt_queue, telemetry_parameter
+        )
+        telemetry_thread.start()
+        threads.append(telemetry_thread)
 
     utility_threads: list[Thread] = robot_interface.get_utility_threads()
     for utility_thread in utility_threads:
