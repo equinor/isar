@@ -1,7 +1,9 @@
 import logging
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from queue import Empty, Full, Queue
 
+from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.properties import Properties
 
 from isar.config.settings import settings
@@ -9,7 +11,6 @@ from isar.models.status import IsarStatus
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus
 from robot_interface.models.mission.task import TASKS
-from robot_interface.telemetry.mqtt_client import MQTTQueueMessage, props_expiry
 from robot_interface.telemetry.payloads import (
     InterventionNeededPayload,
     IsarStatusPayload,
@@ -17,6 +18,21 @@ from robot_interface.telemetry.payloads import (
     MissionPayload,
     TaskPayload,
 )
+
+
+def props_expiry(seconds: int) -> Properties:
+    p = Properties(PacketTypes.PUBLISH)
+    p.MessageExpiryInterval = seconds
+    return p
+
+
+@dataclass
+class MQTTQueueMessage:
+    topic: str
+    payload: str
+    qos: int
+    retain: bool
+    properties: Properties | None
 
 
 class MQTTQueue:

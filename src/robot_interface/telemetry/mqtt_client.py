@@ -2,37 +2,21 @@ import json
 import logging
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from logging import Logger
 from queue import Queue
 from threading import Thread
 
-from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.properties import Properties
 
 from isar.config.settings import settings
+from isar.models.mqtt_queue import MQTTQueueMessage, props_expiry
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotTelemetryException,
     RobotTelemetryNoUpdateException,
     RobotTelemetryPoseException,
 )
 from robot_interface.telemetry.payloads import CloudHealthPayload
-
-
-@dataclass
-class MQTTQueueMessage:
-    topic: str
-    payload: str
-    qos: int
-    retain: bool
-    properties: Properties | None
-
-
-def props_expiry(seconds: int) -> Properties:
-    p = Properties(PacketTypes.PUBLISH)
-    p.MessageExpiryInterval = seconds
-    return p
 
 
 class MqttTelemetryPublisher(Thread):

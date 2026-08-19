@@ -12,8 +12,7 @@ from paho.mqtt.properties import Properties
 from paho.mqtt.reasoncodes import ReasonCode
 
 from isar.config.settings import settings
-from isar.models.mqtt_queue import MQTTQueue
-from robot_interface.telemetry.mqtt_client import MQTTQueueMessage
+from isar.models.mqtt_queue import MQTTQueue, MQTTQueueMessage
 
 
 def _on_success(data: Details) -> None:
