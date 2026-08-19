@@ -2,6 +2,7 @@ import json
 import logging
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from logging import Logger
 from threading import Thread
@@ -18,25 +19,28 @@ from robot_interface.models.exceptions.robot_exceptions import (
 from robot_interface.telemetry.payloads import CloudHealthPayload
 
 
+@dataclass
+class TelemetryParameters:
+    name: str
+    method: Callable[[], str]
+    topic: str
+    interval: float
+
+
 class MqttTelemetryPublisher(Thread):
     def __init__(
         self,
-        name: str,
         mqtt_queue: MQTTQueue,
-        telemetry_method: Callable,
-        topic: str,
-        interval: float,
-        should_expire: bool,
+        parameters: TelemetryParameters,
     ) -> None:
         self.mqtt_queue: MQTTQueue = mqtt_queue
-        self.telemetry_method: Callable = telemetry_method
-        self.topic: str = topic
-        self.interval: float = interval
-        self.should_expire: bool = should_expire
+        self.telemetry_method: Callable[[], str] = parameters.method
+        self.topic: str = f"isar/{settings.ISAR_ID}/{parameters.topic}"
+        self.interval: float = parameters.interval
 
-        self.logger: Logger = logging.getLogger("telemetry")
+        self.logger: Logger = logging.getLogger(f"telemetry - {parameters.name}")
 
-        Thread.__init__(self, name=f"Telemetry thread - {name}")
+        Thread.__init__(self, name=f"Telemetry thread - {parameters.name}")
 
     def stop(self) -> None:
         return
@@ -50,7 +54,12 @@ class MqttTelemetryPublisher(Thread):
         while True:
             time.sleep(self.interval)
             try:
-                payload = self.telemetry_method()
+                payload_str = self.telemetry_method()
+                payload_dict = json.loads(payload_str)
+                payload_dict["isar_id"] = isar_id
+                payload_dict["robot_name"] = robot_name
+                payload_dict["timestamp"] = str(datetime.now(UTC))
+                payload = json.dumps(payload_dict)
                 topic = self.topic
             except RobotTelemetryPoseException, RobotTelemetryNoUpdateException:
                 continue
@@ -59,7 +68,7 @@ class MqttTelemetryPublisher(Thread):
                     CloudHealthPayload(
                         isar_id=isar_id,
                         robot_name=robot_name,
-                        timestamp=datetime.now(UTC),
+                        timestamp=str(datetime.now(UTC)),
                     )
                 )
                 topic = f"isar/{isar_id}/cloud_health"
@@ -67,9 +76,7 @@ class MqttTelemetryPublisher(Thread):
                 self.logger.error(f"Unexpected error in MQTT telemetry publisher: {e}")
                 continue
 
-            properties: Properties | None = None
-            if self.should_expire:
-                properties = props_expiry(settings.MQTT_TELEMETRY_EXPIRY)
+            properties: Properties = props_expiry(settings.MQTT_TELEMETRY_EXPIRY)
 
             self.mqtt_queue.publish(
                 topic=topic,

@@ -12,32 +12,26 @@ from robot_interface.models.mission.task import TaskTypes
 from robot_interface.models.robots.battery_state import BatteryState
 
 
-class TelemetryPayload(BaseModel):
-    isar_id: str
-    robot_name: str
-    timestamp: datetime
-
-
 class CloudHealthPayload(BaseModel):
     isar_id: str
     robot_name: str
     timestamp: datetime
 
 
-class TelemetryPosePayload(TelemetryPayload, BaseModel):
+class TelemetryPosePayload(BaseModel):
     pose: Pose
 
 
-class TelemetryBatteryPayload(TelemetryPayload, BaseModel):
+class TelemetryBatteryPayload(BaseModel):
     battery_level: float
     battery_state: BatteryState | None = None
 
 
-class TelemetryObstacleStatusPayload(TelemetryPayload, BaseModel):
+class TelemetryObstacleStatusPayload(BaseModel):
     obstacle_status: bool
 
 
-class TelemetryPressurePayload(TelemetryPayload, BaseModel):
+class TelemetryPressurePayload(BaseModel):
     pressure_level: float
 
 
