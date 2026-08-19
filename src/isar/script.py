@@ -156,7 +156,7 @@ def start() -> None:
     threads.append(robot_heartbeat_thread)
 
     publishers: list[MqttTelemetryPublisher] = robot_interface.get_telemetry_publishers(
-        queue=events.mqtt_queue.queue,
+        queue=events.mqtt_queue,
         robot_name=settings.ROBOT_NAME,
         isar_id=settings.ISAR_ID,
     )

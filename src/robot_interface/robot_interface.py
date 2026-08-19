@@ -1,9 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
-from queue import Queue
 from threading import Thread
 
-from isar.models.mqtt_queue import MQTTQueueMessage
+from isar.models.mqtt_queue import MQTTQueue
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
@@ -217,7 +216,7 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def get_telemetry_publishers(
-        self, queue: Queue[MQTTQueueMessage], isar_id: str, robot_name: str
+        self, queue: MQTTQueue, isar_id: str, robot_name: str
     ) -> list[MqttTelemetryPublisher]:
         """
         Set up telemetry publisher threads to publish regular updates for pose, battery
