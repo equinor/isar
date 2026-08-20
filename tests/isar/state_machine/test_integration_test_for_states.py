@@ -5,7 +5,6 @@ from threading import Thread
 from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
-from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
@@ -27,9 +26,9 @@ from tests.wait import wait_until
 
 
 def test_state_machine_transitions_when_running_full_mission(
-    container: ApplicationContainer,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
+    scheduling_utilities: SchedulingUtilities,
     mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 5.0)
@@ -61,7 +60,6 @@ def test_state_machine_transitions_when_running_full_mission(
     )
     mission: Mission = Mission(id="id", name="Dummy mission", tasks=[task_1, task_2])
 
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
 
     expected_transitions = deque(
@@ -82,7 +80,7 @@ def test_state_machine_transitions_when_running_full_mission(
 
 
 def test_state_machine_failed_dependency(
-    container: ApplicationContainer,
+    scheduling_utilities: SchedulingUtilities,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
@@ -109,7 +107,6 @@ def test_state_machine_failed_dependency(
         in state_machine_thread.state_machine.transitions_list,
         timeout=10,
     )
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
 
     expected_transitions = deque(
@@ -134,7 +131,8 @@ def test_state_machine_failed_dependency(
 
 
 def test_state_machine_with_successful_collection(
-    container: ApplicationContainer,
+    storage_handlers: list[StorageInterface],
+    scheduling_utilities: SchedulingUtilities,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
     robot_inspection_service_thread: Thread,
@@ -143,9 +141,7 @@ def test_state_machine_with_successful_collection(
     robot_inspection_service_thread.start()
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
 
-    storage_mock: StorageInterface = container.storage_handlers(list[StorageInterface])[
-        0
-    ]
+    storage_mock: StorageInterface = storage_handlers[0]
 
     mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
@@ -153,7 +149,6 @@ def test_state_machine_with_successful_collection(
     mission: Mission = Mission(
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
 
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 2.0)
     state_machine_thread.start()
@@ -183,16 +178,15 @@ def test_state_machine_with_successful_collection(
 
 
 def test_state_machine_with_unsuccessful_collection(
-    container: ApplicationContainer,
+    storage_handlers: list[StorageInterface],
+    scheduling_utilities: SchedulingUtilities,
     mocker: MockerFixture,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
 ) -> None:
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
 
-    storage_mock: StorageInterface = container.storage_handlers(list[StorageInterface])[
-        0
-    ]
+    storage_mock: StorageInterface = storage_handlers[0]
 
     mocker.patch.object(StubRobot, "get_inspection", return_value=None)
 
@@ -208,7 +202,6 @@ def test_state_machine_with_unsuccessful_collection(
     mission: Mission = Mission(
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
 
     expected_transitions = deque(
@@ -233,7 +226,7 @@ def test_state_machine_with_unsuccessful_collection(
 
 
 def test_state_machine_with_mission_start_during_return_home_without_queueing_stop_response(
-    container: ApplicationContainer,
+    scheduling_utilities: SchedulingUtilities,
     mocker: MockerFixture,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
@@ -242,7 +235,6 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
     mission: Mission = Mission(
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     mocker.patch.object(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
     )
@@ -280,14 +272,14 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
 
 
 def test_state_machine_failed_to_initiate_mission_and_return_home(
-    container: ApplicationContainer,
+    scheduling_utilities: SchedulingUtilities,
     state_machine_thread: StateMachineThreadMock,
     robot_service_thread: RobotServiceThreadMock,
     mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
-    mocker.patch.object(settings, "RETURN_HOME_DELAY", 10.0)
+    mocker.patch.object(settings, "RETURN_HOME_DELAY", 3.0)
 
     robot_service_thread.robot_service.robot = StubRobotInitiateMissionRaisesException()
 
@@ -299,8 +291,8 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
     )
     mission: Mission = Mission(id="id", name="Dummy misson", tasks=[task_1, task_2])
 
-    state_machine_thread.start()
     robot_service_thread.start()
+    state_machine_thread.start()
 
     # TODO: check mqtt
     wait_until(
@@ -309,7 +301,6 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
         timeout=10,
     )
 
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     scheduling_utilities.start_mission(mission=mission)
 
     expected_transitions = deque(

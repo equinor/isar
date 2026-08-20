@@ -4,7 +4,6 @@ from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
 from isar.models.events import Events
-from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state import EventHandlerMapping
 from isar.state_machine.states.resuming import Resuming
@@ -24,7 +23,7 @@ from tests.wait import wait_until
 
 
 def test_state_machine_with_successful_mission_stop(
-    container: ApplicationContainer,
+    scheduling_utilities: SchedulingUtilities,
     robot_service_thread: RobotServiceThreadMock,
     state_machine_thread: StateMachineThreadMock,
     mocker: MockerFixture,
@@ -44,8 +43,6 @@ def test_state_machine_with_successful_mission_stop(
         name="Dummy misson",
         tasks=[StubTask.take_image() for _ in range(20)],
     )
-
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
 
     state_machine_thread.start()
     robot_service_thread.start()

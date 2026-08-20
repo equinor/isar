@@ -2,7 +2,7 @@ import logging
 import time
 
 from isar.config.settings import settings
-from isar.services.service_connections.mqtt.mqtt_client import props_expiry
+from isar.models.mqtt_queue import MQTTQueue, props_expiry
 from isar.storage.storage_interface import (
     BlobStoragePath,
     LocalStoragePath,
@@ -16,7 +16,6 @@ from robot_interface.models.inspection.inspection import (
     InspectionValue,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
 from robot_interface.telemetry.payloads import (
     InspectionResultPayload,
     InspectionValuePayload,
@@ -35,7 +34,7 @@ class Uploader:
     def __init__(
         self,
         storage_handlers: list[StorageInterface],
-        mqtt_publisher: MqttClientInterface,
+        mqtt_queue: MQTTQueue,
     ) -> None:
         """Initializes the uploader.
 
@@ -47,12 +46,12 @@ class Uploader:
             The client used to publish results to MQTT
         """
         self.storage_handlers: list[StorageInterface] = storage_handlers
-        self.mqtt_publisher = mqtt_publisher
+        self.mqtt_queue: MQTTQueue = mqtt_queue
         self.logger = logging.getLogger("uploader")
 
     def upload_inspection(self, inspection: Inspection, mission: Mission) -> None:
         if isinstance(inspection, InspectionValue):
-            _publish_inspection_value(self.mqtt_publisher, inspection)
+            _publish_inspection_value(self.mqtt_queue, inspection)
             self.logger.info(f"Published value for inspection {str(inspection.id)[:8]}")
 
         elif isinstance(inspection, InspectionBlob):
@@ -75,7 +74,7 @@ class Uploader:
                     )
                 else:
                     _publish_inspection_result(
-                        self.mqtt_publisher,
+                        self.mqtt_queue,
                         inspection=inspection,
                         inspection_paths=inspection_paths,
                         mission=mission,
@@ -126,7 +125,7 @@ def _upload(
 
 
 def _publish_inspection_value(
-    mqtt_publisher: MqttClientInterface, inspection: InspectionValue
+    mqtt_queue: MQTTQueue, inspection: InspectionValue
 ) -> None:
     payload: InspectionValuePayload = InspectionValuePayload(
         isar_id=settings.ISAR_ID,
@@ -143,7 +142,7 @@ def _publish_inspection_value(
         z=inspection.metadata.robot_pose.position.z,
         timestamp=inspection.metadata.start_time,
     )
-    mqtt_publisher.publish(
+    mqtt_queue.publish(
         topic=settings.TOPIC_ISAR_INSPECTION_VALUE,
         payload=payload.model_dump_json(),
         qos=1,
@@ -153,7 +152,7 @@ def _publish_inspection_value(
 
 
 def _publish_inspection_result(
-    mqtt_publisher: MqttClientInterface,
+    mqtt_queue: MQTTQueue,
     inspection: InspectionBlob,
     inspection_paths: StoragePaths[BlobStoragePath],
     mission: Mission,
@@ -174,7 +173,7 @@ def _publish_inspection_result(
         robot_pose=inspection.metadata.robot_pose,
         target_position=inspection.metadata.target_position,
     )
-    mqtt_publisher.publish(
+    mqtt_queue.publish(
         topic=settings.TOPIC_ISAR_INSPECTION_RESULT,
         payload=payload.model_dump_json(),
         qos=1,

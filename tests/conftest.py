@@ -28,6 +28,7 @@ from isar.robot.robot_status import RobotStatusThread
 from isar.services.service_connections.persistent_memory import Base
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state_machine import StateMachine
+from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from tests.test_mocks.blob_storage import StorageFake
 from tests.test_mocks.robot_interface import StubRobot
@@ -57,7 +58,11 @@ def setup_test_environment() -> None:
 def container() -> ApplicationContainer:
     """Fixture to provide the dependency-injector container without auth."""
     container = ApplicationContainer()
+
     container.events.override(providers.Singleton(Events))
+    container.mqtt_queue.override(
+        providers.Object(container.events.provided.mqtt_queue)
+    )
     container.storage_handlers.override(
         providers.List(providers.Singleton(StorageFake))
     )
@@ -66,7 +71,7 @@ def container() -> ApplicationContainer:
         providers.Singleton(
             Uploader,
             container.storage_handlers(),
-            container.mqtt_client(),
+            container.mqtt_queue(),
         )
     )
     container.robot.override(
@@ -74,7 +79,7 @@ def container() -> ApplicationContainer:
             RobotService,
             events=container.events(),
             robot=container.robot_interface(),
-            mqtt_publisher=container.mqtt_client(),
+            mqtt_queue=container.mqtt_queue(),
         )
     )
     container.inspection_service.override(
@@ -82,14 +87,14 @@ def container() -> ApplicationContainer:
             RobotInspectionService,
             events=container.events(),
             robot=container.robot_interface(),
-            mqtt_publisher=container.mqtt_client(),
+            mqtt_queue=container.mqtt_queue(),
         )
     )
     container.state_machine.override(
         providers.Singleton(
             StateMachine,
             events=container.events,
-            mqtt_publisher=container.mqtt_client(),
+            mqtt_queue=container.mqtt_queue(),
         )
     )
     return container
@@ -138,15 +143,14 @@ def events(container: ApplicationContainer) -> Events:
 
 
 @pytest.fixture()
-def state_machine(container: ApplicationContainer) -> StateMachine:
-    """Fixture to provide the StateMachine instance."""
-    return container.state_machine()
+def storage_handlers(container: ApplicationContainer) -> list[StorageInterface]:
+    return container.storage_handlers()
 
 
 @pytest.fixture()
-def robot() -> StubRobot:
-    """Fixture to provide a mock robot instance."""
-    return StubRobot()
+def state_machine(container: ApplicationContainer) -> StateMachine:
+    """Fixture to provide the StateMachine instance."""
+    return container.state_machine()
 
 
 @pytest.fixture()
@@ -166,7 +170,7 @@ def scheduling_utilities(
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def state_machine_thread(
     container: ApplicationContainer,
     mocker: MockerFixture,
@@ -179,7 +183,7 @@ def state_machine_thread(
     state_machine_thread.join()
 
 
-@pytest.fixture
+@pytest.fixture()
 def state_machine_thread_with_db(
     setup_db_connection_string: str,
     container: ApplicationContainer,
@@ -198,14 +202,14 @@ def state_machine_thread_with_db(
     state_machine_thread.join()
 
 
-@pytest.fixture
+@pytest.fixture()
 def robot_service_thread(
     container: ApplicationContainer,
 ) -> Generator[RobotServiceThreadMock]:
     robot_service: RobotService = RobotService(
         events=container.events(),
         robot=container.robot_interface(),
-        mqtt_publisher=container.mqtt_client(),
+        mqtt_queue=container.mqtt_queue(),
     )
 
     robot_service_thread: RobotServiceThreadMock = RobotServiceThreadMock(
@@ -215,7 +219,7 @@ def robot_service_thread(
     robot_service_thread.join()
 
 
-@pytest.fixture
+@pytest.fixture()
 def robot_inspection_service_thread(
     container: ApplicationContainer,
 ) -> Generator[Thread]:
@@ -233,14 +237,14 @@ def robot_inspection_service_thread(
     robot_inspection_service_thread.join()
 
 
-@pytest.fixture
+@pytest.fixture()
 def mocked_robot_service(
     container: ApplicationContainer, mocker: MockerFixture
 ) -> RobotService:
     robot_service: RobotService = RobotService(
         events=container.events(),
         robot=container.robot_interface(),
-        mqtt_publisher=container.mqtt_client(),
+        mqtt_queue=container.mqtt_queue(),
     )
 
     mocker.patch.object(RobotBatteryThread, "run", return_value=lambda: None)
@@ -255,9 +259,15 @@ def mocked_robot_service(
 
 
 @pytest.fixture(autouse=True)
-def run_before_and_after_tests() -> Generator[None]:
+def run_before_and_after_tests(container: ApplicationContainer) -> Generator[None]:
     results_folder: Path = Path("tests/results")
+
     yield
+
+    container.events.reset()
+    container.mqtt_queue.override(
+        providers.Object(container.events.provides().mqtt_queue)
+    )
 
     print("Removing temporary results folder for testing")
     if results_folder.exists():

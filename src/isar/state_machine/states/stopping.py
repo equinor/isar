@@ -2,7 +2,6 @@ import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.services.utilities.mqtt_utilities import publish_mission_status
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
@@ -14,8 +13,7 @@ def Stopping(events: Events, mission_id: str) -> State:
     def _successful_stop_event_handler(
         _: AbortedMission | EmptyMessage,
     ) -> Transition:
-        publish_mission_status(
-            events.mqtt_queue,
+        events.mqtt_queue.publish_mission_status(
             mission_id,
             MissionStatus.Cancelled,
             ErrorMessage(ErrorReason.RobotActionException, "Mission stopped by user"),

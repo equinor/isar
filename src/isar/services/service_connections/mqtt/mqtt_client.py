@@ -1,7 +1,6 @@
 import logging
 import os
 import time
-from queue import Empty, Queue
 from typing import Any
 
 import backoff
@@ -9,18 +8,11 @@ from backoff.types import Details
 from paho.mqtt import client as mqtt
 from paho.mqtt.client import Client
 from paho.mqtt.enums import CallbackAPIVersion
-from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.properties import Properties
 from paho.mqtt.reasoncodes import ReasonCode
 
 from isar.config.settings import settings
-from robot_interface.telemetry.mqtt_client import MqttClientInterface
-
-
-def props_expiry(seconds: int) -> Properties:
-    p = Properties(PacketTypes.PUBLISH)
-    p.MessageExpiryInterval = seconds
-    return p
+from isar.models.mqtt_queue import MQTTQueue, MQTTQueueMessage
 
 
 def _on_success(data: Details) -> None:
@@ -43,11 +35,11 @@ def _on_giveup(data: Details) -> None:
     )
 
 
-class MqttClient(MqttClientInterface):
-    def __init__(self, mqtt_queue: Queue) -> None:
+class MqttClient:
+    def __init__(self, mqtt_queue: MQTTQueue) -> None:
         self.logger = logging.getLogger("mqtt_client")
         self.logger.setLevel("INFO")
-        self.mqtt_queue: Queue = mqtt_queue
+        self.mqtt_queue: MQTTQueue = mqtt_queue
 
         username: str = settings.MQTT_USERNAME
         password: str = ""
@@ -89,27 +81,20 @@ class MqttClient(MqttClientInterface):
         self.client.loop_start()
 
         while True:
+            time.sleep(0)  # avoid CPU spin
             if not self.client.is_connected():
-                time.sleep(0)  # avoid CPU spin
                 continue
-            try:
-                item: tuple[str, str, int, bool, Properties | None] = (
-                    self.mqtt_queue.get(timeout=1)
-                )
-                if len(item) == 4:
-                    topic, payload, qos, retain = item
-                    properties = None
-                else:
-                    topic, payload, qos, retain, properties = item
-            except Empty:
+            item: MQTTQueueMessage = self.mqtt_queue.get(timeout=1)
+            if item is None:
                 continue
 
-            self.publish(
-                topic=topic,
-                payload=payload,
-                qos=qos,
-                retain=retain,
-                properties=properties,
+            self.logger.debug("Publishing message to topic: %s", item.topic)
+            self.client.publish(
+                topic=item.topic,
+                payload=item.payload,
+                qos=item.qos,
+                retain=item.retain,
+                properties=item.properties,
             )
 
     def on_connect(
@@ -144,16 +129,3 @@ class MqttClient(MqttClientInterface):
         self.logger.info("Attempting to connect to MQTT Broker")
         self.logger.info("Host: %s, Port: %s", host, port)
         self.client.connect(host=host, port=port)
-
-    def publish(
-        self,
-        topic: str,
-        payload: str,
-        qos: int = 0,
-        retain: bool = False,
-        properties: Properties | None = None,
-    ) -> None:
-        self.logger.debug("Publishing message to topic: %s", topic)
-        self.client.publish(
-            topic=topic, payload=payload, qos=qos, retain=retain, properties=properties
-        )

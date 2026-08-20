@@ -8,7 +8,6 @@ from pytest_mock import MockerFixture
 from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.models.events import APIEvent, Event, EventTimeoutError
-from isar.modules import ApplicationContainer
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
@@ -254,9 +253,8 @@ def test_return_home_twice_causes_conflict(
 
 
 def test_api_with_unsuccessful_return_home_stop(
-    mocker: MockerFixture, container: ApplicationContainer
+    mocker: MockerFixture, scheduling_utilities: SchedulingUtilities
 ) -> None:
-    scheduling_utilities: SchedulingUtilities = container.scheduling_utilities()
     stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
         success=False, failure_reason="ISAR failed to stop mission"
     )

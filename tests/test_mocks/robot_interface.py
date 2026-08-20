@@ -1,6 +1,5 @@
 import time
 from collections.abc import Callable
-from queue import Queue
 from threading import Thread
 
 from alitra import Frame, Orientation, Pose, Position
@@ -17,6 +16,7 @@ from robot_interface.models.mission.status import MissionStatus, RobotStatus, Ta
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig, MediaConnectionType
 from robot_interface.robot_interface import RobotInterface
+from robot_interface.telemetry.mqtt_client import TelemetryParameters
 from tests.test_mocks.inspection import stub_image_metadata
 
 _ROBOT_FRAME = Frame(name="robot")
@@ -83,9 +83,10 @@ class StubRobot(RobotInterface):
     ) -> None:
         return
 
-    def get_telemetry_publishers(
-        self, queue: Queue, isar_id: str, robot_name: str
-    ) -> list[Thread]:
+    def get_telemetry_publishers(self) -> list[TelemetryParameters]:
+        return []
+
+    def get_utility_threads(self) -> list[Thread]:
         return []
 
     def robot_status(self) -> RobotStatus:

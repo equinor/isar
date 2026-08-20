@@ -1,16 +1,16 @@
 import json
 import logging
 import time
-from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from logging import Logger
-from queue import Queue
+from threading import Thread
 
-from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.properties import Properties
 
 from isar.config.settings import settings
+from isar.models.mqtt_queue import MQTTQueue, props_expiry
 from robot_interface.models.exceptions.robot_exceptions import (
     RobotTelemetryException,
     RobotTelemetryNoUpdateException,
@@ -18,145 +18,70 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.telemetry.payloads import CloudHealthPayload
 
-MQTTQueueType = tuple[str, str, int, bool, Properties | None]
+
+@dataclass
+class TelemetryParameters:
+    name: str
+    method: Callable[[], str]
+    topic: str
+    interval: float
 
 
-def props_expiry(seconds: int) -> Properties:
-    p = Properties(PacketTypes.PUBLISH)
-    p.MessageExpiryInterval = seconds
-    return p
-
-
-class MqttClientInterface(metaclass=ABCMeta):
-    @abstractmethod
-    def publish(
-        self,
-        topic: str,
-        payload: str,
-        qos: int = 0,
-        retain: bool = False,
-        properties: Properties | None = None,
-    ) -> None:
-        """
-        Parameters
-        ----------
-        topic : string
-            MQTT topic to publish to
-        payload : string
-            Payload to send to publish on the topic
-        qos : integer
-            Quality of Service
-        retain : boolean
-            Retain on topic
-
-        Returns
-        -------
-        """
-
-
-class MqttPublisher(MqttClientInterface):
-    def __init__(self, mqtt_queue: Queue[MQTTQueueType]) -> None:
-        self.mqtt_queue: Queue[MQTTQueueType] = mqtt_queue
-
-    def publish(
-        self,
-        topic: str,
-        payload: str,
-        qos: int = 0,
-        retain: bool = False,
-        properties: Properties | None = None,
-    ) -> None:
-        queue_message: tuple[str, str, int, bool, Properties | None] = (
-            topic,
-            payload,
-            qos,
-            retain,
-            properties,
-        )
-        self.mqtt_queue.put(queue_message)
-
-
-class MqttTelemetryPublisher(MqttClientInterface):
+class MqttTelemetryPublisher(Thread):
     def __init__(
         self,
-        mqtt_queue: Queue[MQTTQueueType],
-        telemetry_method: Callable,
-        topic: str,
-        interval: float,
-        qos: int = 0,
-        retain: bool = False,
-        properties: Properties | None = None,
+        mqtt_queue: MQTTQueue,
+        parameters: TelemetryParameters,
     ) -> None:
-        self.mqtt_queue: Queue[MQTTQueueType] = mqtt_queue
-        self.telemetry_method: Callable = telemetry_method
-        self.topic: str = topic
-        self.interval: float = interval
-        self.qos: int = qos
-        self.retain: bool = retain
-        self.properties: Properties | None = properties
+        self.mqtt_queue: MQTTQueue = mqtt_queue
+        self.telemetry_method: Callable[[], str] = parameters.method
+        self.topic: str = f"isar/{settings.ISAR_ID}/{parameters.topic}"
+        self.interval: float = parameters.interval
 
-        self.logger: Logger = logging.getLogger("telemetry")
+        self.logger: Logger = logging.getLogger(f"telemetry - {parameters.name}")
 
-    def run(self, isar_id: str, robot_name: str) -> None:
-        self.cloud_health_topic: str = f"isar/{isar_id}/cloud_health"
-        self.battery_topic: str = f"isar/{isar_id}/battery"
-        self.pose_topic: str = f"isar/{isar_id}/pose"
-        self.pressure_topic: str = f"isar/{isar_id}/pressure"
+        Thread.__init__(self, name=f"Telemetry thread - {parameters.name}")
+
+    def stop(self) -> None:
+        return
+
+    def run(self) -> None:
+        robot_name = settings.ROBOT_NAME
+        isar_id = settings.ISAR_ID
         topic: str
         payload: str
 
         while True:
+            time.sleep(self.interval)
             try:
-                payload = self.telemetry_method(isar_id=isar_id, robot_name=robot_name)
+                payload_str = self.telemetry_method()
+                payload_dict = json.loads(payload_str)
+                payload_dict["isar_id"] = isar_id
+                payload_dict["robot_name"] = robot_name
+                payload_dict["timestamp"] = str(datetime.now(UTC))
+                payload = json.dumps(payload_dict)
                 topic = self.topic
             except RobotTelemetryPoseException, RobotTelemetryNoUpdateException:
-                time.sleep(self.interval)
                 continue
             except RobotTelemetryException:
                 payload = json.dumps(
                     CloudHealthPayload(
                         isar_id=isar_id,
                         robot_name=robot_name,
-                        timestamp=datetime.now(UTC),
+                        timestamp=str(datetime.now(UTC)),
                     )
                 )
-                topic = self.cloud_health_topic
+                topic = f"isar/{isar_id}/cloud_health"
             except Exception as e:  # noqa: BLE001
                 self.logger.error(f"Unexpected error in MQTT telemetry publisher: {e}")
-                time.sleep(self.interval)
                 continue
 
-            publish_properties = self.properties
+            properties: Properties = props_expiry(settings.MQTT_TELEMETRY_EXPIRY)
 
-            if topic in (
-                self.battery_topic,
-                self.pose_topic,
-                self.pressure_topic,
-            ):
-                publish_properties = props_expiry(settings.MQTT_TELEMETRY_EXPIRY)
-
-            self.publish(
+            self.mqtt_queue.publish(
                 topic=topic,
                 payload=payload,
-                qos=self.qos,
-                retain=self.retain,
-                properties=publish_properties,
+                qos=0,
+                retain=False,
+                properties=properties,
             )
-            time.sleep(self.interval)
-
-    def publish(
-        self,
-        topic: str,
-        payload: str,
-        qos: int = 0,
-        retain: bool = False,
-        properties: Properties | None = None,
-    ) -> None:
-        queue_message: MQTTQueueType = (
-            topic,
-            payload,
-            qos,
-            retain,
-            properties,
-        )
-        self.mqtt_queue.put(queue_message)
