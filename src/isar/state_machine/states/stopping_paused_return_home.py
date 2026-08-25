@@ -1,5 +1,5 @@
+import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.monitor as Monitor
-import isar.state_machine.states.return_home_paused as ReturnHomePaused
 from isar.apis.models.models import MissionStartResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
@@ -12,7 +12,9 @@ def StoppingPausedReturnHome(events: Events, mission: Mission) -> State:
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.robot_service_events.mission_failed_to_stop,
-            handler=lambda _: ReturnHomePaused.transition(),
+            handler=lambda _: InterventionNeeded.transition(
+                "Failed to stop paused return home mission"
+            ),
         ),
         EventHandlerMapping[AbortedMission](
             event=events.robot_service_events.mission_successfully_stopped,

@@ -41,7 +41,7 @@ def test_stopping_paused_return_home_mission_fails(events: Events) -> None:
     assert not events.api_requests.start_mission.response.has_event()
 
     current_state = transition(events)
-    assert current_state.name is States.ReturnHomePaused
+    assert current_state.name is States.InterventionNeeded
 
 
 def test_stopping_paused_return_home_mission_succeeds(events: Events) -> None:
