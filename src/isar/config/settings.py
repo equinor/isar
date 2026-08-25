@@ -97,6 +97,11 @@ class Settings(BaseSettings):
     # communication.
     MQTT_SSL_ENABLED: bool = Field(default=True)
 
+    # CA certificate verifying the MQTT broker. MQTT_CA_CERT is inline PEM and
+    # takes precedence over MQTT_CA_CERT_PATH; unset, the bundled one is used.
+    MQTT_CA_CERT_PATH: str = Field(default="")
+    MQTT_CA_CERT: str = Field(default="")
+
     # Determines whether authentication is enabled for the API or not
     # Enabling this requires certain resources available for OAuth2 authentication
     # Currently supported authentication is Azure AD
