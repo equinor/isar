@@ -332,6 +332,13 @@ ISAR_MQTT_PASSWORD
 
 If not specified the password will default to an empty string.
 
+TLS is enabled by default and controlled by `ISAR_MQTT_SSL_ENABLED`. The CA certificate
+verifying the broker is resolved in this order:
+
+1. `ISAR_MQTT_CA_CERT` — the CA certificate inline as PEM.
+2. `ISAR_MQTT_CA_CERT_PATH` — a path to a CA certificate file.
+3. The one bundled in `src/isar/config/certs/ca-cert.pem`.
+
 ## Running several ISAR instances locally
 
 To run several ISAR instances in parallel locally:

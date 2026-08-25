@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from tempfile import NamedTemporaryFile
 from typing import Any
 
 import backoff
@@ -68,13 +69,37 @@ class MqttClient:
         dirname = os.path.dirname(__file__)
 
         if settings.MQTT_SSL_ENABLED:
-            cert_path = os.path.join(dirname, "../../../config/certs/ca-cert.pem")
-            self.client.tls_set(ca_certs=cert_path)
+            self.client.tls_set(ca_certs=self._resolve_ca_certificate(dirname))
 
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
 
         self.client.username_pw_set(username=username, password=password)
+
+    def _resolve_ca_certificate(self, dirname: str) -> str:
+        """Determine which CA certificate to verify the broker certificate against.
+
+        Parameters
+        ----------
+        dirname : str
+            Directory of this module, used to locate the bundled certificate.
+
+        Returns
+        -------
+        str
+            Path to the CA certificate to use.
+        """
+        if settings.MQTT_CA_CERT:
+            with NamedTemporaryFile(
+                mode="w", suffix=".pem", delete=False
+            ) as certificate_file:
+                certificate_file.write(settings.MQTT_CA_CERT)
+            return certificate_file.name
+
+        if settings.MQTT_CA_CERT_PATH:
+            return settings.MQTT_CA_CERT_PATH
+
+        return os.path.join(dirname, "../../../config/certs/ca-cert.pem")
 
     def run(self) -> None:
         self.connect(host=self.host, port=self.port)
