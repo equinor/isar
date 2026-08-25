@@ -5,7 +5,7 @@ from python_to_mermaid import MermaidDiagram
 
 
 def get_imports(source_code: str) -> tuple[str | None, list]:
-    own_class_name = None
+    own_state_name: str | None = None
     imported_states = []
     tree = ast.parse(source_code)
     for node in ast.walk(tree):
@@ -14,10 +14,29 @@ def get_imports(source_code: str) -> tuple[str | None, list]:
         ):
             state_name = node.names[0].asname
             imported_states.append(state_name)
-        if isinstance(node, ast.ClassDef):
-            own_class_name = node.name
+        if isinstance(node, ast.FunctionDef):
+            if not isinstance(node.returns, ast.Name) or node.returns.id != "State":
+                continue
 
-    return own_class_name, imported_states
+            return_calls: list = list(
+                filter(lambda body_val: isinstance(body_val, ast.Return), node.body)
+            )
+            if len(return_calls) < 1:
+                continue
+            assert isinstance(return_calls[0], ast.Return)
+
+            return_call: ast.Return = return_calls[0]
+            assert isinstance(return_call.value, ast.Call)
+
+            state_name_args = list(
+                filter(lambda arg: arg.arg == "state_name", return_call.value.keywords)
+            )
+            if len(state_name_args) < 1:
+                continue
+            assert isinstance(state_name_args[0].value, ast.Attribute)
+            own_state_name = state_name_args[0].value.attr
+
+    return own_state_name, imported_states
 
 
 def get_all_state_file_paths() -> list[str]:

@@ -4,7 +4,8 @@ The 'update_state_diagram.py' file can be used to generate a state transition
 diagram of the ISAR state machine. To do so, simply run the file from the top
 level folder (it assumes that the main folder is the current woking directory).
 This will then generate a .mmd file (diagram.mmd), which is a Mermaid markdown
-file, which can be converted to other formats if needed.
+file, which can be converted to other formats if needed. You may need to pip
+install 'python-to-mermaid' beforehand.
 
 To convert a .mmd file to a .svg file, first run 
 

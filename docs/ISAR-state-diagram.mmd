@@ -20,14 +20,15 @@ flowchart TD
     PausingReturnHome["PausingReturnHome"]
     InterventionNeeded["InterventionNeeded"]
     StoppingReturnHome["StoppingReturnHome"]
+    StoppingUnknownMission["StoppingUnknownMission"]
     ReturnHomePaused["ReturnHomePaused"]
     UnknownStatus["UnknownStatus"]
     GoingToRechargingWithMission["GoingToRechargingWithMission"]
     Resuming["Resuming"]
     Pausing["Pausing"]
     Lockdown["Lockdown"]
+    StoppingPausedReturnHome --> InterventionNeeded
     StoppingPausedReturnHome --> Monitor
-    StoppingPausedReturnHome --> ReturnHomePaused
     StoppingDueToMaintenance --> InterventionNeeded
     StoppingDueToMaintenance --> Maintenance
     GoingToRecharging --> GoingToLockdown
@@ -101,6 +102,8 @@ flowchart TD
     InterventionNeeded --> UnknownStatus
     StoppingReturnHome --> Monitor
     StoppingReturnHome --> ReturningHome
+    StoppingUnknownMission --> AwaitNextMission
+    StoppingUnknownMission --> InterventionNeeded
     ReturnHomePaused --> GoingToLockdown
     ReturnHomePaused --> ResumingReturnHome
     ReturnHomePaused --> ReturningHome
@@ -111,6 +114,7 @@ flowchart TD
     UnknownStatus --> Maintenance
     UnknownStatus --> Offline
     UnknownStatus --> Stopping
+    UnknownStatus --> StoppingUnknownMission
     GoingToRechargingWithMission --> GoingToLockdown
     GoingToRechargingWithMission --> GoingToRecharging
     GoingToRechargingWithMission --> InterventionNeeded
