@@ -1,3 +1,4 @@
+import atexit
 import logging
 import os
 import time
@@ -34,6 +35,34 @@ def _on_giveup(data: Details) -> None:
     logging.getLogger("mqtt_client").error(
         "Failed to connect to MQTT Broker within set backoff strategy."
     )
+
+
+def _remove_file(path: str) -> None:
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+
+
+# paho wants a path, not the certificate itself, so an inline certificate has to
+# be spilled to disk. Cached by content so that constructing several clients does
+# not leave a file behind for each of them, and removed when ISAR exits.
+# The deployments run with a read-only root filesystem and an emptyDir at /tmp,
+# which is where this lands.
+_inline_certificate_paths: dict[str, str] = {}
+
+
+def _write_inline_certificate(certificate: str) -> str:
+    if certificate in _inline_certificate_paths:
+        return _inline_certificate_paths[certificate]
+
+    with NamedTemporaryFile(mode="w", suffix=".pem", delete=False) as certificate_file:
+        certificate_file.write(certificate)
+
+    _inline_certificate_paths[certificate] = certificate_file.name
+    atexit.register(_remove_file, certificate_file.name)
+
+    return certificate_file.name
 
 
 class MqttClient:
@@ -90,11 +119,7 @@ class MqttClient:
             Path to the CA certificate to use.
         """
         if settings.MQTT_CA_CERT:
-            with NamedTemporaryFile(
-                mode="w", suffix=".pem", delete=False
-            ) as certificate_file:
-                certificate_file.write(settings.MQTT_CA_CERT)
-            return certificate_file.name
+            return _write_inline_certificate(settings.MQTT_CA_CERT)
 
         if settings.MQTT_CA_CERT_PATH:
             return settings.MQTT_CA_CERT_PATH

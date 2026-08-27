@@ -339,6 +339,10 @@ verifying the broker is resolved in this order:
 2. `ISAR_MQTT_CA_CERT_PATH` — a path to a CA certificate file.
 3. The one bundled in `src/isar/config/certs/ca-cert.pem`.
 
+Each deployed broker has its own CA, so set `ISAR_MQTT_CA_CERT`; the bundled certificate is a
+fallback that is being phased out. An inline certificate is written to a temporary file,
+because the MQTT client takes a path — the deployments therefore need a writable `/tmp`.
+
 ## Running several ISAR instances locally
 
 To run several ISAR instances in parallel locally:
