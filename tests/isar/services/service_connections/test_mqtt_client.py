@@ -54,3 +54,17 @@ class TestResolveCaCertificate:
         resolved = Path(client._resolve_ca_certificate(""))
 
         assert resolved.read_text() == CERTIFICATE
+
+    def test_inline_certificate_is_written_once_and_cleaned_up(
+        self, client: MqttClient, mocker: MockerFixture
+    ) -> None:
+        mocker.patch.object(mqtt_client.settings, "MQTT_CA_CERT", CERTIFICATE)
+        mocker.patch.object(mqtt_client.settings, "MQTT_CA_CERT_PATH", "")
+
+        first = client._resolve_ca_certificate("")
+        second = client._resolve_ca_certificate("")
+
+        assert first == second, "each client must not leave its own certificate behind"
+
+        mqtt_client._remove_file(first)
+        assert not Path(first).exists()
