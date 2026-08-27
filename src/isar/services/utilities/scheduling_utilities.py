@@ -387,9 +387,6 @@ class SchedulingUtilities:
     def _send_command(self, input: T1, api_event: APIEvent[T1, T2]) -> T2:
         self._verify_valid_state(api_event)
 
-        if not api_event.lock.acquire(blocking=False):
-            raise EventConflictError("API event has already been sent")
-
         try:
             if api_event.request.has_event():
                 self.logger.error(
@@ -414,4 +411,3 @@ class SchedulingUtilities:
         finally:
             api_event.request.clear_event()
             api_event.response.clear_event()
-            api_event.lock.release()

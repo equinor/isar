@@ -115,7 +115,6 @@ class APIEvent[T1, T2]:
         self.prioritized = (
             prioritized  # For when we want to try even if the statemachine is not ready
         )
-        self.lock: Lock = Lock()
 
 
 class APIRequests:
