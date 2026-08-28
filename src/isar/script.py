@@ -67,9 +67,6 @@ def print_startup_info() -> None:
     print_setting("Using local storage", settings.STORAGE_LOCAL_ENABLED)
     print_setting("Using blob storage", settings.STORAGE_BLOB_ENABLED)
     print_setting("Blob storage account data", settings.BLOB_STORAGE_ACCOUNT_DATA)
-    print_setting(
-        "Blob storage account metadata", settings.BLOB_STORAGE_ACCOUNT_METADATA
-    )
     print_setting("Using async inspection uploading", settings.UPLOAD_INSPECTIONS_ASYNC)
     print_setting("Installation code", settings.PLANT_SHORT_NAME)
     print_setting("Robot capabilities", robot_settings.CAPABILITIES)

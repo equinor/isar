@@ -24,10 +24,6 @@ class BlobStorage(StorageInterface):
             settings.BLOB_STORAGE_ACCOUNT_DATA,
             settings.BLOB_STORAGE_CONNECTION_STRING_DATA,
         )
-        self.container_client_metadata = self._get_container_client(
-            settings.BLOB_STORAGE_ACCOUNT_METADATA,
-            settings.BLOB_STORAGE_CONNECTION_STRING_METADATA,
-        )
 
     def _get_container_client(
         self, account_name: str, storage_connection_string: str
@@ -82,8 +78,8 @@ class BlobStorage(StorageInterface):
         metadata_path = self._upload_file(
             filename=metadata_filename,
             data=metadata_bytes,
-            container_client=self.container_client_metadata,
-            account_name=settings.BLOB_STORAGE_ACCOUNT_METADATA,
+            container_client=self.container_client_data,
+            account_name=settings.BLOB_STORAGE_ACCOUNT_DATA,
         )
         return StoragePaths(data_path=data_path, metadata_path=metadata_path)
 

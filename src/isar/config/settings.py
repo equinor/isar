@@ -147,11 +147,9 @@ class Settings(BaseSettings):
 
     # URL to storage account for Azure Blob Storage
     BLOB_STORAGE_ACCOUNT_DATA: str = Field(default="")
-    BLOB_STORAGE_ACCOUNT_METADATA: str = Field(default="")
 
     # Blob storage connection strings for Azure Blob Storage
     BLOB_STORAGE_CONNECTION_STRING_DATA: str = Field(default="")
-    BLOB_STORAGE_CONNECTION_STRING_METADATA: str = Field(default="")
 
     # Name of blob container in Azure Blob Storage [slimm test]
     BLOB_CONTAINER: str = Field(default="test")
