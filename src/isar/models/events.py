@@ -1,6 +1,5 @@
 from collections import deque
 from queue import Empty, Full, Queue, ShutDown
-from threading import Lock
 
 from isar.apis.models.models import (
     ControlMissionResponse,
@@ -89,7 +88,7 @@ class Events:
         )
 
         self.api_requests: APIRequests = APIRequests()
-        self.state_machine_events: StateMachineEvents = StateMachineEvents()
+        self.action_requests: RobotActionRequests = RobotActionRequests()
         self.robot_service_events: RobotServiceEvents = RobotServiceEvents()
 
         self.upload_event: Event[tuple[Inspection, Mission]] = Event(
@@ -111,7 +110,7 @@ class APIEvent[T1, T2]:
 
     def __init__(self, name: str, prioritized: bool = False):
         self.request: Event[T1] = Event("api-" + name + "-request")
-        self.response: Event[T2] = Event("api-" + name + "-request")
+        self.response: Event[T2] = Event("api-" + name + "-response")
         self.prioritized = (
             prioritized  # For when we want to try even if the statemachine is not ready
         )
@@ -149,43 +148,51 @@ class APIRequests:
         )
 
 
-class StateMachineEvents:
+class RobotActionEvent[T1, T2, T3]:
+    """
+    Creates request and response event. The events are defined such that the request is from
+    state machine to robot service, and vice versa for the response. Only one response per
+    request is expected, and other events are cleared before the next one is triggered.
+    """
+
+    def __init__(self, name: str) -> None:
+        self.request: Event[T1] = Event("robot-" + name + "-request")
+        self.success: Event[T2] = Event("robot-" + name + "-success")
+        self.failure: Event[T3] = Event("robot-" + name + "-failure")
+
+    def trigger_request(self, event_value: T1) -> None:
+        self.failure.clear_event()
+        self.success.clear_event()
+        self.request.trigger_event(event_value)
+
+    def trigger_success_response(self, event_value: T2) -> None:
+        self.failure.clear_event()
+        self.success.trigger_event(event_value)
+
+    def trigger_failure_response(self, event_value: T3) -> None:
+        self.success.clear_event()
+        self.failure.trigger_event(event_value)
+
+
+class RobotActionRequests:
     def __init__(self) -> None:
-        self.start_mission: Event[Mission] = Event("start_mission")
-        self.stop_mission: Event[EmptyMessage] = Event("stop_mission")
-        self.pause_mission: Event[EmptyMessage] = Event("pause_mission")
-        self.resume_mission: Event[EmptyMessage] = Event("resume_mission")
+        self.execute_mission: RobotActionEvent[Mission, EmptyMessage, ErrorMessage] = (
+            RobotActionEvent("execute_mission")
+        )
+        self.stop_mission: RobotActionEvent[
+            EmptyMessage, AbortedMission | EmptyMessage, EmptyMessage
+        ] = RobotActionEvent("stop_mission")
+        self.pause_mission: RobotActionEvent[
+            EmptyMessage, EmptyMessage, EmptyMessage
+        ] = RobotActionEvent("pause_mission")
+        self.resume_mission: RobotActionEvent[
+            EmptyMessage, EmptyMessage, EmptyMessage
+        ] = RobotActionEvent("resume_mission")
 
 
 class RobotServiceEvents:
     def __init__(self) -> None:
-        self.mission_succeeded: Event[EmptyMessage] = Event("mission_succeeded")
-        self.mission_failed: Event[ErrorMessage] = Event("mission_failed")
-        self.mission_started_successfully: Event[EmptyMessage] = Event(
-            "mission_started_successfully"
-        )
         self.robot_status_update: Event[RobotStatus] = Event("robot_status_update")
-        self.mission_failed_to_stop: Event[EmptyMessage] = Event(
-            "mission_failed_to_stop"
-        )
-        self.mission_successfully_stopped: Event[AbortedMission] = Event(
-            "mission_successfully_stopped"
-        )
-        self.stopped_mission_already_done: Event[EmptyMessage] = Event(
-            "stopped_mission_already_done"
-        )
-        self.mission_failed_to_pause: Event[EmptyMessage] = Event(
-            "mission_failed_to_pause"
-        )
-        self.mission_successfully_paused: Event[EmptyMessage] = Event(
-            "mission_successfully_paused"
-        )
-        self.mission_failed_to_resume: Event[EmptyMessage] = Event(
-            "mission_failed_to_resume"
-        )
-        self.mission_successfully_resumed: Event[EmptyMessage] = Event(
-            "mission_successfully_resumed"
-        )
         self.request_inspection_upload: Event[tuple[InspectionTask, Mission]] = Event(
             "request_inspection_upload"
         )

@@ -30,7 +30,7 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
 
     lockdown_event_handler: EventHandlerMapping = (
         current_state.get_event_handler_by_event(
-            events.robot_service_events.mission_failed_to_resume
+            events.action_requests.resume_mission.failure
         )
     )
 
@@ -49,7 +49,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(events: Events) -> N
     current_state = StoppingGoToLockdown(events, "mission_id")
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_successfully_stopped
+        events.action_requests.stop_mission.success
     )
 
     aborted_mission: Mission = Mission(

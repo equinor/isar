@@ -12,7 +12,7 @@ def test_unknown_mission_successfully_stopped(events: Events) -> None:
 
     stopping_state_event_handler: EventHandlerMapping = (
         current_state.get_event_handler_by_event(
-            events.robot_service_events.mission_successfully_stopped
+            events.action_requests.stop_mission.success
         )
     )
 
@@ -32,7 +32,7 @@ def test_unknown_mission_successfully_stopped_with_no_mission_found(
 
     stopping_state_event_handler: EventHandlerMapping = (
         current_state.get_event_handler_by_event(
-            events.robot_service_events.stopped_mission_already_done
+            events.action_requests.stop_mission.success
         )
     )
 
@@ -63,7 +63,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(events: Events) ->
 
     stopping_state_event_handler: EventHandlerMapping = (
         current_state.get_event_handler_by_event(
-            events.robot_service_events.mission_successfully_stopped
+            events.action_requests.stop_mission.success
         )
     )
 
@@ -77,7 +77,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(events: Events) ->
 def test_stopping_mission_fails(events: Events) -> None:
     current_state = StoppingUnknownMission(events)
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed_to_stop
+        events.action_requests.stop_mission.failure
     )
 
     transition = event_handler.handler(

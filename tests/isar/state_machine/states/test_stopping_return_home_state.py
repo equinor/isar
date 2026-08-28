@@ -47,7 +47,7 @@ def test_stopping_return_home_mission_fails(events: Events) -> None:
     )
     current_state = StoppingReturnHome(events, mission)
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed_to_stop
+        events.action_requests.stop_mission.failure
     )
 
     transition = event_handler.handler(
@@ -66,7 +66,7 @@ def test_stopping_return_home_mission_succeeds(events: Events) -> None:
     )
     current_state = StoppingReturnHome(events, mission)
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_successfully_stopped
+        events.action_requests.stop_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())

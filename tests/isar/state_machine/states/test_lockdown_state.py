@@ -22,7 +22,7 @@ def test_going_to_lockdown_transitions_to_lockdown(events: Events) -> None:
     current_state = GoingToLockdown(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_succeeded
+        events.action_requests.execute_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())

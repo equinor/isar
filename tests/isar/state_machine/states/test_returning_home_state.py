@@ -17,7 +17,7 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
     current_state = StoppingReturnHome(events, example_mission)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_successfully_stopped
+        events.action_requests.stop_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -30,7 +30,7 @@ def test_transition_from_pausing_return_home_to_returning_home(events: Events) -
     current_state = PausingReturnHome(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed_to_pause
+        events.action_requests.pause_mission.failure
     )
 
     error_event = ErrorMessage(
@@ -48,7 +48,7 @@ def test_transition_from_resuming_return_home_to_returning_home_state(
     current_state = ResumingReturnHome(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_successfully_resumed
+        events.action_requests.resume_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -63,7 +63,7 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
     current_state: State = ReturningHome(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_succeeded
+        events.action_requests.execute_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())

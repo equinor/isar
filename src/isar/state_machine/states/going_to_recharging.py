@@ -12,13 +12,13 @@ def GoingToRecharging(events: Events) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[ErrorMessage](
-            event=events.robot_service_events.mission_failed,
+            event=events.action_requests.execute_mission.failure,
             handler=lambda _: InterventionNeeded.transition(
                 "Return home to recharge failed"
             ),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_succeeded,
+            event=events.action_requests.execute_mission.success,
             handler=lambda _: Recharging.transition(),
         ),
         EventHandlerMapping[EmptyMessage](
@@ -35,11 +35,8 @@ def GoingToRecharging(events: Events) -> State:
 
 def transition_and_start_return_home() -> Transition:
     def _transition(events: Events) -> State:
-        events.robot_service_events.mission_failed.clear_event()
-        events.robot_service_events.mission_succeeded.clear_event()
-        events.robot_service_events.mission_started_successfully.clear_event()
 
-        events.state_machine_events.start_mission.trigger_event(ReturnHomeMission())
+        events.action_requests.execute_mission.trigger_request(ReturnHomeMission())
         return GoingToRecharging(events)
 
     return _transition

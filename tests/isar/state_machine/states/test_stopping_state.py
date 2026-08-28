@@ -10,7 +10,7 @@ def test_mqtt_mission_status_sent_on_mission_stopped(events: Events) -> None:
 
     stopping_state_event_handler: EventHandlerMapping = (
         current_state.get_event_handler_by_event(
-            events.robot_service_events.mission_successfully_stopped
+            events.action_requests.stop_mission.success
         )
     )
 
@@ -26,7 +26,7 @@ def test_mqtt_mission_status_sent_on_mission_stopped(events: Events) -> None:
 def test_stopping_mission_fails(events: Events) -> None:
     current_state = Stopping(events, "mission_id")
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed_to_stop
+        events.action_requests.stop_mission.failure
     )
 
     transition = event_handler.handler(

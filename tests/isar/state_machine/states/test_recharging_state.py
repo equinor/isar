@@ -9,7 +9,7 @@ from isar.state_machine.states_enum import States
 def test_going_to_recharging_goes_to_recharge(events: Events) -> None:
     current_state = GoingToRecharging(events)
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_succeeded
+        events.action_requests.execute_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())

@@ -33,11 +33,11 @@ def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> Sta
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[ErrorMessage](
-            event=events.robot_service_events.mission_failed,
+            event=events.action_requests.execute_mission.failure,
             handler=_mission_failed_event_handler,
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_succeeded,
+            event=events.action_requests.execute_mission.success,
             handler=lambda _: RechargingWithMission.transition(mission),
         ),
         EventHandlerMapping[EmptyMessage](
@@ -62,11 +62,8 @@ def transition_and_start_return_home(
     mission: AbortedMission,
 ) -> Transition:
     def _transition(events: Events) -> State:
-        events.robot_service_events.mission_failed.clear_event()
-        events.robot_service_events.mission_succeeded.clear_event()
-        events.robot_service_events.mission_started_successfully.clear_event()
 
-        events.state_machine_events.start_mission.trigger_event(ReturnHomeMission())
+        events.action_requests.execute_mission.trigger_request(ReturnHomeMission())
         return GoingToRechargingWithMission(events, mission=mission)
 
     return _transition

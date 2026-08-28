@@ -2,6 +2,7 @@ import asyncio
 
 from pytest_mock import MockerFixture
 
+from isar.models.events import EmptyMessage
 from isar.robot.robot_service import RobotService
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -34,8 +35,8 @@ def test_mission_fails_to_schedule(
 
     r_service._start_mission_handler(mission)
 
-    assert r_service.robot_service_events.mission_failed.has_event()
-    mission_failed_event = r_service.robot_service_events.mission_failed.get()
+    assert r_service.action_requests.execute_mission.failure.has_event()
+    mission_failed_event = r_service.action_requests.execute_mission.failure.get()
     assert mission_failed_event is not None
     assert mission_failed_event.error_reason == ErrorReason.RobotUnknownErrorException
 
@@ -72,12 +73,10 @@ def test_mission_fails_to_stop(
 
     asyncio.run(r_service._stop_mission_handler(None))
 
-    assert r_service.robot_service_events.mission_failed_to_stop.has_event()
-    mission_failed_to_stop_event = (
-        r_service.robot_service_events.mission_failed_to_stop.get()
-    )
+    assert r_service.action_requests.stop_mission.failure.has_event()
+    mission_failed_to_stop_event = r_service.action_requests.stop_mission.failure.get()
     assert mission_failed_to_stop_event is not None
-    assert not r_service.robot_service_events.mission_successfully_stopped.has_event()
+    assert not r_service.action_requests.stop_mission.success.has_event()
 
 
 def test_successful_stop_with_remaining_tasks(
@@ -109,10 +108,10 @@ def test_successful_stop_with_remaining_tasks(
 
     asyncio.run(test_stop_mission_handler())
 
-    assert r_service.robot_service_events.mission_successfully_stopped.has_event()
-    assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
-    assert not r_service.robot_service_events.mission_failed.has_event()
-    assert not r_service.robot_service_events.mission_succeeded.has_event()
+    assert r_service.action_requests.stop_mission.success.has_event()
+    assert not r_service.action_requests.stop_mission.failure.has_event()
+    assert not r_service.action_requests.execute_mission.failure.has_event()
+    assert not r_service.action_requests.execute_mission.success.has_event()
 
 
 def test_successful_stop_with_no_remaining_tasks(
@@ -144,10 +143,13 @@ def test_successful_stop_with_no_remaining_tasks(
 
     asyncio.run(test_stop_mission_handler())
 
-    assert r_service.robot_service_events.stopped_mission_already_done.has_event()
-    assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
-    assert not r_service.robot_service_events.mission_failed.has_event()
-    assert not r_service.robot_service_events.mission_succeeded.has_event()
+    assert r_service.action_requests.stop_mission.success.has_event()
+    assert isinstance(
+        r_service.action_requests.stop_mission.success.get(), EmptyMessage
+    )
+    assert not r_service.action_requests.stop_mission.failure.has_event()
+    assert not r_service.action_requests.execute_mission.failure.has_event()
+    assert not r_service.action_requests.execute_mission.success.has_event()
 
 
 def test_successful_stop_with_no_ongoing_monitoring(
@@ -159,10 +161,13 @@ def test_successful_stop_with_no_ongoing_monitoring(
 
     asyncio.run(r_service._stop_mission_handler(None))
 
-    assert r_service.robot_service_events.stopped_mission_already_done.has_event()
-    assert not r_service.robot_service_events.mission_failed_to_stop.has_event()
-    assert not r_service.robot_service_events.mission_failed.has_event()
-    assert not r_service.robot_service_events.mission_succeeded.has_event()
+    assert r_service.action_requests.stop_mission.success.has_event()
+    assert isinstance(
+        r_service.action_requests.stop_mission.success.get(), EmptyMessage
+    )
+    assert not r_service.action_requests.stop_mission.failure.has_event()
+    assert not r_service.action_requests.execute_mission.failure.has_event()
+    assert not r_service.action_requests.execute_mission.success.has_event()
 
 
 def test_monitor_mission_reports_nothing_after_mission_stopped(
@@ -182,8 +187,8 @@ def test_monitor_mission_reports_nothing_after_mission_stopped(
 
     asyncio.run(r_service._monitor_mission_handler(mission))
 
-    assert not r_service.robot_service_events.mission_failed.has_event()
-    assert not r_service.robot_service_events.mission_succeeded.has_event()
+    assert not r_service.action_requests.execute_mission.failure.has_event()
+    assert not r_service.action_requests.execute_mission.success.has_event()
 
 
 def test_monitor_mission_reports_mission_failed(
@@ -207,8 +212,8 @@ def test_monitor_mission_reports_mission_failed(
 
     asyncio.run(r_service._monitor_mission_handler(mission))
 
-    assert r_service.robot_service_events.mission_failed.has_event()
-    assert not r_service.robot_service_events.mission_succeeded.has_event()
+    assert r_service.action_requests.execute_mission.failure.has_event()
+    assert not r_service.action_requests.execute_mission.success.has_event()
 
 
 def test_monitor_mission_reports_mission_success(
@@ -228,8 +233,8 @@ def test_monitor_mission_reports_mission_success(
 
     asyncio.run(r_service._monitor_mission_handler(mission))
 
-    assert r_service.robot_service_events.mission_succeeded.has_event()
-    assert not r_service.robot_service_events.mission_failed.has_event()
+    assert r_service.action_requests.execute_mission.success.has_event()
+    assert not r_service.action_requests.execute_mission.failure.has_event()
 
 
 def test_mission_fails_to_pause(
@@ -247,12 +252,12 @@ def test_mission_fails_to_pause(
 
     r_service._pause_mission_handler()
 
-    assert r_service.robot_service_events.mission_failed_to_pause.has_event()
+    assert r_service.action_requests.pause_mission.failure.has_event()
     mission_failed_to_pause_event = (
-        r_service.robot_service_events.mission_failed_to_pause.get()
+        r_service.action_requests.pause_mission.failure.get()
     )
     assert mission_failed_to_pause_event is not None
-    assert not r_service.robot_service_events.mission_successfully_paused.has_event()
+    assert not r_service.action_requests.pause_mission.success.has_event()
 
 
 def test_mission_succeeds_to_pause(
@@ -264,8 +269,8 @@ def test_mission_succeeds_to_pause(
 
     r_service._pause_mission_handler()
 
-    assert not r_service.robot_service_events.mission_failed_to_pause.has_event()
-    assert r_service.robot_service_events.mission_successfully_paused.has_event()
+    assert not r_service.action_requests.pause_mission.failure.has_event()
+    assert r_service.action_requests.pause_mission.success.has_event()
 
 
 def test_mission_fails_to_resume(
@@ -283,12 +288,12 @@ def test_mission_fails_to_resume(
 
     r_service._resume_mission_handler()
 
-    assert r_service.robot_service_events.mission_failed_to_resume.has_event()
+    assert r_service.action_requests.resume_mission.failure.has_event()
     mission_failed_to_resume_event = (
-        r_service.robot_service_events.mission_failed_to_resume.get()
+        r_service.action_requests.resume_mission.failure.get()
     )
     assert mission_failed_to_resume_event is not None
-    assert not r_service.robot_service_events.mission_successfully_resumed.has_event()
+    assert not r_service.action_requests.resume_mission.success.has_event()
 
 
 def test_mission_succeeds_to_resume(
@@ -300,8 +305,8 @@ def test_mission_succeeds_to_resume(
 
     r_service._resume_mission_handler()
 
-    assert not r_service.robot_service_events.mission_failed_to_resume.has_event()
-    assert r_service.robot_service_events.mission_successfully_resumed.has_event()
+    assert not r_service.action_requests.resume_mission.failure.has_event()
+    assert r_service.action_requests.resume_mission.success.has_event()
 
 
 def test_start_mission_reports_robot_already_home(
@@ -321,4 +326,4 @@ def test_start_mission_reports_robot_already_home(
     success = r_service._start_mission_handler(mission)
 
     assert not success
-    assert r_service.robot_service_events.mission_succeeded.has_event()
+    assert r_service.action_requests.execute_mission.success.has_event()

@@ -8,22 +8,26 @@ from isar.state_machine.states_enum import States
 
 def StoppingGoToRecharge(events: Events) -> State:
 
+    def _mission_stopped_event_handler(
+        aborted_mission: AbortedMission | EmptyMessage,
+    ) -> Transition:
+        if isinstance(aborted_mission, AbortedMission):
+            return GoingToRechargingWithMission.transition_and_start_return_home(
+                aborted_mission
+            )
+        else:
+            return GoingToRecharging.transition_and_start_return_home()
+
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_failed_to_stop,
+            event=events.action_requests.stop_mission.failure,
             handler=lambda _: InterventionNeeded.transition(
                 "Failed to stop mission when battery was low"
             ),
         ),
-        EventHandlerMapping[AbortedMission](
-            event=events.robot_service_events.mission_successfully_stopped,
-            handler=lambda aborted_mission: GoingToRechargingWithMission.transition_and_start_return_home(
-                aborted_mission
-            ),
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.stopped_mission_already_done,
-            handler=lambda _: GoingToRecharging.transition_and_start_return_home(),
+        EventHandlerMapping[AbortedMission | EmptyMessage](
+            event=events.action_requests.stop_mission.success,
+            handler=_mission_stopped_event_handler,
         ),
     ]
     return State(
@@ -35,7 +39,7 @@ def StoppingGoToRecharge(events: Events) -> State:
 
 def transition_and_stop_mission() -> Transition:
     def _transition(events: Events) -> State:
-        events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
+        events.action_requests.stop_mission.trigger_request(EmptyMessage())
         return StoppingGoToRecharge(events)
 
     return _transition

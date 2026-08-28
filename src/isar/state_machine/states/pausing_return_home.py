@@ -10,11 +10,11 @@ def PausingReturnHome(events: Events) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_failed_to_pause,
+            event=events.action_requests.pause_mission.failure,
             handler=lambda _: ReturningHome.transition_to_existing_mission(),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_successfully_paused,
+            event=events.action_requests.pause_mission.success,
             handler=lambda _: ReturnHomePaused.transition(),
         ),
     ]
@@ -30,7 +30,7 @@ def transition_and_pause_mission_and_reply_to_API() -> Transition:
         events.api_requests.pause_mission.response.trigger_event(
             ControlMissionResponse(success=True)
         )
-        events.state_machine_events.pause_mission.trigger_event(EmptyMessage())
+        events.action_requests.pause_mission.trigger_request(EmptyMessage())
         return PausingReturnHome(events)
 
     return _transition

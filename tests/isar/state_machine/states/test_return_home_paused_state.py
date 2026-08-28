@@ -12,7 +12,7 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
     current_state = PausingReturnHome(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_successfully_paused
+        events.action_requests.pause_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())
