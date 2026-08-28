@@ -30,12 +30,12 @@ def test_state_machine_with_return_home_failure_successful_retries(
 
     event_handler_success: EventHandlerMapping = (
         current_state.get_event_handler_by_event(
-            events.robot_service_events.mission_succeeded
+            events.action_requests.execute_mission.success
         )
     )
     event_handler_failure: EventHandlerMapping = (
         current_state.get_event_handler_by_event(
-            events.robot_service_events.mission_failed
+            events.action_requests.execute_mission.failure
         )
     )
 

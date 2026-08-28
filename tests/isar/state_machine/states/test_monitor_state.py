@@ -42,7 +42,7 @@ def _mock_robot_exception_with_message() -> RobotException:
 def test_stopping_to_recharge_goes_to_intervention_needed(events: Events) -> None:
     current_state = StoppingGoToRecharge(events)
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed_to_stop
+        events.action_requests.stop_mission.failure
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -60,7 +60,7 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     current_state = StoppingReturnHome(events, example_mission)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_successfully_stopped
+        events.action_requests.stop_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -73,7 +73,7 @@ def test_stopping_lockdown_failing_to_monitor(events: Events) -> None:
     current_state = StoppingGoToLockdown(events, "mission_id")
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed_to_stop
+        events.action_requests.stop_mission.failure
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -90,7 +90,7 @@ def test_transition_from_pausing_to_monitor(events: Events) -> None:
     current_state = Pausing(events, "mission_id")
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed_to_pause
+        events.action_requests.pause_mission.failure
     )
 
     error_event = ErrorMessage(
@@ -106,7 +106,7 @@ def test_transition_from_resuming_to_monitor(events: Events) -> None:
     current_state = Resuming(events, "mission_id")
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_successfully_resumed
+        events.action_requests.resume_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -212,4 +212,4 @@ def test_transition_from_monitor_to_stopping_to_recharge(events: Events) -> None
 
     assert current_state.name is States.StoppingGoToRecharge
     assert not events.api_requests.stop_mission.response.has_event()
-    assert events.state_machine_events.stop_mission.has_event()
+    assert events.action_requests.stop_mission.request.has_event()

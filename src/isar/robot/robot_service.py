@@ -6,8 +6,8 @@ from isar.models.events import (
     AbortedMission,
     EmptyMessage,
     Events,
+    RobotActionRequests,
     RobotServiceEvents,
-    StateMachineEvents,
 )
 from isar.models.mqtt_queue import MQTTQueue
 from isar.robot.robot_battery import RobotBatteryThread
@@ -32,7 +32,7 @@ class RobotService:
         mqtt_queue: MQTTQueue,
     ) -> None:
         self.logger = logging.getLogger("robot")
-        self.state_machine_events: StateMachineEvents = events.state_machine_events
+        self.action_requests: RobotActionRequests = events.action_requests
         self.robot_service_events: RobotServiceEvents = events.robot_service_events
         self.mqtt_queue: MQTTQueue = mqtt_queue
         self.robot: RobotInterface = robot
@@ -59,7 +59,9 @@ class RobotService:
             and error_message.error_reason == ErrorReason.RobotAlreadyHomeException
         ):
             self.logger.info("Did not start return home, since robot was already home")
-            self.robot_service_events.mission_succeeded.trigger_event(EmptyMessage())
+            self.action_requests.execute_mission.trigger_success_response(
+                EmptyMessage()
+            )
             return False
         elif error_message:
             mission.status = MissionStatus.Failed
@@ -67,12 +69,8 @@ class RobotService:
                 f"Failed to initiate due to: {error_message.error_description}"
             )
             self.logger.warning(f"Failed to start mission. {error_message}")
-            self.robot_service_events.mission_failed.trigger_event(error_message)
+            self.action_requests.execute_mission.trigger_failure_response(error_message)
             return False
-        if not mission._is_return_to_home_mission():
-            self.robot_service_events.mission_started_successfully.trigger_event(
-                EmptyMessage()
-            )
         self.logger.info("Received confirmation that mission has started")
         return True
 
@@ -85,9 +83,7 @@ class RobotService:
 
         if error_message:
             self.logger.warning(f"Failed to stop mission. {error_message}")
-            self.robot_service_events.mission_failed_to_stop.trigger_event(
-                EmptyMessage()
-            )
+            self.action_requests.stop_mission.trigger_failure_response(EmptyMessage())
             return
 
         if monitor_mission_task is not None:
@@ -107,17 +103,12 @@ class RobotService:
                         name=aborted_mission.name,
                         tasks=unfinished_tasks,
                     )
-                    self.robot_service_events.mission_successfully_stopped.trigger_event(
+                    self.action_requests.stop_mission.trigger_success_response(
                         continued_mission
                     )
                     return
-        # This is here in case monitor is cancelled at the exact time it sets these events
-        self.robot_service_events.mission_succeeded.clear_event()
-        self.robot_service_events.mission_failed.clear_event()
 
-        self.robot_service_events.stopped_mission_already_done.trigger_event(
-            EmptyMessage()
-        )
+        self.action_requests.stop_mission.trigger_success_response(EmptyMessage())
 
     def _pause_mission_handler(self) -> None:
         error_message: ErrorMessage | None = robot_pause_mission(
@@ -126,13 +117,9 @@ class RobotService:
 
         if error_message:
             self.logger.warning(f"Failed to pause mission. {error_message}")
-            self.robot_service_events.mission_failed_to_pause.trigger_event(
-                EmptyMessage()
-            )
+            self.action_requests.pause_mission.trigger_failure_response(EmptyMessage())
         else:
-            self.robot_service_events.mission_successfully_paused.trigger_event(
-                EmptyMessage()
-            )
+            self.action_requests.pause_mission.trigger_success_response(EmptyMessage())
 
     def _resume_mission_handler(self) -> None:
         error_message: ErrorMessage | None = robot_resume_mission(
@@ -141,13 +128,9 @@ class RobotService:
 
         if error_message:
             self.logger.warning(f"Failed to resume mission. {error_message}")
-            self.robot_service_events.mission_failed_to_resume.trigger_event(
-                EmptyMessage()
-            )
+            self.action_requests.resume_mission.trigger_failure_response(EmptyMessage())
         else:
-            self.robot_service_events.mission_successfully_resumed.trigger_event(
-                EmptyMessage()
-            )
+            self.action_requests.resume_mission.trigger_success_response(EmptyMessage())
 
     async def _monitor_mission_handler(self, mission: Mission) -> Mission | None:
         remaining_mission: Mission | None = None
@@ -171,9 +154,11 @@ class RobotService:
 
             if error_message is not None:
                 self.logger.warning(f"Error monitoring mission. {error_message}")
-                self.robot_service_events.mission_failed.trigger_event(error_message)
+                self.action_requests.execute_mission.trigger_failure_response(
+                    error_message
+                )
             else:
-                self.robot_service_events.mission_succeeded.trigger_event(
+                self.action_requests.execute_mission.trigger_success_response(
                     EmptyMessage()
                 )
         except asyncio.CancelledError:
@@ -184,7 +169,6 @@ class RobotService:
         self.status_thread = RobotStatusThread(
             robot=self.robot,
             signal_exit=self.signal_exit,
-            state_machine_events=self.state_machine_events,
             robot_service_events=self.robot_service_events,
         )
         self.status_thread.start()
@@ -202,7 +186,7 @@ class RobotService:
 
         while not self.signal_exit.wait(0):
             start_mission_request = (
-                self.state_machine_events.start_mission.consume_event()
+                self.action_requests.execute_mission.request.consume_event()
             )
             if start_mission_request:
                 success = self._start_mission_handler(start_mission_request)
@@ -212,19 +196,19 @@ class RobotService:
                     )
 
             pause_mission_request = (
-                self.state_machine_events.pause_mission.consume_event()
+                self.action_requests.pause_mission.request.consume_event()
             )
             if pause_mission_request:
                 self._pause_mission_handler()
 
             resume_mission_request = (
-                self.state_machine_events.resume_mission.consume_event()
+                self.action_requests.resume_mission.request.consume_event()
             )
             if resume_mission_request:
                 self._resume_mission_handler()
 
             stop_mission_request = (
-                self.state_machine_events.stop_mission.consume_event()
+                self.action_requests.stop_mission.request.consume_event()
             )
             if stop_mission_request:
                 await self._stop_mission_handler(monitor_mission_task)

@@ -10,11 +10,11 @@ def ResumingReturnHome(events: Events) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_failed_to_resume,
+            event=events.action_requests.resume_mission.failure,
             handler=lambda _: ReturnHomePaused.transition(),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_successfully_resumed,
+            event=events.action_requests.resume_mission.success,
             handler=lambda _: ReturningHome.transition_to_existing_mission(),
         ),
     ]
@@ -30,7 +30,7 @@ def transition_and_resume_mission_and_reply_to_API() -> Transition:
         events.api_requests.resume_mission.response.trigger_event(
             ControlMissionResponse(success=True)
         )
-        events.state_machine_events.resume_mission.trigger_event(EmptyMessage())
+        events.action_requests.resume_mission.trigger_request(EmptyMessage())
         return ResumingReturnHome(events)
 
     return _transition

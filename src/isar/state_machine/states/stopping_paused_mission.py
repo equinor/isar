@@ -19,15 +19,11 @@ def StoppingPausedMission(events: Events, mission_id: str) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_failed_to_stop,
+            event=events.action_requests.stop_mission.failure,
             handler=lambda _: Paused.transition(mission_id),
         ),
-        EventHandlerMapping[AbortedMission](
-            event=events.robot_service_events.mission_successfully_stopped,
-            handler=_successful_stop_event_handler,
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.stopped_mission_already_done,
+        EventHandlerMapping[AbortedMission | EmptyMessage](
+            event=events.action_requests.stop_mission.success,
             handler=_successful_stop_event_handler,
         ),
     ]
@@ -42,7 +38,7 @@ def transition_and_trigger_stop(
     mission_id: str, should_respond_to_API_request: bool = False
 ) -> Transition:
     def _transition(events: Events) -> State:
-        events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
+        events.action_requests.stop_mission.trigger_request(EmptyMessage())
         if should_respond_to_API_request:
             events.api_requests.stop_mission.response.trigger_event(
                 ControlMissionResponse(success=True)

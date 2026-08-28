@@ -13,7 +13,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_task
 ) -> None:
     current_state = StoppingGoToRecharge(events)
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.stopped_mission_already_done
+        events.action_requests.stop_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -27,7 +27,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
 ) -> None:
     current_state = StoppingGoToRecharge(events)
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_successfully_stopped
+        events.action_requests.stop_mission.success
     )
 
     transition = event_handler.handler(AbortedMission(id="id", name="test"))

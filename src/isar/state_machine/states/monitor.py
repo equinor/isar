@@ -35,12 +35,6 @@ def Monitor(events: Events, mission_id: str) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_started_successfully,
-            handler=lambda _: events.mqtt_queue.publish_mission_status(
-                mission_id, MissionStatus.InProgress, None
-            ),
-        ),
-        EventHandlerMapping[EmptyMessage](
             event=events.api_requests.stop_mission.request,
             handler=lambda _: Stopping.transition_and_trigger_stop_and_respond_to_API(
                 mission_id
@@ -53,11 +47,11 @@ def Monitor(events: Events, mission_id: str) -> State:
             ),
         ),
         EventHandlerMapping[ErrorMessage](
-            event=events.robot_service_events.mission_failed,
+            event=events.action_requests.execute_mission.failure,
             handler=_mission_failed_event_handler,
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_succeeded,
+            event=events.action_requests.execute_mission.success,
             handler=_mission_success_event_handler,
         ),
         EventHandlerMapping[EmptyMessage](
@@ -88,14 +82,11 @@ def transition_and_start_mission(
     mission: Mission, should_respond_to_API_request: bool = False
 ) -> Transition:
     def _transition(events: Events) -> State:
-        events.mqtt_queue.publish_mission_status(
-            mission.id, MissionStatus.NotStarted, None
-        )
-        events.robot_service_events.mission_failed.clear_event()
-        events.robot_service_events.mission_succeeded.clear_event()
-        events.robot_service_events.mission_started_successfully.clear_event()
 
-        events.state_machine_events.start_mission.trigger_event(mission)
+        events.action_requests.execute_mission.trigger_request(mission)
+        events.mqtt_queue.publish_mission_status(
+            mission.id, MissionStatus.InProgress, None
+        )
 
         if should_respond_to_API_request:
             events.api_requests.start_mission.response.trigger_event(

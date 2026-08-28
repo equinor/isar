@@ -74,7 +74,7 @@ def test_transition_from_resuming_to_paused(events: Events) -> None:
     current_state = Resuming(events, "mission_id")
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed_to_resume
+        events.action_requests.resume_mission.failure
     )
 
     transition = event_handler.handler(
@@ -108,7 +108,7 @@ def test_transition_from_resuming_return_home_to_await_next_mission(
     current_state = ResumingReturnHome(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed_to_resume
+        events.action_requests.resume_mission.failure
     )
 
     transition = event_handler.handler(

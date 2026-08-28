@@ -10,17 +10,13 @@ def StoppingUnknownMission(events: Events) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_failed_to_stop,
+            event=events.action_requests.stop_mission.failure,
             handler=lambda _: InterventionNeeded.transition(
                 "Failed to stop unknown mission"
             ),
         ),
-        EventHandlerMapping[AbortedMission](
-            event=events.robot_service_events.mission_successfully_stopped,
-            handler=lambda _: AwaitNextMission.transition(),
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.stopped_mission_already_done,
+        EventHandlerMapping[AbortedMission | EmptyMessage](
+            event=events.action_requests.stop_mission.success,
             handler=lambda _: AwaitNextMission.transition(),
         ),
     ]
@@ -33,7 +29,7 @@ def StoppingUnknownMission(events: Events) -> State:
 
 def transition() -> Transition:
     def _transition(events: Events) -> State:
-        events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
+        events.action_requests.stop_mission.trigger_request(EmptyMessage())
         return StoppingUnknownMission(events)
 
     return _transition
@@ -41,7 +37,7 @@ def transition() -> Transition:
 
 def transition_and_respond_to_API() -> Transition:
     def _transition(events: Events) -> State:
-        events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
+        events.action_requests.stop_mission.trigger_request(EmptyMessage())
         events.api_requests.stop_mission.response.trigger_event(
             ControlMissionResponse(success=True)
         )

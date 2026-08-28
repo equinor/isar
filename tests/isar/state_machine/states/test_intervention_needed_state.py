@@ -13,7 +13,7 @@ from robot_interface.models.mission.status import RobotStatus
 def test_going_to_recharging_goes_to_intervention_needed(events: Events) -> None:
     current_state = GoingToRecharging(events)
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed
+        events.action_requests.execute_mission.failure
     )
 
     transition = event_handler.handler(
@@ -33,7 +33,7 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
     current_state = GoingToLockdown(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed
+        events.action_requests.execute_mission.failure
     )
 
     transition = event_handler.handler(
@@ -53,7 +53,7 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
     current_state = GoingToLockdown(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed
+        events.action_requests.execute_mission.failure
     )
 
     # The type of error reason is not important for this test
@@ -73,7 +73,7 @@ def test_state_machine_with_return_home_failure(events: Events) -> None:
     for i in range(settings.RETURN_HOME_RETRY_LIMIT - 1):
 
         failure_event_handler = current_state.get_event_handler_by_event(
-            events.robot_service_events.mission_failed
+            events.action_requests.execute_mission.failure
         )
 
         transition = failure_event_handler.handler(
@@ -88,7 +88,7 @@ def test_state_machine_with_return_home_failure(events: Events) -> None:
         assert current_state.name is States.ReturningHome
 
     failure_event_handler = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_failed
+        events.action_requests.execute_mission.failure
     )
 
     transition = failure_event_handler.handler(

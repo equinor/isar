@@ -12,17 +12,17 @@ def GoingToLockdown(events: Events) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[ErrorMessage](
-            event=events.robot_service_events.mission_failed,
+            event=events.action_requests.execute_mission.failure,
             handler=lambda _: InterventionNeeded.transition("Lockdown mission failed"),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_failed_to_resume,
+            event=events.action_requests.resume_mission.failure,
             handler=lambda _: InterventionNeeded.transition(
                 "Failed to resume return to home mission"
             ),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_succeeded,
+            event=events.action_requests.execute_mission.success,
             handler=lambda _: Lockdown.transition_without_responding_to_api(),
         ),
     ]
@@ -39,11 +39,7 @@ def transition_and_start_mission_and_report_to_api() -> Transition:
             LockdownResponse(lockdown_started=True)
         )
 
-        events.robot_service_events.mission_failed.clear_event()
-        events.robot_service_events.mission_succeeded.clear_event()
-        events.robot_service_events.mission_started_successfully.clear_event()
-
-        events.state_machine_events.start_mission.trigger_event(ReturnHomeMission())
+        events.action_requests.execute_mission.trigger_request(ReturnHomeMission())
         return GoingToLockdown(events)
 
     return _transition

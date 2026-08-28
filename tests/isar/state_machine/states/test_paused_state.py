@@ -9,7 +9,7 @@ def test_transition_from_pausing_to_paused(events: Events) -> None:
     current_state = Pausing(events, "mission_id")
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.mission_successfully_paused
+        events.action_requests.pause_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())
@@ -46,4 +46,4 @@ def test_transition_from_paused_to_stopping_to_recharge(events: Events) -> None:
 
     assert current_state.name is States.StoppingGoToRecharge
     assert not events.api_requests.stop_mission.response.has_event()
-    assert events.state_machine_events.stop_mission.has_event()
+    assert events.action_requests.stop_mission.request.has_event()

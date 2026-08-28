@@ -11,15 +11,11 @@ def StoppingReturnHome(events: Events, mission: Mission) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_failed_to_stop,
+            event=events.action_requests.stop_mission.failure,
             handler=lambda _: ReturningHome.transition_to_existing_mission(),
         ),
-        EventHandlerMapping[AbortedMission](
-            event=events.robot_service_events.mission_successfully_stopped,
-            handler=lambda _: Monitor.transition_and_start_mission(mission, True),
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.stopped_mission_already_done,
+        EventHandlerMapping[AbortedMission | EmptyMessage](
+            event=events.action_requests.stop_mission.success,
             handler=lambda _: Monitor.transition_and_start_mission(mission, True),
         ),
     ]
@@ -34,7 +30,7 @@ def transition_and_stop_return_home_and_reply_to_API(
     mission: Mission,
 ) -> Transition:
     def _transition(events: Events) -> State:
-        events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
+        events.action_requests.stop_mission.trigger_request(EmptyMessage())
         response = MissionStartResponse(
             mission_id=mission.id,
             mission_started=True,

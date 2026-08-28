@@ -17,11 +17,11 @@ def Pausing(events: Events, mission_id: str) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_failed_to_pause,
+            event=events.action_requests.pause_mission.failure,
             handler=lambda _: Monitor.transition_with_existing_mission(mission_id),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_successfully_paused,
+            event=events.action_requests.pause_mission.success,
             handler=_successful_pause_event_handler,
         ),
     ]
@@ -39,7 +39,7 @@ def transition_and_pause_mission_and_reply_to_API(
         events.api_requests.pause_mission.response.trigger_event(
             ControlMissionResponse(success=True)
         )
-        events.state_machine_events.pause_mission.trigger_event(EmptyMessage())
+        events.action_requests.pause_mission.trigger_request(EmptyMessage())
         return Pausing(events, mission_id=mission_id)
 
     return _transition

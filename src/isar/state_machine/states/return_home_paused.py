@@ -14,7 +14,7 @@ def ReturnHomePaused(events: Events) -> State:
     def _send_to_lockdown_event_handler(
         _: EmptyMessage,
     ) -> Transition:
-        events.state_machine_events.resume_mission.trigger_event(EmptyMessage())
+        events.action_requests.resume_mission.trigger_request(EmptyMessage())
 
         return GoingToLockdown.transition_to_existing_mission_and_report_to_api()
 

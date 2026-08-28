@@ -32,15 +32,11 @@ def StoppingGoToLockdown(events: Events, mission_id: str) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_failed_to_stop,
+            event=events.action_requests.stop_mission.failure,
             handler=_failed_stop_event_handler,
         ),
-        EventHandlerMapping[AbortedMission](
-            event=events.robot_service_events.mission_successfully_stopped,
-            handler=_successful_stop_event_handler,
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.stopped_mission_already_done,
+        EventHandlerMapping[AbortedMission | EmptyMessage](
+            event=events.action_requests.stop_mission.success,
             handler=_successful_stop_event_handler,
         ),
     ]
@@ -53,7 +49,7 @@ def StoppingGoToLockdown(events: Events, mission_id: str) -> State:
 
 def transition_and_stop_mission(mission_id: str) -> Transition:
     def _transition(events: Events) -> State:
-        events.state_machine_events.stop_mission.trigger_event(EmptyMessage())
+        events.action_requests.stop_mission.trigger_request(EmptyMessage())
         return StoppingGoToLockdown(events, mission_id)
 
     return _transition

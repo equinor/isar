@@ -34,7 +34,7 @@ def ReturningHome(
             handler=lambda _: PausingReturnHome.transition_and_pause_mission_and_reply_to_API(),
         ),
         EventHandlerMapping[ErrorMessage](
-            event=events.robot_service_events.mission_failed,
+            event=events.action_requests.execute_mission.failure,
             handler=_mission_failed_event_handler,
         ),
         EventHandlerMapping[Mission](
@@ -44,7 +44,7 @@ def ReturningHome(
             ),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.mission_succeeded,
+            event=events.action_requests.execute_mission.success,
             handler=lambda _: Home.transition(),
         ),
         EventHandlerMapping[EmptyMessage](
@@ -72,11 +72,8 @@ def transition_and_start_mission(
     retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
 ) -> Transition:
     def _transition(events: Events) -> State:
-        events.robot_service_events.mission_failed.clear_event()
-        events.robot_service_events.mission_succeeded.clear_event()
-        events.robot_service_events.mission_started_successfully.clear_event()
 
-        events.state_machine_events.start_mission.trigger_event(ReturnHomeMission())
+        events.action_requests.execute_mission.trigger_request(ReturnHomeMission())
 
         if should_respond_to_API_request:
             events.api_requests.return_home.response.trigger_event(EmptyMessage())
