@@ -6,6 +6,7 @@ from alitra import Frame, Orientation, Pose, Position
 
 from isar.apis.models.start_mission_definition import (
     InspectionTypes,
+    MissionFormatError,
     StartMissionDefinition,
     StartMissionTaskDefinition,
     to_isar_mission,
@@ -168,3 +169,27 @@ def test_acoustic_measurement_forwards_roi_to_task() -> None:
     task = mission.tasks[0]
     assert isinstance(task, TakeAcousticMeasurement)
     assert task.roi == Roi(x=760, y=400, width=133, height=160)
+
+
+# A malformed mission is the caller's mistake, so it must surface as
+# MissionFormatError, which the scheduling controller answers with 400. A bare
+# ValueError escapes that handler and becomes an opaque 500.
+def test_missing_duration_is_a_mission_format_error() -> None:
+    # Video inspections require a duration.
+    payload = {
+        "type": "Video",
+        "inspection_target": {"x": 0, "y": 0, "z": 0, "frame": {"name": "robot"}},
+    }
+
+    with pytest.raises(MissionFormatError):
+        _build_mission_with_inspection_payload(payload)
+
+
+def test_missing_acoustic_parameters_is_a_mission_format_error() -> None:
+    payload = {
+        "type": "AcousticMeasurement",
+        "inspection_target": {"x": 0, "y": 0, "z": 0, "frame": {"name": "robot"}},
+    }
+
+    with pytest.raises(MissionFormatError):
+        _build_mission_with_inspection_payload(payload)
