@@ -124,10 +124,12 @@ _INSPECTION_SPECS: dict[InspectionTypes, _InspectionSpec] = {
 def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
     spec = _INSPECTION_SPECS.get(task_definition.type)
     if spec is None:
-        raise ValueError(f"Inspection type '{task_definition.type}' not supported")
+        raise MissionFormatError(
+            f"Inspection type '{task_definition.type}' not supported"
+        )
 
     if spec.needs_duration and task_definition.duration is None:
-        raise ValueError(
+        raise MissionFormatError(
             f"No duration given to {task_definition.type.value} inspection task"
         )
 
@@ -147,7 +149,7 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
     if spec.needs_acoustic_params:
         acoustic = task_definition.acoustic
         if acoustic is None:
-            raise ValueError(
+            raise MissionFormatError(
                 f"No acoustic parameters given to "
                 f"{task_definition.type.value} inspection task"
             )
