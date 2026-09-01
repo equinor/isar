@@ -87,7 +87,7 @@ class State:
                     )
                     if transition is not None:
                         self.logger.debug(
-                            f"Transitioning from {self.name.name} to {transition.__annotations__['return'].__name__}"
+                            f"Transitioning from {self.name.name} to {transition.__name__}"
                         )
                         return transition
 
