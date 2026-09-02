@@ -104,6 +104,8 @@ class StateMachine:
             if current_state.name in [
                 States.StoppingGoToLockdown,
                 States.GoingToLockdown,
+                States.GoingToLockdownWithMission,
+                States.LockdownWithMission,
                 States.Lockdown,
             ]:
                 change_persistent_robot_state(
@@ -145,9 +147,9 @@ def state_to_status(state_name: States) -> IsarStatus:
         return IsarStatus.Recharging
     elif state_name == States.RechargingWithMission:
         return IsarStatus.RechargingWithMission
-    elif state_name == States.Lockdown:
+    elif state_name in [States.Lockdown, States.LockdownWithMission]:
         return IsarStatus.Lockdown
-    elif state_name == States.GoingToLockdown:
+    elif state_name in [States.GoingToLockdown, States.GoingToLockdownWithMission]:
         return IsarStatus.GoingToLockdown
     elif state_name == States.GoingToRecharging:
         return IsarStatus.GoingToRecharging

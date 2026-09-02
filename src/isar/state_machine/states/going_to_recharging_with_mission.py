@@ -1,4 +1,4 @@
-import isar.state_machine.states.going_to_lockdown as GoingToLockdown
+import isar.state_machine.states.going_to_lockdown_with_mission as GoingToLockdownWithMission
 import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging_with_mission as RechargingWithMission
@@ -42,7 +42,9 @@ def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> Sta
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
+            handler=lambda _: GoingToLockdownWithMission.transition_to_existing_mission_and_report_to_api(
+                mission
+            ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.stop_mission.request,

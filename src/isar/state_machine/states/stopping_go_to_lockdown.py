@@ -1,4 +1,5 @@
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
+import isar.state_machine.states.going_to_lockdown_with_mission as GoingToLockdownWithMission
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
@@ -20,12 +21,14 @@ def StoppingGoToLockdown(events: Events, mission_id: str) -> State:
         return Monitor.transition_with_existing_mission(mission_id)
 
     def _successful_stop_event_handler(
-        _: AbortedMission | EmptyMessage,
+        mission: AbortedMission | EmptyMessage,
     ) -> Transition:
-        events.mqtt_queue.publish_mission_aborted(
-            mission_id, "Robot being sent to lockdown"
-        )
-        return GoingToLockdown.transition_and_start_mission_and_report_to_api()
+        if isinstance(mission, AbortedMission):
+            return GoingToLockdownWithMission.transition_and_start_mission_and_report_to_api(
+                mission
+            )
+        else:
+            return GoingToLockdown.transition_and_start_mission_and_report_to_api()
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](

@@ -11,6 +11,9 @@ from isar.models.events import APIEvent, Event, EventTimeoutError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
+from isar.state_machine.states.going_to_lockdown_with_mission import (
+    GoingToLockdownWithMission,
+)
 from isar.state_machine.states.going_to_recharging import GoingToRecharging
 from isar.state_machine.states.going_to_recharging_with_mission import (
     GoingToRechargingWithMission,
@@ -18,6 +21,7 @@ from isar.state_machine.states.going_to_recharging_with_mission import (
 from isar.state_machine.states.home import Home
 from isar.state_machine.states.intervention_needed import InterventionNeeded
 from isar.state_machine.states.lockdown import Lockdown
+from isar.state_machine.states.lockdown_with_mission import LockdownWithMission
 from isar.state_machine.states.maintenance import Maintenance
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states.offline import Offline
@@ -120,7 +124,11 @@ def test_state_machine_ready_to_receive_mission(
         States.StoppingDueToMaintenance: StoppingDueToMaintenance(events),
         States.StoppingPausedMission: StoppingPausedMission(events, ""),
         States.StoppingPausedReturnHome: StoppingPausedReturnHome(events, mission),
+        States.GoingToLockdownWithMission: GoingToLockdownWithMission(events, mission),
+        States.LockdownWithMission: LockdownWithMission(events, mission),
     }
+
+    assert len(States) == len(states)
 
     all_states = list(states.keys())
 
@@ -143,7 +151,7 @@ def test_state_machine_ready_to_receive_mission(
         api_events.pause_mission: [States.Monitor, States.ReturningHome],
         api_events.resume_mission: [States.Paused, States.ReturnHomePaused],
         api_events.send_to_lockdown: all_states,
-        api_events.release_from_lockdown: [States.Lockdown],
+        api_events.release_from_lockdown: [States.Lockdown, States.LockdownWithMission],
         api_events.set_maintenance_mode: all_states,
         api_events.release_from_maintenance_mode: [States.Maintenance],
         api_events.release_intervention_needed: [States.InterventionNeeded],

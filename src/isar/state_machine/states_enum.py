@@ -22,7 +22,9 @@ class States(str, Enum):
     RechargingWithMission = "recharging_with_mission"
     StoppingGoToLockdown = "stopping_go_to_lockdown"
     GoingToLockdown = "going_to_lockdown"
+    GoingToLockdownWithMission = "going_to_lockdown_with_mission"
     Lockdown = "lockdown"
+    LockdownWithMission = "lockdown_with_mission"
     GoingToRecharging = "going_to_recharging"
     GoingToRechargingWithMission = "going_to_recharging_with_mission"
     StoppingGoToRecharge = "stopping_go_to_recharge"
@@ -64,4 +66,6 @@ STATE_TO_CODE: dict[States, int] = {
     States.GoingToLockdown: 25,
     States.Lockdown: 26,
     States.UnknownStatus: 27,
+    States.GoingToLockdownWithMission: 28,
+    States.LockdownWithMission: 29,
 }
