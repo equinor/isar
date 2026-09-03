@@ -70,11 +70,11 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
 
     current_state = transition(events)
     assert current_state.name is States.Home
-    assert not events.robot_service_events.robot_status_update.check()
+    assert not events.robot_async_events.robot_status_update.check()
 
     event_handler_robot_status: EventHandlerMapping = (
         current_state.get_event_handler_by_event(
-            events.robot_service_events.robot_status_update
+            events.robot_async_events.robot_status_update
         )
     )
 

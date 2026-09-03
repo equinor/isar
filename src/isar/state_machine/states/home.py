@@ -43,7 +43,7 @@ def Home(events: Events) -> State:
             handler=lambda _: StoppingUnknownMission.transition_and_respond_to_API(),
         ),
         EventHandlerMapping[RobotStatus](
-            event=events.robot_service_events.robot_status_update,
+            event=events.robot_async_events.robot_status_update,
             handler=_robot_status_event_handler,
         ),
         EventHandlerMapping[EmptyMessage](
@@ -51,7 +51,7 @@ def Home(events: Events) -> State:
             handler=lambda _: Lockdown.transition_and_respond_to_api(),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.battery_below_mission_threshold,
+            event=events.robot_async_events.battery_below_mission_threshold,
             handler=lambda _: Recharging.transition(),
         ),
         EventHandlerMapping[EmptyMessage](
@@ -69,7 +69,7 @@ def Home(events: Events) -> State:
 def transition() -> Transition:
     def _transition(events: Events) -> State:
         # This clears the current robot status value, so we don't read an outdated value
-        events.robot_service_events.robot_status_update.clear_event()
+        events.robot_async_events.robot_status_update.clear_event()
 
         return Home(events)
 

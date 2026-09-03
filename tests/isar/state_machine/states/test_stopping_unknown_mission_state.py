@@ -49,7 +49,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(events: Events) ->
     current_state: State = UnknownStatus(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.robot_status_update
+        events.robot_async_events.robot_status_update
     )
 
     transition = event_handler.handler(RobotStatus.Busy)

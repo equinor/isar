@@ -32,7 +32,7 @@ def UnknownStatus(events: Events) -> State:
             handler=lambda _: StoppingUnknownMission.transition_and_respond_to_API(),
         ),
         EventHandlerMapping[RobotStatus](
-            event=events.robot_service_events.robot_status_update,
+            event=events.robot_async_events.robot_status_update,
             handler=_robot_status_event_handler,
         ),
         EventHandlerMapping[EmptyMessage](

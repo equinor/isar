@@ -7,7 +7,7 @@ from isar.models.events import (
     EmptyMessage,
     Events,
     RobotActionRequests,
-    RobotServiceEvents,
+    RobotAsyncEvents,
 )
 from isar.models.mqtt_queue import MQTTQueue
 from isar.robot.robot_battery import RobotBatteryThread
@@ -33,7 +33,7 @@ class RobotService:
     ) -> None:
         self.logger = logging.getLogger("robot")
         self.action_requests: RobotActionRequests = events.action_requests
-        self.robot_service_events: RobotServiceEvents = events.robot_service_events
+        self.robot_async_events: RobotAsyncEvents = events.robot_async_events
         self.mqtt_queue: MQTTQueue = mqtt_queue
         self.robot: RobotInterface = robot
         self.battery_thread: RobotBatteryThread | None = None
@@ -138,7 +138,7 @@ class RobotService:
             should_report_task_status = not mission._is_return_to_home_mission()
 
             def request_inspection_upload(task: InspectionTask) -> None:
-                self.robot_service_events.request_inspection_upload.trigger_event(
+                self.robot_async_events.request_inspection_upload.trigger_event(
                     (task, mission)
                 )
 
@@ -169,15 +169,15 @@ class RobotService:
         self.status_thread = RobotStatusThread(
             robot=self.robot,
             signal_exit=self.signal_exit,
-            robot_service_events=self.robot_service_events,
+            robot_async_events=self.robot_async_events,
         )
         self.status_thread.start()
 
         self.battery_thread = RobotBatteryThread(
             self.robot,
             self.signal_exit,
-            self.robot_service_events.battery_below_mission_threshold,
-            self.robot_service_events.battery_above_recharge_threshold,
+            self.robot_async_events.battery_below_mission_threshold,
+            self.robot_async_events.battery_above_recharge_threshold,
         )
         self.battery_thread.start()
 

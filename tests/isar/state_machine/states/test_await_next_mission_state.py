@@ -93,7 +93,7 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
     current_state = UnknownStatus(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.robot_status_update
+        events.robot_async_events.robot_status_update
     )
 
     transition = event_handler.handler(RobotStatus.Available)

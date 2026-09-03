@@ -27,7 +27,7 @@ def Offline(events: Events) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[RobotStatus](
-            event=events.robot_service_events.robot_status_update,
+            event=events.robot_async_events.robot_status_update,
             handler=_robot_status_event_handler,
         ),
         EventHandlerMapping[EmptyMessage](

@@ -12,11 +12,11 @@ def Recharging(events: Events) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.battery_above_recharge_threshold,
+            event=events.robot_async_events.battery_above_recharge_threshold,
             handler=lambda _: Home.transition(),
         ),
         EventHandlerMapping[RobotStatus](
-            event=events.robot_service_events.robot_status_update,
+            event=events.robot_async_events.robot_status_update,
             handler=lambda robot_status: (
                 Offline.transition() if robot_status == RobotStatus.Offline else None
             ),

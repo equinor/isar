@@ -41,7 +41,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
 def test_return_home_goes_to_recharging_when_battery_low(events: Events) -> None:
     current_state = ReturningHome(events)
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.battery_below_mission_threshold
+        events.robot_async_events.battery_below_mission_threshold
     )
 
     transition = event_handler.handler(EmptyMessage())
