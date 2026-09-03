@@ -28,10 +28,7 @@ def Lockdown(events: Events) -> State:
 
 
 def transition_without_responding_to_api() -> Transition:
-    def _transition(events: Events) -> State:
-        return Lockdown(events)
-
-    return _transition
+    return Lockdown
 
 
 def transition_and_respond_to_api() -> Transition:
