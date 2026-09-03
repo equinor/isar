@@ -61,7 +61,7 @@ def test_intervention_needed_transitions_to_home_if_robot_is_home(
     current_state = InterventionNeeded(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.robot_status_update
+        events.robot_async_events.robot_status_update
     )
 
     transition = event_handler.handler(RobotStatus.Home)
@@ -76,7 +76,7 @@ def test_recharging_goes_to_home_when_battery_high(events: Events) -> None:
     current_state = Recharging(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.battery_above_recharge_threshold
+        events.robot_async_events.battery_above_recharge_threshold
     )
 
     transition = event_handler.handler(EmptyMessage())

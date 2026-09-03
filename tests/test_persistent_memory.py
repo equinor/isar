@@ -80,7 +80,7 @@ def test_lockdown_mode(
 
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     wait_until(
-        lambda: state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
+        lambda: state_machine_thread_with_db.state_machine.events.robot_async_events.robot_status_update.check()
         == RobotStatus.Home,
         timeout=10.0,
     )
@@ -181,7 +181,7 @@ def test_maintenance_mode(
 
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     wait_until(
-        lambda: state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
+        lambda: state_machine_thread_with_db.state_machine.events.robot_async_events.robot_status_update.check()
         == RobotStatus.Home,
         timeout=10.0,
     )
@@ -256,7 +256,7 @@ def test_release_maintenance_mode(
 
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     wait_until(
-        lambda: state_machine_thread_with_db.state_machine.events.robot_service_events.robot_status_update.check()
+        lambda: state_machine_thread_with_db.state_machine.events.robot_async_events.robot_status_update.check()
         == RobotStatus.Home,
         timeout=10.0,
     )

@@ -55,7 +55,7 @@ def Monitor(events: Events, mission_id: str) -> State:
             handler=_mission_success_event_handler,
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.battery_below_mission_threshold,
+            event=events.robot_async_events.battery_below_mission_threshold,
             handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(),
         ),
         EventHandlerMapping[EmptyMessage](

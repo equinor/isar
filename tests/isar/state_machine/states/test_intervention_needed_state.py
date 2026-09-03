@@ -108,7 +108,7 @@ def test_intervention_needed_transitions_does_not_transition_if_status_is_not_ho
     current_state = InterventionNeeded(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.robot_status_update
+        events.robot_async_events.robot_status_update
     )
 
     statuses = [

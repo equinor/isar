@@ -48,7 +48,7 @@ def ReturningHome(
             handler=lambda _: Home.transition(),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.battery_below_mission_threshold,
+            event=events.robot_async_events.battery_below_mission_threshold,
             handler=lambda _: GoingToRecharging.transition_to_existing_mission(),
         ),
         EventHandlerMapping[EmptyMessage](

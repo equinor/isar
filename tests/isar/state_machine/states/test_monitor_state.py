@@ -203,7 +203,7 @@ def test_transition_from_monitor_to_stopping_to_recharge(events: Events) -> None
     current_state = Monitor(events, "test_id")
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_service_events.battery_below_mission_threshold
+        events.robot_async_events.battery_below_mission_threshold
     )
 
     transition = event_handler.handler(EmptyMessage())

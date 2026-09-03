@@ -22,13 +22,13 @@ def RechargingWithMission(events: Events, mission: AbortedMission) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_service_events.battery_above_recharge_threshold,
+            event=events.robot_async_events.battery_above_recharge_threshold,
             handler=lambda _: Monitor.transition_and_start_mission(
                 mission, should_respond_to_API_request=False
             ),
         ),
         EventHandlerMapping[RobotStatus](
-            event=events.robot_service_events.robot_status_update,
+            event=events.robot_async_events.robot_status_update,
             handler=lambda robot_status: (
                 Offline.transition() if robot_status == RobotStatus.Offline else None
             ),
