@@ -239,7 +239,7 @@ class RobotService:
                     )
                 monitor_mission_task = None
 
-            await asyncio.sleep(0)
+            await asyncio.sleep(0.01)
 
     def run(self) -> None:
 
