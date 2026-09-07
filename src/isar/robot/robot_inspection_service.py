@@ -78,9 +78,7 @@ class RobotInspectionService:
     def _prune_upload_thread_list(self) -> None:
         if len(self.upload_inspection_threads) > 0:
             self.upload_inspection_threads[:] = [
-                thread
-                for thread in self.upload_inspection_threads
-                if not thread.is_alive()
+                thread for thread in self.upload_inspection_threads if thread.is_alive()
             ]
 
     def _restart_inspection_thread_if_stopped(self) -> None:
@@ -110,7 +108,7 @@ class RobotInspectionService:
 
     def run(self) -> None:
         try:
-            while not self.signal_exit.wait(0):
+            while not self.signal_exit.wait(0.01):
 
                 upload_task_request: tuple[(InspectionTask, Mission)] | None = (
                     self.upload_task_event.consume_event()
