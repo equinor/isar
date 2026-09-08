@@ -91,8 +91,11 @@ class Events:
         self.action_requests: RobotActionRequests = RobotActionRequests()
         self.robot_async_events: RobotAsyncEvents = RobotAsyncEvents()
 
-        self.upload_event: Event[tuple[Inspection, Mission]] = Event(
+        self.upload_inspection_event: Event[tuple[Inspection, Mission]] = Event(
             "uploader", maxsize=10
+        )
+        self.upload_task_event: Event[tuple[InspectionTask, Mission]] = Event(
+            "request_inspection_upload"
         )
 
         self.mqtt_queue: MQTTQueue = MQTTQueue(maxsize=30)
@@ -202,9 +205,6 @@ class RobotActionRequests:
 class RobotAsyncEvents:
     def __init__(self) -> None:
         self.robot_status_update: Event[RobotStatus] = Event("robot_status_update")
-        self.request_inspection_upload: Event[tuple[InspectionTask, Mission]] = Event(
-            "request_inspection_upload"
-        )
         self.battery_below_mission_threshold: Event[EmptyMessage] = Event(
             "battery_below_mission_threshold"
         )
