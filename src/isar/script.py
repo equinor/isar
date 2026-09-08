@@ -118,7 +118,9 @@ def start() -> None:
     if settings.UPLOAD_INSPECTIONS_ASYNC:
 
         def inspections_callback(inspection: Inspection, mission: Mission) -> None:
-            state_machine.events.upload_event.trigger_event((inspection, mission))
+            state_machine.events.upload_inspection_event.trigger_event(
+                (inspection, mission)
+            )
 
         inspection_service.register_and_monitor_inspection_callback(
             inspections_callback

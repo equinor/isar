@@ -5,6 +5,7 @@ from threading import Event as ThreadEvent
 from isar.models.events import (
     AbortedMission,
     EmptyMessage,
+    Event,
     Events,
     RobotActionRequests,
     RobotAsyncEvents,
@@ -35,6 +36,9 @@ class RobotService:
         self.action_requests: RobotActionRequests = events.action_requests
         self.robot_async_events: RobotAsyncEvents = events.robot_async_events
         self.mqtt_queue: MQTTQueue = mqtt_queue
+        self.upload_task_event: Event[tuple[InspectionTask, Mission]] = (
+            events.upload_task_event
+        )
         self.robot: RobotInterface = robot
         self.battery_thread: RobotBatteryThread | None = None
         self.status_thread: RobotStatusThread | None = None
@@ -137,15 +141,10 @@ class RobotService:
         try:
             should_report_task_status = not mission._is_return_to_home_mission()
 
-            def request_inspection_upload(task: InspectionTask) -> None:
-                self.robot_async_events.request_inspection_upload.trigger_event(
-                    (task, mission)
-                )
-
             error_message, remaining_mission, is_aborted = await robot_monitor_mission(
                 mission,
                 self.robot,
-                request_inspection_upload,
+                lambda task: self.upload_task_event.trigger_event((task, mission)),
                 self.mqtt_queue,
                 should_report_task_status,
             )

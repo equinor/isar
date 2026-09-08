@@ -56,10 +56,10 @@ class RobotInspectionService:
     ) -> None:
         self.logger = logging.getLogger("uploader")
         self.upload_task_event: Event[tuple[InspectionTask, Mission]] = (
-            events.robot_async_events.request_inspection_upload
+            events.upload_task_event
         )
         self.upload_inspection_event: Event[tuple[Inspection, Mission]] = (
-            events.upload_event
+            events.upload_inspection_event
         )
         self.uploader: Uploader = uploader
         self.robot: RobotInterface = robot
