@@ -18,7 +18,7 @@ def robot_start_mission(
     logger: logging.Logger,
     mission: Mission,
 ) -> ErrorMessage | None:
-    if signal_exit.wait(0):
+    if signal_exit.wait(0.01):
         return ErrorMessage(
             ErrorReason.RobotActionException, "Start mission thread cancelled"
         )

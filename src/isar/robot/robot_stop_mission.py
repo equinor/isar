@@ -19,7 +19,7 @@ def robot_stop_mission(
     retries = 0
     error: ErrorMessage | None = None
     while retries < settings.ROBOT_REQUEST_ATTEMPTS_LIMIT:
-        if signal_exit.wait(0):
+        if signal_exit.wait(0.01):
             error_message = ErrorMessage(
                 error_reason=ErrorReason.RobotUnknownErrorException,
                 error_description="Stop mission thread cancelled",
