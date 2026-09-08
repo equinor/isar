@@ -76,7 +76,7 @@ def transition_and_start_mission(
         events.action_requests.execute_mission.trigger_request(ReturnHomeMission())
 
         if should_respond_to_API_request:
-            events.api_requests.return_home.response.trigger_event(EmptyMessage())
+            events.api_requests.return_home.trigger_response(EmptyMessage())
         return ReturningHome(events, retries=retries)
 
     return _transition

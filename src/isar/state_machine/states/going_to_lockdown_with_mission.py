@@ -54,7 +54,7 @@ def transition_and_start_mission_and_report_to_api(
     mission: AbortedMission,
 ) -> Transition:
     def _transition(events: Events) -> State:
-        events.api_requests.send_to_lockdown.response.trigger_event(
+        events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )
 
@@ -68,7 +68,7 @@ def transition_to_existing_mission_and_report_to_api(
     mission: AbortedMission,
 ) -> Transition:
     def _transition(events: Events) -> State:
-        events.api_requests.send_to_lockdown.response.trigger_event(
+        events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )
         return GoingToLockdownWithMission(events, mission)

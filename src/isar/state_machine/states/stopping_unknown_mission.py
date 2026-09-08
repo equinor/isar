@@ -38,7 +38,7 @@ def transition() -> Transition:
 def transition_and_respond_to_API() -> Transition:
     def _transition(events: Events) -> State:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
-        events.api_requests.stop_mission.response.trigger_event(
+        events.api_requests.stop_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
         return StoppingUnknownMission(events)

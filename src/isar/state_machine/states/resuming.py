@@ -38,7 +38,7 @@ def transition_resume_mission_and_respond_to_API(
     mission_id: str,
 ) -> Transition:
     def _transition(events: Events) -> State:
-        events.api_requests.resume_mission.response.trigger_event(
+        events.api_requests.resume_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
         events.action_requests.resume_mission.trigger_request(EmptyMessage())

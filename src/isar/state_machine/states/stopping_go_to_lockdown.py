@@ -12,7 +12,7 @@ def StoppingGoToLockdown(events: Events, mission_id: str) -> State:
     def _failed_stop_event_handler(
         _: EmptyMessage,
     ) -> Transition:
-        events.api_requests.send_to_lockdown.response.trigger_event(
+        events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(
                 lockdown_started=False,
                 failure_reason="Failed to stop ongoing mission",
