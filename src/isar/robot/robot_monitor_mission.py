@@ -130,17 +130,6 @@ async def get_mission_status(
     )
 
 
-def log_task_status(logger: logging.Logger, task: TASKS) -> None:
-    if task.status == TaskStatus.Failed:
-        logger.warning(f"Task: {str(task.id)[:8]} was reported as failed by the robot")
-    elif task.status == TaskStatus.Successful:
-        logger.info(f"{type(task).__name__} task: {str(task.id)[:8]} completed")
-    else:
-        logger.info(
-            f"Task: {str(task.id)[:8]} was reported as {task.status} by the robot"
-        )
-
-
 async def get_and_report_task_status(
     current_task: TASKS,
     robot: RobotInterface,
@@ -154,7 +143,9 @@ async def get_and_report_task_status(
 
         if current_task.status != new_task_status:
             current_task.status = new_task_status
-            log_task_status(logger, current_task)
+            logger.info(
+                f"Task: {type(current_task).__name__} task: {str(current_task.id)[:8]} reported as {current_task.status} by the robot"
+            )
             mqtt_queue.publish_task_status(current_task, mission_id)
         return new_task_status
 
