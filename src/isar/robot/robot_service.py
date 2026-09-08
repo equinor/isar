@@ -183,7 +183,7 @@ class RobotService:
     async def _run_main_event_loop(self) -> None:
         monitor_mission_task: asyncio.Task[AbortedMission | None] | None = None
 
-        while not self.signal_exit.wait(0):
+        while not self.signal_exit.is_set():
             start_mission_request = (
                 self.action_requests.execute_mission.request.consume_event()
             )

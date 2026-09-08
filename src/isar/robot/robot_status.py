@@ -27,10 +27,7 @@ class RobotStatusThread(Thread):
         return
 
     def run(self) -> None:
-        if self.signal_exit.is_set():
-            return
-
-        while not self.signal_exit.wait(0):
+        while not self.signal_exit.wait(0.01):
 
             time.sleep(settings.ROBOT_API_STATUS_POLL_INTERVAL)
 

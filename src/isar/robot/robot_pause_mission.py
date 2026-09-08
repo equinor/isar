@@ -19,7 +19,7 @@ def robot_pause_mission(
     retries = 0
     error: ErrorMessage | None = None
     while retries < settings.ROBOT_REQUEST_ATTEMPTS_LIMIT:
-        if signal_exit.wait(0):
+        if signal_exit.wait(0.01):
             return ErrorMessage(
                 ErrorReason.RobotActionException, "Pause thread cancelled"
             )
