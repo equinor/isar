@@ -47,7 +47,7 @@ def test_state_machine_transitions_when_running_full_mission(
     # thread has been started.
     robot_service_thread.robot_service.robot = (
         StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(
-            current_state=state_machine_thread.state_machine.state_event,
+            current_state=state_machine_thread.state_machine.current_state.name,
             initiate_mission_delay=1,
         )
     )
@@ -249,7 +249,7 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
     )
     scheduling_utilities.return_home()
     wait_until(
-        lambda: state_machine_thread.state_machine.state_event.check()
+        lambda: state_machine_thread.state_machine.current_state.name
         == States.ReturningHome
     )
     scheduling_utilities.start_mission(mission=mission)

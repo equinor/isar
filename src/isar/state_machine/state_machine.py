@@ -41,7 +41,6 @@ class StateMachine:
         self.logger = logging.getLogger("state_machine")
 
         self.events: Events = events
-        self.state_event: Event[States] = events.state
         self.mqtt_queue: MQTTQueue = mqtt_queue
 
         self.current_state: State = UnknownStatus(self.events)
@@ -63,8 +62,6 @@ class StateMachine:
         self.transitions_list: deque[States] = deque(
             [], settings.STATE_TRANSITIONS_LOG_LENGTH
         )
-
-        self.state_event.update(self.current_state.name)
 
         self.state_metrics_publisher: StateMetricsPublisher = StateMetricsPublisher(
             current_state_provider=lambda: self.current_state.name
@@ -98,7 +95,6 @@ class StateMachine:
 
     def update_state(self, current_state: State) -> None:
         """Updates the current state of the state machine."""
-        self.state_event.update(current_state.name)
 
         if settings.USE_DB:
             if current_state.name in [
