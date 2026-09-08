@@ -26,7 +26,7 @@ def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> Sta
     def _stop_mission_event_handler(
         _: EmptyMessage,
     ) -> Transition | None:
-        events.api_requests.stop_mission.response.trigger_event(
+        events.api_requests.stop_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
         return GoingToRecharging.transition_to_existing_mission()

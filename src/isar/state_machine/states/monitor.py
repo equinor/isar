@@ -89,7 +89,7 @@ def transition_and_start_mission(
         )
 
         if should_respond_to_API_request:
-            events.api_requests.start_mission.response.trigger_event(
+            events.api_requests.start_mission.trigger_response(
                 MissionStartResponse(mission_started=True)
             )
         return Monitor(events, mission_id=mission.id)

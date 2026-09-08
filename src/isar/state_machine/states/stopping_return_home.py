@@ -35,7 +35,7 @@ def transition_and_stop_return_home_and_reply_to_API(
             mission_id=mission.id,
             mission_started=True,
         )
-        events.api_requests.start_mission.response.trigger_event(response)
+        events.api_requests.start_mission.trigger_response(response)
         return StoppingReturnHome(events, mission)
 
     return _transition

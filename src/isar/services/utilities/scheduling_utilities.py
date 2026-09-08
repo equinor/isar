@@ -398,15 +398,12 @@ class SchedulingUtilities:
                     "API request already had response before sending request"
                 )
 
-            api_event.request.clear_event()
-            api_event.response.clear_event()
-
-            api_event.request.trigger_event(input, timeout=1)
+            api_event.trigger_request(input, timeout=1)
             return api_event.response.consume_event(timeout=settings.QUEUE_TIMEOUT)
         except EventTimeoutError:
-            self.logger.error("Queue timed out")
-            api_event.request.clear_event()
-            self.logger.error("No output received for command to state machine")
+            self.logger.error(
+                "Queue timed out - No output received for command to state machine"
+            )
             raise
         finally:
             api_event.request.clear_event()

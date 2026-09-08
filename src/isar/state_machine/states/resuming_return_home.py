@@ -27,7 +27,7 @@ def ResumingReturnHome(events: Events) -> State:
 
 def transition_and_resume_mission_and_reply_to_API() -> Transition:
     def _transition(events: Events) -> State:
-        events.api_requests.resume_mission.response.trigger_event(
+        events.api_requests.resume_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
         events.action_requests.resume_mission.trigger_request(EmptyMessage())

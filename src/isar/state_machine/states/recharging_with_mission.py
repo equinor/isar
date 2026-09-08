@@ -15,7 +15,7 @@ def RechargingWithMission(events: Events, mission: AbortedMission) -> State:
     def _stop_mission_event_handler(
         _: EmptyMessage,
     ) -> Transition | None:
-        events.api_requests.stop_mission.response.trigger_event(
+        events.api_requests.stop_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
         return Recharging.transition()

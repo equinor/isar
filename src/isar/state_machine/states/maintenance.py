@@ -10,7 +10,7 @@ def Maintenance(events: Events) -> State:
     def _release_from_maintenance_handler(
         _: EmptyMessage,
     ) -> Transition:
-        events.api_requests.release_from_maintenance_mode.response.trigger_event(
+        events.api_requests.release_from_maintenance_mode.trigger_response(
             EmptyMessage()
         )
 
@@ -32,7 +32,7 @@ def Maintenance(events: Events) -> State:
 
 def transition_and_reply_to_API() -> Transition:
     def _transition(events: Events) -> State:
-        events.api_requests.set_maintenance_mode.response.trigger_event(
+        events.api_requests.set_maintenance_mode.trigger_response(
             MaintenanceResponse(is_maintenance_mode=True)
         )
         return Maintenance(events)

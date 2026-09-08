@@ -115,6 +115,15 @@ class APIEvent[T1, T2]:
             prioritized  # For when we want to try even if the statemachine is not ready
         )
 
+    def trigger_request(self, value: T1, timeout: int | None = None) -> None:
+        self.response.clear_event()
+        self.request.clear_event()
+        self.request.trigger_event(value, timeout=timeout)
+
+    def trigger_response(self, value: T2) -> None:
+        self.response.clear_event()
+        self.response.trigger_event(value)
+
 
 class APIRequests:
     def __init__(self) -> None:

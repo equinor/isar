@@ -11,7 +11,7 @@ def StoppingDueToMaintenance(events: Events, mission_id: str | None = None) -> S
     def _failed_stop_event_handler(
         _: EmptyMessage,
     ) -> Transition:
-        events.api_requests.set_maintenance_mode.response.trigger_event(
+        events.api_requests.set_maintenance_mode.trigger_response(
             MaintenanceResponse(
                 is_maintenance_mode=False,
                 failure_reason="Failed to stop ongoing mission",

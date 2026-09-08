@@ -13,9 +13,7 @@ def InterventionNeeded(events: Events) -> State:
     def release_intervention_needed_handler(
         _: EmptyMessage,
     ) -> Transition:
-        events.api_requests.release_intervention_needed.response.trigger_event(
-            EmptyMessage()
-        )
+        events.api_requests.release_intervention_needed.trigger_response(EmptyMessage())
         return UnknownStatus.transition()
 
     def _robot_status_event_handler(
