@@ -131,17 +131,6 @@ class StubRobotOfflineToAvailableTest(StubRobot):
         return RobotStatus.Available
 
 
-class StubRobotHomeToMaintenanceByTeleoperationTest(StubRobot):
-    def __init__(self, current_state_event: Event[States]) -> None:
-        self.current_state_event = current_state_event
-
-    def robot_status(self) -> RobotStatus:
-        current_state: States = self.current_state_event.check()
-        if current_state is None:
-            raise RobotCommunicationException("Could not read state machine state")
-        return RobotStatus.TeleOperation
-
-
 class StubRobotOfflineToHomeTest(StubRobot):
     def __init__(self, current_state: Event) -> None:
         self.entered_offline = False
@@ -162,7 +151,7 @@ class StubRobotOfflineToHomeTest(StubRobot):
 class StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(StubRobot):
     def __init__(
         self,
-        current_state: Event,
+        current_state: States,
         initiate_mission_delay: float = 0.0,
     ) -> None:
         super().__init__()
@@ -179,7 +168,7 @@ class StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(StubRobot):
         return self.task_status_return_value
 
     def robot_status(self) -> RobotStatus:
-        current_state = self.current_state.check()
+        current_state = self.current_state
         if current_state is None:
             raise RobotCommunicationException("Could not read state machine state")
         if (

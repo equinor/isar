@@ -8,7 +8,6 @@ from isar.apis.models.models import (
     MissionStartResponse,
 )
 from isar.models.mqtt_queue import MQTTQueue
-from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.event_exceptions import (
     EventConflictError,
     EventTimeoutError,
@@ -99,8 +98,6 @@ class Events:
         )
 
         self.mqtt_queue: MQTTQueue = MQTTQueue(maxsize=30)
-
-        self.state: Event[States] = Event("state")
 
 
 class APIEvent[T1, T2]:
