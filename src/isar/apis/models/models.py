@@ -9,7 +9,7 @@ class TaskResponse(BaseModel):
     type: TaskTypes
 
 
-class StartMissionResponse(BaseModel):
+class ScheduleMissionResponse(BaseModel):
     id: str
     tasks: list[TaskResponse]
 
@@ -21,8 +21,8 @@ class ControlMissionResponse(BaseModel):
 
 class MissionStartResponse(BaseModel):
     mission_id: str | None = None
-    mission_started: bool
-    mission_not_started_reason: str | None = None
+    mission_scheduled: bool
+    mission_not_scheduled_reason: str | None = None
 
 
 class LockdownResponse(BaseModel):

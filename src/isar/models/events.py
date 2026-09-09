@@ -88,7 +88,7 @@ class Events:
 
         self.api_requests: APIRequests = APIRequests()
         self.action_requests: RobotActionRequests = RobotActionRequests()
-        self.robot_async_events: RobotAsyncEvents = RobotAsyncEvents()
+        self.async_events: AsyncEvents = AsyncEvents()
 
         self.upload_inspection_event: Event[tuple[Inspection, Mission]] = Event(
             "uploader", maxsize=10
@@ -127,8 +127,9 @@ class APIEvent[T1, T2]:
 
 class APIRequests:
     def __init__(self) -> None:
-        self.start_mission: APIEvent[Mission, MissionStartResponse] = APIEvent(
-            "start_mission"
+        self.schedule_mission: APIEvent[Mission, MissionStartResponse] = APIEvent(
+            "schedule_mission",
+            prioritized=True,  # Prioritized since it is accepted in any state
         )
         self.stop_mission: APIEvent[EmptyMessage, ControlMissionResponse] = APIEvent(
             "stop_mission"
@@ -199,7 +200,7 @@ class RobotActionRequests:
         ] = RobotActionEvent("resume_mission")
 
 
-class RobotAsyncEvents:
+class AsyncEvents:
     def __init__(self) -> None:
         self.robot_status_update: Event[RobotStatus] = Event("robot_status_update")
         self.battery_below_mission_threshold: Event[EmptyMessage] = Event(
@@ -208,3 +209,4 @@ class RobotAsyncEvents:
         self.battery_above_recharge_threshold: Event[EmptyMessage] = Event(
             "battery_above_recharge_threshold"
         )
+        self.mission_ready: Event[Mission] = Event("mission_ready")

@@ -1,6 +1,6 @@
 from alitra import Frame, Orientation, Pose, Position
 
-from isar.apis.models.models import StartMissionResponse, TaskResponse
+from isar.apis.models.models import ScheduleMissionResponse, TaskResponse
 from isar.apis.models.start_mission_definition import (
     InspectionTypes,
     StartMissionDefinition,
@@ -44,7 +44,7 @@ class DummyMissionDefinition:
         type=dummy_task_take_image.type,
     )
 
-    dummy_start_mission_response = StartMissionResponse(
+    dummy_start_mission_response = ScheduleMissionResponse(
         id=default_mission.id,
         tasks=[dummy_task_response_take_image],
     )

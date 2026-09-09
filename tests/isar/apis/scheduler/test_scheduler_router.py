@@ -48,7 +48,7 @@ mock_return_control_mission_stop_wrong_id_response = mock.Mock(
 
 
 class TestStartMission:
-    schedule_start_mission_path = "/schedule/start-mission"
+    schedule_start_mission_path = "/schedule/schedule-mission"
     dummy_start_mission_definition = (
         DummyMissionDefinition.dummy_start_mission_definition
     )
@@ -62,8 +62,8 @@ class TestStartMission:
     @mock.patch.object(
         SchedulingUtilities, "_verify_valid_state", lambda self, event: None
     )
-    @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
-    def test_start_mission(self, client: TestClient) -> None:
+    @mock.patch.object(SchedulingUtilities, "schedule_mission", mock_void)
+    def test_schedule_mission(self, client: TestClient) -> None:
         response = client.post(
             url=self.schedule_start_mission_path,
             json=jsonable_encoder(self.dummy_start_mission_content),
@@ -90,21 +90,21 @@ class TestStartMission:
         SchedulingUtilities, "_verify_valid_state", lambda self, event: None
     )
     @mock.patch.object(SchedulingUtilities, "_send_command", mock_queue_timeout_error)
-    def test_start_mission_timeout(self, client: TestClient) -> None:
+    def test_schedule_mission_timeout(self, client: TestClient) -> None:
         response = client.post(
             url=self.schedule_start_mission_path,
             json=jsonable_encoder(self.dummy_start_mission_content),
         )
         assert response.status_code == HTTPStatus.CONFLICT
         assert response.json() == {
-            "detail": "State machine has entered a state which cannot start a mission"
+            "detail": "State machine has entered a state which cannot schedule a mission"
         }
 
     @mock.patch.object(
         SchedulingUtilities, "_verify_valid_state", lambda self, event: None
     )
     @mock.patch("isar.config.settings.robot_settings.CAPABILITIES", [])
-    @mock.patch.object(SchedulingUtilities, "start_mission", mock_void)
+    @mock.patch.object(SchedulingUtilities, "schedule_mission", mock_void)
     def test_robot_not_capable(self, client: TestClient) -> None:
         response = client.post(
             url=self.schedule_start_mission_path,

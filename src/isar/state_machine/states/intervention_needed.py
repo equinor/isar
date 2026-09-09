@@ -37,7 +37,7 @@ def InterventionNeeded(events: Events) -> State:
             handler=lambda _: Maintenance.transition_and_reply_to_API(),
         ),
         EventHandlerMapping[RobotStatus](
-            event=events.robot_async_events.robot_status_update,
+            event=events.async_events.robot_status_update,
             handler=_robot_status_event_handler,
         ),
     ]

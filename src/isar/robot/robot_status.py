@@ -3,7 +3,7 @@ import time
 from threading import Event, Thread
 
 from isar.config.settings import settings
-from isar.models.events import RobotAsyncEvents
+from isar.models.events import AsyncEvents
 from robot_interface.models.exceptions.robot_exceptions import RobotException
 from robot_interface.robot_interface import RobotInterface
 
@@ -13,10 +13,10 @@ class RobotStatusThread(Thread):
         self,
         robot: RobotInterface,
         signal_exit: Event,
-        robot_async_events: RobotAsyncEvents,
+        robot_async_events: AsyncEvents,
     ):
         self.logger = logging.getLogger("robot")
-        self.robot_async_events: RobotAsyncEvents = robot_async_events
+        self.robot_async_events: AsyncEvents = robot_async_events
         self.robot: RobotInterface = robot
         self.signal_exit: Event = signal_exit
         self.robot_status_poll_interval: float = settings.ROBOT_API_STATUS_POLL_INTERVAL
