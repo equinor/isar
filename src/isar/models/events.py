@@ -188,6 +188,9 @@ class RobotActionRequests:
         self.execute_mission: RobotActionEvent[Mission, EmptyMessage, ErrorMessage] = (
             RobotActionEvent("execute_mission")
         )
+        self.return_home: RobotActionEvent[EmptyMessage, EmptyMessage, ErrorMessage] = (
+            RobotActionEvent("return_home")
+        )
         self.stop_mission: RobotActionEvent[
             EmptyMessage, AbortedMission | EmptyMessage, EmptyMessage
         ] = RobotActionEvent("stop_mission")

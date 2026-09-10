@@ -14,7 +14,7 @@ from robot_interface.models.mission.task import TakeImage, Task
 from tests.test_mocks.inspection import stub_pose
 from tests.test_mocks.robot_interface import (
     StubRobot,
-    StubRobotInitiateMissionRaisesException,
+    StubRobotInitiateReturnHomeRaisesException,
     StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus,
 )
 from tests.test_mocks.state_machine_mocks import (
@@ -281,7 +281,9 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
     mocker.patch.object(settings, "RETURN_HOME_DELAY", 3.0)
 
-    robot_service_thread.robot_service.robot = StubRobotInitiateMissionRaisesException()
+    robot_service_thread.robot_service.robot = (
+        StubRobotInitiateReturnHomeRaisesException()
+    )
 
     task_1: Task = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()

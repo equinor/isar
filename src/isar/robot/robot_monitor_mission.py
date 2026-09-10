@@ -157,12 +157,53 @@ async def get_and_report_task_status(
         return None
 
 
+async def robot_monitor_return_home_mission(
+    mission_id: str,
+    robot: RobotInterface,
+) -> tuple[ErrorMessage | None, bool]:
+    logger = logging.getLogger("robot")
+    logger.info("Started monitoring return home mission")
+    error_message: ErrorMessage | None = None
+
+    mission_status: MissionStatus = MissionStatus.InProgress
+    try:
+        while mission_status in [
+            MissionStatus.NotStarted,
+            MissionStatus.InProgress,
+            MissionStatus.Paused,
+        ]:
+            try:
+                mission_status = await get_mission_status(robot, mission_id)
+            except RobotMissionStatusException as e:
+                logger.exception("Failed to collect mission status")
+                error_message = ErrorMessage(
+                    error_reason=e.error_reason,
+                    error_description=e.error_description,
+                )
+                mission_status = MissionStatus.Failed
+
+            await asyncio.sleep(settings.FSM_SLEEP_TIME)
+
+        if error_message is None and mission_status in [
+            MissionStatus.Failed,
+            MissionStatus.Cancelled,
+        ]:
+            error_message = ErrorMessage(
+                error_reason=None,
+                error_description="The mission was reported as failed by the robot",
+            )
+        return error_message, False
+    except asyncio.CancelledError:
+        return None, True
+    finally:
+        logger.info("Stopped monitoring return home mission")
+
+
 async def robot_monitor_mission(
     mission: Mission,
     robot: RobotInterface,
     request_inspection_upload: Callable[[InspectionTask], None],
     mqtt_queue: MQTTQueue,
-    should_report_task_status: bool,
 ) -> tuple[ErrorMessage | None, Mission, bool]:
     logger = logging.getLogger("robot")
     logger.info(f"Started monitoring mission {mission.name}")
@@ -191,8 +232,7 @@ async def robot_monitor_mission(
                 mission_status = MissionStatus.Failed
 
             should_wait_for_task_status = (
-                should_report_task_status
-                and current_task is not None
+                current_task is not None
                 and mission_status in [MissionStatus.Successful, MissionStatus.Failed]
             )  # We want to get tasks statuses before we exit monitoring
 
@@ -212,7 +252,7 @@ async def robot_monitor_mission(
                 return error_message, mission, False
 
             # --------- Report task status ---------
-            if should_report_task_status and current_task:
+            if current_task:
                 if mission_status == MissionStatus.Cancelled:
                     current_task.status = TaskStatus.Cancelled
                     mqtt_queue.publish_task_status(current_task, mission.id)
@@ -239,7 +279,7 @@ async def robot_monitor_mission(
 
             await asyncio.sleep(settings.FSM_SLEEP_TIME)
     except asyncio.CancelledError:
-        if should_report_task_status and current_task is not None:
+        if current_task is not None:
             current_task.status = TaskStatus.Cancelled
             mqtt_queue.publish_task_status(current_task, mission.id)
         return None, mission, True

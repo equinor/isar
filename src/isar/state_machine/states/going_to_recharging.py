@@ -5,20 +5,19 @@ from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.mission import ReturnHomeMission
 
 
 def GoingToRecharging(events: Events) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[ErrorMessage](
-            event=events.action_requests.execute_mission.failure,
+            event=events.action_requests.return_home.failure,
             handler=lambda _: InterventionNeeded.transition(
                 "Return home to recharge failed"
             ),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.execute_mission.success,
+            event=events.action_requests.return_home.success,
             handler=lambda _: Recharging.transition(),
         ),
         EventHandlerMapping[EmptyMessage](
@@ -36,7 +35,7 @@ def GoingToRecharging(events: Events) -> State:
 def transition_and_start_return_home() -> Transition:
     def _transition(events: Events) -> State:
 
-        events.action_requests.execute_mission.trigger_request(ReturnHomeMission())
+        events.action_requests.return_home.trigger_request(EmptyMessage())
         return GoingToRecharging(events)
 
     return _transition

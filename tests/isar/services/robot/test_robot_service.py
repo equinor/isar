@@ -314,16 +314,12 @@ def test_start_mission_reports_robot_already_home(
 ) -> None:
     r_service = mocked_robot_service
 
-    def mock_initiate_mission(mission: Mission) -> None:
+    def mock_initiate_mission(mission_id: str) -> None:
         raise RobotAlreadyHomeException("test")
 
-    r_service.robot.initiate_mission = mock_initiate_mission  # type: ignore
+    r_service.robot.initiate_return_home = mock_initiate_mission  # type: ignore
 
-    task_1: Task = TakeImage(
-        id="id", target=stub_pose().position, robot_pose=stub_pose()
-    )
-    mission: Mission = Mission(id="id", name="Dummy mission", tasks=[task_1])
-    success = r_service._start_mission_handler(mission)
+    success = r_service._start_return_home_handler("id")
 
     assert not success
-    assert r_service.action_requests.execute_mission.success.has_event()
+    assert r_service.action_requests.return_home.success.has_event()
