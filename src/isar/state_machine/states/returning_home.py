@@ -10,7 +10,7 @@ from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.mission import Mission, ReturnHomeMission
+from robot_interface.models.mission.mission import Mission
 
 
 def ReturningHome(
@@ -34,7 +34,7 @@ def ReturningHome(
             handler=lambda _: PausingReturnHome.transition_and_pause_mission_and_reply_to_API(),
         ),
         EventHandlerMapping[ErrorMessage](
-            event=events.action_requests.execute_mission.failure,
+            event=events.action_requests.return_home.failure,
             handler=_mission_failed_event_handler,
         ),
         EventHandlerMapping[Mission](
@@ -44,7 +44,7 @@ def ReturningHome(
             ),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.execute_mission.success,
+            event=events.action_requests.return_home.success,
             handler=lambda _: Home.transition(),
         ),
         EventHandlerMapping[EmptyMessage](
@@ -73,7 +73,7 @@ def transition_and_start_mission(
 ) -> Transition:
     def _transition(events: Events) -> State:
 
-        events.action_requests.execute_mission.trigger_request(ReturnHomeMission())
+        events.action_requests.return_home.trigger_request(EmptyMessage())
 
         if should_respond_to_API_request:
             events.api_requests.return_home.trigger_response(EmptyMessage())
