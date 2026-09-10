@@ -3,7 +3,6 @@
   "name": "my-mission",
   "tasks": [
     {
-      "type": "inspection",
       "pose": {
         "position": {
           "x": 0,
@@ -20,17 +19,14 @@
         },
         "frame_name": "robot"
       },
-      "inspection": {
-        "type": "Image",
-        "inspection_target": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "frame_name": "robot"
-        },
-        "analysis_types": ["anonymize"],
-        "id": "generated_inspection_id"
+      "type": "Image",
+      "inspection_target": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "frame_name": "robot"
       },
+      "analysis_types": ["anonymize"],
       "tag": "MY-TAG-123",
       "id": "generated_task_id"
     }
