@@ -2,9 +2,9 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 
+from alitra import Pose, Position
 from pydantic import BaseModel, Field
 
-from isar.apis.models.models import InputPose, InputPosition
 from isar.config.settings import settings
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import (
@@ -43,9 +43,9 @@ class AcousticInspectionParameters(BaseModel):
 
 class StartMissionTaskDefinition(BaseModel):
     id: str = Field()
-    pose: InputPose
+    pose: Pose
     type: InspectionTypes = Field(default=InspectionTypes.image)
-    inspection_target: InputPosition
+    inspection_target: Position
     inspection_description: str | None = None
     duration: float | None = None
     acoustic: AcousticInspectionParameters | None = None
@@ -133,13 +133,13 @@ def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
 
     kwargs: dict = {
         "id": task_definition.id,
-        "robot_pose": task_definition.pose.to_alitra_pose(),
+        "robot_pose": task_definition.pose,
         "tag_id": task_definition.tag,
         "inspection_description": task_definition.inspection_description,
         "analysis_types": task_definition.analysis_types,
     }
     if spec.needs_target:
-        kwargs["target"] = task_definition.inspection_target.to_alitra_position()
+        kwargs["target"] = task_definition.inspection_target
     if spec.needs_zoom:
         kwargs["zoom"] = task_definition.zoom
     if spec.needs_duration:
