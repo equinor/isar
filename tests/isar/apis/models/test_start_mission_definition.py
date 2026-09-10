@@ -8,7 +8,6 @@ from isar.apis.models.models import InputOrientation, InputPose, InputPosition
 from isar.apis.models.start_mission_definition import (
     InspectionTypes,
     StartMissionDefinition,
-    StartMissionInspectionDefinition,
     StartMissionTaskDefinition,
     to_isar_mission,
 )
@@ -24,10 +23,6 @@ from robot_interface.models.mission.task import (
 def test_to_isar_mission() -> None:
     DUMMY_MISSION_NAME = "mission_name"
 
-    inspection_definition = StartMissionInspectionDefinition(
-        type=InspectionTypes.image,
-        inspection_target=InputPosition(x=1, y=1, z=1),
-    )
     task_pose = InputPose(
         position=InputPosition(x=1, y=1, z=1),
         orientation=InputOrientation(x=1, y=1, z=1, w=1),
@@ -35,7 +30,8 @@ def test_to_isar_mission() -> None:
     task_definition = StartMissionTaskDefinition(
         id="test-id",
         pose=task_pose,
-        inspection=inspection_definition,
+        type=InspectionTypes.image,
+        inspection_target=InputPosition(x=1, y=1, z=1),
     )
     mission_definition = StartMissionDefinition(
         tasks=[task_definition], name=DUMMY_MISSION_NAME, id="test-id2"
@@ -99,7 +95,7 @@ def _build_mission_with_inspection_payload(inspection_payload: dict) -> Mission:
                     "position": {"x": 0, "y": 0, "z": 0},
                     "orientation": {"x": 0, "y": 0, "z": 0, "w": 1},
                 },
-                "inspection": inspection_payload,
+                **inspection_payload,
             }
         ],
     }

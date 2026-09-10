@@ -41,19 +41,15 @@ class AcousticInspectionParameters(BaseModel):
     roi: Roi | None = None
 
 
-class StartMissionInspectionDefinition(BaseModel):
+class StartMissionTaskDefinition(BaseModel):
+    id: str = Field()
+    pose: InputPose
     type: InspectionTypes = Field(default=InspectionTypes.image)
     inspection_target: InputPosition
     inspection_description: str | None = None
     duration: float | None = None
     acoustic: AcousticInspectionParameters | None = None
     analysis_types: list[str] | None = Field(default=None)
-
-
-class StartMissionTaskDefinition(BaseModel):
-    id: str = Field()
-    pose: InputPose
-    inspection: StartMissionInspectionDefinition | None = None
     tag: str | None = None
     zoom: ZoomDescription | None = None
 
@@ -126,40 +122,34 @@ _INSPECTION_SPECS: dict[InspectionTypes, _InspectionSpec] = {
 
 
 def to_inspection_task(task_definition: StartMissionTaskDefinition) -> TASKS:
-    if task_definition.inspection is None:
-        raise ValueError("Inspection in task definition was None")
-
-    inspection_definition = task_definition.inspection
-    spec = _INSPECTION_SPECS.get(inspection_definition.type)
+    spec = _INSPECTION_SPECS.get(task_definition.type)
     if spec is None:
-        raise ValueError(
-            f"Inspection type '{inspection_definition.type}' not supported"
-        )
+        raise ValueError(f"Inspection type '{task_definition.type}' not supported")
 
-    if spec.needs_duration and inspection_definition.duration is None:
+    if spec.needs_duration and task_definition.duration is None:
         raise ValueError(
-            f"No duration given to {inspection_definition.type.value} inspection task"
+            f"No duration given to {task_definition.type.value} inspection task"
         )
 
     kwargs: dict = {
         "id": task_definition.id,
         "robot_pose": task_definition.pose.to_alitra_pose(),
         "tag_id": task_definition.tag,
-        "inspection_description": inspection_definition.inspection_description,
-        "analysis_types": inspection_definition.analysis_types,
+        "inspection_description": task_definition.inspection_description,
+        "analysis_types": task_definition.analysis_types,
     }
     if spec.needs_target:
-        kwargs["target"] = inspection_definition.inspection_target.to_alitra_position()
+        kwargs["target"] = task_definition.inspection_target.to_alitra_position()
     if spec.needs_zoom:
         kwargs["zoom"] = task_definition.zoom
     if spec.needs_duration:
-        kwargs["duration"] = inspection_definition.duration
+        kwargs["duration"] = task_definition.duration
     if spec.needs_acoustic_params:
-        acoustic = inspection_definition.acoustic
+        acoustic = task_definition.acoustic
         if acoustic is None:
             raise ValueError(
                 f"No acoustic parameters given to "
-                f"{inspection_definition.type.value} inspection task"
+                f"{task_definition.type.value} inspection task"
             )
         kwargs["frequency_from"] = acoustic.frequency_from
         kwargs["frequency_to"] = acoustic.frequency_to
