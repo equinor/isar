@@ -7,13 +7,13 @@ from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
-from robot_interface.models.mission.mission import Mission, ReturnHomeMission
+from robot_interface.models.mission.mission import Mission
 
 
 def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
     events: Events,
 ) -> None:
-    example_mission: Mission = ReturnHomeMission()
+    example_mission: Mission = Mission(id="id", name="name")
     current_state = StoppingReturnHome(events, example_mission)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
@@ -63,7 +63,7 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
     current_state: State = ReturningHome(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.action_requests.execute_mission.success
+        events.action_requests.return_home.success
     )
 
     transition = event_handler.handler(EmptyMessage())

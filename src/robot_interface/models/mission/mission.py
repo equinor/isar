@@ -1,10 +1,8 @@
-from uuid import uuid4
-
 from pydantic import BaseModel, Field
 
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
-from robot_interface.models.mission.task import TASKS, ReturnToHome, TaskTypes
+from robot_interface.models.mission.task import TASKS
 
 
 class Mission(BaseModel):
@@ -13,11 +11,6 @@ class Mission(BaseModel):
     name: str = Field(frozen=True)
     status: MissionStatus = MissionStatus.NotStarted
     error_message: ErrorMessage | None = Field(default=None)
-
-    def _is_return_to_home_mission(self) -> bool:
-        if len(self.tasks) != 1:
-            return False
-        return self.tasks[0].type == TaskTypes.ReturnToHome
 
     def _get_unfinished_tasks(self) -> list[TASKS]:
         return list(
@@ -31,9 +24,3 @@ class Mission(BaseModel):
                 self.tasks,
             )
         )
-
-
-class ReturnHomeMission(Mission):
-    id: str = str(uuid4())
-    tasks: list[TASKS] = Field(default_factory=lambda: [ReturnToHome()])
-    name: str = "Return Home"

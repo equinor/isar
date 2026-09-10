@@ -1,7 +1,6 @@
 import builtins
 from enum import Enum
 from typing import Literal
-from uuid import uuid4
 
 from alitra import Pose, Position
 from pydantic import BaseModel, Field, model_validator
@@ -74,15 +73,6 @@ class InspectionTask(Task):
     @staticmethod
     def get_inspection_type() -> type[Inspection]:
         return Inspection
-
-
-class ReturnToHome(Task):
-    """
-    Task which cases the robot to return home
-    """
-
-    id: str = str(uuid4())
-    type: Literal[TaskTypes.ReturnToHome] = TaskTypes.ReturnToHome
 
 
 class TakeImage(InspectionTask):
@@ -204,8 +194,7 @@ class TakeAcousticMeasurement(InspectionTask):
 
 
 TASKS = (
-    ReturnToHome
-    | TakeImage
+    TakeImage
     | TakeThermalImage
     | TakeVideo
     | TakeThermalVideo

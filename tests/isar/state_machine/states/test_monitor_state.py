@@ -18,7 +18,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     ErrorReason,
     RobotException,
 )
-from robot_interface.models.mission.mission import Mission, ReturnHomeMission
+from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
 from tests.test_mocks.robot_interface import (
     StubRobot,
@@ -56,7 +56,7 @@ def test_stopping_to_recharge_goes_to_intervention_needed(events: Events) -> Non
 def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     events: Events,
 ) -> None:
-    example_mission: Mission = ReturnHomeMission()
+    example_mission: Mission = Mission(id="id", name="name")
     current_state = StoppingReturnHome(events, example_mission)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
