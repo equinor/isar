@@ -13,7 +13,7 @@ from isar.state_machine.states.resuming_return_home import ResumingReturnHome
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
-from robot_interface.models.mission.mission import Mission, ReturnHomeMission
+from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
 from tests.test_mocks.robot_interface import StubRobot
 from tests.test_mocks.state_machine_mocks import (
@@ -65,8 +65,8 @@ def test_set_return_home_timeout(
     assert transition is not None
     assert transition(events).name is States.ReturningHome
     assert isinstance(
-        events.action_requests.execute_mission.request.consume_event(),
-        ReturnHomeMission,
+        events.action_requests.return_home.request.consume_event(),
+        EmptyMessage,
     )
     assert clock.return_value == 100 + expected_elapsed
     assert response.call_count == len(updates)
@@ -109,8 +109,8 @@ def test_low_battery_overrides_updated_timeout(
     assert transition is not None
     assert transition(events).name is States.GoingToRecharging
     assert isinstance(
-        events.action_requests.execute_mission.request.consume_event(),
-        ReturnHomeMission,
+        events.action_requests.return_home.request.consume_event(),
+        EmptyMessage,
     )
     response.assert_called_once()
 

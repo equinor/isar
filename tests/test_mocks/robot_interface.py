@@ -49,6 +49,9 @@ class StubRobot(RobotInterface):
         time.sleep(self.initiate_mission_delay)
         self.mission = mission
 
+    def initiate_return_home(self, mission_id: str) -> None:
+        pass
+
     def task_status(self, task_id: str) -> TaskStatus:
         return self.task_status_return_value
 
@@ -94,6 +97,14 @@ class StubRobot(RobotInterface):
 
     def get_battery_level(self) -> float:
         return 80.0
+
+
+class StubRobotInitiateReturnHomeRaisesException(StubRobot):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def initiate_return_home(self, mission_id: str) -> None:
+        raise RobotCommunicationException("Testing Initate Mission Exception")
 
 
 class StubRobotInitiateMissionRaisesException(StubRobot):
@@ -160,11 +171,6 @@ class StubRobotRobotStatusBusyIfNotHomeOrUnknownStatus(StubRobot):
         self.return_home_mission_just_finished_successfully = False
 
     def task_status(self, task_id: str) -> TaskStatus:
-        if (
-            self.mission._is_return_to_home_mission()
-            and self.task_status_return_value == TaskStatus.Successful
-        ):
-            self.return_home_mission_just_finished_successfully = True
         return self.task_status_return_value
 
     def robot_status(self) -> RobotStatus:
