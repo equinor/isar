@@ -10,14 +10,10 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     groups:
-      # Use Dependabot's native 3-day cooldown for version updates.
-      python-patch-minor:
+      # Group all uv version updates together.
+      python-dependencies:
         patterns: ["*"]
-        update-types: ["patch", "minor"]
-      # Bundle major bumps separately from patch and minor updates.
-      python-major:
-        patterns: ["*"]
-        update-types: ["major"]
+        applies-to: version-updates
   - package-ecosystem: github-actions
     directory: /
     schedule:
