@@ -8,23 +8,31 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "frame_name": "robot"
+          "frame": {
+            "name": "robot"
+          }
         },
         "orientation": {
           "x": 0,
           "y": 0,
           "z": 0,
           "w": 0,
-          "frame_name": "robot"
+          "frame": {
+            "name": "robot"
+          }
         },
-        "frame_name": "robot"
+        "frame": {
+          "name": "robot"
+        }
       },
       "type": "Image",
       "inspection_target": {
         "x": 0,
         "y": 0,
         "z": 0,
-        "frame_name": "robot"
+        "frame": {
+          "name": "robot"
+        }
       },
       "analysis_types": ["anonymize"],
       "tag": "MY-TAG-123",
