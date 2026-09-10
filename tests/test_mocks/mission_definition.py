@@ -8,7 +8,6 @@ from isar.apis.models.models import (
 from isar.apis.models.start_mission_definition import (
     InspectionTypes,
     StartMissionDefinition,
-    StartMissionInspectionDefinition,
     StartMissionTaskDefinition,
 )
 from robot_interface.models.mission.mission import Mission
@@ -42,16 +41,6 @@ class DummyMissionDefinition:
         ],
         status=MissionStatus.Cancelled,
     )
-    dummy_start_mission_inspection_definition = StartMissionInspectionDefinition(
-        type=InspectionTypes.image,
-        inspection_target=dummy_input_target_position,
-    )
-    dummy_start_mission_inspection_definition_thermal_image = (
-        StartMissionInspectionDefinition(
-            type=InspectionTypes.thermal_image,
-            inspection_target=dummy_input_target_position,
-        )
-    )
     dummy_task_response_take_image = TaskResponse(
         id=dummy_task_take_image.id,
         tag_id=dummy_task_take_image.tag_id,
@@ -70,7 +59,8 @@ class DummyMissionDefinition:
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition,
+                type=InspectionTypes.image,
+                inspection_target=dummy_input_target_position,
             ),
         ],
     )
@@ -81,13 +71,15 @@ class DummyMissionDefinition:
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition,
+                type=InspectionTypes.image,
+                inspection_target=dummy_input_target_position,
             ),
             StartMissionTaskDefinition(
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition_thermal_image,
+                type=InspectionTypes.thermal_image,
+                inspection_target=dummy_input_target_position,
             ),
         ],
     )
@@ -98,19 +90,22 @@ class DummyMissionDefinition:
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition,
+                type=InspectionTypes.image,
+                inspection_target=dummy_input_target_position,
             ),
             StartMissionTaskDefinition(
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition,
+                type=InspectionTypes.image,
+                inspection_target=dummy_input_target_position,
             ),
             StartMissionTaskDefinition(
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition,
+                type=InspectionTypes.image,
+                inspection_target=dummy_input_target_position,
             ),
         ],
     )
