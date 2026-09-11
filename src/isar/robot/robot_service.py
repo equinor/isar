@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from threading import Event as ThreadEvent
+from uuid import uuid4
 
 from isar.models.events import (
     AbortedMission,
@@ -12,15 +13,18 @@ from isar.models.events import (
 )
 from isar.models.mqtt_queue import MQTTQueue
 from isar.robot.robot_battery import RobotBatteryThread
-from isar.robot.robot_monitor_mission import robot_monitor_mission
+from isar.robot.robot_monitor_mission import (
+    robot_monitor_mission,
+    robot_monitor_return_home_mission,
+)
 from isar.robot.robot_pause_mission import robot_pause_mission
 from isar.robot.robot_resume_mission import robot_resume_mission
+from isar.robot.robot_return_home import robot_return_home
 from isar.robot.robot_start_mission import robot_start_mission
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import robot_stop_mission
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.robot_interface import RobotInterface
 
@@ -53,9 +57,9 @@ class RobotService:
         self.status_thread = None
         self.battery_thread = None
 
-    def _start_mission_handler(self, mission: Mission) -> bool:
-        error_message: ErrorMessage | None = robot_start_mission(
-            self.signal_exit, self.robot, self.logger, mission
+    def _start_return_home_handler(self, mission_id: str) -> bool:
+        error_message: ErrorMessage | None = robot_return_home(
+            self.signal_exit, self.robot, self.logger, mission_id
         )
 
         if (
@@ -63,12 +67,24 @@ class RobotService:
             and error_message.error_reason == ErrorReason.RobotAlreadyHomeException
         ):
             self.logger.info("Did not start return home, since robot was already home")
-            self.action_requests.execute_mission.trigger_success_response(
-                EmptyMessage()
-            )
+            self.action_requests.return_home.trigger_success_response(EmptyMessage())
             return False
         elif error_message:
-            mission.status = MissionStatus.Failed
+            error_message.error_description = (
+                f"Failed to initiate due to: {error_message.error_description}"
+            )
+            self.logger.warning(f"Failed to return home mission. {error_message}")
+            self.action_requests.return_home.trigger_failure_response(error_message)
+            return False
+        self.logger.info("Received confirmation that return home mission has started")
+        return True
+
+    def _start_mission_handler(self, mission: Mission) -> bool:
+        error_message: ErrorMessage | None = robot_start_mission(
+            self.signal_exit, self.robot, self.logger, mission
+        )
+
+        if error_message:
             error_message.error_description = (
                 f"Failed to initiate due to: {error_message.error_description}"
             )
@@ -136,17 +152,37 @@ class RobotService:
         else:
             self.action_requests.resume_mission.trigger_success_response(EmptyMessage())
 
-    async def _monitor_mission_handler(self, mission: Mission) -> Mission | None:
+    async def _monitor_return_home_handler(self, mission_id: str) -> None:
+        error_message: ErrorMessage | None = None
+        is_aborted: bool = True
+        try:
+            error_message, is_aborted = await robot_monitor_return_home_mission(
+                mission_id, self.robot
+            )
+
+            if is_aborted:
+                return
+
+            if error_message is not None:
+                self.logger.warning(
+                    f"Error monitoring return home mission. {error_message}"
+                )
+                self.action_requests.return_home.trigger_failure_response(error_message)
+            else:
+                self.action_requests.return_home.trigger_success_response(
+                    EmptyMessage()
+                )
+        except asyncio.CancelledError:
+            pass
+
+    async def _monitor_mission_handler(self, mission: Mission) -> AbortedMission | None:
         remaining_mission: Mission | None = None
         try:
-            should_report_task_status = not mission._is_return_to_home_mission()
-
             error_message, remaining_mission, is_aborted = await robot_monitor_mission(
                 mission,
                 self.robot,
                 lambda task: self.upload_task_event.trigger_event((task, mission)),
                 self.mqtt_queue,
-                should_report_task_status,
             )
             if is_aborted:
                 return remaining_mission
@@ -184,6 +220,18 @@ class RobotService:
         monitor_mission_task: asyncio.Task[AbortedMission | None] | None = None
 
         while not self.signal_exit.is_set():
+
+            return_home_request = (
+                self.action_requests.return_home.request.consume_event()
+            )
+            if return_home_request:
+                return_home_mission_id = str(uuid4())
+                success = self._start_return_home_handler(return_home_mission_id)
+                if success:
+                    monitor_mission_task = asyncio.create_task(
+                        self._monitor_return_home_handler(return_home_mission_id)
+                    )
+
             start_mission_request = (
                 self.action_requests.execute_mission.request.consume_event()
             )

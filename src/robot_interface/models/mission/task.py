@@ -1,7 +1,6 @@
 import builtins
 from enum import Enum
 from typing import Literal
-from uuid import uuid4
 
 from alitra import Pose, Position
 from pydantic import BaseModel, Field, model_validator
@@ -54,18 +53,15 @@ class ZoomDescription(BaseModel):
     objectHeight: float
 
 
-class Task(BaseModel):
+class InspectionTask(BaseModel):
+    """
+    Base class for all inspection tasks.
+    """
+
     status: TaskStatus = Field(default=TaskStatus.NotStarted)
     error_message: ErrorMessage | None = Field(default=None)
     tag_id: str | None = Field(default=None)
     id: str = Field(frozen=True)
-
-
-class InspectionTask(Task):
-    """
-    Base class for all inspection tasks which produce results to be uploaded.
-    """
-
     robot_pose: Pose = Field()
     inspection_description: str | None = Field(default=None)
     zoom: ZoomDescription | None = Field(default=None)
@@ -74,15 +70,6 @@ class InspectionTask(Task):
     @staticmethod
     def get_inspection_type() -> type[Inspection]:
         return Inspection
-
-
-class ReturnToHome(Task):
-    """
-    Task which cases the robot to return home
-    """
-
-    id: str = str(uuid4())
-    type: Literal[TaskTypes.ReturnToHome] = TaskTypes.ReturnToHome
 
 
 class TakeImage(InspectionTask):
@@ -204,8 +191,7 @@ class TakeAcousticMeasurement(InspectionTask):
 
 
 TASKS = (
-    ReturnToHome
-    | TakeImage
+    TakeImage
     | TakeThermalImage
     | TakeVideo
     | TakeThermalVideo

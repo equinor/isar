@@ -39,12 +39,29 @@ class RobotInterface(metaclass=ABCMeta):
 
         Raises
         ------
-        RobotAlreadyHomeException
-            If the mission is a return home mission and the robot wish to disregard the
-            mission as it is already at home
         RobotInfeasibleMissionException
             If the mission input is infeasible and the mission fails to be scheduled in
             a way that means attempting to schedule again is not necessary
+        RobotException
+            Will catch all RobotExceptions not previously listed and retry scheduling of
+            the mission until the number of allowed retries is exceeded
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def initiate_return_home(self, mission_id: str) -> None:
+        """Initiates a return home mission
+
+        Parameters
+        ----------
+        mission_id: str
+
+        Raises
+        ------
+        RobotAlreadyHomeException
+            If the mission is a return home mission and the robot wish to disregard the
+            mission as it is already at home
         RobotException
             Will catch all RobotExceptions not previously listed and retry scheduling of
             the mission until the number of allowed retries is exceeded

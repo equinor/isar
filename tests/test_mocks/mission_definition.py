@@ -1,14 +1,9 @@
-from isar.apis.models.models import (
-    InputOrientation,
-    InputPose,
-    InputPosition,
-    StartMissionResponse,
-    TaskResponse,
-)
+from alitra import Frame, Orientation, Pose, Position
+
+from isar.apis.models.models import StartMissionResponse, TaskResponse
 from isar.apis.models.start_mission_definition import (
     InspectionTypes,
     StartMissionDefinition,
-    StartMissionInspectionDefinition,
     StartMissionTaskDefinition,
 )
 from robot_interface.models.mission.mission import Mission
@@ -17,14 +12,14 @@ from tests.test_mocks.task import StubTask
 
 
 class DummyMissionDefinition:
-    dummy_input_position = InputPosition(x=1, y=1, z=1, frame_name="robot")
-    dummy_input_orientation = InputOrientation(x=0, y=0, z=0, w=0, frame_name="robot")
-    dummy_input_pose = InputPose(
+    dummy_input_position = Position(x=1, y=1, z=1, frame=Frame("robot"))
+    dummy_input_orientation = Orientation(x=0, y=0, z=0, w=0, frame=Frame("robot"))
+    dummy_input_pose = Pose(
         position=dummy_input_position,
         orientation=dummy_input_orientation,
-        frame_name="robot",
+        frame=Frame("robot"),
     )
-    dummy_input_target_position = InputPosition(x=5, y=5, z=5, frame_name="robot")
+    dummy_input_target_position = Position(x=5, y=5, z=5, frame=Frame("robot"))
     dummy_task_take_image = StubTask.take_image()
     default_mission = Mission(
         id="default_mission",
@@ -41,16 +36,6 @@ class DummyMissionDefinition:
             dummy_task_take_image_cancelled,
         ],
         status=MissionStatus.Cancelled,
-    )
-    dummy_start_mission_inspection_definition = StartMissionInspectionDefinition(
-        type=InspectionTypes.image,
-        inspection_target=dummy_input_target_position,
-    )
-    dummy_start_mission_inspection_definition_thermal_image = (
-        StartMissionInspectionDefinition(
-            type=InspectionTypes.thermal_image,
-            inspection_target=dummy_input_target_position,
-        )
     )
     dummy_task_response_take_image = TaskResponse(
         id=dummy_task_take_image.id,
@@ -70,7 +55,8 @@ class DummyMissionDefinition:
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition,
+                type=InspectionTypes.image,
+                inspection_target=dummy_input_target_position,
             ),
         ],
     )
@@ -81,13 +67,15 @@ class DummyMissionDefinition:
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition,
+                type=InspectionTypes.image,
+                inspection_target=dummy_input_target_position,
             ),
             StartMissionTaskDefinition(
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition_thermal_image,
+                type=InspectionTypes.thermal_image,
+                inspection_target=dummy_input_target_position,
             ),
         ],
     )
@@ -98,19 +86,22 @@ class DummyMissionDefinition:
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition,
+                type=InspectionTypes.image,
+                inspection_target=dummy_input_target_position,
             ),
             StartMissionTaskDefinition(
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition,
+                type=InspectionTypes.image,
+                inspection_target=dummy_input_target_position,
             ),
             StartMissionTaskDefinition(
                 id="dummy_id",
                 pose=dummy_input_pose,
                 tag="dummy_tag",
-                inspection=dummy_start_mission_inspection_definition,
+                type=InspectionTypes.image,
+                inspection_target=dummy_input_target_position,
             ),
         ],
     )
