@@ -9,6 +9,8 @@ operator systems. Through the ISAR API you can send commands to a robot to do mi
 missions.
 
 ## Getting started
+Prerequisites:
+- Have UV installed
 
 Steps:
 
