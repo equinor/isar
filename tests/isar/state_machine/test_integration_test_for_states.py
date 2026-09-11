@@ -10,7 +10,7 @@ from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
-from robot_interface.models.mission.task import TakeImage, Task
+from robot_interface.models.mission.task import InspectionTask, TakeImage
 from tests.test_mocks.inspection import stub_pose
 from tests.test_mocks.robot_interface import (
     StubRobot,
@@ -52,10 +52,10 @@ def test_state_machine_transitions_when_running_full_mission(
         )
     )
 
-    task_1: Task = TakeImage(
+    task_1: InspectionTask = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()
     )
-    task_2: Task = TakeImage(
+    task_2: InspectionTask = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()
     )
     mission: Mission = Mission(id="id", name="Dummy mission", tasks=[task_1, task_2])
@@ -89,10 +89,10 @@ def test_state_machine_failed_dependency(
     mocker.patch.object(settings, "RETURN_HOME_RETRY_LIMIT", 3)
     mocker.patch.object(settings, "FSM_SLEEP_TIME", 0.01)
 
-    task_1: Task = TakeImage(
+    task_1: InspectionTask = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()
     )
-    task_2: Task = TakeImage(
+    task_2: InspectionTask = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()
     )
     mission: Mission = Mission(id="id", name="Dummy misson", tasks=[task_1, task_2])
@@ -285,10 +285,10 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
         StubRobotInitiateReturnHomeRaisesException()
     )
 
-    task_1: Task = TakeImage(
+    task_1: InspectionTask = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()
     )
-    task_2: Task = TakeImage(
+    task_2: InspectionTask = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()
     )
     mission: Mission = Mission(id="id", name="Dummy misson", tasks=[task_1, task_2])
