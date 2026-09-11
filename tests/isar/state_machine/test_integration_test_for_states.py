@@ -60,7 +60,7 @@ def test_state_machine_transitions_when_running_full_mission(
     )
     mission: Mission = Mission(id="id", name="Dummy mission", tasks=[task_1, task_2])
 
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.schedule_mission(mission=mission)
 
     expected_transitions = deque(
         [
@@ -107,7 +107,7 @@ def test_state_machine_failed_dependency(
         in state_machine_thread.state_machine.transitions_list,
         timeout=10,
     )
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.schedule_mission(mission=mission)
 
     expected_transitions = deque(
         [
@@ -158,7 +158,7 @@ def test_state_machine_with_successful_collection(
         lambda: States.Home in state_machine_thread.state_machine.transitions_list,
         timeout=10,
     )
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.schedule_mission(mission=mission)
 
     expected_transitions = deque(
         [
@@ -202,7 +202,7 @@ def test_state_machine_with_unsuccessful_collection(
     mission: Mission = Mission(
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.schedule_mission(mission=mission)
 
     expected_transitions = deque(
         [
@@ -252,7 +252,7 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
         lambda: state_machine_thread.state_machine.current_state.name
         == States.ReturningHome
     )
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.schedule_mission(mission=mission)
     expected_transitions = deque(
         [
             States.UnknownStatus,
@@ -267,7 +267,7 @@ def test_state_machine_with_mission_start_during_return_home_without_queueing_st
         == expected_transitions
     )
     assert (
-        not state_machine_thread.state_machine.events.api_requests.start_mission.request.has_event()
+        not state_machine_thread.state_machine.events.async_events.mission_ready.has_event()
     )
 
 
@@ -301,7 +301,7 @@ def test_state_machine_failed_to_initiate_mission_and_return_home(
         timeout=10,
     )
 
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.schedule_mission(mission=mission)
 
     expected_transitions = deque(
         [

@@ -17,14 +17,14 @@ def test_transition_to_stopping_paused_return_home_replies_to_API(
     )
     current_state = ReturnHomePaused(events)
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.api_requests.start_mission.request
+        events.async_events.mission_ready
     )
 
     transition = event_handler.handler(mission)
 
     current_state = transition(events)
     assert current_state.name is States.StoppingPausedReturnHome
-    assert events.api_requests.start_mission.response.has_event()
+    assert events.api_requests.schedule_mission.response.has_event()
 
 
 def test_stopping_paused_return_home_mission_fails(events: Events) -> None:
@@ -38,7 +38,7 @@ def test_stopping_paused_return_home_mission_fails(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    assert not events.api_requests.start_mission.response.has_event()
+    assert not events.api_requests.schedule_mission.response.has_event()
 
     current_state = transition(events)
     assert current_state.name is States.InterventionNeeded

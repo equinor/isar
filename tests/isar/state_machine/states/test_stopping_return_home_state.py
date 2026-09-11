@@ -12,7 +12,7 @@ def test_return_home_cancelled_when_new_mission_received(events: Events) -> None
     current_state = ReturningHome(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.api_requests.start_mission.request
+        events.async_events.mission_ready
     )
 
     mission: Mission = Mission(
@@ -31,14 +31,14 @@ def test_transition_to_stopping_return_home_replies_to_API(events: Events) -> No
     )
     current_state = ReturningHome(events)
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.api_requests.start_mission.request
+        events.async_events.mission_ready
     )
 
     transition = event_handler.handler(mission)
 
     current_state = transition(events)
     assert current_state.name is States.StoppingReturnHome
-    assert events.api_requests.start_mission.response.has_event()
+    assert events.api_requests.schedule_mission.response.has_event()
 
 
 def test_stopping_return_home_mission_fails(events: Events) -> None:
@@ -54,7 +54,7 @@ def test_stopping_return_home_mission_fails(events: Events) -> None:
         ErrorMessage(error_description="", error_reason=ErrorReason.RobotAPIException)
     )
 
-    assert not events.api_requests.start_mission.response.has_event()
+    assert not events.api_requests.schedule_mission.response.has_event()
 
     current_state = transition(events)
     assert current_state.name is States.ReturningHome

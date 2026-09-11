@@ -49,7 +49,7 @@ def test_state_machine_with_successful_mission_stop(
     wait_until(
         lambda: States.Home in state_machine_thread.state_machine.transitions_list
     )
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.schedule_mission(mission=mission)
     wait_until(
         lambda: state_machine_thread.state_machine.current_state.name == States.Monitor
     )
@@ -93,7 +93,7 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
     current_state = UnknownStatus(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_async_events.robot_status_update
+        events.async_events.robot_status_update
     )
 
     transition = event_handler.handler(RobotStatus.Available)

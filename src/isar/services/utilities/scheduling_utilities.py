@@ -73,13 +73,13 @@ class SchedulingUtilities:
             )
         log_statement: str = "\n".join(log_statements)
 
-        self.logger.info("Started mission:\n%s", log_statement)
+        self.logger.info("Scheduled mission:\n%s", log_statement)
 
-    def start_mission(
+    def schedule_mission(
         self,
         mission: Mission,
     ) -> None:
-        """Start mission
+        """Schedule mission
 
         Raises
         ------
@@ -92,22 +92,22 @@ class SchedulingUtilities:
         """
         try:
             self.logger.info(
-                "Requesting to start mission:\n"
+                "Requesting to schedule mission:\n"
                 f"  Mission ID: {mission.id}\n"
                 f"  Mission Name: {mission.name}\n"
                 f"  Number of Tasks: {len(mission.tasks)}"
             )
-            mission_start_response = self._send_command(
+            mission_schedule_response = self._send_command(
                 deepcopy(mission),
-                self.api_events.start_mission,
+                self.api_events.schedule_mission,
             )
-            if not mission_start_response.mission_started:
+            if not mission_schedule_response.mission_scheduled:
                 self.logger.warning(
-                    f"Mission failed to start - {mission_start_response.mission_not_started_reason}"
+                    f"Mission failed to schedule - {mission_schedule_response.mission_not_scheduled_reason}"
                 )
                 raise HTTPException(
                     status_code=HTTPStatus.CONFLICT,
-                    detail=mission_start_response.mission_not_started_reason,
+                    detail=mission_schedule_response.mission_not_scheduled_reason,
                 )
         except EventConflictError:
             error_message = "Previous mission request is still being processed"
@@ -115,12 +115,12 @@ class SchedulingUtilities:
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         except EventTimeoutError:
             error_message = (
-                "State machine has entered a state which cannot start a mission"
+                "State machine has entered a state which cannot schedule a mission"
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         self.log_mission_overview(mission)
-        self.logger.info("OK - Mission start successfully initiated")
+        self.logger.info("OK - Mission schedule successfully initiated")
 
     def return_home(
         self,

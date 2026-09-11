@@ -1,5 +1,4 @@
-from alitra import Frame, Orientation, Pose, Position
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from robot_interface.models.mission.task import TaskTypes
 
@@ -10,7 +9,7 @@ class TaskResponse(BaseModel):
     type: TaskTypes
 
 
-class StartMissionResponse(BaseModel):
+class ScheduleMissionResponse(BaseModel):
     id: str
     tasks: list[TaskResponse]
 
@@ -22,8 +21,8 @@ class ControlMissionResponse(BaseModel):
 
 class MissionStartResponse(BaseModel):
     mission_id: str | None = None
-    mission_started: bool
-    mission_not_started_reason: str | None = None
+    mission_scheduled: bool
+    mission_not_scheduled_reason: str | None = None
 
 
 class LockdownResponse(BaseModel):
@@ -43,48 +42,3 @@ class RobotInfoResponse(BaseModel):
     robot_capabilities: list[str]
     robot_map_name: str
     plant_short_name: str
-
-
-class InputOrientation(BaseModel):
-    x: float
-    y: float
-    z: float
-    w: float
-    frame_name: str = Field(default="robot")
-
-    def to_alitra_orientation(self) -> Orientation:
-        return Orientation(
-            x=self.x,
-            y=self.y,
-            z=self.z,
-            w=self.w,
-            frame=Frame(self.frame_name),
-        )
-
-
-class InputPosition(BaseModel):
-    x: float
-    y: float
-    z: float
-    frame_name: str = Field(default="robot")
-
-    def to_alitra_position(self) -> Position:
-        return Position(
-            x=self.x,
-            y=self.y,
-            z=self.z,
-            frame=Frame(self.frame_name),
-        )
-
-
-class InputPose(BaseModel):
-    position: InputPosition
-    orientation: InputOrientation
-    frame_name: str = Field(default="robot")
-
-    def to_alitra_pose(self) -> Pose:
-        return Pose(
-            position=self.position.to_alitra_position(),
-            orientation=self.orientation.to_alitra_orientation(),
-            frame=Frame(self.frame_name),
-        )

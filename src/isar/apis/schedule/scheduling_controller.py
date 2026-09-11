@@ -6,7 +6,7 @@ from opentelemetry import trace
 
 from isar.apis.models.models import (
     ControlMissionResponse,
-    StartMissionResponse,
+    ScheduleMissionResponse,
     TaskResponse,
 )
 from isar.apis.models.start_mission_definition import (
@@ -30,8 +30,8 @@ class SchedulingController:
         self.scheduling_utilities: SchedulingUtilities = scheduling_utilities
         self.logger = logging.getLogger("api")
 
-    @tracer.start_as_current_span("start_mission")
-    def start_mission(
+    @tracer.start_as_current_span("schedule_mission")
+    def schedule_mission(
         self,
         mission_definition: StartMissionDefinition = Body(
             default=None,
@@ -39,8 +39,8 @@ class SchedulingController:
             title="Mission Definition",
             description="Description of the mission in json format",
         ),
-    ) -> StartMissionResponse:
-        self.logger.info("Received request to start new mission")
+    ) -> ScheduleMissionResponse:
+        self.logger.info("Received request to schedule new mission")
 
         if not mission_definition:
             error_message_no_mission_definition: str = (
@@ -68,8 +68,8 @@ class SchedulingController:
             mission=mission, robot_capabilities=robot_settings.CAPABILITIES
         )
 
-        self.logger.info("Starting mission: %s", mission.id)
-        self.scheduling_utilities.start_mission(mission=mission)
+        self.logger.info("Scheduling mission: %s", mission.id)
+        self.scheduling_utilities.schedule_mission(mission=mission)
         return self._api_response(mission)
 
     @tracer.start_as_current_span("return_home")
@@ -141,8 +141,8 @@ class SchedulingController:
         self.scheduling_utilities.release_maintenance_mode()
         self.logger.info("Maintenance mode successfully released")
 
-    def _api_response(self, mission: Mission) -> StartMissionResponse:
-        return StartMissionResponse(
+    def _api_response(self, mission: Mission) -> ScheduleMissionResponse:
+        return ScheduleMissionResponse(
             id=mission.id,
             tasks=[self._task_api_response(task) for task in mission.tasks],
         )

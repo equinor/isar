@@ -133,11 +133,37 @@ def test_state_machine_ready_to_receive_mission(
     all_states = list(states.keys())
 
     event_mappings: dict[APIEvent, list[States]] = {
-        api_events.start_mission: [
-            States.Home,
-            States.AwaitNextMission,
+        api_events.schedule_mission: [
+            States.Monitor,
             States.ReturningHome,
+            States.Stopping,
+            States.StoppingUnknownMission,
+            States.StoppingReturnHome,
+            States.Paused,
+            States.Pausing,
+            States.Resuming,
+            States.PausingReturnHome,
+            States.ResumingReturnHome,
             States.ReturnHomePaused,
+            States.AwaitNextMission,
+            States.Home,
+            States.Offline,
+            States.UnknownStatus,
+            States.InterventionNeeded,
+            States.Recharging,
+            States.RechargingWithMission,
+            States.StoppingGoToLockdown,
+            States.GoingToLockdown,
+            States.Lockdown,
+            States.GoingToRecharging,
+            States.GoingToRechargingWithMission,
+            States.StoppingGoToRecharge,
+            States.Maintenance,
+            States.StoppingDueToMaintenance,
+            States.StoppingPausedMission,
+            States.StoppingPausedReturnHome,
+            States.GoingToLockdownWithMission,
+            States.LockdownWithMission,
         ],
         api_events.stop_mission: [
             States.Monitor,
@@ -193,13 +219,13 @@ def test_mission_already_started_causes_conflict(
 ) -> None:
     mocker.patch.object(settings, "QUEUE_TIMEOUT", 2)
     start_mission_thread: Thread = Thread(
-        target=scheduling_utilities.start_mission,
+        target=scheduling_utilities.schedule_mission,
         args=[DummyMissionDefinition.default_mission],
     )
     start_mission_thread.start()
 
     with pytest.raises(HTTPException) as err:
-        scheduling_utilities.start_mission(DummyMissionDefinition.default_mission)
+        scheduling_utilities.schedule_mission(DummyMissionDefinition.default_mission)
     start_mission_thread.join()
     assert err.value.status_code == HTTPStatus.CONFLICT
 

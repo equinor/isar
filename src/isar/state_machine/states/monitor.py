@@ -55,7 +55,7 @@ def Monitor(events: Events, mission_id: str) -> State:
             handler=_mission_success_event_handler,
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_async_events.battery_below_mission_threshold,
+            event=events.async_events.battery_below_mission_threshold,
             handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(),
         ),
         EventHandlerMapping[EmptyMessage](
@@ -89,8 +89,8 @@ def transition_and_start_mission(
         )
 
         if should_respond_to_API_request:
-            events.api_requests.start_mission.trigger_response(
-                MissionStartResponse(mission_started=True)
+            events.api_requests.schedule_mission.trigger_response(
+                MissionStartResponse(mission_scheduled=True)
             )
         return Monitor(events, mission_id=mission.id)
 
