@@ -7,6 +7,7 @@ from alitra import Frame, Orientation, Pose, Position
 from isar.apis.models.models import InputOrientation, InputPose, InputPosition
 from isar.apis.models.start_mission_definition import (
     InspectionTypes,
+    MissionFormatError,
     StartMissionDefinition,
     StartMissionInspectionDefinition,
     StartMissionTaskDefinition,
@@ -165,3 +166,66 @@ def test_acoustic_measurement_forwards_roi_to_task() -> None:
     task = mission.tasks[0]
     assert isinstance(task, TakeAcousticMeasurement)
     assert task.roi == Roi(x=760, y=400, width=133, height=160)
+
+
+def _task_definition_with_inspection(
+    inspection: StartMissionInspectionDefinition | None,
+) -> StartMissionTaskDefinition:
+    return StartMissionTaskDefinition(
+        id="task_id",
+        pose=InputPose(
+            position=InputPosition(x=1, y=1, z=1),
+            orientation=InputOrientation(x=0, y=0, z=0, w=1),
+            frame_name="asset",
+        ),
+        inspection=inspection,
+        tag="tag",
+    )
+
+
+# A malformed mission is the caller's mistake, so it must surface as
+# MissionFormatError, which the scheduling controller answers with 400. A bare
+# ValueError escapes that handler and becomes an opaque 500.
+def test_missing_inspection_is_a_mission_format_error() -> None:
+    mission_definition = StartMissionDefinition(
+        id="mission_id", tasks=[_task_definition_with_inspection(None)]
+    )
+
+    with pytest.raises(MissionFormatError):
+        to_isar_mission(mission_definition)
+
+
+def test_missing_duration_is_a_mission_format_error() -> None:
+    # Video inspections require a duration.
+    mission_definition = StartMissionDefinition(
+        id="mission_id",
+        tasks=[
+            _task_definition_with_inspection(
+                StartMissionInspectionDefinition(
+                    type=InspectionTypes.video,
+                    inspection_target=InputPosition(x=1, y=1, z=1),
+                )
+            )
+        ],
+    )
+
+    with pytest.raises(MissionFormatError):
+        to_isar_mission(mission_definition)
+
+
+def test_missing_acoustic_parameters_is_a_mission_format_error() -> None:
+    mission_definition = StartMissionDefinition(
+        id="mission_id",
+        tasks=[
+            _task_definition_with_inspection(
+                StartMissionInspectionDefinition(
+                    type=InspectionTypes.acoustic_measurement,
+                    inspection_target=InputPosition(x=1, y=1, z=1),
+                    acoustic=None,
+                )
+            )
+        ],
+    )
+
+    with pytest.raises(MissionFormatError):
+        to_isar_mission(mission_definition)
