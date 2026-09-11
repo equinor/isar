@@ -53,18 +53,15 @@ class ZoomDescription(BaseModel):
     objectHeight: float
 
 
-class Task(BaseModel):
+class InspectionTask(BaseModel):
+    """
+    Base class for all inspection tasks.
+    """
+
     status: TaskStatus = Field(default=TaskStatus.NotStarted)
     error_message: ErrorMessage | None = Field(default=None)
     tag_id: str | None = Field(default=None)
     id: str = Field(frozen=True)
-
-
-class InspectionTask(Task):
-    """
-    Base class for all inspection tasks which produce results to be uploaded.
-    """
-
     robot_pose: Pose = Field()
     inspection_description: str | None = Field(default=None)
     zoom: ZoomDescription | None = Field(default=None)
