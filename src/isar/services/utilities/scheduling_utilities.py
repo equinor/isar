@@ -151,6 +151,21 @@ class SchedulingUtilities:
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
         self.logger.info("OK - Return home mission start successfully initiated")
 
+    def set_return_home_timeout(self, seconds: int) -> None:
+        try:
+            self._send_command(seconds, self.api_events.set_return_home_timeout)
+        except EventConflictError:
+            error_message = (
+                "Previous return home timeout request is still being processed"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except EventTimeoutError:
+            error_message = "State machine has entered a state which cannot set the return home timeout"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        self.logger.info("OK - Return home timeout set to %s seconds from now", seconds)
+
     def pause_mission(self) -> ControlMissionResponse:
         """Pause mission
 

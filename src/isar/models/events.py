@@ -140,6 +140,9 @@ class APIRequests:
             "resume_mission"
         )
         self.return_home: APIEvent[EmptyMessage, EmptyMessage] = APIEvent("return_home")
+        self.set_return_home_timeout: APIEvent[int, EmptyMessage] = APIEvent(
+            "set_return_home_timeout"
+        )
         self.release_intervention_needed: APIEvent[EmptyMessage, EmptyMessage] = (
             APIEvent("release_intervention_needed")
         )

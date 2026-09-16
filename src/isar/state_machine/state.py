@@ -38,6 +38,8 @@ class State:
         self.signal_exit_event = signal_exit_event
         self.event_handler_mappings = event_handler_mappings
         self.timers = timers if timers is not None else []
+        self._active_timers: list[TimeoutHandlerMapping] = []
+        self._entered_time: float = 0
 
     def get_event_handler_by_event(self, event: Event) -> EventHandlerMapping:
         filtered_handlers = list(
@@ -63,18 +65,28 @@ class State:
         allowed_events: list[Event] = [m.event for m in self.event_handler_mappings]
         return event in allowed_events
 
+    def reset_timer(self, name: str, timeout_in_seconds: float) -> None:
+        """Replace an active timer's remaining wait, measured from now."""
+        for timer in self._active_timers:
+            if timer.name == name:
+                timer.timeout_in_seconds = (
+                    time.monotonic() - self._entered_time + timeout_in_seconds
+                )
+                return
+        raise ValueError(f"No active timer named '{name}' in state {self.name}")
+
     def run(self) -> Transition | None:
-        timers = deepcopy(self.timers)
-        entered_time = time.time()
+        self._active_timers = deepcopy(self.timers)
+        self._entered_time = time.monotonic()
         while True:
             if self.signal_exit_event.has_event():
                 self.logger.info("Stopping state machine from %s state", self.name)
                 break
 
-            for timer in timers:
-                if time.time() - entered_time > timer.timeout_in_seconds:
+            for timer in self._active_timers:
+                if time.monotonic() - self._entered_time > timer.timeout_in_seconds:
                     transition = timer.handler()
-                    timers.remove(timer)
+                    self._active_timers.remove(timer)
                     if transition is not None:
                         return transition
 

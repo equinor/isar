@@ -78,6 +78,22 @@ class SchedulingController:
 
         self.scheduling_utilities.return_home()
 
+    @tracer.start_as_current_span("set_return_home_timeout")
+    def set_return_home_timeout(
+        self,
+        seconds: int = Body(
+            ...,
+            embed=True,
+            gt=0,
+            strict=True,
+            description="Remaining wait in seconds, measured from when the request is handled",
+        ),
+    ) -> None:
+        self.logger.info(
+            "Received request to set return home timeout to %s seconds", seconds
+        )
+        self.scheduling_utilities.set_return_home_timeout(seconds)
+
     @tracer.start_as_current_span("pause_mission")
     def pause_mission(self) -> ControlMissionResponse:
         self.logger.info("Received request to pause current mission")
