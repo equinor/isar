@@ -4,13 +4,20 @@ from typing import ClassVar
 from unittest import mock
 from uuid import uuid4
 
+import pytest
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
+from pytest_mock import MockerFixture
 
 from isar.apis.models.models import ControlMissionResponse
 from isar.apis.models.start_mission_definition import StopMissionDefinition
-from isar.models.events import EventTimeoutError
+from isar.models.events import (
+    EmptyMessage,
+    EventConflictError,
+    Events,
+    EventTimeoutError,
+)
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
 from tests.test_mocks.mission_definition import DummyMissionDefinition
@@ -119,6 +126,63 @@ class TestStartMission:
         )
         assert re.search("take_thermal_image", response_detail)
         assert re.search("take_image", response_detail)
+
+
+class TestSetReturnHomeTimeout:
+    path = "/schedule/set-return-home-timeout"
+
+    @pytest.mark.parametrize("seconds", [1, 60])
+    def test_set_timeout(
+        self, client: TestClient, events: Events, mocker: MockerFixture, seconds: int
+    ) -> None:
+        send_command = mocker.patch.object(
+            SchedulingUtilities, "_send_command", return_value=EmptyMessage()
+        )
+
+        response = client.post(self.path, json={"seconds": seconds})
+
+        assert response.status_code == HTTPStatus.OK
+        assert response.json() is None
+        send_command.assert_called_once_with(
+            seconds, events.api_requests.set_return_home_timeout
+        )
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            {},
+            {"seconds": 0},
+            {"seconds": -1},
+            {"seconds": 1.5},
+            {"seconds": "60"},
+            {"seconds": True},
+            {"seconds": None},
+        ],
+    )
+    def test_invalid_timeout(
+        self, client: TestClient, mocker: MockerFixture, body: dict
+    ) -> None:
+        send_command = mocker.patch.object(SchedulingUtilities, "_send_command")
+
+        response = client.post(self.path, json=body)
+
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+        send_command.assert_not_called()
+
+    def test_conflicting_state(self, client: TestClient) -> None:
+        response = client.post(self.path, json={"seconds": 60})
+
+        assert response.status_code == HTTPStatus.CONFLICT
+
+    @pytest.mark.parametrize("error", [EventConflictError, EventTimeoutError])
+    def test_command_failure(
+        self, client: TestClient, mocker: MockerFixture, error: type[Exception]
+    ) -> None:
+        mocker.patch.object(SchedulingUtilities, "_send_command", side_effect=error)
+
+        response = client.post(self.path, json={"seconds": 60})
+
+        assert response.status_code == HTTPStatus.CONFLICT
 
 
 class TestPauseMission:

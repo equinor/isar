@@ -155,6 +155,29 @@ class API:
             },
         )
         router.add_api_route(
+            path="/schedule/set-return-home-timeout",
+            endpoint=self.scheduling_controller.set_return_home_timeout,
+            methods=["POST"],
+            dependencies=[authentication_dependency],
+            summary="Set the remaining wait before returning home",
+            description=(
+                "Only available while awaiting the next mission. Replaces the remaining "
+                "wait with the requested number of seconds from when the request is handled, "
+                "allowing it to be shortened or extended. Low battery still triggers return "
+                "home. Applies only to the current waiting period; subsequent waits use "
+                "the configured default. Does not cancel a return home already in progress."
+            ),
+            responses={
+                HTTPStatus.OK.value: {"description": "Return home timeout updated"},
+                HTTPStatus.UNPROCESSABLE_ENTITY.value: {
+                    "description": "Invalid body - seconds must be a positive integer"
+                },
+                HTTPStatus.CONFLICT.value: {
+                    "description": "Conflict - Cannot set the timeout in the current state"
+                },
+            },
+        )
+        router.add_api_route(
             path="/schedule/stop-mission",
             endpoint=self.scheduling_controller.stop_mission,
             methods=["POST"],
