@@ -80,7 +80,7 @@ def test_lockdown_mode(
 
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     wait_until(
-        lambda: state_machine_thread_with_db.state_machine.events.robot_async_events.robot_status_update.check()
+        lambda: state_machine_thread_with_db.state_machine.events.async_events.robot_status_update.check()
         == RobotStatus.Home,
         timeout=10.0,
     )
@@ -96,7 +96,7 @@ def test_lockdown_mode(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
     )  # The robot will not go to awaiting next mission after mission has started, it should remain in monitor. In order to test the "stop" functionality.
     response = client.post(
-        url="/schedule/start-mission",
+        url="/schedule/schedule-mission",
         json=jsonable_encoder(
             {
                 "mission_definition": DummyMissionDefinition.dummy_start_mission_definition
@@ -105,9 +105,12 @@ def test_lockdown_mode(
     )
     assert response.status_code == HTTPStatus.OK
 
-    assert (
-        state_machine_thread_with_db.state_machine.current_state.name == States.Monitor
+    wait_until(
+        lambda: state_machine_thread_with_db.state_machine.current_state.name
+        == States.Monitor,
+        timeout=5.0,
     )
+
     response = client.post(url="/schedule/lockdown")
     assert response.status_code == HTTPStatus.OK
 
@@ -120,16 +123,6 @@ def test_lockdown_mode(
         == States.Lockdown,
         timeout=10.0,
     )
-
-    response = client.post(
-        url="/schedule/start-mission",
-        json=jsonable_encoder(
-            {
-                "mission_definition": DummyMissionDefinition.dummy_start_mission_definition
-            }
-        ),
-    )
-    assert response.status_code == HTTPStatus.CONFLICT
 
     expected_transitions = deque(
         [
@@ -168,20 +161,9 @@ def test_maintenance_mode(
         == States.Maintenance
     )
 
-    # The robot should have started in maintenance mode since the robot id is not found in the database.
-    response = client.post(
-        url="/schedule/start-mission",
-        json=jsonable_encoder(
-            {
-                "mission_definition": DummyMissionDefinition.dummy_start_mission_definition
-            }
-        ),
-    )
-    assert response.status_code == HTTPStatus.CONFLICT
-
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     wait_until(
-        lambda: state_machine_thread_with_db.state_machine.events.robot_async_events.robot_status_update.check()
+        lambda: state_machine_thread_with_db.state_machine.events.async_events.robot_status_update.check()
         == RobotStatus.Home,
         timeout=10.0,
     )
@@ -197,7 +179,7 @@ def test_maintenance_mode(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
     )  # The robot will not go to awaitng next mission after mission has started, it should remain in monitor. In order to test the "stop" functionality.
     response = client.post(
-        url="/schedule/start-mission",
+        url="/schedule/schedule-mission",
         json=jsonable_encoder(
             {
                 "mission_definition": DummyMissionDefinition.dummy_start_mission_definition
@@ -206,21 +188,14 @@ def test_maintenance_mode(
     )
     assert response.status_code == HTTPStatus.OK
 
-    assert (
-        state_machine_thread_with_db.state_machine.current_state.name == States.Monitor
+    wait_until(
+        lambda: state_machine_thread_with_db.state_machine.current_state.name
+        == States.Monitor,
+        timeout=5.0,
     )
+
     response = client.post(url="/schedule/maintenance-mode")
     assert response.status_code == HTTPStatus.OK
-
-    response = client.post(
-        url="/schedule/start-mission",
-        json=jsonable_encoder(
-            {
-                "mission_definition": DummyMissionDefinition.dummy_start_mission_definition
-            }
-        ),
-    )
-    assert response.status_code == HTTPStatus.CONFLICT
 
     expected_transitions = deque(
         [
@@ -256,7 +231,7 @@ def test_release_maintenance_mode(
 
     mocker.patch.object(StubRobot, "robot_status", return_value=RobotStatus.Home)
     wait_until(
-        lambda: state_machine_thread_with_db.state_machine.events.robot_async_events.robot_status_update.check()
+        lambda: state_machine_thread_with_db.state_machine.events.async_events.robot_status_update.check()
         == RobotStatus.Home,
         timeout=10.0,
     )

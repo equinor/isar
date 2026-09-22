@@ -14,6 +14,7 @@ from isar.models.events import Events
 from isar.modules import ApplicationContainer, get_injector
 from isar.robot.robot_inspection_service import RobotInspectionService
 from isar.robot.robot_service import RobotService
+from isar.services.mission_queue.mission_queue_service import MissionQueueService
 from isar.services.service_connections.mqtt.mqtt_client import MqttClient
 from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
     RobotHeartbeatPublisher,
@@ -108,6 +109,10 @@ def start() -> None:
     )
     inspection_service_thread.start()
     threads.append(inspection_service_thread)
+
+    mission_queue_service_thread: MissionQueueService = MissionQueueService(events)
+    mission_queue_service_thread.start()
+    threads.append(mission_queue_service_thread)
 
     robot_service_thread: Thread = Thread(
         target=robot.run, name="Robot service", daemon=True

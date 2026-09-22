@@ -27,7 +27,7 @@ def stub_access_token() -> str:
 class TestAuthentication:
     @pytest.mark.parametrize(
         "query_string",
-        ["start-mission?ID=1", "stop-mission"],
+        ["schedule-mission?ID=1", "stop-mission"],
     )
     def test_authentication(
         self,

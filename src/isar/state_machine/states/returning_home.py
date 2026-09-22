@@ -38,7 +38,7 @@ def ReturningHome(
             handler=_mission_failed_event_handler,
         ),
         EventHandlerMapping[Mission](
-            event=events.api_requests.start_mission.request,
+            event=events.async_events.mission_ready,
             handler=lambda mission: StoppingReturnHome.transition_and_stop_return_home_and_reply_to_API(
                 mission
             ),
@@ -48,7 +48,7 @@ def ReturningHome(
             handler=lambda _: Home.transition(),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_async_events.battery_below_mission_threshold,
+            event=events.async_events.battery_below_mission_threshold,
             handler=lambda _: GoingToRecharging.transition_to_existing_mission(),
         ),
         EventHandlerMapping[EmptyMessage](
