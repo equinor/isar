@@ -163,7 +163,7 @@ class Settings(BaseSettings):
     # submitted with the results once they have been uploaded.
 
     # Shortname of the facility the robot is operating in
-    PLANT_SHORT_NAME: str = Field(default="HUA")
+    PLANT_SHORT_NAME: str = Field(default="KAA")
 
     # Name of robot
     ROBOT_NAME: str = Field(default="Placebot")
