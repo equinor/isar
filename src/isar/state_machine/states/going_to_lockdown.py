@@ -5,14 +5,13 @@ from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.mission import ReturnHomeMission
 
 
 def GoingToLockdown(events: Events) -> State:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[ErrorMessage](
-            event=events.action_requests.execute_mission.failure,
+            event=events.action_requests.return_home.failure,
             handler=lambda _: InterventionNeeded.transition("Lockdown mission failed"),
         ),
         EventHandlerMapping[EmptyMessage](
@@ -22,7 +21,7 @@ def GoingToLockdown(events: Events) -> State:
             ),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.execute_mission.success,
+            event=events.action_requests.return_home.success,
             handler=lambda _: Lockdown.transition_without_responding_to_api(),
         ),
     ]
@@ -39,7 +38,7 @@ def transition_and_start_mission_and_report_to_api() -> Transition:
             LockdownResponse(lockdown_started=True)
         )
 
-        events.action_requests.execute_mission.trigger_request(ReturnHomeMission())
+        events.action_requests.return_home.trigger_request(EmptyMessage())
         return GoingToLockdown(events)
 
     return _transition

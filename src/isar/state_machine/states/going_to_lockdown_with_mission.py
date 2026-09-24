@@ -5,7 +5,6 @@ from isar.models.events import AbortedMission, EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
-from robot_interface.models.mission.mission import ReturnHomeMission
 from robot_interface.models.mission.status import MissionStatus
 
 
@@ -31,7 +30,7 @@ def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> State
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[ErrorMessage](
-            event=events.action_requests.execute_mission.failure,
+            event=events.action_requests.return_home.failure,
             handler=_lockdown_mission_failed,
         ),
         EventHandlerMapping[EmptyMessage](
@@ -39,7 +38,7 @@ def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> State
             handler=_lockdown_mission_failed_to_resume,
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.execute_mission.success,
+            event=events.action_requests.return_home.success,
             handler=lambda _: LockdownWithMission.transition(mission),
         ),
     ]
@@ -58,7 +57,7 @@ def transition_and_start_mission_and_report_to_api(
             LockdownResponse(lockdown_started=True)
         )
 
-        events.action_requests.execute_mission.trigger_request(ReturnHomeMission())
+        events.action_requests.return_home.trigger_request(EmptyMessage())
         return GoingToLockdownWithMission(events, mission)
 
     return _transition

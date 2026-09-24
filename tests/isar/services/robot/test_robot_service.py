@@ -11,7 +11,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import TaskStatus
-from robot_interface.models.mission.task import TakeImage, Task
+from robot_interface.models.mission.task import InspectionTask, TakeImage
 from tests.test_mocks.inspection import stub_pose
 
 
@@ -20,7 +20,7 @@ def test_mission_fails_to_schedule(
 ) -> None:
     r_service = mocked_robot_service
 
-    task_1: Task = TakeImage(
+    task_1: InspectionTask = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()
     )
     mission: Mission = Mission(id="id", name="Dummy misson", tasks=[task_1])
@@ -46,7 +46,7 @@ def test_mission_succeeds_to_schedule(
 ) -> None:
     r_service = mocked_robot_service
 
-    task_1: Task = TakeImage(
+    task_1: InspectionTask = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()
     )
     mission: Mission = Mission(id="id", name="Dummy misson", tasks=[task_1])
@@ -86,7 +86,7 @@ def test_successful_stop_with_remaining_tasks(
 
     mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
 
-    task_1: Task = TakeImage(
+    task_1: InspectionTask = TakeImage(
         id="id",
         target=stub_pose().position,
         robot_pose=stub_pose(),
@@ -121,7 +121,7 @@ def test_successful_stop_with_no_remaining_tasks(
 
     mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
 
-    task_1: Task = TakeImage(
+    task_1: InspectionTask = TakeImage(
         id="id",
         target=stub_pose().position,
         robot_pose=stub_pose(),
@@ -175,7 +175,7 @@ def test_monitor_mission_reports_nothing_after_mission_stopped(
 ) -> None:
     r_service = mocked_robot_service
 
-    task_1: Task = TakeImage(
+    task_1: InspectionTask = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()
     )
     mission: Mission = Mission(id="id", name="Dummy misson", tasks=[task_1])
@@ -196,7 +196,7 @@ def test_monitor_mission_reports_mission_failed(
 ) -> None:
     r_service = mocked_robot_service
 
-    task_1: Task = TakeImage(
+    task_1: InspectionTask = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()
     )
     mission: Mission = Mission(id="id", name="Dummy misson", tasks=[task_1])
@@ -221,7 +221,7 @@ def test_monitor_mission_reports_mission_success(
 ) -> None:
     r_service = mocked_robot_service
 
-    task_1: Task = TakeImage(
+    task_1: InspectionTask = TakeImage(
         id="id", target=stub_pose().position, robot_pose=stub_pose()
     )
     mission: Mission = Mission(id="id", name="Dummy misson", tasks=[task_1])
@@ -314,16 +314,12 @@ def test_start_mission_reports_robot_already_home(
 ) -> None:
     r_service = mocked_robot_service
 
-    def mock_initiate_mission(mission: Mission) -> None:
+    def mock_initiate_mission(mission_id: str) -> None:
         raise RobotAlreadyHomeException("test")
 
-    r_service.robot.initiate_mission = mock_initiate_mission  # type: ignore
+    r_service.robot.initiate_return_home = mock_initiate_mission  # type: ignore
 
-    task_1: Task = TakeImage(
-        id="id", target=stub_pose().position, robot_pose=stub_pose()
-    )
-    mission: Mission = Mission(id="id", name="Dummy mission", tasks=[task_1])
-    success = r_service._start_mission_handler(mission)
+    success = r_service._start_return_home_handler("id")
 
     assert not success
-    assert r_service.action_requests.execute_mission.success.has_event()
+    assert r_service.action_requests.return_home.success.has_event()
