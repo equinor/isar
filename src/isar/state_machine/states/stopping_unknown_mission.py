@@ -1,7 +1,7 @@
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.events import AbortedMission, EmptyMessage, Events
+from isar.models.events import AbortedMission, EmptyMessage, Events, MissionCompleted
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 
@@ -15,7 +15,7 @@ def StoppingUnknownMission(events: Events) -> State:
                 "Failed to stop unknown mission"
             ),
         ),
-        EventHandlerMapping[AbortedMission | EmptyMessage](
+        EventHandlerMapping[AbortedMission | MissionCompleted | EmptyMessage](
             event=events.action_requests.stop_mission.success,
             handler=lambda _: AwaitNextMission.transition(),
         ),

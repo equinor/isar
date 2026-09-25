@@ -2,7 +2,7 @@ import asyncio
 
 from pytest_mock import MockerFixture
 
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, MissionCompleted
 from isar.robot.robot_service import RobotService
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -145,11 +145,37 @@ def test_successful_stop_with_no_remaining_tasks(
 
     assert r_service.action_requests.stop_mission.success.has_event()
     assert isinstance(
-        r_service.action_requests.stop_mission.success.get(), EmptyMessage
+        r_service.action_requests.stop_mission.success.get(), MissionCompleted
     )
     assert not r_service.action_requests.stop_mission.failure.has_event()
     assert not r_service.action_requests.execute_mission.failure.has_event()
     assert not r_service.action_requests.execute_mission.success.has_event()
+
+
+def test_successful_stop_before_monitoring_starts_returns_original_mission(
+    mocked_robot_service: RobotService, mocker: MockerFixture
+) -> None:
+    r_service = mocked_robot_service
+    mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
+
+    task = TakeImage(
+        id="id", target=stub_pose().position, robot_pose=stub_pose()
+    )
+    mission = Mission(id="id", name="Dummy mission", tasks=[task])
+
+    async def wait_for_monitoring() -> None:
+        await asyncio.Event().wait()
+
+    async def test_stop_mission_handler() -> None:
+        monitor_mission_task = asyncio.create_task(wait_for_monitoring())
+        await asyncio.sleep(0)
+        await r_service._stop_mission_handler(monitor_mission_task, mission)
+
+    asyncio.run(test_stop_mission_handler())
+
+    stop_result = r_service.action_requests.stop_mission.success.get()
+    assert isinstance(stop_result, Mission)
+    assert stop_result.id == mission.id
 
 
 def test_successful_stop_with_no_ongoing_monitoring(

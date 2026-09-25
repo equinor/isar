@@ -1,7 +1,7 @@
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.paused as Paused
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.events import AbortedMission, EmptyMessage, Events
+from isar.models.events import AbortedMission, EmptyMessage, Events, MissionCompleted
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus
@@ -10,7 +10,7 @@ from robot_interface.models.mission.status import MissionStatus
 def StoppingPausedMission(events: Events, mission_id: str) -> State:
 
     def _successful_stop_event_handler(
-        _: AbortedMission | EmptyMessage,
+        _: AbortedMission | MissionCompleted | EmptyMessage,
     ) -> Transition:
         events.mqtt_queue.publish_mission_status(
             mission_id, MissionStatus.Cancelled, None
@@ -22,7 +22,7 @@ def StoppingPausedMission(events: Events, mission_id: str) -> State:
             event=events.action_requests.stop_mission.failure,
             handler=lambda _: Paused.transition(mission_id),
         ),
-        EventHandlerMapping[AbortedMission | EmptyMessage](
+        EventHandlerMapping[AbortedMission | MissionCompleted | EmptyMessage](
             event=events.action_requests.stop_mission.success,
             handler=_successful_stop_event_handler,
         ),

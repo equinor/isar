@@ -1,7 +1,7 @@
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import MissionStartResponse
-from isar.models.events import AbortedMission, EmptyMessage, Events
+from isar.models.events import AbortedMission, EmptyMessage, Events, MissionCompleted
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
@@ -14,7 +14,7 @@ def StoppingReturnHome(events: Events, mission: Mission) -> State:
             event=events.action_requests.stop_mission.failure,
             handler=lambda _: ReturningHome.transition_to_existing_mission(),
         ),
-        EventHandlerMapping[AbortedMission | EmptyMessage](
+        EventHandlerMapping[AbortedMission | MissionCompleted | EmptyMessage](
             event=events.action_requests.stop_mission.success,
             handler=lambda _: Monitor.transition_and_start_mission(mission, True),
         ),
