@@ -1,4 +1,6 @@
-from isar.models.events import AbortedMission, EmptyMessage, Events
+import json
+
+from isar.models.events import AbortedMission, EmptyMessage, Events, MissionCompleted
 from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.states.going_to_recharging_with_mission import (
     GoingToRechargingWithMission,
@@ -11,12 +13,19 @@ from isar.state_machine.states_enum import States
 def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_tasks(
     events: Events,
 ) -> None:
-    current_state = State(StoppingGoToRecharge(events))
+    current_state = State(StoppingGoToRecharge(events, mission_id="id"))
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.stop_mission.success
     )
 
-    transition = event_handler.handler(EmptyMessage())
+    transition = event_handler.handler(MissionCompleted())
+
+    aborted_mission = json.loads(events.mqtt_queue.get().payload)
+    assert aborted_mission["mission_id"] == "id"
+    assert (
+        aborted_mission["reason"]
+        == "Mission aborted because the robot began recharging after all tasks completed"
+    )
 
     current_state = State(transition(events))
     assert current_state.name is States.GoingToRecharging
