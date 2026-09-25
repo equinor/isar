@@ -9,6 +9,7 @@ from isar.models.events import (
     EmptyMessage,
     Event,
     Events,
+    MissionCompleted,
     RobotActionRequests,
     RobotAsyncEvents,
 )
@@ -125,7 +126,9 @@ class RobotService:
         return True
 
     async def _stop_mission_handler(
-        self, monitor_mission_task: asyncio.Task[AbortedMission | None] | None
+        self,
+        monitor_mission_task: asyncio.Task[AbortedMission | None] | None,
+        monitoring_mission: Mission | None = None,
     ) -> None:
         error_message: ErrorMessage | None = robot_stop_mission(
             self.signal_exit, self.robot, self.logger
@@ -145,7 +148,7 @@ class RobotService:
             try:
                 aborted_mission = await monitor_mission_task
             except asyncio.CancelledError:
-                pass  # This happens if the monitor task is cancelled before it starts
+                aborted_mission = monitoring_mission
 
             if aborted_mission is not None:
                 unfinished_tasks = aborted_mission._get_unfinished_tasks()
@@ -159,6 +162,10 @@ class RobotService:
                         continued_mission
                     )
                     return
+                self.action_requests.stop_mission.trigger_success_response(
+                    MissionCompleted()
+                )
+                return
 
         self.action_requests.stop_mission.trigger_success_response(EmptyMessage())
 
@@ -254,6 +261,7 @@ class RobotService:
 
     async def _run_main_event_loop(self) -> None:
         monitor_mission_task: asyncio.Task[AbortedMission | None] | None = None
+        monitoring_mission: Mission | None = None
 
         while not self.signal_exit.is_set():
             return_home_request = (
@@ -273,6 +281,7 @@ class RobotService:
             if start_mission_request:
                 success = self._start_mission_handler(start_mission_request)
                 if success:
+                    monitoring_mission = start_mission_request
                     monitor_mission_task = asyncio.create_task(
                         self._monitor_mission_handler(start_mission_request)
                     )
@@ -293,8 +302,11 @@ class RobotService:
                 self.action_requests.stop_mission.request.consume_event()
             )
             if stop_mission_request:
-                await self._stop_mission_handler(monitor_mission_task)
+                await self._stop_mission_handler(
+                    monitor_mission_task, monitoring_mission
+                )
                 monitor_mission_task = None
+                monitoring_mission = None
 
             if monitor_mission_task is not None and monitor_mission_task.done():
                 try:
@@ -304,6 +316,7 @@ class RobotService:
                         "Mission monitor task was cancelled outside stop mission handler"
                     )
                 monitor_mission_task = None
+                monitoring_mission = None
 
             await asyncio.sleep(0.01)
 
