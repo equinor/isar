@@ -24,6 +24,10 @@ class EmptyMessage:
         return "Empty message"
 
 
+class MissionCompleted:
+    pass
+
+
 AbortedMission = Mission
 
 
@@ -192,7 +196,7 @@ class RobotActionRequests:
             RobotActionEvent("execute_mission")
         )
         self.stop_mission: RobotActionEvent[
-            EmptyMessage, AbortedMission | EmptyMessage, EmptyMessage
+            EmptyMessage, AbortedMission | MissionCompleted | EmptyMessage, EmptyMessage
         ] = RobotActionEvent("stop_mission")
         self.pause_mission: RobotActionEvent[
             EmptyMessage, EmptyMessage, EmptyMessage

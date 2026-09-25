@@ -2,7 +2,7 @@ import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.going_to_lockdown_with_mission as GoingToLockdownWithMission
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
-from isar.models.events import AbortedMission, EmptyMessage, Events
+from isar.models.events import AbortedMission, EmptyMessage, Events, MissionCompleted
 from isar.state_machine.state import EventHandlerMapping, State, Transition
 from isar.state_machine.states_enum import States
 
@@ -21,7 +21,7 @@ def StoppingGoToLockdown(events: Events, mission_id: str) -> State:
         return Monitor.transition_with_existing_mission(mission_id)
 
     def _successful_stop_event_handler(
-        mission: AbortedMission | EmptyMessage,
+        mission: AbortedMission | MissionCompleted | EmptyMessage,
     ) -> Transition:
         if isinstance(mission, AbortedMission):
             return GoingToLockdownWithMission.transition_and_start_mission_and_report_to_api(
@@ -35,7 +35,7 @@ def StoppingGoToLockdown(events: Events, mission_id: str) -> State:
             event=events.action_requests.stop_mission.failure,
             handler=_failed_stop_event_handler,
         ),
-        EventHandlerMapping[AbortedMission | EmptyMessage](
+        EventHandlerMapping[AbortedMission | MissionCompleted | EmptyMessage](
             event=events.action_requests.stop_mission.success,
             handler=_successful_stop_event_handler,
         ),

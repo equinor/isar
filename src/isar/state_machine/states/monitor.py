@@ -56,7 +56,9 @@ def Monitor(events: Events, mission_id: str) -> State:
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.robot_async_events.battery_below_mission_threshold,
-            handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(),
+            handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(
+                mission_id
+            ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.send_to_lockdown.request,
