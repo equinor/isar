@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from isar.models.status import IsarStatus
 from isar.storage.storage_interface import BlobStoragePath
 from robot_interface.models.exceptions.robot_exceptions import ErrorReason
+from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from robot_interface.models.mission.task import TaskTypes
 from robot_interface.models.robots.battery_state import BatteryState
@@ -59,6 +60,12 @@ class RobotInfoPayload(BaseModel):
     port: int
     capabilities: list[str]
     timestamp: datetime
+
+
+class MissionQueuePayload(BaseModel):
+    isar_id: str
+    robot_name: str
+    mission_queue: list[Mission]
 
 
 class RobotHeartbeatPayload(BaseModel):

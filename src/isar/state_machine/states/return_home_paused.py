@@ -24,11 +24,11 @@ def ReturnHomePaused(events: Events) -> State:
             handler=lambda _: ResumingReturnHome.transition_and_resume_mission_and_reply_to_API(),
         ),
         EventHandlerMapping[EmptyMessage](
-            event=events.robot_async_events.battery_below_mission_threshold,
+            event=events.async_events.battery_below_mission_threshold,
             handler=lambda _: ReturningHome.transition_to_existing_mission(),
         ),
         EventHandlerMapping[Mission](
-            event=events.api_requests.start_mission.request,
+            event=events.async_events.mission_ready,
             handler=lambda mission: StoppingPausedReturnHome.transition_and_stop_return_home_and_reply_to_API(
                 mission
             ),

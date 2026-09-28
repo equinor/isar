@@ -140,7 +140,7 @@ def test_state_machine_with_unsuccessful_mission_stop(
         in state_machine_thread.state_machine.transitions_list,
         timeout=10,
     )
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.schedule_mission(mission=mission)
     wait_until(
         lambda: state_machine_thread.state_machine.current_state.name == States.Monitor
     )
@@ -183,7 +183,7 @@ def test_robot_mission_status_exception_handling(
         timeout=10,
     )
 
-    scheduling_utilities.start_mission(mission=mission)
+    scheduling_utilities.schedule_mission(mission=mission)
 
     expected_transitions = deque(
         [
@@ -203,7 +203,7 @@ def test_transition_from_monitor_to_stopping_to_recharge(events: Events) -> None
     current_state = Monitor(events, "test_id")
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_async_events.battery_below_mission_threshold
+        events.async_events.battery_below_mission_threshold
     )
 
     transition = event_handler.handler(EmptyMessage())

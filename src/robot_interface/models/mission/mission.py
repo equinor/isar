@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -12,6 +13,7 @@ class Mission(BaseModel):
     tasks: list[TASKS] = Field(default_factory=list, frozen=True)
     name: str = Field(frozen=True)
     status: MissionStatus = MissionStatus.NotStarted
+    start_time: datetime | None = Field(default=None, frozen=True)
     error_message: ErrorMessage | None = Field(default=None)
 
     def _is_return_to_home_mission(self) -> bool:

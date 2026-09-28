@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRouter
 from pydantic import AnyHttpUrl
 
-from isar.apis.models.models import ControlMissionResponse, StartMissionResponse
+from isar.apis.models.models import ControlMissionResponse, ScheduleMissionResponse
 from isar.apis.robot_control.robot_controller import RobotController
 from isar.apis.schedule.scheduling_controller import SchedulingController
 from isar.apis.security.authentication import Authenticator
@@ -108,15 +108,15 @@ class API:
         authentication_dependency: Any = Security(self.authenticator.get_scheme())
 
         router.add_api_route(
-            path="/schedule/start-mission",
-            endpoint=self.scheduling_controller.start_mission,
+            path="/schedule/schedule-mission",
+            endpoint=self.scheduling_controller.schedule_mission,
             methods=["POST"],
             dependencies=[authentication_dependency],
-            summary="Start the mission provided in JSON format",
+            summary="Schedule the mission provided in JSON format",
             responses={
                 HTTPStatus.OK.value: {
-                    "description": "Mission succesfully started",
-                    "model": StartMissionResponse,
+                    "description": "Mission succesfully scheduled",
+                    "model": ScheduleMissionResponse,
                 },
                 HTTPStatus.UNPROCESSABLE_ENTITY.value: {
                     "description": "Invalid body - The JSON is incorrect",
@@ -141,7 +141,7 @@ class API:
             responses={
                 HTTPStatus.OK.value: {
                     "description": "Return home mission succesfully started",
-                    "model": StartMissionResponse,
+                    "model": ScheduleMissionResponse,
                 },
                 HTTPStatus.UNPROCESSABLE_ENTITY.value: {
                     "description": "Invalid body - The JSON is incorrect",

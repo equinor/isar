@@ -20,6 +20,9 @@ class Settings(BaseSettings):
 
     USE_DB: bool = Field(default=False)
 
+    # The maximum number of pending missions
+    MISSION_QUEUE_MAX_SIZE: int = Field(default=100)
+
     # Determines which robot package ISAR will attempt to import
     # Name must match with an installed python package in the local environment
     ROBOT_PACKAGE: str = Field(default="isar_robot")
@@ -58,6 +61,9 @@ class Settings(BaseSettings):
 
     # Number of attempts to stop the robot before giving up
     UPLOAD_FAILURE_MAX_WAIT: int = Field(default=60)
+
+    # Frequency at which the mission queue is updated and published on mqtt
+    MISSION_QUEUE_REFRESH_INTERVAL: float = Field(default=10.0)
 
     # ISAR telemetry intervals
     ROBOT_HEARTBEAT_PUBLISH_INTERVAL: float = Field(default=1)
@@ -197,6 +203,9 @@ class Settings(BaseSettings):
     TOPIC_ISAR_STARTUP: str = Field(default="startup", validate_default=True)
     TOPIC_ISAR_INTERVENTION_NEEDED: str = Field(
         default="intervention_needed", validate_default=True
+    )
+    TOPIC_ISAR_MISSION_QUEUE: str = Field(
+        default="mission_queue", validate_default=True
     )
 
     # List of MQTT Topics Expiry

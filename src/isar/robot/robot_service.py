@@ -4,11 +4,11 @@ from threading import Event as ThreadEvent
 
 from isar.models.events import (
     AbortedMission,
+    AsyncEvents,
     EmptyMessage,
     Event,
     Events,
     RobotActionRequests,
-    RobotAsyncEvents,
 )
 from isar.models.mqtt_queue import MQTTQueue
 from isar.robot.robot_battery import RobotBatteryThread
@@ -34,7 +34,7 @@ class RobotService:
     ) -> None:
         self.logger = logging.getLogger("robot")
         self.action_requests: RobotActionRequests = events.action_requests
-        self.robot_async_events: RobotAsyncEvents = events.robot_async_events
+        self.robot_async_events: AsyncEvents = events.async_events
         self.mqtt_queue: MQTTQueue = mqtt_queue
         self.upload_task_event: Event[tuple[InspectionTask, Mission]] = (
             events.upload_task_event

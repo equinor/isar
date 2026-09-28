@@ -40,7 +40,7 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
     current_state = ReturnHomePaused(events)
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.api_requests.start_mission.request
+        events.async_events.mission_ready
     )
 
     example_mission: Mission = Mission(id="id", name="Dummy misson", tasks=[])
@@ -49,5 +49,5 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
 
     current_state = transition(events)
 
-    assert events.api_requests.start_mission.response.has_event()
+    assert events.api_requests.schedule_mission.response.has_event()
     assert current_state.name is States.StoppingPausedReturnHome
