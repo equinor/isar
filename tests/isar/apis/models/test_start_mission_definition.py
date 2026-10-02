@@ -4,11 +4,9 @@ import os
 import pytest
 from alitra import Frame, Orientation, Pose, Position
 
-from isar.apis.models.models import InputOrientation, InputPose, InputPosition
 from isar.apis.models.start_mission_definition import (
     InspectionTypes,
     StartMissionDefinition,
-    StartMissionInspectionDefinition,
     StartMissionTaskDefinition,
     to_isar_mission,
 )
@@ -24,18 +22,16 @@ from robot_interface.models.mission.task import (
 def test_to_isar_mission() -> None:
     DUMMY_MISSION_NAME = "mission_name"
 
-    inspection_definition = StartMissionInspectionDefinition(
-        type=InspectionTypes.image,
-        inspection_target=InputPosition(x=1, y=1, z=1),
-    )
-    task_pose = InputPose(
-        position=InputPosition(x=1, y=1, z=1),
-        orientation=InputOrientation(x=1, y=1, z=1, w=1),
+    task_pose = Pose(
+        position=Position(x=1, y=1, z=1, frame=Frame("robot")),
+        orientation=Orientation(x=1, y=1, z=1, w=1, frame=Frame("robot")),
+        frame=Frame("robot"),
     )
     task_definition = StartMissionTaskDefinition(
         id="test-id",
         pose=task_pose,
-        inspection=inspection_definition,
+        type=InspectionTypes.image,
+        inspection_target=Position(x=1, y=1, z=1, frame=Frame("robot")),
     )
     mission_definition = StartMissionDefinition(
         tasks=[task_definition], name=DUMMY_MISSION_NAME, id="test-id2"
@@ -96,10 +92,17 @@ def _build_mission_with_inspection_payload(inspection_payload: dict) -> Mission:
                 "id": "dummy_id",
                 "type": "inspection",
                 "pose": {
-                    "position": {"x": 0, "y": 0, "z": 0},
-                    "orientation": {"x": 0, "y": 0, "z": 0, "w": 1},
+                    "position": {"x": 0, "y": 0, "z": 0, "frame": {"name": "robot"}},
+                    "orientation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1,
+                        "frame": {"name": "robot"},
+                    },
+                    "frame": {"name": "robot"},
                 },
-                "inspection": inspection_payload,
+                **inspection_payload,
             }
         ],
     }
@@ -115,7 +118,7 @@ def test_analysis_types_defaults_to_none_for_all_inspection_types(
 ) -> None:
     payload: dict = {
         "type": inspection_type,
-        "inspection_target": {"x": 0, "y": 0, "z": 0},
+        "inspection_target": {"x": 0, "y": 0, "z": 0, "frame": {"name": "robot"}},
     }
     if inspection_type in {"Video", "ThermalVideo", "Audio"}:
         payload["duration"] = 1.0
@@ -136,7 +139,7 @@ def test_analysis_types_defaults_to_none_for_all_inspection_types(
 def _acoustic_payload(roi: dict | None = None) -> dict:
     payload: dict = {
         "type": "AcousticMeasurement",
-        "inspection_target": {"x": 0, "y": 0, "z": 0},
+        "inspection_target": {"x": 0, "y": 0, "z": 0, "frame": {"name": "robot"}},
         "acoustic": {
             "frequency_from": 35000.0,
             "frequency_to": 40000.0,
