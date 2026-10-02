@@ -9,8 +9,9 @@ class MediaConnectionType(str, Enum):
 
 
 class MediaStream(BaseModel):
-    role: str
+    camera_id: str
     url: str
+    rotation_degrees: int = 0  # rotation to be applied for display of stream
 
 
 class MediaConfig(BaseModel):
