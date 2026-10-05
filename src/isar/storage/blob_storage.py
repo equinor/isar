@@ -10,8 +10,8 @@ from isar.storage.storage_interface import (
     StorageException,
     StorageInterface,
 )
-from isar.storage.utilities import construct_path
-from robot_interface.models.inspection.inspection import InspectionBlob
+from isar.storage.utilities import construct_path, inspection_bytes
+from robot_interface.models.inspection.inspection import InspectionBlob, InspectionValue
 from robot_interface.models.mission.mission import Mission
 
 
@@ -54,15 +54,15 @@ class BlobStorage(StorageInterface):
             )
         return container_client
 
-    def store(self, inspection: InspectionBlob, mission: Mission) -> BlobStoragePath:
-        if inspection.data is None:
-            raise StorageException("Nothing to store. The inspection data is empty")
-
+    def store(
+        self, inspection: InspectionBlob | InspectionValue, mission: Mission
+    ) -> BlobStoragePath:
+        data = inspection_bytes(inspection)
         data_filename = construct_path(inspection=inspection, mission=mission)
 
         return self._upload_file(
             filename=data_filename,
-            data=inspection.data,
+            data=data,
             container_client=self.container_client_data,
             account_name=settings.BLOB_STORAGE_ACCOUNT_DATA,
         )

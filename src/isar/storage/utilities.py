@@ -2,8 +2,21 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from isar.config.settings import settings
-from robot_interface.models.inspection.inspection import Inspection
+from isar.storage.storage_interface import StorageException
+from robot_interface.models.inspection.inspection import (
+    Inspection,
+    InspectionBlob,
+    InspectionValue,
+)
 from robot_interface.models.mission.mission import Mission
+
+
+def inspection_bytes(inspection: InspectionBlob | InspectionValue) -> bytes:
+    if isinstance(inspection, InspectionValue):
+        return inspection.model_dump_json().encode("utf-8")
+    if inspection.data is None:
+        raise StorageException("Nothing to store. The inspection data is empty")
+    return inspection.data
 
 
 def construct_path(inspection: Inspection, mission: Mission) -> Path:

@@ -4,6 +4,8 @@ from alitra import Frame, Orientation, Pose, Position
 
 from robot_interface.models.inspection.inspection import (
     AcousticMeasurementMetadata,
+    CO2Measurement,
+    GasMeasurementMetadata,
     ImageMetadata,
 )
 
@@ -13,6 +15,23 @@ def stub_pose() -> Pose:
         position=Position(x=0, y=0, z=0, frame=Frame("asset")),
         orientation=Orientation(x=0, y=0, z=0, w=1, frame=Frame("asset")),
         frame=Frame("asset"),
+    )
+
+
+def stub_inspection_value() -> CO2Measurement:
+    return CO2Measurement(
+        id="scalar-inspection-id",
+        value=412.5,
+        unit="ppm",
+        metadata=GasMeasurementMetadata(
+            start_time=datetime(2026, 9, 24, 12, tzinfo=UTC),
+            robot_pose=stub_pose(),
+            target_position=Position(x=1, y=2, z=3, frame=Frame("asset")),
+            file_type="txt",
+            tag_id="CO2-001",
+            inspection_description="Carbon dioxide",
+            analysis_types=["gas-reading"],
+        ),
     )
 
 

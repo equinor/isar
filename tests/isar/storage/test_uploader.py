@@ -5,6 +5,8 @@ from alitra import Frame, Orientation, Pose, Position
 from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
+from isar.storage.blob_storage import BlobStorage
+from isar.storage.storage_interface import StorageException
 from isar.storage.uploader import Uploader
 from robot_interface.models.inspection.inspection import Inspection, InspectionBlob
 from robot_interface.models.mission.mission import Mission
@@ -13,6 +15,7 @@ from tests.test_mocks.blob_storage import StorageEmptyBlobPathsFake, StorageFake
 from tests.test_mocks.inspection import (
     stub_acoustic_measurement_metadata,
     stub_image_metadata,
+    stub_inspection_value,
 )
 
 MISSION_ID = "some-mission-id"
@@ -156,3 +159,83 @@ def test_publishes_acoustic_metadata(uploader: Uploader) -> None:
         "frequency_from": metadata.frequency_from,
         "frequency_to": metadata.frequency_to,
     }
+
+
+def test_uploads_scalar_as_json(uploader: Uploader, mocker: MockerFixture) -> None:
+    container = mocker.Mock()
+    blob = container.get_blob_client.return_value
+    blob.blob_name = "scalar.json"
+    mocker.patch.object(BlobStorage, "_get_container_client", return_value=container)
+    uploader.storage_handlers = [BlobStorage()]
+    inspection = stub_inspection_value()
+    expected = inspection.model_dump(mode="json")
+    expected["metadata"]["file_type"] = "json"
+
+    uploader.upload_inspection(inspection, Mission(id="mission-id", name="Mission"))
+
+    assert json.loads(blob.upload_blob.call_args.kwargs["data"]) == expected
+    filename = container.get_blob_client.call_args.args[0]
+    assert "__CO2Measurement__" in filename and filename.endswith(".json")
+    assert inspection.metadata.file_type == "txt"
+
+
+def test_publishes_scalar_fields_with_blob_reference(uploader: Uploader) -> None:
+    inspection = stub_inspection_value()
+    metadata = inspection.metadata.model_dump(mode="json")
+
+    uploader.upload_inspection(inspection, Mission(id="mission-id", name="Mission"))
+
+    message = uploader.mqtt_queue.get()
+    assert json.loads(message.payload) == {
+        "isar_id": settings.ISAR_ID,
+        "robot_name": settings.ROBOT_NAME,
+        "inspection_id": inspection.id,
+        "blob_storage_data_path": {
+            "storage_account": "acct",
+            "blob_container": "cont",
+            "blob_name": "blob",
+        },
+        "installation_code": settings.PLANT_SHORT_NAME,
+        "tag_id": "CO2-001",
+        "inspection_type": "CO2Measurement",
+        "inspection_description": "Carbon dioxide",
+        "value": 412.5,
+        "unit": "ppm",
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "timestamp": "2026-09-24T12:00:00Z",
+        "robot_pose": metadata["robot_pose"],
+        "target_position": metadata["target_position"],
+    }
+    assert (
+        message.topic,
+        message.qos,
+        message.retain,
+        message.properties.MessageExpiryInterval,
+    ) == (
+        settings.TOPIC_ISAR_INSPECTION_VALUE,
+        1,
+        True,
+        settings.MQTT_MISSION_TASK_AND_STATUS_EXPIRY,
+    )
+    assert uploader.mqtt_queue.empty()
+
+
+def test_does_not_publish_scalar_after_upload_exhaustion(
+    uploader: Uploader, mocker: MockerFixture
+) -> None:
+    mocker.patch.object(settings, "UPLOAD_FAILURE_ATTEMPTS_LIMIT", 2)
+    mocker.patch("isar.storage.uploader.time.sleep")
+    store = mocker.patch.object(
+        uploader.storage_handlers[0],
+        "store",
+        side_effect=StorageException("Upload failed"),
+    )
+
+    uploader.upload_inspection(
+        stub_inspection_value(), Mission(id="mission-id", name="Mission")
+    )
+
+    assert store.call_count == 2
+    assert uploader.mqtt_queue.empty()

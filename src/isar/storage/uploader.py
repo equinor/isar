@@ -50,44 +50,49 @@ class Uploader:
         self.logger = logging.getLogger("uploader")
 
     def upload_inspection(self, inspection: Inspection, mission: Mission) -> None:
-        if isinstance(inspection, InspectionValue):
-            _publish_inspection_value(self.mqtt_queue, inspection)
-            self.logger.info(f"Published value for inspection {str(inspection.id)[:8]}")
-
-        elif isinstance(inspection, InspectionBlob):
-            for storage_handler in self.storage_handlers:
-                inspection_path: BlobStoragePath | LocalStoragePath | None = _upload(
-                    self.logger, storage_handler, inspection, mission
-                )
-
-                if inspection_path is None:
-                    continue
-
-                if isinstance(inspection_path, LocalStoragePath):
-                    self.logger.info("Skipping publishing when using local storage")
-                elif has_empty_blob_storage_path(inspection_path):
-                    self.logger.warning(
-                        "Skipping publishing: Blob storage paths are empty for inspection %s",
-                        str(inspection.id)[:8],
-                    )
-                else:
-                    _publish_inspection_result(
-                        self.mqtt_queue,
-                        inspection=inspection,
-                        inspection_path=inspection_path,
-                        mission=mission,
-                    )
-
-        else:
+        if not isinstance(inspection, (InspectionBlob, InspectionValue)):
             self.logger.warning(
                 f"Unable to add upload item as its type {type(inspection).__name__} is unsupported"
             )
+            return
+
+        if isinstance(inspection, InspectionValue):
+            if not self.storage_handlers:
+                self.logger.warning(
+                    "Skipping value publication: no storage handlers configured"
+                )
+                return
+            metadata = inspection.metadata.model_copy(update={"file_type": "json"})
+            inspection = inspection.model_copy(update={"metadata": metadata})
+
+        for storage_handler in self.storage_handlers:
+            inspection_path = _upload(self.logger, storage_handler, inspection, mission)
+
+            if inspection_path is None:
+                continue
+
+            if isinstance(inspection_path, LocalStoragePath):
+                self.logger.info("Skipping publishing when using local storage")
+            elif has_empty_blob_storage_path(inspection_path):
+                self.logger.warning(
+                    "Skipping publishing: Blob storage paths are empty for inspection %s",
+                    str(inspection.id)[:8],
+                )
+            elif isinstance(inspection, InspectionValue):
+                _publish_inspection_value(self.mqtt_queue, inspection, inspection_path)
+            else:
+                _publish_inspection_result(
+                    self.mqtt_queue,
+                    inspection=inspection,
+                    inspection_path=inspection_path,
+                    mission=mission,
+                )
 
 
 def _upload(
     logger: logging.Logger,
     storage_handler: StorageInterface,
-    inspection: InspectionBlob,
+    inspection: InspectionBlob | InspectionValue,
     mission: Mission,
 ) -> BlobStoragePath | LocalStoragePath | None:
     upload_attempts: int = 0
@@ -122,12 +127,15 @@ def _upload(
 
 
 def _publish_inspection_value(
-    mqtt_queue: MQTTQueue, inspection: InspectionValue
+    mqtt_queue: MQTTQueue,
+    inspection: InspectionValue,
+    inspection_path: BlobStoragePath,
 ) -> None:
     payload: InspectionValuePayload = InspectionValuePayload(
         isar_id=settings.ISAR_ID,
         robot_name=settings.ROBOT_NAME,
         inspection_id=inspection.id,
+        blob_storage_data_path=inspection_path,
         installation_code=settings.PLANT_SHORT_NAME,
         tag_id=inspection.metadata.tag_id,
         inspection_type=type(inspection).__name__,
@@ -138,6 +146,8 @@ def _publish_inspection_value(
         y=inspection.metadata.robot_pose.position.y,
         z=inspection.metadata.robot_pose.position.z,
         timestamp=inspection.metadata.start_time,
+        robot_pose=inspection.metadata.robot_pose,
+        target_position=inspection.metadata.target_position,
     )
     mqtt_queue.publish(
         topic=settings.TOPIC_ISAR_INSPECTION_VALUE,
