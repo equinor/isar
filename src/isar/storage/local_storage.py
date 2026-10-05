@@ -7,8 +7,8 @@ from isar.storage.storage_interface import (
     StorageException,
     StorageInterface,
 )
-from isar.storage.utilities import construct_path
-from robot_interface.models.inspection.inspection import InspectionBlob
+from isar.storage.utilities import construct_path, inspection_bytes
+from robot_interface.models.inspection.inspection import InspectionBlob, InspectionValue
 from robot_interface.models.mission.mission import Mission
 
 
@@ -17,10 +17,10 @@ class LocalStorage(StorageInterface):
         self.root_folder: Path = Path(settings.LOCAL_STORAGE_PATH)
         self.logger = logging.getLogger("uploader")
 
-    def store(self, inspection: InspectionBlob, mission: Mission) -> LocalStoragePath:
-        if inspection.data is None:
-            raise StorageException("Nothing to store. The inspection data is empty")
-
+    def store(
+        self, inspection: InspectionBlob | InspectionValue, mission: Mission
+    ) -> LocalStoragePath:
+        data = inspection_bytes(inspection)
         local_filename = construct_path(inspection=inspection, mission=mission)
         data_path: Path = self.root_folder.joinpath(local_filename)
 
@@ -28,7 +28,7 @@ class LocalStorage(StorageInterface):
 
         try:
             with open(data_path, "wb") as file:
-                file.write(inspection.data)
+                file.write(data)
         except OSError as e:
             self.logger.warning(f"Failed open/write for file: {data_path}")
             raise StorageException from e

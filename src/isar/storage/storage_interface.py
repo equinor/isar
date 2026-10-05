@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from robot_interface.models.inspection.inspection import InspectionBlob
+from robot_interface.models.inspection.inspection import InspectionBlob, InspectionValue
 from robot_interface.models.mission.mission import Mission
 
 
@@ -20,12 +20,12 @@ class LocalStoragePath(BaseModel):
 class StorageInterface(metaclass=ABCMeta):
     @abstractmethod
     def store(
-        self, inspection: InspectionBlob, mission: Mission
+        self, inspection: InspectionBlob | InspectionValue, mission: Mission
     ) -> BlobStoragePath | LocalStoragePath:
         """
         Parameters
         ----------
-        inspection : InspectionBlob
+        inspection : InspectionBlob | InspectionValue
             The inspection object to be stored.
         mission : Mission
             Mission the inspection is a part of.

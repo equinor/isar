@@ -3,7 +3,11 @@ from isar.storage.storage_interface import (
     StorageException,
     StorageInterface,
 )
-from robot_interface.models.inspection.inspection import Inspection, InspectionBlob
+from robot_interface.models.inspection.inspection import (
+    Inspection,
+    InspectionBlob,
+    InspectionValue,
+)
 from robot_interface.models.mission.mission import Mission
 
 
@@ -13,7 +17,9 @@ class StorageFake(StorageInterface):
     def __init__(self) -> None:
         self.stored_inspections: list[Inspection] = []
 
-    def store(self, inspection: InspectionBlob, mission: Mission) -> BlobStoragePath:
+    def store(
+        self, inspection: InspectionBlob | InspectionValue, mission: Mission
+    ) -> BlobStoragePath:
         if self.failure_count > 1:
             self.failure_count -= 1
             raise StorageException("Fake failed on purpose")
@@ -33,7 +39,9 @@ class StorageEmptyBlobPathsFake(StorageInterface):
         self.stored: list[Inspection] = []
         self.fail: bool = False
 
-    def store(self, inspection: InspectionBlob, mission: Mission) -> BlobStoragePath:
+    def store(
+        self, inspection: InspectionBlob | InspectionValue, mission: Mission
+    ) -> BlobStoragePath:
         if self.fail:
             raise StorageException("fail on purpose")
         self.stored.append(inspection)

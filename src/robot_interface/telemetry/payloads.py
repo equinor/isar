@@ -133,6 +133,7 @@ class InspectionValuePayload(BaseModel):
     isar_id: str
     robot_name: str
     inspection_id: str
+    blob_storage_data_path: BlobStoragePath
     installation_code: str
     tag_id: str | None = None
     inspection_type: str | None = None
@@ -143,6 +144,8 @@ class InspectionValuePayload(BaseModel):
     y: float
     z: float
     timestamp: datetime
+    robot_pose: Pose
+    target_position: Position | None = None
 
 
 class StartUpMessagePayload(BaseModel):
