@@ -165,7 +165,7 @@ class TestGetDbConnectionString:
         url = database_connection.get_db_connection_string()
 
         assert url == (
-            "postgresql://isar-app:ENTRA_TOKEN@"
+            "postgresql+psycopg2://isar-app:ENTRA_TOKEN@"
             "robotics-dev-psql-server.postgres.database.azure.com:5432/isar"
             "?sslmode=require"
         )

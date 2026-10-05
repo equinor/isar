@@ -103,7 +103,7 @@ def get_db_connection_string() -> str:
     ssl_mode = "?sslmode=require"
 
     return (
-        f"postgresql://"
+        f"postgresql+psycopg2://"
         f"{settings.DATABASE_USER}:{token}@"
         f"{settings.DATABASE_SERVER_NAME}:5432/isar{ssl_mode}"
     )
