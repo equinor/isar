@@ -19,6 +19,7 @@ from robot_interface.models.mission.task import (
     TakeThermalImage,
     TakeThermalVideo,
     TakeVideo,
+    TakeXam8000GasMeasurement,
     ZoomDescription,
 )
 
@@ -30,6 +31,7 @@ class InspectionTypes(str, Enum):
     thermal_video = "ThermalVideo"
     audio = "Audio"
     co2_measurement = "CO2Measurement"
+    xam8000_gas_measurement = "Xam8000GasMeasurement"
     acoustic_measurement = "AcousticMeasurement"
 
 
@@ -118,6 +120,9 @@ _INSPECTION_SPECS: dict[InspectionTypes, _InspectionSpec] = {
     InspectionTypes.audio: _InspectionSpec(RecordAudio, needs_duration=True),
     InspectionTypes.co2_measurement: _InspectionSpec(
         TakeCO2Measurement, needs_target=False
+    ),
+    InspectionTypes.xam8000_gas_measurement: _InspectionSpec(
+        TakeXam8000GasMeasurement, needs_target=False
     ),
     InspectionTypes.acoustic_measurement: _InspectionSpec(
         TakeAcousticMeasurement, needs_acoustic_params=True

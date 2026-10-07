@@ -121,6 +121,10 @@ class CO2Measurement(GasMeasurement):
     pass
 
 
+class Xam8000GasMeasurement(GasMeasurement):
+    pass
+
+
 class AcousticMeasurement(InspectionBlob):
     metadata: AcousticMeasurementMetadata  # type: ignore
 
