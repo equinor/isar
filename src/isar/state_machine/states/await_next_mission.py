@@ -18,10 +18,6 @@ from robot_interface.models.mission.mission import Mission
 
 def AwaitNextMission(events: Events) -> State:
 
-    def _set_return_home_timeout(seconds: int) -> None:
-        state.reset_timer("should_return_home_timer", seconds)
-        events.api_requests.set_return_home_timeout.trigger_response(EmptyMessage())
-
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[Mission](
             event=events.api_requests.start_mission.request,
@@ -47,10 +43,6 @@ def AwaitNextMission(events: Events) -> State:
             event=events.api_requests.set_maintenance_mode.request,
             handler=lambda _: Maintenance.transition_and_reply_to_API(),
         ),
-        EventHandlerMapping[int](
-            event=events.api_requests.set_return_home_timeout.request,
-            handler=_set_return_home_timeout,
-        ),
     ]
 
     timers: list[TimeoutHandlerMapping] = [
@@ -61,13 +53,12 @@ def AwaitNextMission(events: Events) -> State:
         )
     ]
 
-    state = State(
+    return State(
         state_name=States.AwaitNextMission,
         signal_exit_event=events.signal_state_machine_exit,
         event_handler_mappings=event_handlers,
         timers=timers,
     )
-    return state
 
 
 def transition() -> Transition:
