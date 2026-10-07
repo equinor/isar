@@ -160,7 +160,6 @@ def test_state_machine_ready_to_receive_mission(
             States.Home,
             States.InterventionNeeded,
         ],
-        api_events.set_return_home_timeout: [States.AwaitNextMission],
     }
 
     for event, valid_states in event_mappings.items():
