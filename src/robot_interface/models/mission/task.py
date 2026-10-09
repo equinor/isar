@@ -15,6 +15,7 @@ from robot_interface.models.inspection.inspection import (
     ThermalImage,
     ThermalVideo,
     Video,
+    Xam8000GasMeasurement,
 )
 from robot_interface.models.mission.status import TaskStatus
 
@@ -26,6 +27,7 @@ class TaskTypes(str, Enum):
     TakeVideo = "take_video"
     TakeThermalVideo = "take_thermal_video"
     TakeCO2Measurement = "take_co2_measurement"
+    TakeXam8000GasMeasurement = "take_xam8000_gas_measurement"
     TakeAcousticMeasurement = "take_acoustic_measurement"
     RecordAudio = "record_audio"
 
@@ -158,6 +160,20 @@ class TakeCO2Measurement(InspectionTask):
         return CO2Measurement
 
 
+class TakeXam8000GasMeasurement(InspectionTask):
+    """
+    Task which causes the robot to take a gas measurement with the X-am 8000 sensor at its position.
+    """
+
+    type: Literal[TaskTypes.TakeXam8000GasMeasurement] = (
+        TaskTypes.TakeXam8000GasMeasurement
+    )
+
+    @staticmethod
+    def get_inspection_type() -> builtins.type[Inspection]:
+        return Xam8000GasMeasurement
+
+
 class TakeAcousticMeasurement(InspectionTask):
     """
     Task which causes the robot to take an acoustic measurement towards the given target.
@@ -196,6 +212,7 @@ TASKS = (
     | TakeVideo
     | TakeThermalVideo
     | TakeCO2Measurement
+    | TakeXam8000GasMeasurement
     | TakeAcousticMeasurement
     | RecordAudio
 )
