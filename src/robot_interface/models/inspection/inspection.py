@@ -43,7 +43,7 @@ class AcousticMeasurementMetadata(InspectionMetadata):
     snr_value: float
     leak_rate: float
     leak_rate_unit: str
-    sound_pressure_level_at_sensor_db: float
+    sound_pressure_level_at_sensor_db: float | None = None
     sound_pressure_level_at_source_db: float
     distance_to_source: float
     result: str
