@@ -70,7 +70,7 @@ class SchedulingController:
 
         self.logger.info("Starting mission: %s", mission.id)
         self.scheduling_utilities.start_mission(mission=mission)
-        return self._api_response(mission)
+        return self._mission_api_response(mission)
 
     @tracer.start_as_current_span("return_home")
     def return_home(self) -> None:
@@ -141,7 +141,7 @@ class SchedulingController:
         self.scheduling_utilities.release_maintenance_mode()
         self.logger.info("Maintenance mode successfully released")
 
-    def _api_response(self, mission: Mission) -> StartMissionResponse:
+    def _mission_api_response(self, mission: Mission) -> StartMissionResponse:
         return StartMissionResponse(
             id=mission.id,
             tasks=[self._task_api_response(task) for task in mission.tasks],
