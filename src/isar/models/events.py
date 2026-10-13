@@ -6,6 +6,7 @@ from isar.apis.models.models import (
     LockdownResponse,
     MaintenanceResponse,
     MissionStartResponse,
+    TeleoperationResponse,
 )
 from isar.models.mqtt_queue import MQTTQueue
 from robot_interface.models.exceptions.event_exceptions import (
@@ -154,6 +155,9 @@ class APIRequests:
         )
         self.release_from_maintenance_mode: APIEvent[EmptyMessage, EmptyMessage] = (
             APIEvent("release_from_maintenance_mode")
+        )
+        self.set_teleoperation_mode: APIEvent[EmptyMessage, TeleoperationResponse] = (
+            APIEvent("set_teleoperation_mode", prioritized=True)
         )
 
 

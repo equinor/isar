@@ -141,6 +141,13 @@ class SchedulingController:
         self.scheduling_utilities.release_maintenance_mode()
         self.logger.info("Maintenance mode successfully released")
 
+    @tracer.start_as_current_span("teleoperation_mode")
+    def set_teleoperation_mode(self) -> None:
+        self.logger.info("Received request to set teleoperation_mode")
+
+        self.scheduling_utilities.set_teleoperation_mode()
+        self.logger.info("Teleoperation mode has been set")
+
     def _api_response(self, mission: Mission) -> StartMissionResponse:
         return StartMissionResponse(
             id=mission.id,

@@ -46,6 +46,7 @@ from isar.state_machine.states.stopping_paused_return_home import (
 )
 from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from isar.state_machine.states.stopping_unknown_mission import StoppingUnknownMission
+from isar.state_machine.states.teleoperation import Teleoperation
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
@@ -126,6 +127,7 @@ def test_state_machine_ready_to_receive_mission(
         States.StoppingPausedReturnHome: StoppingPausedReturnHome(events, mission),
         States.GoingToLockdownWithMission: GoingToLockdownWithMission(events, mission),
         States.LockdownWithMission: LockdownWithMission(events, mission),
+        States.Teleoperation: Teleoperation(events),
     }
 
     assert len(States) == len(states)
@@ -160,6 +162,7 @@ def test_state_machine_ready_to_receive_mission(
             States.Home,
             States.InterventionNeeded,
         ],
+        api_events.set_teleoperation_mode: all_states,
     }
 
     for event, valid_states in event_mappings.items():
