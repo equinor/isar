@@ -35,6 +35,11 @@ class MaintenanceResponse(BaseModel):
     failure_reason: str | None = None
 
 
+class TeleoperationResponse(BaseModel):
+    is_teleoperation_mode: bool
+    failure_reason: str | None = None
+
+
 class RobotInfoResponse(BaseModel):
     robot_package: str
     isar_id: str
