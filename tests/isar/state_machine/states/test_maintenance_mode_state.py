@@ -1,5 +1,5 @@
 from isar.models.events import Events
-from isar.state_machine.state import EventHandlerMapping
+from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.states.home import Home
 from isar.state_machine.states.offline import Offline
 from isar.state_machine.states.unknown_status import UnknownStatus
@@ -10,7 +10,7 @@ from robot_interface.models.mission.status import RobotStatus
 def test_home_transitions_to_maintenance_mode_when_teleoperating(
     events: Events,
 ) -> None:
-    current_state = Home(events)
+    current_state = State(Home(events))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.robot_async_events.robot_status_update
@@ -20,14 +20,14 @@ def test_home_transitions_to_maintenance_mode_when_teleoperating(
 
     assert transition is not None
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.Maintenance
 
 
 def test_unknown_status_transitions_to_maintenance_mode_when_teleoperating(
     events: Events,
 ) -> None:
-    current_state = UnknownStatus(events)
+    current_state = State(UnknownStatus(events))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.robot_async_events.robot_status_update
@@ -37,14 +37,14 @@ def test_unknown_status_transitions_to_maintenance_mode_when_teleoperating(
 
     assert transition is not None
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.Maintenance
 
 
 def test_offline_transitions_to_maintenance_mode_when_teleoperating(
     events: Events,
 ) -> None:
-    current_state = Offline(events)
+    current_state = State(Offline(events))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.robot_async_events.robot_status_update
@@ -54,5 +54,5 @@ def test_offline_transitions_to_maintenance_mode_when_teleoperating(
 
     assert transition is not None
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.Maintenance

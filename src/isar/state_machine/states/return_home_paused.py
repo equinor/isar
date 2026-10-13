@@ -4,12 +4,12 @@ import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_paused_return_home as StoppingPausedReturnHome
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
 
-def ReturnHomePaused(events: Events) -> State:
+def ReturnHomePaused(events: Events) -> StateDef:
 
     def _send_to_lockdown_event_handler(
         _: EmptyMessage,
@@ -42,10 +42,9 @@ def ReturnHomePaused(events: Events) -> State:
             handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
         ),
     ]
-    return State(
-        state_name=States.ReturnHomePaused,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.ReturnHomePaused,
+        handlers=event_handlers,
     )
 
 

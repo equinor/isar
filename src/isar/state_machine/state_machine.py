@@ -12,7 +12,7 @@ from isar.services.service_connections.persistent_memory import (
     create_persistent_robot_state,
     read_persistent_robot_state,
 )
-from isar.state_machine.state import State, Transition
+from isar.state_machine.state import State, StateDef, Transition
 from isar.state_machine.state_metrics import StateMetricsPublisher
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.maintenance import Maintenance
@@ -43,7 +43,9 @@ class StateMachine:
         self.events: Events = events
         self.mqtt_queue: MQTTQueue = mqtt_queue
 
-        self.current_state: State = UnknownStatus(self.events)
+        self.signal_exit: Event[EmptyMessage] = Event("signal_state_machine_exit")
+
+        current_state_definition: StateDef = UnknownStatus(self.events)
 
         if not settings.USE_DB:
             self.logger.warning(
@@ -55,9 +57,11 @@ class StateMachine:
                 f"Connected to robot status database and the startup mode was: {robot_startup_mode}. "
             )
             if robot_startup_mode == RobotStartupMode.Maintenance:
-                self.current_state = Maintenance(self.events)
+                current_state_definition = Maintenance(self.events)
             elif robot_startup_mode == RobotStartupMode.Lockdown:
-                self.current_state = GoingToLockdown(self.events)
+                current_state_definition = GoingToLockdown(self.events)
+
+        self.current_state = State(current_state_definition, self.signal_exit)
 
         self.transitions_list: deque[States] = deque(
             [], settings.STATE_TRANSITIONS_LOG_LENGTH
@@ -85,13 +89,14 @@ class StateMachine:
                     )
                     break
 
-                self.current_state = transition(self.events)
+                state_definition = transition(self.events)
+                self.current_state = State(state_definition, self.signal_exit)
         except Exception as e:  # noqa: BLE001
             self.logger.error(f"Unhandled exception in state machine: {e!s}")
 
     def terminate(self) -> None:
         self.logger.info("Stopping state machine")
-        self.events.signal_state_machine_exit.trigger_event(EmptyMessage())
+        self.signal_exit.trigger_event(EmptyMessage())
 
     def update_state(self, current_state: State) -> None:
         """Updates the current state of the state machine."""

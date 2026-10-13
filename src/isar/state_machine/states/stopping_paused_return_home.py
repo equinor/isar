@@ -2,12 +2,12 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import MissionStartResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
 
-def StoppingPausedReturnHome(events: Events, mission: Mission) -> State:
+def StoppingPausedReturnHome(events: Events, mission: Mission) -> StateDef:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
@@ -21,17 +21,16 @@ def StoppingPausedReturnHome(events: Events, mission: Mission) -> State:
             handler=lambda _: Monitor.transition_and_start_mission(mission, True),
         ),
     ]
-    return State(
-        state_name=States.StoppingPausedReturnHome,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.StoppingPausedReturnHome,
+        handlers=event_handlers,
     )
 
 
 def transition_and_stop_return_home_and_reply_to_API(
     mission: Mission,
 ) -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
 
         response = MissionStartResponse(

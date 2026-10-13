@@ -8,7 +8,7 @@ from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import (
     EventHandlerMapping,
-    State,
+    StateDef,
     TimeoutHandlerMapping,
     Transition,
 )
@@ -16,7 +16,7 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
 
-def AwaitNextMission(events: Events) -> State:
+def AwaitNextMission(events: Events) -> StateDef:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[Mission](
@@ -53,10 +53,9 @@ def AwaitNextMission(events: Events) -> State:
         )
     ]
 
-    return State(
-        state_name=States.AwaitNextMission,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.AwaitNextMission,
+        handlers=event_handlers,
         timers=timers,
     )
 

@@ -7,7 +7,7 @@ import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMai
 import isar.state_machine.states.stopping_return_home as StoppingReturnHome
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
@@ -16,7 +16,7 @@ from robot_interface.models.mission.mission import Mission
 def ReturningHome(
     events: Events,
     retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
-) -> State:
+) -> StateDef:
 
     def _mission_failed_event_handler(
         _: ErrorMessage,
@@ -60,10 +60,9 @@ def ReturningHome(
             handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
         ),
     ]
-    return State(
-        state_name=States.ReturningHome,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.ReturningHome,
+        handlers=event_handlers,
     )
 
 
@@ -71,7 +70,7 @@ def transition_and_start_mission(
     should_respond_to_API_request: bool = False,
     retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
 ) -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
 
         events.action_requests.return_home.trigger_request(EmptyMessage())
 

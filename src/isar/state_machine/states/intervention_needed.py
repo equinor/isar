@@ -3,12 +3,12 @@ import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
 
-def InterventionNeeded(events: Events) -> State:
+def InterventionNeeded(events: Events) -> StateDef:
 
     def release_intervention_needed_handler(
         _: EmptyMessage,
@@ -41,15 +41,14 @@ def InterventionNeeded(events: Events) -> State:
             handler=_robot_status_event_handler,
         ),
     ]
-    return State(
-        state_name=States.InterventionNeeded,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.InterventionNeeded,
+        handlers=event_handlers,
     )
 
 
 def transition(reason: str) -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         events.mqtt_queue.publish_intervention_needed(error_message=reason)
 
         return InterventionNeeded(events)

@@ -1,11 +1,11 @@
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 
 
-def LockdownWithMission(events: Events, mission: AbortedMission) -> State:
+def LockdownWithMission(events: Events, mission: AbortedMission) -> StateDef:
 
     def _release_from_lockdown_handler(
         _: EmptyMessage,
@@ -20,15 +20,14 @@ def LockdownWithMission(events: Events, mission: AbortedMission) -> State:
         ),
     ]
 
-    return State(
-        state_name=States.LockdownWithMission,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.LockdownWithMission,
+        handlers=event_handlers,
     )
 
 
 def transition(mission: AbortedMission) -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )

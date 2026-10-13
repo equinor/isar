@@ -9,7 +9,7 @@ from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Event, Events
 from isar.state_machine.states_enum import States
 
-Transition = Callable[[Events], "State"]
+Transition = Callable[[Events], "StateDef"]
 
 
 @dataclass
@@ -25,25 +25,30 @@ class TimeoutHandlerMapping:
     handler: Callable[[], Transition | None]
 
 
+@dataclass
+class StateDef:
+    name: States
+    handlers: list[EventHandlerMapping]
+    timers: list[TimeoutHandlerMapping] | None = None
+
+
 class State:
     def __init__(
         self,
-        signal_exit_event: Event[EmptyMessage],
-        state_name: States,
-        event_handler_mappings: list[EventHandlerMapping],
-        timers: list[TimeoutHandlerMapping] | None = None,
+        definition: StateDef,
+        signal_exit_event: Event[EmptyMessage] | None = None,
     ) -> None:
-        self.name = state_name
+        self.name = definition.name
         self.logger = logging.getLogger("state_machine")
         self.signal_exit_event = signal_exit_event
-        self.event_handler_mappings = event_handler_mappings
-        self.timers = timers if timers is not None else []
+        self.handlers = definition.handlers
+        self.timers = definition.timers if definition.timers is not None else []
 
     def get_event_handler_by_event(self, event: Event) -> EventHandlerMapping:
         filtered_handlers = list(
             filter(
                 lambda mapping: mapping.event == event,
-                self.event_handler_mappings,
+                self.handlers,
             )
         )
         assert len(filtered_handlers) > 0
@@ -60,14 +65,14 @@ class State:
         return filtered_timers[0]
 
     def handles_event(self, event: Event) -> bool:
-        allowed_events: list[Event] = [m.event for m in self.event_handler_mappings]
+        allowed_events: list[Event] = [m.event for m in self.handlers]
         return event in allowed_events
 
     def run(self) -> Transition | None:
         timers = deepcopy(self.timers)
         entered_time = time.time()
         while True:
-            if self.signal_exit_event.has_event():
+            if self.signal_exit_event != None and self.signal_exit_event.has_event():
                 self.logger.info("Stopping state machine from %s state", self.name)
                 break
 
@@ -78,7 +83,7 @@ class State:
                     if transition is not None:
                         return transition
 
-            for handler_mapping in self.event_handler_mappings:
+            for handler_mapping in self.handlers:
                 event_value: Any | None = handler_mapping.event.consume_event()
                 if event_value is not None:
                     transition = handler_mapping.handler(event_value)

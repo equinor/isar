@@ -1,6 +1,6 @@
 from isar.config.settings import settings
 from isar.models.events import Events
-from isar.state_machine.state import EventHandlerMapping
+from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.going_to_recharging import GoingToRecharging
 from isar.state_machine.states.intervention_needed import InterventionNeeded
@@ -11,7 +11,7 @@ from robot_interface.models.mission.status import RobotStatus
 
 
 def test_going_to_recharging_goes_to_intervention_needed(events: Events) -> None:
-    current_state = GoingToRecharging(events)
+    current_state = State(GoingToRecharging(events))
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.return_home.failure
     )
@@ -23,14 +23,14 @@ def test_going_to_recharging_goes_to_intervention_needed(events: Events) -> None
         )
     )
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.InterventionNeeded
 
 
 def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
     events: Events,
 ) -> None:
-    current_state = GoingToLockdown(events)
+    current_state = State(GoingToLockdown(events))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.return_home.failure
@@ -43,14 +43,14 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
         )
     )
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.InterventionNeeded
 
 
 def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
     events: Events,
 ) -> None:
-    current_state = GoingToLockdown(events)
+    current_state = State(GoingToLockdown(events))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.return_home.failure
@@ -61,12 +61,12 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
         ErrorMessage(error_description="", error_reason=ErrorReason.RobotAPIException)
     )
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.InterventionNeeded
 
 
 def test_state_machine_with_return_home_failure(events: Events) -> None:
-    current_state = ReturningHome(events)
+    current_state = State(ReturningHome(events))
 
     failure_event_handler: EventHandlerMapping
 
@@ -84,7 +84,7 @@ def test_state_machine_with_return_home_failure(events: Events) -> None:
         )
 
         assert transition is not None  # type: ignore
-        current_state = transition(events)
+        current_state = State(transition(events))
         assert current_state.name is States.ReturningHome
 
     failure_event_handler = current_state.get_event_handler_by_event(
@@ -98,14 +98,14 @@ def test_state_machine_with_return_home_failure(events: Events) -> None:
         )
     )
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.InterventionNeeded
 
 
 def test_intervention_needed_transitions_does_not_transition_if_status_is_not_home(
     events: Events,
 ) -> None:
-    current_state = InterventionNeeded(events)
+    current_state = State(InterventionNeeded(events))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.robot_async_events.robot_status_update

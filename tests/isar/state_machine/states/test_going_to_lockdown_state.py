@@ -15,7 +15,7 @@ from tests.test_mocks.task import StubTask
 def test_transition_from_return_home_paused_to_going_to_lockdown(
     events: Events,
 ) -> None:
-    current_state: State = ReturnHomePaused(events)
+    current_state = State(ReturnHomePaused(events))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.api_requests.send_to_lockdown.request
@@ -23,7 +23,7 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
 
     assert events.api_requests.send_to_lockdown.response.has_event()
     assert current_state.name is States.GoingToLockdown
@@ -41,12 +41,12 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
         )
     )
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.InterventionNeeded
 
 
 def test_stopping_lockdown_transitions_to_going_to_lockdown(events: Events) -> None:
-    current_state = StoppingGoToLockdown(events, "mission_id")
+    current_state = State(StoppingGoToLockdown(events, "mission_id"))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.stop_mission.success
@@ -60,7 +60,7 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(events: Events) -> N
 
     transition = event_handler.handler(aborted_mission)
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.GoingToLockdownWithMission
 
     assert events.api_requests.send_to_lockdown.response.check().lockdown_started
@@ -75,7 +75,7 @@ def test_continuing_mission_after_lockdown(events: Events) -> None:
         tasks=[StubTask.take_image() for _ in range(20)],
     )
 
-    current_state = LockdownWithMission(events, aborted_mission)
+    current_state = State(LockdownWithMission(events, aborted_mission))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.api_requests.release_from_lockdown.request
@@ -83,7 +83,7 @@ def test_continuing_mission_after_lockdown(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.Monitor
 
     assert events.api_requests.release_from_lockdown.response.has_event()
@@ -92,7 +92,7 @@ def test_continuing_mission_after_lockdown(events: Events) -> None:
 
 
 def test_return_home_transitions_to_going_to_lockdown(events: Events) -> None:
-    current_state = ReturningHome(events)
+    current_state = State(ReturningHome(events))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.api_requests.send_to_lockdown.request
@@ -100,12 +100,12 @@ def test_return_home_transitions_to_going_to_lockdown(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.GoingToLockdown
 
 
 def test_recharging_transitions_to_going_to_lockdown(events: Events) -> None:
-    current_state = GoingToRecharging(events)
+    current_state = State(GoingToRecharging(events))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.api_requests.send_to_lockdown.request
@@ -113,12 +113,12 @@ def test_recharging_transitions_to_going_to_lockdown(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.GoingToLockdown
 
 
 def test_await_next_mission_transitions_to_going_to_lockdown(events: Events) -> None:
-    current_state = AwaitNextMission(events)
+    current_state = State(AwaitNextMission(events))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.api_requests.send_to_lockdown.request
@@ -126,7 +126,7 @@ def test_await_next_mission_transitions_to_going_to_lockdown(events: Events) -> 
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.GoingToLockdown
 
     assert events.api_requests.send_to_lockdown.response.check()
