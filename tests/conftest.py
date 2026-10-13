@@ -69,6 +69,7 @@ from isar.state_machine.states.stopping_paused_return_home import (
 )
 from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from isar.state_machine.states.stopping_unknown_mission import StoppingUnknownMission
+from isar.state_machine.states.teleoperation import Teleoperation
 from isar.state_machine.states.unknown_status import UnknownStatus
 from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
@@ -346,6 +347,7 @@ def all_state_functions(
             (events, mission),
         ),
         States.LockdownWithMission: (LockdownWithMission, (events, mission)),
+        States.Teleoperation: (Teleoperation, (events,)),
     }
 
     assert len(States) == len(
