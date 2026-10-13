@@ -2,11 +2,11 @@ import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 
 
-def StoppingUnknownMission(events: Events) -> State:
+def StoppingUnknownMission(events: Events) -> StateDef:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
@@ -20,15 +20,14 @@ def StoppingUnknownMission(events: Events) -> State:
             handler=lambda _: AwaitNextMission.transition(),
         ),
     ]
-    return State(
-        state_name=States.StoppingUnknownMission,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.StoppingUnknownMission,
+        handlers=event_handlers,
     )
 
 
 def transition() -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
         return StoppingUnknownMission(events)
 
@@ -36,7 +35,7 @@ def transition() -> Transition:
 
 
 def transition_and_respond_to_API() -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
         events.api_requests.stop_mission.trigger_response(
             ControlMissionResponse(success=True)

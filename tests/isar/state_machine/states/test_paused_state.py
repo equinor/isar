@@ -1,12 +1,12 @@
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping
+from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.states.paused import Paused
 from isar.state_machine.states.pausing import Pausing
 from isar.state_machine.states_enum import States
 
 
 def test_transition_from_pausing_to_paused(events: Events) -> None:
-    current_state = Pausing(events, "mission_id")
+    current_state = State(Pausing(events, "mission_id"))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.pause_mission.success
@@ -14,12 +14,12 @@ def test_transition_from_pausing_to_paused(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.Paused
 
 
 def test_transition_from_paused_to_stopping_paused_mission(events: Events) -> None:
-    current_state = Paused(events, "test_id")
+    current_state = State(Paused(events, "test_id"))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.api_requests.stop_mission.request
@@ -27,14 +27,14 @@ def test_transition_from_paused_to_stopping_paused_mission(events: Events) -> No
 
     transition = event_handler.handler("test_id")
 
-    current_state = transition(events)
+    current_state = State(transition(events))
 
     assert current_state.name is States.StoppingPausedMission
     assert events.api_requests.stop_mission.response.has_event()
 
 
 def test_transition_from_paused_to_stopping_to_recharge(events: Events) -> None:
-    current_state = Paused(events, "test_id")
+    current_state = State(Paused(events, "test_id"))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.robot_async_events.battery_below_mission_threshold
@@ -42,7 +42,7 @@ def test_transition_from_paused_to_stopping_to_recharge(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
 
     assert current_state.name is States.StoppingGoToRecharge
     assert not events.api_requests.stop_mission.response.has_event()

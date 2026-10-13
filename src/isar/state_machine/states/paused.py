@@ -4,11 +4,11 @@ import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 import isar.state_machine.states.stopping_paused_mission as StoppingPausedMission
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 
 
-def Paused(events: Events, mission_id: str) -> State:
+def Paused(events: Events, mission_id: str) -> StateDef:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
@@ -40,15 +40,14 @@ def Paused(events: Events, mission_id: str) -> State:
             ),
         ),
     ]
-    return State(
-        state_name=States.Paused,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.Paused,
+        handlers=event_handlers,
     )
 
 
 def transition(mission_id: str) -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         return Paused(events, mission_id)
 
     return _transition

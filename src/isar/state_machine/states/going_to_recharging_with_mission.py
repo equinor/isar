@@ -4,13 +4,13 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging_with_mission as RechargingWithMission
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus
 
 
-def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> State:
+def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> StateDef:
 
     def _mission_failed_event_handler(
         error_message: ErrorMessage,
@@ -50,17 +50,16 @@ def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> Sta
             handler=_stop_mission_event_handler,
         ),
     ]
-    return State(
-        state_name=States.GoingToRechargingWithMission,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.GoingToRechargingWithMission,
+        handlers=event_handlers,
     )
 
 
 def transition_and_start_return_home(
     mission: AbortedMission,
 ) -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
 
         events.action_requests.return_home.trigger_request(EmptyMessage())
         return GoingToRechargingWithMission(events, mission=mission)

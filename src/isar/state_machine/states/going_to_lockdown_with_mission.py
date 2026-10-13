@@ -2,13 +2,13 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown_with_mission as LockdownWithMission
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.status import MissionStatus
 
 
-def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> State:
+def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> StateDef:
 
     def _lockdown_mission_failed(error_message: ErrorMessage) -> Transition:
         events.mqtt_queue.publish_mission_status(
@@ -42,17 +42,16 @@ def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> State
             handler=lambda _: LockdownWithMission.transition(mission),
         ),
     ]
-    return State(
-        state_name=States.GoingToLockdownWithMission,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.GoingToLockdownWithMission,
+        handlers=event_handlers,
     )
 
 
 def transition_and_start_mission_and_report_to_api(
     mission: AbortedMission,
 ) -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )
@@ -66,7 +65,7 @@ def transition_and_start_mission_and_report_to_api(
 def transition_to_existing_mission_and_report_to_api(
     mission: AbortedMission,
 ) -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )

@@ -1,5 +1,5 @@
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping
+from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.states.return_home_paused import ReturnHomePaused
 from isar.state_machine.states.stopping_paused_return_home import (
     StoppingPausedReturnHome,
@@ -15,14 +15,14 @@ def test_transition_to_stopping_paused_return_home_replies_to_API(
     mission: Mission = Mission(
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
-    current_state = ReturnHomePaused(events)
+    current_state = State(ReturnHomePaused(events))
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.api_requests.start_mission.request
     )
 
     transition = event_handler.handler(mission)
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.StoppingPausedReturnHome
     assert events.api_requests.start_mission.response.has_event()
 
@@ -31,7 +31,7 @@ def test_stopping_paused_return_home_mission_fails(events: Events) -> None:
     mission: Mission = Mission(
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
-    current_state = StoppingPausedReturnHome(events, mission)
+    current_state = State(StoppingPausedReturnHome(events, mission))
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.stop_mission.failure
     )
@@ -40,7 +40,7 @@ def test_stopping_paused_return_home_mission_fails(events: Events) -> None:
 
     assert not events.api_requests.start_mission.response.has_event()
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.InterventionNeeded
 
 
@@ -48,12 +48,12 @@ def test_stopping_paused_return_home_mission_succeeds(events: Events) -> None:
     mission: Mission = Mission(
         id="id", name="Dummy misson", tasks=[StubTask.take_image()]
     )
-    current_state = StoppingPausedReturnHome(events, mission)
+    current_state = State(StoppingPausedReturnHome(events, mission))
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.stop_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.Monitor

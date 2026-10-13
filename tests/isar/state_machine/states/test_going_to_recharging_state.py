@@ -1,5 +1,5 @@
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping
+from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.states.going_to_recharging_with_mission import (
     GoingToRechargingWithMission,
 )
@@ -11,21 +11,21 @@ from isar.state_machine.states_enum import States
 def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_tasks(
     events: Events,
 ) -> None:
-    current_state = StoppingGoToRecharge(events)
+    current_state = State(StoppingGoToRecharge(events))
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.stop_mission.success
     )
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.GoingToRecharging
 
 
 def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
     events: Events,
 ) -> None:
-    current_state = StoppingGoToRecharge(events)
+    current_state = State(StoppingGoToRecharge(events))
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.stop_mission.success
     )
@@ -34,25 +34,27 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
 
     assert events.mqtt_queue.empty()
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.GoingToRechargingWithMission
 
 
 def test_return_home_goes_to_recharging_when_battery_low(events: Events) -> None:
-    current_state = ReturningHome(events)
+    current_state = State(ReturningHome(events))
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.robot_async_events.battery_below_mission_threshold
     )
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.GoingToRecharging
 
 
 def test_cancelling_mission_when_going_home_to_recharge(events: Events) -> None:
-    current_state = GoingToRechargingWithMission(
-        events, mission=AbortedMission(name="test", id="test_id")
+    current_state = State(
+        GoingToRechargingWithMission(
+            events, mission=AbortedMission(name="test", id="test_id")
+        )
     )
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.api_requests.stop_mission.request
@@ -60,5 +62,5 @@ def test_cancelling_mission_when_going_home_to_recharge(events: Events) -> None:
 
     transition = event_handler.handler("test_id")
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.GoingToRecharging

@@ -3,12 +3,12 @@ import isar.state_machine.states.lockdown as Lockdown
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.offline as Offline
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
 
-def Recharging(events: Events) -> State:
+def Recharging(events: Events) -> StateDef:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
@@ -30,10 +30,9 @@ def Recharging(events: Events) -> State:
             handler=lambda _: Maintenance.transition_and_reply_to_API(),
         ),
     ]
-    return State(
-        state_name=States.Recharging,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.Recharging,
+        handlers=event_handlers,
     )
 
 

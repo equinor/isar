@@ -9,6 +9,7 @@ from isar.apis.models.models import ControlMissionResponse
 from isar.config.settings import settings
 from isar.models.events import APIEvent, Event, EventTimeoutError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+from isar.state_machine.state import State
 from isar.state_machine.states.await_next_mission import AwaitNextMission
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.going_to_lockdown_with_mission import (
@@ -166,7 +167,7 @@ def test_state_machine_ready_to_receive_mission(
         mocker.patch.object(event.request, "trigger_event", lambda input, timeout: None)
         mocker.patch.object(event.response, "consume_event", lambda timeout: None)
         for state_name, state_object in states.items():
-            scheduling_utilities.state_machine.current_state = state_object
+            scheduling_utilities.state_machine.current_state = State(state_object)
             if state_name in valid_states:
                 try:
                     scheduling_utilities._send_command(True, event)

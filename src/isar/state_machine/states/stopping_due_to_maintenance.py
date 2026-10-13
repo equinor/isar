@@ -2,11 +2,11 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.maintenance as Maintenance
 from isar.apis.models.models import MaintenanceResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 
 
-def StoppingDueToMaintenance(events: Events, mission_id: str | None = None) -> State:
+def StoppingDueToMaintenance(events: Events, mission_id: str | None = None) -> StateDef:
 
     def _failed_stop_event_handler(
         _: EmptyMessage,
@@ -41,17 +41,16 @@ def StoppingDueToMaintenance(events: Events, mission_id: str | None = None) -> S
             handler=_successful_stop_event_handler,
         ),
     ]
-    return State(
-        state_name=States.StoppingDueToMaintenance,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.StoppingDueToMaintenance,
+        handlers=event_handlers,
     )
 
 
 def transition_and_stop_mission(
     mission_id: str | None = None,
 ) -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
         return StoppingDueToMaintenance(events, mission_id)
 

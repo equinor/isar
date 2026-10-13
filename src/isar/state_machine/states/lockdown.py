@@ -1,11 +1,11 @@
 import isar.state_machine.states.home as Home
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 
 
-def Lockdown(events: Events) -> State:
+def Lockdown(events: Events) -> StateDef:
 
     def _release_from_lockdown_handler(
         _: EmptyMessage,
@@ -20,10 +20,9 @@ def Lockdown(events: Events) -> State:
         ),
     ]
 
-    return State(
-        state_name=States.Lockdown,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.Lockdown,
+        handlers=event_handlers,
     )
 
 
@@ -32,7 +31,7 @@ def transition_without_responding_to_api() -> Transition:
 
 
 def transition_and_respond_to_api() -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )

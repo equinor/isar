@@ -8,13 +8,13 @@ import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_unknown_mission as StoppingUnknownMission
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus
 
 
-def Home(events: Events) -> State:
+def Home(events: Events) -> StateDef:
 
     def _robot_status_event_handler(
         robot_status: RobotStatus,
@@ -59,15 +59,14 @@ def Home(events: Events) -> State:
             handler=lambda _: Maintenance.transition_and_reply_to_API(),
         ),
     ]
-    return State(
-        state_name=States.Home,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.Home,
+        handlers=event_handlers,
     )
 
 
 def transition() -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         # This clears the current robot status value, so we don't read an outdated value
         events.robot_async_events.robot_status_update.clear_event()
 

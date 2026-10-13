@@ -2,11 +2,11 @@ import isar.state_machine.states.return_home_paused as ReturnHomePaused
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 
 
-def PausingReturnHome(events: Events) -> State:
+def PausingReturnHome(events: Events) -> StateDef:
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
@@ -18,15 +18,14 @@ def PausingReturnHome(events: Events) -> State:
             handler=lambda _: ReturnHomePaused.transition(),
         ),
     ]
-    return State(
-        state_name=States.PausingReturnHome,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.PausingReturnHome,
+        handlers=event_handlers,
     )
 
 
 def transition_and_pause_mission_and_reply_to_API() -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         events.api_requests.pause_mission.trigger_response(
             ControlMissionResponse(success=True)
         )

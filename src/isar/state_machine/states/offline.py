@@ -3,12 +3,12 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
 
-def Offline(events: Events) -> State:
+def Offline(events: Events) -> StateDef:
 
     def _robot_status_event_handler(
         robot_status: RobotStatus,
@@ -35,10 +35,9 @@ def Offline(events: Events) -> State:
             handler=lambda _: Maintenance.transition_and_reply_to_API(),
         ),
     ]
-    return State(
-        state_name=States.Offline,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.Offline,
+        handlers=event_handlers,
     )
 
 

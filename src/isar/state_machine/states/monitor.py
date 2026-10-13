@@ -6,14 +6,14 @@ import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 from isar.apis.models.models import MissionStartResponse
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, State, Transition
+from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
 
 
-def Monitor(events: Events, mission_id: str) -> State:
+def Monitor(events: Events, mission_id: str) -> StateDef:
 
     def _mission_success_event_handler(
         _: EmptyMessage,
@@ -71,17 +71,16 @@ def Monitor(events: Events, mission_id: str) -> State:
             ),
         ),
     ]
-    return State(
-        state_name=States.Monitor,
-        signal_exit_event=events.signal_state_machine_exit,
-        event_handler_mappings=event_handlers,
+    return StateDef(
+        name=States.Monitor,
+        handlers=event_handlers,
     )
 
 
 def transition_and_start_mission(
     mission: Mission, should_respond_to_API_request: bool = False
 ) -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
 
         events.action_requests.execute_mission.trigger_request(mission)
         events.mqtt_queue.publish_mission_status(
@@ -98,7 +97,7 @@ def transition_and_start_mission(
 
 
 def transition_with_existing_mission(mission_id: str) -> Transition:
-    def _transition(events: Events) -> State:
+    def _transition(events: Events) -> StateDef:
         return Monitor(events, mission_id=mission_id)
 
     return _transition

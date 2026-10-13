@@ -1,12 +1,12 @@
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping
+from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.monitor import Monitor
 from isar.state_machine.states_enum import States
 
 
 def test_mission_stopped_when_going_to_lockdown(events: Events) -> None:
-    current_state = Monitor(events, "mission_id")
+    current_state = State(Monitor(events, "mission_id"))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.api_requests.send_to_lockdown.request
@@ -14,12 +14,12 @@ def test_mission_stopped_when_going_to_lockdown(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.StoppingGoToLockdown
 
 
 def test_going_to_lockdown_transitions_to_lockdown(events: Events) -> None:
-    current_state = GoingToLockdown(events)
+    current_state = State(GoingToLockdown(events))
 
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.return_home.success
@@ -27,5 +27,5 @@ def test_going_to_lockdown_transitions_to_lockdown(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = transition(events)
+    current_state = State(transition(events))
     assert current_state.name is States.Lockdown
