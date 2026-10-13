@@ -45,22 +45,12 @@ class State:
         self.timers = definition.timers if definition.timers is not None else []
 
     def get_event_handler_by_event(self, event: Event) -> EventHandlerMapping:
-        filtered_handlers = list(
-            filter(
-                lambda mapping: mapping.event == event,
-                self.handlers,
-            )
-        )
+        filtered_handlers = [h for h in self.handlers if h.event == event]
         assert len(filtered_handlers) > 0
         return filtered_handlers[0]
 
     def get_event_timer_by_name(self, event_timer_name: str) -> TimeoutHandlerMapping:
-        filtered_timers = list(
-            filter(
-                lambda mapping: mapping.name == event_timer_name,
-                self.timers,
-            )
-        )
+        filtered_timers = [t for t in self.timers if t.name == event_timer_name]
         assert len(filtered_timers) > 0
         return filtered_timers[0]
 

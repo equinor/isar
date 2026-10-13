@@ -13,14 +13,13 @@ class Mission(BaseModel):
     error_message: ErrorMessage | None = Field(default=None)
 
     def _get_unfinished_tasks(self) -> list[TASKS]:
-        return list(
-            filter(
-                lambda task: task.status
-                not in [
-                    TaskStatus.Failed,
-                    TaskStatus.Successful,
-                    TaskStatus.PartiallySuccessful,
-                ],
-                self.tasks,
-            )
-        )
+        return [
+            t
+            for t in self.tasks
+            if t.status
+            not in [
+                TaskStatus.Failed,
+                TaskStatus.Successful,
+                TaskStatus.PartiallySuccessful,
+            ]
+        ]
