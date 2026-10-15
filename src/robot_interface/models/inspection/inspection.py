@@ -121,6 +121,26 @@ class CO2Measurement(GasMeasurement):
     pass
 
 
+class IsobutyleneMeasurement(GasMeasurement):
+    pass
+
+
+class TolueneMeasurement(GasMeasurement):
+    pass
+
+
+class O2Measurement(GasMeasurement):
+    pass
+
+
+class COMeasurement(GasMeasurement):
+    pass
+
+
+class H2SMeasurement(GasMeasurement):
+    pass
+
+
 class AcousticMeasurement(InspectionBlob):
     metadata: AcousticMeasurementMetadata  # type: ignore
 
