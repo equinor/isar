@@ -2,7 +2,9 @@
 # # This removes the deprecation warning in testcontainers that is not our fault
 # warnings.filterwarnings("ignore", category=DeprecationWarning, module="testcontainers")
 
+import ast
 import logging
+import os
 import shutil
 from collections.abc import Callable, Generator
 from pathlib import Path
@@ -368,6 +370,67 @@ def all_states_dict(
         all_states_dict.items()
     ), "Remember to include all states in this list"
     return all_states_dict
+
+
+def get_state_transitions_from_ast_graph(source_code: str) -> tuple[str | None, list]:
+    own_state_name: str | None = None
+    imported_states = []
+    tree = ast.parse(source_code)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import) and node.names[0].name.startswith(
+            "isar.state_machine.states."
+        ):
+            state_name = node.names[0].asname
+            imported_states.append(state_name)
+        if isinstance(node, ast.FunctionDef):
+            if not isinstance(node.returns, ast.Name) or node.returns.id != "StateDef":
+                continue
+
+            return_calls: list = list(
+                filter(lambda body_val: isinstance(body_val, ast.Return), node.body)
+            )
+            if len(return_calls) < 1:
+                continue
+            assert isinstance(return_calls[0], ast.Return)
+
+            return_call: ast.Return = return_calls[0]
+            assert isinstance(return_call.value, ast.Call)
+
+            state_name_args = list(
+                filter(lambda arg: arg.arg == "name", return_call.value.keywords)
+            )
+            if len(state_name_args) < 1:
+                continue
+            assert isinstance(state_name_args[0].value, ast.Attribute)
+            own_state_name = state_name_args[0].value.attr
+
+    return own_state_name, imported_states
+
+
+def get_all_state_file_paths() -> list[str]:
+    cwd = os.getcwd()
+    states_folder = os.path.join(cwd, "src", "isar", "state_machine", "states")
+    state_files = []
+    for file_or_folder in os.listdir(states_folder):
+        sub_path = os.path.join(states_folder, file_or_folder)
+        if os.path.isfile(sub_path) and not sub_path.endswith("__.py"):
+            state_files.append(sub_path)
+    return state_files
+
+
+@pytest.fixture()
+def states_graph() -> dict[str, list[str]]:
+    state_files = get_all_state_file_paths()
+
+    state_graph = {}
+
+    for state_file in state_files:
+        with open(state_file, "r") as file:
+            source = file.read()
+            own_state_name, linked_states = get_state_transitions_from_ast_graph(source)
+            state_graph[own_state_name] = linked_states
+
+    return state_graph
 
 
 @pytest.fixture(autouse=True)
