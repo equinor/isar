@@ -48,7 +48,7 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi",
     "pymysql",
     "sqlalchemy",
-    "psycopg2-binary"
+    "psycopg[binary]>=3.3.6",
 ]
 dynamic = ["version"]
 
