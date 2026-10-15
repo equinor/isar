@@ -284,6 +284,20 @@ class API:
             },
         )
         router.add_api_route(
+            path="/schedule/teleoperation-mode",
+            endpoint=self.scheduling_controller.set_teleoperation_mode,
+            methods=["POST"],
+            dependencies=[authentication_dependency],
+            summary="Place the robot in teleoperation mode, where it will not autonomously manage its own state",
+            responses={
+                HTTPStatus.OK.value: {"description": "Robot is in teleoperation mode"},
+                HTTPStatus.CONFLICT.value: {"description": "Conflict"},
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    "description": "Internal Server Error"
+                },
+            },
+        )
+        router.add_api_route(
             path="/schedule/release-intervention-needed",
             endpoint=self.scheduling_controller.release_intervention_needed,
             methods=["POST"],
