@@ -18,33 +18,35 @@ from robot_interface.robot_interface import RobotInterface
 
 
 def fetch_and_upload_inspection(
-    get_inspection_function: Callable[[InspectionTask], Inspection],
+    get_inspection_function: Callable[[InspectionTask], list[Inspection]],
     logger: logging.Logger,
     upload_function: Callable[[Inspection, Mission], None],
     task: InspectionTask,
     mission: Mission,
 ) -> None:
     try:
-        inspection: Inspection = get_inspection_function(task)
-        if task.id != inspection.id:
-            logger.warning(
-                f"The id of task ({task.id}) "
-                f"and result ({inspection.id}) is not matching. "
-                f"This may lead to confusions when accessing the inspection later"
-            )
+        inspections: list[Inspection] = get_inspection_function(task)
+        for inspection in inspections:
+            if task.id != inspection.id:
+                logger.warning(
+                    f"The id of task ({task.id}) "
+                    f"and result ({inspection.id}) is not matching. "
+                    f"This may lead to confusions when accessing the inspection later"
+                )
 
     except (RobotRetrieveInspectionException, RobotException) as e:
         logger.error(f"Failed to retrieve inspections because: {e.error_description}")
         return
 
-    if not inspection:
+    if not inspections or len(inspections) == 0:
         logger.error(f"No inspection result data retrieved for task {str(task.id)[:8]}")
         return
 
-    inspection.metadata.tag_id = task.tag_id
-    inspection.metadata.analysis_types = task.analysis_types
+    for inspection in inspections:
+        inspection.metadata.tag_id = task.tag_id
+        inspection.metadata.analysis_types = task.analysis_types
 
-    upload_function(inspection, mission)
+        upload_function(inspection, mission)
 
 
 class RobotInspectionService:
@@ -118,7 +120,7 @@ class RobotInspectionService:
                     self.upload_inspection_threads.append(
                         FunctionThread(
                             fetch_and_upload_inspection,
-                            self.robot.get_inspection,
+                            self.robot.get_inspections,
                             self.logger,
                             self.uploader.upload_inspection,
                             upload_task_request[0],

@@ -68,7 +68,7 @@ class InspectionTask(BaseModel):
     analysis_types: list[str] | None = Field(default=None)
 
     @staticmethod
-    def get_inspection_type() -> type[Inspection]:
+    def get_inspection_type() -> builtins.type[Inspection]:
         return Inspection
 
 

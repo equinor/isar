@@ -67,12 +67,14 @@ class StubRobot(RobotInterface):
     def resume(self) -> None:
         return
 
-    def get_inspection(self, task: InspectionTask) -> Inspection:
-        return Image(
-            metadata=stub_image_metadata(),
-            id=task.id,
-            data=b"Some binary image data",
-        )
+    def get_inspections(self, task: InspectionTask) -> list[Inspection]:
+        return [
+            Image(
+                metadata=stub_image_metadata(),
+                id=task.id,
+                data=b"Some binary image data",
+            )
+        ]
 
     def generate_media_config(self) -> MediaConfig:
         return MediaConfig(
