@@ -19,6 +19,7 @@ from robot_interface.models.mission.task import (
     TakeThermalImage,
     TakeThermalVideo,
     TakeVideo,
+    TakeXam8000GasMeasurement,
     ZoomDescription,
 )
 
@@ -30,6 +31,11 @@ class InspectionTypes(str, Enum):
     thermal_video = "ThermalVideo"
     audio = "Audio"
     co2_measurement = "CO2Measurement"
+    isobutylene_measurement = "IsobutyleneMeasurement"
+    toluene_measurement = "TolueneMeasurement"
+    o2_measurement = "O2Measurement"
+    co_measurement = "COMeasurement"
+    h2s_measurement = "H2SMeasurement"
     acoustic_measurement = "AcousticMeasurement"
 
 
@@ -112,8 +118,23 @@ _INSPECTION_SPECS: dict[InspectionTypes, _InspectionSpec] = {
         TakeThermalVideo, needs_zoom=True, needs_duration=True
     ),
     InspectionTypes.audio: _InspectionSpec(RecordAudio, needs_duration=True),
-    InspectionTypes.co2_measurement: _InspectionSpec(
+    InspectionTypes.co2_measurement: _InspectionSpec( # TODO: How to handle that this can be TakeCO2Measurement or TakeXam8000GasMeasurement?
         TakeCO2Measurement, needs_target=False
+    ),
+    InspectionTypes.isobutylene_measurement: _InspectionSpec(
+        TakeXam8000GasMeasurement, needs_target=False
+    ),
+    InspectionTypes.toluene_measurement: _InspectionSpec(
+        TakeXam8000GasMeasurement, needs_target=False
+    ),
+    InspectionTypes.o2_measurement: _InspectionSpec(
+        TakeXam8000GasMeasurement, needs_target=False
+    ),
+    InspectionTypes.co_measurement: _InspectionSpec(
+        TakeXam8000GasMeasurement, needs_target=False
+    ),
+    InspectionTypes.h2s_measurement: _InspectionSpec(
+        TakeXam8000GasMeasurement, needs_target=False
     ),
     InspectionTypes.acoustic_measurement: _InspectionSpec(
         TakeAcousticMeasurement, needs_acoustic_params=True
