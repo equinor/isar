@@ -188,7 +188,7 @@ def test_state_machine_with_unsuccessful_collection(
 
     storage_mock: StorageInterface = storage_handlers[0]
 
-    mocker.patch.object(StubRobot, "get_inspection", return_value=None)
+    mocker.patch.object(StubRobot, "get_inspections", return_value=None)
 
     mocker.patch.object(settings, "ROBOT_API_BATTERY_POLL_INTERVAL", 0.01)
     mocker.patch.object(settings, "ROBOT_API_STATUS_POLL_INTERVAL", 0.01)

@@ -174,8 +174,8 @@ class RobotInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_inspection(self, task: InspectionTask) -> Inspection:
-        """Return the inspection connected to the given task.
+    def get_inspections(self, task: InspectionTask) -> list[Inspection]:
+        """Return the inspections connected to the given task.
 
         Parameters
         ----------
@@ -183,10 +183,10 @@ class RobotInterface(metaclass=ABCMeta):
 
         Returns
         -------
-        Inspection
-            The inspection connected to the given task.
+        list[Inspection]
+            The inspections connected to the given task.
             get_inspection has responsibility to assign the inspection_id of the task
-            to the inspection that it returns.
+            to the inspections that it returns.
 
         Raises
         ------
