@@ -80,6 +80,14 @@ def test_no_empty_states(all_states_dict: dict[States, State]) -> None:
         ), f"{state_name.name} is missing eventhandlers"
 
 
+def test_no_invalid_timers(all_states_dict: dict[States, State]) -> None:
+    for state_name, state_object in all_states_dict.items():
+        for timer in state_object.timers:
+            assert (
+                timer.timeout_in_seconds >= 0.0
+            ), f"Timer {timer.name} in state {state_name} has a negative timeout"
+
+
 def test_no_transitions_to_non_states(states_graph: dict[str, list[str]]) -> None:
     all_states = set(states_graph.keys())
     for state_name, transitions in states_graph.items():
