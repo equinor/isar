@@ -70,7 +70,11 @@ class State:
                 if time.time() - entered_time > timer.timeout_in_seconds:
                     transition = timer.handler()
                     timers.remove(timer)
+                    self.logger.debug(f"Event timer '{timer.name}' triggered. ")
                     if transition is not None:
+                        self.logger.debug(
+                            f"Transitioning from {self.name.name} to {transition.__name__}"
+                        )
                         return transition
 
             for handler_mapping in self.handlers:
