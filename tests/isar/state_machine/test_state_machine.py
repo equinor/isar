@@ -123,4 +123,4 @@ def test_no_closed_loops(states_graph: dict[str, list[str]]) -> None:
         all_linked_states = _find_all_linked_states(states_graph, state_name, set())
         assert len(all_linked_states.intersection(set(states_graph.keys()))) == len(
             states_graph
-        ), f"State {state_name} cannot reach all other statets"
+        ), f"State {state_name} cannot reach all other states"
