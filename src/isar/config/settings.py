@@ -93,6 +93,9 @@ class Settings(BaseSettings):
     STORAGE_LOCAL_ENABLED: bool = Field(default=True)
     STORAGE_BLOB_ENABLED: bool = Field(default=False)
 
+    # Enables optional mission camera recording supplied by the robot driver
+    RECORDING_ENABLED: bool = Field(default=False)
+
     # Determines whether certificate based encryption will be used for the MQTT
     # communication.
     MQTT_SSL_ENABLED: bool = Field(default=True)

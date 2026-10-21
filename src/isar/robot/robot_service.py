@@ -3,6 +3,7 @@ import logging
 from threading import Event as ThreadEvent
 from uuid import uuid4
 
+from isar.config.settings import settings
 from isar.models.events import (
     AbortedMission,
     EmptyMessage,
@@ -23,6 +24,7 @@ from isar.robot.robot_return_home import robot_return_home
 from isar.robot.robot_start_mission import robot_start_mission
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import robot_stop_mission
+from isar.storage.recording_publisher import BlobRecordingPublisher
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import InspectionTask
@@ -47,6 +49,32 @@ class RobotService:
         self.battery_thread: RobotBatteryThread | None = None
         self.status_thread: RobotStatusThread | None = None
         self.signal_exit: ThreadEvent = ThreadEvent()
+        self.mission_recorder = None
+        self.recording_mission_id: str | None = None
+        if settings.RECORDING_ENABLED:
+            try:
+                self.mission_recorder = robot.get_mission_recorder(
+                    publisher=BlobRecordingPublisher(robot.isar_id)
+                )
+            except Exception as error:  # noqa: BLE001
+                self.logger.warning("Recording unavailable (%s)", type(error).__name__)
+
+    def _start_recording(self, mission_id: str) -> None:
+        if self.mission_recorder is not None:
+            try:
+                self.mission_recorder.start(mission_id)
+                self.recording_mission_id = mission_id
+            except Exception as error:  # noqa: BLE001
+                self.logger.warning("Recording start failed (%s)", type(error).__name__)
+
+    def _stop_recording(self, mission_id: str, interrupted: bool = False) -> None:
+        if self.mission_recorder is not None:
+            try:
+                self.mission_recorder.stop(mission_id, interrupted)
+            except Exception as error:  # noqa: BLE001
+                self.logger.warning("Recording stop failed (%s)", type(error).__name__)
+        if self.recording_mission_id == mission_id:
+            self.recording_mission_id = None
 
     def stop(self) -> None:
         self.signal_exit.set()
@@ -77,6 +105,7 @@ class RobotService:
             self.action_requests.return_home.trigger_failure_response(error_message)
             return False
         self.logger.info("Received confirmation that return home mission has started")
+        self._start_recording(mission_id)
         return True
 
     def _start_mission_handler(self, mission: Mission) -> bool:
@@ -92,6 +121,7 @@ class RobotService:
             self.action_requests.execute_mission.trigger_failure_response(error_message)
             return False
         self.logger.info("Received confirmation that mission has started")
+        self._start_recording(mission.id)
         return True
 
     async def _stop_mission_handler(
@@ -106,6 +136,8 @@ class RobotService:
             self.action_requests.stop_mission.trigger_failure_response(EmptyMessage())
             return
 
+        if self.recording_mission_id:
+            self._stop_recording(self.recording_mission_id)
         if monitor_mission_task is not None:
             if not monitor_mission_task.done():
                 monitor_mission_task.cancel()
@@ -163,6 +195,8 @@ class RobotService:
             if is_aborted:
                 return
 
+            self._stop_recording(mission_id, error_message is not None)
+
             if error_message is not None:
                 self.logger.warning(
                     f"Error monitoring return home mission. {error_message}"
@@ -186,6 +220,8 @@ class RobotService:
             )
             if is_aborted:
                 return remaining_mission
+
+            self._stop_recording(mission.id, error_message is not None)
 
             if error_message is not None:
                 self.logger.warning(f"Error monitoring mission. {error_message}")
@@ -220,7 +256,6 @@ class RobotService:
         monitor_mission_task: asyncio.Task[AbortedMission | None] | None = None
 
         while not self.signal_exit.is_set():
-
             return_home_request = (
                 self.action_requests.return_home.request.consume_event()
             )
@@ -273,6 +308,5 @@ class RobotService:
             await asyncio.sleep(0.01)
 
     def run(self) -> None:
-
         self._register_status_threads()
         asyncio.run(self._run_main_event_loop())
