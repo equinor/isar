@@ -2,11 +2,13 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
 from threading import Thread
 
+from robot_interface.mission_recording import MissionRecorder
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig
+from robot_interface.recording_publisher import RecordingPublisher
 from robot_interface.telemetry.mqtt_client import TelemetryParameters
 
 
@@ -24,6 +26,12 @@ class RobotInterface(metaclass=ABCMeta):
         """
         self.robot_name = robot_name
         self.isar_id = isar_id
+
+    def get_mission_recorder(
+        self, publisher: RecordingPublisher | None = None
+    ) -> MissionRecorder | None:
+        """Return an optional recorder, with platform publication available if needed."""
+        return None
 
     @abstractmethod
     def initiate_mission(self, mission: Mission) -> None:

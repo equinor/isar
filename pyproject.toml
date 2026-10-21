@@ -76,6 +76,9 @@ dev = [
 [tool.setuptools_scm]
 # This section is empty but required for dynamic versioning.
 
+[tool.setuptools.package-data]
+"*" = ["*.conf", "*.pem"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--ignore=tests/integration"
