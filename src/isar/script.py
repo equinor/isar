@@ -1,8 +1,8 @@
 import logging
+import signal
 import sys
-import time
 from logging import Logger
-from threading import Thread
+from threading import Event, Thread
 from typing import Any
 
 import isar
@@ -172,9 +172,30 @@ def start() -> None:
         utility_thread.start()
         threads.append(utility_thread)
 
-    while True:
-        for thread in threads:
-            if not thread.is_alive():
-                logger.critical("Thread '%s' failed - ISAR shutting down", thread.name)
-                sys.exit(1)
-        time.sleep(settings.FSM_SLEEP_TIME)
+    shutdown_requested = Event()
+
+    def request_shutdown(*_: Any) -> None:
+        shutdown_requested.set()
+
+    signal.signal(signal.SIGTERM, request_shutdown)
+    signal.signal(signal.SIGINT, request_shutdown)
+
+    exit_code = 0
+    try:
+        while not shutdown_requested.is_set():
+            for thread in threads:
+                if not thread.is_alive():
+                    logger.critical(
+                        "Thread '%s' failed - ISAR shutting down", thread.name
+                    )
+                    exit_code = 1
+                    shutdown_requested.set()
+                    break
+
+            shutdown_requested.wait(settings.FSM_SLEEP_TIME)
+    finally:
+        api.server.should_exit = True
+        if robot.mission_recorder is not None:
+            robot.mission_recorder.close()
+
+    sys.exit(exit_code)
