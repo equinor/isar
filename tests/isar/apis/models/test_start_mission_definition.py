@@ -3,6 +3,7 @@ import os
 
 import pytest
 from alitra import Frame, Orientation, Pose, Position
+from pydantic import ValidationError
 
 from isar.apis.models.start_mission_definition import (
     InspectionTypes,
@@ -18,6 +19,7 @@ from robot_interface.models.mission.task import (
     TakeAcousticMeasurement,
     TakeImage,
 )
+from tests.test_mocks.mission_definition import DummyMissionDefinition
 
 
 def test_to_isar_mission() -> None:
@@ -193,3 +195,54 @@ def test_missing_acoustic_parameters_is_a_mission_format_error() -> None:
 
     with pytest.raises(MissionFormatError):
         _build_mission_with_inspection_payload(payload)
+
+
+def test_stored_mission_preserves_reference_and_execution_id() -> None:
+    mission = to_isar_mission(
+        StartMissionDefinition(
+            id="execution-id",
+            name="Weekly diagnostic",
+            robot_mission_id="DiagnosticRoutine",
+            tasks=[],
+        )
+    )
+    assert mission.id == "execution-id"
+    assert mission.name == "Weekly diagnostic"
+    assert mission.robot_mission_id == "DiagnosticRoutine"
+    assert mission.tasks == []
+    assert Mission.model_validate_json(mission.model_dump_json()) == mission
+
+
+@pytest.mark.parametrize("robot_mission_id", [None, "", " ", "\t\n"])
+def test_empty_or_blank_mission_rejected(robot_mission_id: str | None) -> None:
+    with pytest.raises(MissionFormatError):
+        to_isar_mission(
+            StartMissionDefinition(
+                id="execution-id", tasks=[], robot_mission_id=robot_mission_id
+            )
+        )
+
+
+def test_stored_reference_with_inspection_tasks_rejected() -> None:
+    definition = DummyMissionDefinition.dummy_start_mission_definition.model_copy(
+        deep=True
+    )
+    definition.robot_mission_id = "DiagnosticRoutine"
+    with pytest.raises(MissionFormatError, match="cannot contain inspection tasks"):
+        to_isar_mission(definition)
+
+
+@pytest.mark.parametrize("robot_mission_id", ["", " ", "\t\n"])
+def test_robot_interface_rejects_blank_stored_reference(robot_mission_id: str) -> None:
+    with pytest.raises(ValidationError, match="must not be blank"):
+        Mission(id="id", name="name", robot_mission_id=robot_mission_id)
+
+
+def test_robot_interface_rejects_mixed_stored_mission() -> None:
+    with pytest.raises(ValidationError, match="cannot contain tasks"):
+        Mission(
+            id="id",
+            name="name",
+            robot_mission_id="DiagnosticRoutine",
+            tasks=DummyMissionDefinition.default_mission.tasks,
+        )

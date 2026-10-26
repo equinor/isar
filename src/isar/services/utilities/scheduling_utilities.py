@@ -47,9 +47,14 @@ class SchedulingUtilities:
         HTTPException 400 Bad request
             If the robot is not capable of performing mission
         """
-        missing_capabilities = {
+        missing_capabilities: set[str] = {
             task.type for task in mission.tasks if task.type not in robot_capabilities
         }
+        if (
+            mission.robot_mission_id is not None
+            and "stored_mission" not in robot_capabilities
+        ):
+            missing_capabilities.add("stored_mission")
 
         if missing_capabilities:
             error_message = (

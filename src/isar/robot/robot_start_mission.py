@@ -22,7 +22,10 @@ def robot_start_mission(
             ErrorReason.RobotActionException, "Start mission thread cancelled"
         )
     try:
-        robot.initiate_mission(mission)
+        if mission.robot_mission_id is not None:
+            robot.initiate_stored_mission(mission)
+        else:
+            robot.initiate_mission(mission)
     except RobotInfeasibleMissionException as e:
         logger.error(
             f"Mission is infeasible and cannot be scheduled because: {e.error_description}"

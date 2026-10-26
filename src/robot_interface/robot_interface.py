@@ -2,6 +2,9 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
 from threading import Thread
 
+from robot_interface.models.exceptions.robot_exceptions import (
+    RobotInfeasibleMissionException,
+)
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
@@ -24,6 +27,18 @@ class RobotInterface(metaclass=ABCMeta):
         """
         self.robot_name = robot_name
         self.isar_id = isar_id
+
+    def initiate_stored_mission(self, mission: Mission) -> None:
+        """Start mission.robot_mission_id already stored on the robot.
+
+        Integrations must override this method and advertise the ``stored_mission``
+        capability to opt in. The mission has no inspection tasks. Track execution
+        using mission.id in mission_status, and support the normal stop/pause/resume
+        lifecycle. Unknown references must raise RobotInfeasibleMissionException.
+        """
+        raise RobotInfeasibleMissionException(
+            "This robot integration does not support stored missions"
+        )
 
     @abstractmethod
     def initiate_mission(self, mission: Mission) -> None:

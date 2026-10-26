@@ -4,12 +4,15 @@ from typing import ClassVar
 from unittest import mock
 from uuid import uuid4
 
+import pytest
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
+from pytest_mock import MockerFixture
 
 from isar.apis.models.models import ControlMissionResponse
 from isar.apis.models.start_mission_definition import StopMissionDefinition
+from isar.config.settings import robot_settings
 from isar.models.events import EventTimeoutError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
@@ -119,6 +122,68 @@ class TestStartMission:
         )
         assert re.search("take_thermal_image", response_detail)
         assert re.search("take_image", response_detail)
+
+    def test_start_stored_mission(
+        self, client: TestClient, mocker: MockerFixture
+    ) -> None:
+        mocker.patch.object(robot_settings, "CAPABILITIES", ["stored_mission"])
+        start = mocker.patch.object(SchedulingUtilities, "start_mission")
+        response = client.post(
+            self.schedule_start_mission_path,
+            json={
+                "mission_definition": {
+                    "id": "run-id",
+                    "name": "Weekly diagnostic",
+                    "robot_mission_id": "DiagnosticRoutine",
+                    "tasks": [],
+                }
+            },
+        )
+        assert response.status_code == HTTPStatus.OK
+        assert response.json() == {"id": "run-id", "tasks": []}
+        mission = start.call_args.kwargs["mission"]
+        assert mission.robot_mission_id == "DiagnosticRoutine"
+        assert mission.id == "run-id"
+        assert mission.tasks == []
+
+    @pytest.mark.parametrize(
+        ("reference", "capabilities", "with_tasks"),
+        [
+            ("DiagnosticRoutine", [], False),
+            ("DiagnosticRoutine", ["stored_mission"], True),
+            ("", ["stored_mission"], False),
+            (" \t", ["stored_mission"], False),
+            (None, ["stored_mission"], False),
+        ],
+    )
+    def test_invalid_stored_mission_does_not_start(
+        self,
+        client: TestClient,
+        mocker: MockerFixture,
+        reference: str | None,
+        capabilities: list[str],
+        with_tasks: bool,
+    ) -> None:
+        mocker.patch.object(robot_settings, "CAPABILITIES", capabilities)
+        start = mocker.patch.object(SchedulingUtilities, "start_mission")
+        response = client.post(
+            self.schedule_start_mission_path,
+            json=jsonable_encoder(
+                {
+                    "mission_definition": {
+                        **self.dummy_start_mission_definition.model_dump(),
+                        "robot_mission_id": reference,
+                        "tasks": (
+                            self.dummy_start_mission_definition.tasks
+                            if with_tasks
+                            else []
+                        ),
+                    }
+                }
+            ),
+        )
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        start.assert_not_called()
 
 
 class TestPauseMission:
