@@ -205,3 +205,19 @@ def test_completed_stored_mission_is_not_aborted(stored_mission: Mission) -> Non
     asyncio.run(stop_after_completion())
     assert events.action_requests.execute_mission.success.has_event()
     assert events.mqtt_queue.empty()
+
+
+def test_task_mission_stopped_before_monitor_preserves_existing_behavior() -> None:
+    events = Events()
+    service = RobotService(events, StubRobot(), events.mqtt_queue)
+    mission = DummyMissionDefinition.default_mission.model_copy(deep=True)
+
+    async def stop_before_monitoring() -> None:
+        task = asyncio.create_task(service._monitor_mission_handler(mission))
+        await service._stop_mission_handler(task, mission)
+
+    asyncio.run(stop_before_monitoring())
+    assert isinstance(
+        events.action_requests.stop_mission.success.consume_event(), EmptyMessage
+    )
+    assert events.mqtt_queue.empty()

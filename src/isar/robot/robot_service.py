@@ -117,7 +117,8 @@ class RobotService:
                 aborted_mission = await monitor_mission_task
             except asyncio.CancelledError:
                 # The monitor may be cancelled before its coroutine starts.
-                aborted_mission = mission
+                if mission is not None and mission.robot_mission_id is not None:
+                    aborted_mission = mission
 
             if aborted_mission is not None:
                 if (
