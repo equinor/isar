@@ -144,6 +144,43 @@ Here is an example body:
    }
 }
 
+#### Missions stored on the robot
+
+An integration can opt in to executing existing robot missions by implementing
+`RobotInterface.initiate_stored_mission(mission)` and adding `stored_mission` to
+its `CAPABILITIES`. Use the same `/schedule/start-mission` endpoint:
+
+```json
+{
+  "mission_definition": {
+    "id": "unique-execution-id",
+    "name": "Weekly diagnostic",
+    "robot_mission_id": "DiagnosticRoutine",
+    "tasks": []
+  }
+}
+```
+
+`robot_mission_id` is the exact stored reference, not the display name or execution
+ID. It must not be blank or combined with inspection tasks. Without this field,
+the existing task-based contract is unchanged and empty missions are rejected.
+The response contains the execution `id` and an empty `tasks` list.
+
+ISAR rejects requests without the `stored_mission` capability. The default
+interface implementation also rejects execution, so advertising the capability
+alone cannot silently run an empty mission. Integrations must reject unknown
+references and track the robot execution under `mission.id` for `mission_status`.
+ISAR polls mission status without polling tasks or requesting inspection uploads;
+normal pause, resume and stop controls still apply. Stopping a stored mission,
+including for recharge or lockdown, cancels it without automatically restarting it.
+
+This contract requires an ISAR version containing these changes, a compatible
+robot integration, and a scheduler that sends `robot_mission_id`. Until a release
+is published, cross-repository validation can use an immutable ISAR commit pin;
+replace it with the released dependency afterward. Refresh the integration's
+dependency lock (including ISAR's OpenTelemetry dependencies) and the robot's
+advertised capabilities before enabling stored-mission schedules in Flotilla.
+
 ### Configuration
 
 The system consists of many configuration variables which may alter the functionality. As an example, it is possible to

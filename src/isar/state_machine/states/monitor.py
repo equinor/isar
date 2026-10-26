@@ -16,10 +16,12 @@ from robot_interface.models.mission.status import MissionStatus
 def Monitor(events: Events, mission_id: str) -> StateDef:
 
     def _mission_success_event_handler(
-        _: EmptyMessage,
+        result: EmptyMessage | MissionStatus,
     ) -> Transition:
         events.mqtt_queue.publish_mission_status(
-            mission_id, MissionStatus.Successful, None
+            mission_id,
+            result if isinstance(result, MissionStatus) else MissionStatus.Successful,
+            None,
         )
         return AwaitNextMission.transition()
 
@@ -50,7 +52,7 @@ def Monitor(events: Events, mission_id: str) -> StateDef:
             event=events.action_requests.execute_mission.failure,
             handler=_mission_failed_event_handler,
         ),
-        EventHandlerMapping[EmptyMessage](
+        EventHandlerMapping[EmptyMessage | MissionStatus](
             event=events.action_requests.execute_mission.success,
             handler=_mission_success_event_handler,
         ),

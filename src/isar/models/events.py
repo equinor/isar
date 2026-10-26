@@ -15,7 +15,7 @@ from robot_interface.models.exceptions.event_exceptions import (
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import RobotStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus
 from robot_interface.models.mission.task import InspectionTask
 
 
@@ -181,9 +181,9 @@ class RobotActionEvent[T1, T2, T3]:
 
 class RobotActionRequests:
     def __init__(self) -> None:
-        self.execute_mission: RobotActionEvent[Mission, EmptyMessage, ErrorMessage] = (
-            RobotActionEvent("execute_mission")
-        )
+        self.execute_mission: RobotActionEvent[
+            Mission, EmptyMessage | MissionStatus, ErrorMessage
+        ] = RobotActionEvent("execute_mission")
         self.return_home: RobotActionEvent[EmptyMessage, EmptyMessage, ErrorMessage] = (
             RobotActionEvent("return_home")
         )
