@@ -90,6 +90,9 @@ class StateMachine:
                     break
 
                 state_definition = transition(self.events)
+                self.logger.debug(
+                    f"Transitioning from {self.current_state.name.name} to {state_definition.name.name}"
+                )
                 self.current_state = State(state_definition, self.signal_exit)
         except Exception as e:  # noqa: BLE001
             self.logger.error(f"Unhandled exception in state machine: {e!s}")
