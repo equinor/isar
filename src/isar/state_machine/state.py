@@ -63,7 +63,7 @@ class State:
         entered_time = time.time()
         while True:
             if self.signal_exit_event != None and self.signal_exit_event.has_event():
-                self.logger.info("Stopping state machine from %s state", self.name)
+                self.logger.info("Stopping state machine from %s state", self.name.name)
                 break
 
             for timer in timers:
@@ -72,9 +72,6 @@ class State:
                     timers.remove(timer)
                     self.logger.debug(f"Event timer '{timer.name}' triggered. ")
                     if transition is not None:
-                        self.logger.debug(
-                            f"Transitioning from {self.name.name} to {transition.__name__}"
-                        )
                         return transition
 
             for handler_mapping in self.handlers:
@@ -85,9 +82,6 @@ class State:
                         f"Event '{handler_mapping.event.name}' triggered with input: {event_value}. "
                     )
                     if transition is not None:
-                        self.logger.debug(
-                            f"Transitioning from {self.name.name} to {transition.__name__}"
-                        )
                         return transition
 
             time.sleep(settings.FSM_SLEEP_TIME)
