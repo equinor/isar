@@ -5,7 +5,11 @@ from typing import TypeVar
 
 from fastapi import HTTPException
 
-from isar.apis.models.models import ControlMissionResponse, MaintenanceResponse
+from isar.apis.models.models import (
+    ControlMissionResponse,
+    MaintenanceResponse,
+    TeleoperationResponse,
+)
 from isar.config.settings import settings
 from isar.models.events import (
     APIEvent,
@@ -369,6 +373,30 @@ class SchedulingUtilities:
         except EventTimeoutError:
             error_message = (
                 "Cannot release robot from maintenance as it is not in maintenance"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+
+    def set_teleoperation_mode(self) -> None:
+        """Set teleoperation mode"""
+        try:
+            response: TeleoperationResponse = self._send_command(
+                EmptyMessage(), self.api_events.set_teleoperation_mode
+            )
+            if response.failure_reason is not None:
+                self.logger.warning(response.failure_reason)
+                raise HTTPException(
+                    status_code=HTTPStatus.CONFLICT,
+                    detail="Conflict attempting to set teleoperation mode",
+                )
+            self.logger.info("OK - Robot sent into teleoperation mode")
+        except EventConflictError:
+            error_message = "Previous teleoperation request is still being processed"
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except EventTimeoutError:
+            error_message = (
+                "Cannot send robot to teleoperation as it is not at home or available"
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
