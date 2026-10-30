@@ -2,12 +2,18 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown_with_mission as LockdownWithMission
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.state import (
+    EventHandlerMapping,
+    StateDef,
+    Transition,
+    state_definition,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.status import MissionStatus
 
 
+@state_definition
 def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> StateDef:
 
     def _lockdown_mission_failed(error_message: ErrorMessage) -> Transition:

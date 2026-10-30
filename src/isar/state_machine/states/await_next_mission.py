@@ -11,11 +11,13 @@ from isar.state_machine.state import (
     StateDef,
     TimeoutHandlerMapping,
     Transition,
+    state_definition,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
 
+@state_definition
 def AwaitNextMission(events: Events) -> StateDef:
 
     event_handlers: list[EventHandlerMapping] = [

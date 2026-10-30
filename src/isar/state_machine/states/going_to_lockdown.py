@@ -2,11 +2,17 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown as Lockdown
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.state import (
+    EventHandlerMapping,
+    StateDef,
+    Transition,
+    state_definition,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
 
+@state_definition
 def GoingToLockdown(events: Events) -> StateDef:
 
     event_handlers: list[EventHandlerMapping] = [

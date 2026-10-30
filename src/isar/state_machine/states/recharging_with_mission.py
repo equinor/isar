@@ -5,11 +5,17 @@ import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.recharging as Recharging
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.state import (
+    EventHandlerMapping,
+    StateDef,
+    Transition,
+    state_definition,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
 
+@state_definition
 def RechargingWithMission(events: Events, mission: AbortedMission) -> StateDef:
 
     def _stop_mission_event_handler(

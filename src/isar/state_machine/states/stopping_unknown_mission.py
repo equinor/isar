@@ -2,10 +2,16 @@ import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.state import (
+    EventHandlerMapping,
+    StateDef,
+    Transition,
+    state_definition,
+)
 from isar.state_machine.states_enum import States
 
 
+@state_definition
 def StoppingUnknownMission(events: Events) -> StateDef:
 
     event_handlers: list[EventHandlerMapping] = [

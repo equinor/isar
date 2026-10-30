@@ -7,12 +7,18 @@ import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMai
 import isar.state_machine.states.stopping_return_home as StoppingReturnHome
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.state import (
+    EventHandlerMapping,
+    StateDef,
+    Transition,
+    state_definition,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 
 
+@state_definition
 def ReturningHome(
     events: Events,
     retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
