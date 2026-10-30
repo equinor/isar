@@ -3,11 +3,17 @@ import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.state import (
+    EventHandlerMapping,
+    StateDef,
+    Transition,
+    state_definition,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
 
+@state_definition
 def InterventionNeeded(events: Events) -> StateDef:
 
     def release_intervention_needed_handler(

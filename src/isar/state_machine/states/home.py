@@ -8,12 +8,18 @@ import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_unknown_mission as StoppingUnknownMission
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.state import (
+    EventHandlerMapping,
+    StateDef,
+    Transition,
+    state_definition,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus
 
 
+@state_definition
 def Home(events: Events) -> StateDef:
 
     def _robot_status_event_handler(

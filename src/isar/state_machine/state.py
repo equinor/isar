@@ -3,13 +3,17 @@ import time
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Concatenate, ParamSpec
 
 from isar.config.settings import settings
-from isar.models.events import EmptyMessage, Event, Events
+from isar.models.events import EmptyMessage, Event, Events, _get_events_hash
 from isar.state_machine.states_enum import States
 
 Transition = Callable[[Events], "StateDef"]
+
+states_list: list[str] = []
+
+P = ParamSpec("P")
 
 
 @dataclass
@@ -30,6 +34,40 @@ class StateDef:
     name: States
     handlers: list[EventHandlerMapping]
     timers: list[TimeoutHandlerMapping] | None = None
+
+
+def state_definition[**P](
+    state_func: Callable[Concatenate[Events, P], StateDef],
+) -> Callable[Concatenate[Events, P], StateDef]:
+    state_name: str = state_func.__name__
+    assert state_name in (
+        state.name for state in States
+    ), f"{state_name} needs to be added to the States enum"
+    states_list.append(state_name)
+
+    def wrapper(events: Events, *args: P.args, **kwargs: P.kwargs) -> StateDef:
+        events_hash = _get_events_hash(events)
+        state_def = state_func(events, *args, **kwargs)
+        assert (
+            _get_events_hash(events) == events_hash
+        ), f"{state_name} has side effects in its definition"
+
+        assert len(state_def.handlers) > 0, f"{state_name} is missing eventhandlers"
+
+        event_set = set()
+        for handler in state_def.handlers:
+            assert (
+                not handler.event in event_set
+            ), f"{state_name} has two handlers for event '{handler.event.name}'"
+            event_set.add(handler.event)
+
+        for timer in state_def.timers if state_def.timers is not None else []:
+            assert (
+                timer.timeout_in_seconds >= 0.0
+            ), f"Timer {timer.name} in state {state_name} has a negative timeout"
+        return state_def
+
+    return wrapper
 
 
 class State:

@@ -3,10 +3,16 @@ import isar.state_machine.states.going_to_lockdown_with_mission as GoingToLockdo
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.state import (
+    EventHandlerMapping,
+    StateDef,
+    Transition,
+    state_definition,
+)
 from isar.state_machine.states_enum import States
 
 
+@state_definition
 def StoppingGoToLockdown(events: Events, mission_id: str) -> StateDef:
 
     def _failed_stop_event_handler(
