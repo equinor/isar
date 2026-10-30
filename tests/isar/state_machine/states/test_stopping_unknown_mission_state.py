@@ -20,7 +20,7 @@ def test_unknown_mission_successfully_stopped(events: Events) -> None:
 
     assert events.mqtt_queue.qsize() == 0
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
 
     assert current_state.name is States.AwaitNextMission
 
@@ -40,7 +40,7 @@ def test_unknown_mission_successfully_stopped_with_no_mission_found(
 
     assert events.mqtt_queue.qsize() == 0
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
 
     assert current_state.name is States.AwaitNextMission
 
@@ -56,7 +56,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(events: Events) ->
 
     assert transition is not None
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
 
     assert current_state is not None
     assert current_state.name is States.StoppingUnknownMission
@@ -69,7 +69,7 @@ def test_unknown_mission_successfully_aborted_on_isar_restart(events: Events) ->
 
     transition = stopping_state_event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
 
     assert current_state.name is States.AwaitNextMission
 
@@ -86,5 +86,5 @@ def test_stopping_mission_fails(events: Events) -> None:
 
     assert events.mqtt_queue.empty()
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.InterventionNeeded

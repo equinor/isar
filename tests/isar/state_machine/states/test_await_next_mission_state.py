@@ -83,7 +83,7 @@ def test_transition_from_resuming_to_paused(events: Events) -> None:
         )
     )
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Paused
 
 
@@ -98,7 +98,7 @@ def test_unknown_status_transitions_to_await_next_mission_if_it_was_already_avai
 
     transition = event_handler.handler(RobotStatus.Available)
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.AwaitNextMission
 
 
@@ -117,5 +117,5 @@ def test_transition_from_resuming_return_home_to_await_next_mission(
         )
     )
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.ReturnHomePaused

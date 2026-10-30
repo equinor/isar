@@ -14,7 +14,7 @@ def test_going_to_recharging_goes_to_recharge(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Recharging
 
 
@@ -26,7 +26,7 @@ def test_home_goes_to_recharging_when_battery_low(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Recharging
 
 
@@ -40,7 +40,7 @@ def test_continuing_mission_when_battery_high(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Monitor
 
 
@@ -54,5 +54,5 @@ def test_cancelling_mission_when_recharging_with_mission(events: Events) -> None
 
     transition = event_handler.handler("test_id")
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Recharging

@@ -26,7 +26,7 @@ def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> Sta
             MissionStatus.Failed,
             error_message,
         )
-        return InterventionNeeded.transition("Return home to recharge failed")
+        return InterventionNeeded.transition(events, "Return home to recharge failed")
 
     def _stop_mission_event_handler(
         _: EmptyMessage,
@@ -34,7 +34,7 @@ def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> Sta
         events.api_requests.stop_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
-        return GoingToRecharging.transition_to_existing_mission()
+        return GoingToRecharging.transition_to_existing_mission(events)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[ErrorMessage](
@@ -43,12 +43,12 @@ def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> Sta
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.return_home.success,
-            handler=lambda _: RechargingWithMission.transition(mission),
+            handler=lambda _: RechargingWithMission.transition(events, mission),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.send_to_lockdown.request,
             handler=lambda _: GoingToLockdownWithMission.transition_to_existing_mission_and_report_to_api(
-                mission
+                events, mission
             ),
         ),
         EventHandlerMapping[EmptyMessage](
@@ -63,11 +63,12 @@ def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> Sta
 
 
 def transition_and_start_return_home(
+    events: Events,
     mission: AbortedMission,
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
-
+    def _side_effect(events: Events) -> None:
         events.action_requests.return_home.trigger_request(EmptyMessage())
-        return GoingToRechargingWithMission(events, mission=mission)
 
-    return _transition
+    return Transition(
+        GoingToRechargingWithMission(events, mission=mission), _side_effect
+    )

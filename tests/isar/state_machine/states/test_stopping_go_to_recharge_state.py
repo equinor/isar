@@ -12,5 +12,5 @@ def test_monitor_goes_to_return_home_when_battery_low(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.StoppingGoToRecharge

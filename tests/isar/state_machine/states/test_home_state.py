@@ -19,7 +19,7 @@ def test_lockdown_transitions_to_home(events: Events) -> None:
     transition = event_handler.handler(EmptyMessage())
 
     assert events.api_requests.release_from_lockdown.response.check()
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Home
 
 
@@ -51,7 +51,7 @@ def test_state_machine_with_return_home_failure_successful_retries(
 
     transition = event_handler_success.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Home
 
 
@@ -68,7 +68,7 @@ def test_intervention_needed_transitions_to_home_if_robot_is_home(
 
     assert transition is not None
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Home
 
 
@@ -81,6 +81,6 @@ def test_recharging_goes_to_home_when_battery_high(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
 
     assert current_state.name is States.Home

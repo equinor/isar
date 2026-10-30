@@ -19,21 +19,23 @@ def Recharging(events: Events) -> StateDef:
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.robot_async_events.battery_above_recharge_threshold,
-            handler=lambda _: Home.transition(),
+            handler=lambda _: Home.transition(events),
         ),
         EventHandlerMapping[RobotStatus](
             event=events.robot_async_events.robot_status_update,
             handler=lambda robot_status: (
-                Offline.transition() if robot_status == RobotStatus.Offline else None
+                Offline.transition(events)
+                if robot_status == RobotStatus.Offline
+                else None
             ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: Lockdown.transition_and_respond_to_api(),
+            handler=lambda _: Lockdown.transition_and_respond_to_api(events),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: Maintenance.transition_and_reply_to_API(),
+            handler=lambda _: Maintenance.transition_and_reply_to_API(events),
         ),
     ]
     return StateDef(
@@ -42,5 +44,5 @@ def Recharging(events: Events) -> StateDef:
     )
 
 
-def transition() -> Transition:
-    return Recharging
+def transition(events: Events) -> Transition:
+    return Transition(Recharging(events))

@@ -21,7 +21,7 @@ def test_return_home_cancelled_when_new_mission_received(events: Events) -> None
 
     transition = event_handler.handler(mission)
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.StoppingReturnHome
 
 
@@ -36,7 +36,9 @@ def test_transition_to_stopping_return_home_replies_to_API(events: Events) -> No
 
     transition = event_handler.handler(mission)
 
-    current_state = State(transition(events))
+    assert transition.side_effect is not None
+    transition.side_effect(events)
+    current_state = State(transition.state_def)
     assert current_state.name is States.StoppingReturnHome
     assert events.api_requests.start_mission.response.has_event()
 
@@ -56,7 +58,7 @@ def test_stopping_return_home_mission_fails(events: Events) -> None:
 
     assert not events.api_requests.start_mission.response.has_event()
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.ReturningHome
 
 
@@ -71,5 +73,5 @@ def test_stopping_return_home_mission_succeeds(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Monitor

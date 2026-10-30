@@ -17,7 +17,7 @@ def test_transition_from_pausing_return_home_to_return_home_paused(
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.ReturnHomePaused
 
 
@@ -30,7 +30,7 @@ def test_resuming_paused_return_home(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.ResumingReturnHome
 
 
@@ -47,7 +47,9 @@ def test_transition_from_paused_return_home_to_stopping_paused_return_home_missi
 
     transition = event_handler.handler(example_mission)
 
-    current_state = State(transition(events))
+    assert transition.side_effect is not None
+    transition.side_effect(events)
+    current_state = State(transition.state_def)
 
     assert events.api_requests.start_mission.response.has_event()
     assert current_state.name is States.StoppingPausedReturnHome

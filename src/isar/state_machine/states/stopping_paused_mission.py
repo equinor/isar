@@ -21,12 +21,12 @@ def StoppingPausedMission(events: Events, mission_id: str) -> StateDef:
         events.mqtt_queue.publish_mission_status(
             mission_id, MissionStatus.Cancelled, None
         )
-        return AwaitNextMission.transition()
+        return AwaitNextMission.transition(events)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.stop_mission.failure,
-            handler=lambda _: Paused.transition(mission_id),
+            handler=lambda _: Paused.transition(events, mission_id),
         ),
         EventHandlerMapping[AbortedMission | EmptyMessage](
             event=events.action_requests.stop_mission.success,
@@ -40,14 +40,13 @@ def StoppingPausedMission(events: Events, mission_id: str) -> StateDef:
 
 
 def transition_and_trigger_stop(
-    mission_id: str, should_respond_to_API_request: bool = False
+    events: Events, mission_id: str, should_respond_to_API_request: bool = False
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
+    def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
         if should_respond_to_API_request:
             events.api_requests.stop_mission.trigger_response(
                 ControlMissionResponse(success=True)
             )
-        return StoppingPausedMission(events, mission_id)
 
-    return _transition
+    return Transition(StoppingPausedMission(events, mission_id), _side_effect)

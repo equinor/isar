@@ -13,5 +13,5 @@ def test_transition_from_paused_to_resuming(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Resuming

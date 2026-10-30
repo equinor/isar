@@ -22,21 +22,23 @@ def ReturnHomePaused(events: Events) -> StateDef:
     ) -> Transition:
         events.action_requests.resume_mission.trigger_request(EmptyMessage())
 
-        return GoingToLockdown.transition_to_existing_mission_and_report_to_api()
+        return GoingToLockdown.transition_to_existing_mission_and_report_to_api(events)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.resume_mission.request,
-            handler=lambda _: ResumingReturnHome.transition_and_resume_mission_and_reply_to_API(),
+            handler=lambda _: ResumingReturnHome.transition_and_resume_mission_and_reply_to_API(
+                events
+            ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.robot_async_events.battery_below_mission_threshold,
-            handler=lambda _: ReturningHome.transition_to_existing_mission(),
+            handler=lambda _: ReturningHome.transition_to_existing_mission(events),
         ),
         EventHandlerMapping[Mission](
             event=events.api_requests.start_mission.request,
             handler=lambda mission: StoppingPausedReturnHome.transition_and_stop_return_home_and_reply_to_API(
-                mission
+                events, mission
             ),
         ),
         EventHandlerMapping[EmptyMessage](
@@ -45,7 +47,9 @@ def ReturnHomePaused(events: Events) -> StateDef:
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
+            handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(
+                events
+            ),
         ),
     ]
     return StateDef(
@@ -54,5 +58,5 @@ def ReturnHomePaused(events: Events) -> StateDef:
     )
 
 
-def transition() -> Transition:
-    return ReturnHomePaused
+def transition(events: Events) -> Transition:
+    return Transition(ReturnHomePaused(events))

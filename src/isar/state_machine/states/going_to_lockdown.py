@@ -18,17 +18,19 @@ def GoingToLockdown(events: Events) -> StateDef:
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[ErrorMessage](
             event=events.action_requests.return_home.failure,
-            handler=lambda _: InterventionNeeded.transition("Lockdown mission failed"),
+            handler=lambda _: InterventionNeeded.transition(
+                events, "Lockdown mission failed"
+            ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.resume_mission.failure,
             handler=lambda _: InterventionNeeded.transition(
-                "Failed to resume return to home mission"
+                events, "Failed to resume return to home mission"
             ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.return_home.success,
-            handler=lambda _: Lockdown.transition_without_responding_to_api(),
+            handler=lambda _: Lockdown.transition_without_responding_to_api(events),
         ),
     ]
     return StateDef(
@@ -37,23 +39,20 @@ def GoingToLockdown(events: Events) -> StateDef:
     )
 
 
-def transition_and_start_mission_and_report_to_api() -> Transition:
-    def _transition(events: Events) -> StateDef:
+def transition_and_start_mission_and_report_to_api(events: Events) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )
-
         events.action_requests.return_home.trigger_request(EmptyMessage())
-        return GoingToLockdown(events)
 
-    return _transition
+    return Transition(GoingToLockdown(events), _side_effect)
 
 
-def transition_to_existing_mission_and_report_to_api() -> Transition:
-    def _transition(events: Events) -> StateDef:
+def transition_to_existing_mission_and_report_to_api(events: Events) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )
-        return GoingToLockdown(events)
 
-    return _transition
+    return Transition(GoingToLockdown(events), _side_effect)

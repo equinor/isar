@@ -22,7 +22,7 @@ def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> State
             MissionStatus.Failed,
             error_message,
         )
-        return InterventionNeeded.transition("Lockdown mission failed")
+        return InterventionNeeded.transition(events, "Lockdown mission failed")
 
     def _lockdown_mission_failed_to_resume(_: EmptyMessage) -> Transition:
         events.mqtt_queue.publish_mission_status(
@@ -32,7 +32,9 @@ def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> State
                 ErrorReason.RobotActionException, "Failed to resume lockdown mission"
             ),
         )
-        return InterventionNeeded.transition("Failed to resume return to home mission")
+        return InterventionNeeded.transition(
+            events, "Failed to resume return to home mission"
+        )
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[ErrorMessage](
@@ -45,7 +47,7 @@ def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> State
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.return_home.success,
-            handler=lambda _: LockdownWithMission.transition(mission),
+            handler=lambda _: LockdownWithMission.transition(events, mission),
         ),
     ]
     return StateDef(
@@ -55,26 +57,25 @@ def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> State
 
 
 def transition_and_start_mission_and_report_to_api(
+    events: Events,
     mission: AbortedMission,
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
+    def _side_effect(events: Events) -> None:
         events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )
-
         events.action_requests.return_home.trigger_request(EmptyMessage())
-        return GoingToLockdownWithMission(events, mission)
 
-    return _transition
+    return Transition(GoingToLockdownWithMission(events, mission), _side_effect)
 
 
 def transition_to_existing_mission_and_report_to_api(
+    events: Events,
     mission: AbortedMission,
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
+    def _side_effect(events: Events) -> None:
         events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )
-        return GoingToLockdownWithMission(events, mission)
 
-    return _transition
+    return Transition(GoingToLockdownWithMission(events, mission), _side_effect)

@@ -19,16 +19,16 @@ def StoppingGoToRecharge(events: Events) -> StateDef:
     ) -> Transition:
         if isinstance(aborted_mission, AbortedMission):
             return GoingToRechargingWithMission.transition_and_start_return_home(
-                aborted_mission
+                events, aborted_mission
             )
         else:
-            return GoingToRecharging.transition_and_start_return_home()
+            return GoingToRecharging.transition_and_start_return_home(events)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.stop_mission.failure,
             handler=lambda _: InterventionNeeded.transition(
-                "Failed to stop mission when battery was low"
+                events, "Failed to stop mission when battery was low"
             ),
         ),
         EventHandlerMapping[AbortedMission | EmptyMessage](
@@ -42,9 +42,8 @@ def StoppingGoToRecharge(events: Events) -> StateDef:
     )
 
 
-def transition_and_stop_mission() -> Transition:
-    def _transition(events: Events) -> StateDef:
+def transition_and_stop_mission(events: Events) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
-        return StoppingGoToRecharge(events)
 
-    return _transition
+    return Transition(StoppingGoToRecharge(events), _side_effect)

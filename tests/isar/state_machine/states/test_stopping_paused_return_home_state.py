@@ -22,7 +22,9 @@ def test_transition_to_stopping_paused_return_home_replies_to_API(
 
     transition = event_handler.handler(mission)
 
-    current_state = State(transition(events))
+    assert transition.side_effect is not None
+    transition.side_effect(events)
+    current_state = State(transition.state_def)
     assert current_state.name is States.StoppingPausedReturnHome
     assert events.api_requests.start_mission.response.has_event()
 
@@ -40,7 +42,7 @@ def test_stopping_paused_return_home_mission_fails(events: Events) -> None:
 
     assert not events.api_requests.start_mission.response.has_event()
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.InterventionNeeded
 
 
@@ -55,5 +57,5 @@ def test_stopping_paused_return_home_mission_succeeds(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Monitor

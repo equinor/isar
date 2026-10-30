@@ -19,16 +19,18 @@ def GoingToRecharging(events: Events) -> StateDef:
         EventHandlerMapping[ErrorMessage](
             event=events.action_requests.return_home.failure,
             handler=lambda _: InterventionNeeded.transition(
-                "Return home to recharge failed"
+                events, "Return home to recharge failed"
             ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.return_home.success,
-            handler=lambda _: Recharging.transition(),
+            handler=lambda _: Recharging.transition(events),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
+            handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(
+                events
+            ),
         ),
     ]
     return StateDef(
@@ -37,14 +39,12 @@ def GoingToRecharging(events: Events) -> StateDef:
     )
 
 
-def transition_and_start_return_home() -> Transition:
-    def _transition(events: Events) -> StateDef:
-
+def transition_and_start_return_home(events: Events) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.action_requests.return_home.trigger_request(EmptyMessage())
-        return GoingToRecharging(events)
 
-    return _transition
+    return Transition(GoingToRecharging(events), _side_effect)
 
 
-def transition_to_existing_mission() -> Transition:
-    return GoingToRecharging
+def transition_to_existing_mission(events: Events) -> Transition:
+    return Transition(GoingToRecharging(events))

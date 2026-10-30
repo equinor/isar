@@ -96,7 +96,11 @@ class StateMachine:
                     )
                     break
 
-                state_definition = transition(self.events)
+                if transition.side_effect is not None:
+                    transition.side_effect(self.events)
+
+                state_definition = transition.state_def
+
                 assert (
                     state_definition.name.name in states_list
                 ), f"Attempted to transition to unregistered state {state_definition.name.name}. Use the @state_definition decorator"

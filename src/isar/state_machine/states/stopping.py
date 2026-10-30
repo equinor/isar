@@ -24,12 +24,14 @@ def Stopping(events: Events, mission_id: str) -> StateDef:
             MissionStatus.Cancelled,
             ErrorMessage(ErrorReason.RobotActionException, "Mission stopped by user"),
         )
-        return AwaitNextMission.transition()
+        return AwaitNextMission.transition(events)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.stop_mission.failure,
-            handler=lambda _: Monitor.transition_with_existing_mission(mission_id),
+            handler=lambda _: Monitor.transition_with_existing_mission(
+                events, mission_id
+            ),
         ),
         EventHandlerMapping[AbortedMission | EmptyMessage](
             event=events.action_requests.stop_mission.success,
@@ -43,13 +45,13 @@ def Stopping(events: Events, mission_id: str) -> StateDef:
 
 
 def transition_and_trigger_stop_and_respond_to_API(
+    events: Events,
     mission_id: str,
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
+    def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
         events.api_requests.stop_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
-        return Stopping(events, mission_id)
 
-    return _transition
+    return Transition(Stopping(events, mission_id), _side_effect)

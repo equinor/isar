@@ -20,19 +20,19 @@ def InterventionNeeded(events: Events) -> StateDef:
         _: EmptyMessage,
     ) -> Transition:
         events.api_requests.release_intervention_needed.trigger_response(EmptyMessage())
-        return UnknownStatus.transition()
+        return UnknownStatus.transition(events)
 
     def _robot_status_event_handler(
         robot_status: RobotStatus,
     ) -> Transition | None:
         if robot_status == RobotStatus.Home:
-            return Home.transition()
+            return Home.transition(events)
         return None
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.return_home.request,
-            handler=lambda _: ReturningHome.transition_and_start_mission(True),
+            handler=lambda _: ReturningHome.transition_and_start_mission(events, True),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.release_intervention_needed.request,
@@ -40,7 +40,7 @@ def InterventionNeeded(events: Events) -> StateDef:
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: Maintenance.transition_and_reply_to_API(),
+            handler=lambda _: Maintenance.transition_and_reply_to_API(events),
         ),
         EventHandlerMapping[RobotStatus](
             event=events.robot_async_events.robot_status_update,
@@ -53,10 +53,8 @@ def InterventionNeeded(events: Events) -> StateDef:
     )
 
 
-def transition(reason: str) -> Transition:
-    def _transition(events: Events) -> StateDef:
+def transition(events: Events, reason: str) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.mqtt_queue.publish_intervention_needed(error_message=reason)
 
-        return InterventionNeeded(events)
-
-    return _transition
+    return Transition(InterventionNeeded(events), _side_effect)

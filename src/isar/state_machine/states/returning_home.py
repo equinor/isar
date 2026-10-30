@@ -29,15 +29,18 @@ def ReturningHome(
     ) -> Transition:
         if retries < 1:
             return InterventionNeeded.transition(
-                f"Return home failed after {settings.RETURN_HOME_RETRY_LIMIT} attempts"
+                events,
+                f"Return home failed after {settings.RETURN_HOME_RETRY_LIMIT} attempts",
             )
         else:
-            return transition_and_start_mission(False, retries - 1)
+            return transition_and_start_mission(events, False, retries - 1)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.pause_mission.request,
-            handler=lambda _: PausingReturnHome.transition_and_pause_mission_and_reply_to_API(),
+            handler=lambda _: PausingReturnHome.transition_and_pause_mission_and_reply_to_API(
+                events
+            ),
         ),
         EventHandlerMapping[ErrorMessage](
             event=events.action_requests.return_home.failure,
@@ -46,24 +49,28 @@ def ReturningHome(
         EventHandlerMapping[Mission](
             event=events.api_requests.start_mission.request,
             handler=lambda mission: StoppingReturnHome.transition_and_stop_return_home_and_reply_to_API(
-                mission
+                events, mission
             ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.return_home.success,
-            handler=lambda _: Home.transition(),
+            handler=lambda _: Home.transition(events),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.robot_async_events.battery_below_mission_threshold,
-            handler=lambda _: GoingToRecharging.transition_to_existing_mission(),
+            handler=lambda _: GoingToRecharging.transition_to_existing_mission(events),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
+            handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(
+                events
+            ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
+            handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(
+                events
+            ),
         ),
     ]
     return StateDef(
@@ -73,19 +80,18 @@ def ReturningHome(
 
 
 def transition_and_start_mission(
+    events: Events,
     should_respond_to_API_request: bool = False,
     retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
-
+    def _side_effect(events: Events) -> None:
         events.action_requests.return_home.trigger_request(EmptyMessage())
 
         if should_respond_to_API_request:
             events.api_requests.return_home.trigger_response(EmptyMessage())
-        return ReturningHome(events, retries=retries)
 
-    return _transition
+    return Transition(ReturningHome(events, retries=retries), _side_effect)
 
 
-def transition_to_existing_mission() -> Transition:
-    return ReturningHome
+def transition_to_existing_mission(events: Events) -> Transition:
+    return Transition(ReturningHome(events))

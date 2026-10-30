@@ -23,7 +23,7 @@ def test_going_to_recharging_goes_to_intervention_needed(events: Events) -> None
         )
     )
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.InterventionNeeded
 
 
@@ -43,7 +43,7 @@ def test_going_to_lockdown_task_failed_transitions_to_intervention_needed(
         )
     )
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.InterventionNeeded
 
 
@@ -61,7 +61,7 @@ def test_going_to_lockdown_mission_failed_transitions_to_intervention_needed(
         ErrorMessage(error_description="", error_reason=ErrorReason.RobotAPIException)
     )
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.InterventionNeeded
 
 
@@ -84,7 +84,7 @@ def test_state_machine_with_return_home_failure(events: Events) -> None:
         )
 
         assert transition is not None  # type: ignore
-        current_state = State(transition(events))
+        current_state = State(transition.state_def)
         assert current_state.name is States.ReturningHome
 
     failure_event_handler = current_state.get_event_handler_by_event(
@@ -98,7 +98,7 @@ def test_state_machine_with_return_home_failure(events: Events) -> None:
         )
     )
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.InterventionNeeded
 
 

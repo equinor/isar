@@ -27,7 +27,7 @@ def Monitor(events: Events, mission_id: str) -> StateDef:
         events.mqtt_queue.publish_mission_status(
             mission_id, MissionStatus.Successful, None
         )
-        return AwaitNextMission.transition()
+        return AwaitNextMission.transition(events)
 
     def _mission_failed_event_handler(
         error_message: ErrorMessage,
@@ -37,19 +37,19 @@ def Monitor(events: Events, mission_id: str) -> StateDef:
             MissionStatus.Failed,
             error_message,
         )
-        return AwaitNextMission.transition()
+        return AwaitNextMission.transition(events)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.stop_mission.request,
             handler=lambda _: Stopping.transition_and_trigger_stop_and_respond_to_API(
-                mission_id
+                events, mission_id
             ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.pause_mission.request,
             handler=lambda _: Pausing.transition_and_pause_mission_and_reply_to_API(
-                mission_id
+                events, mission_id
             ),
         ),
         EventHandlerMapping[ErrorMessage](
@@ -62,18 +62,18 @@ def Monitor(events: Events, mission_id: str) -> StateDef:
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.robot_async_events.battery_below_mission_threshold,
-            handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(),
+            handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(events),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.send_to_lockdown.request,
             handler=lambda _: StoppingGoToLockdown.transition_and_stop_mission(
-                mission_id
+                events, mission_id
             ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.set_maintenance_mode.request,
             handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(
-                mission_id
+                events, mission_id
             ),
         ),
     ]
@@ -84,9 +84,9 @@ def Monitor(events: Events, mission_id: str) -> StateDef:
 
 
 def transition_and_start_mission(
-    mission: Mission, should_respond_to_API_request: bool = False
+    events: Events, mission: Mission, should_respond_to_API_request: bool = False
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
+    def _side_effect(events: Events) -> None:
 
         events.action_requests.execute_mission.trigger_request(mission)
         events.mqtt_queue.publish_mission_status(
@@ -97,13 +97,9 @@ def transition_and_start_mission(
             events.api_requests.start_mission.trigger_response(
                 MissionStartResponse(mission_started=True)
             )
-        return Monitor(events, mission_id=mission.id)
 
-    return _transition
+    return Transition(Monitor(events, mission_id=mission.id), _side_effect)
 
 
-def transition_with_existing_mission(mission_id: str) -> Transition:
-    def _transition(events: Events) -> StateDef:
-        return Monitor(events, mission_id=mission_id)
-
-    return _transition
+def transition_with_existing_mission(events: Events, mission_id: str) -> Transition:
+    return Transition(Monitor(events, mission_id=mission_id))

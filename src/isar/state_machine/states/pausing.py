@@ -19,12 +19,14 @@ def Pausing(events: Events, mission_id: str) -> StateDef:
         _: EmptyMessage,
     ) -> Transition:
         events.mqtt_queue.publish_mission_status(mission_id, MissionStatus.Paused, None)
-        return Paused.transition(mission_id)
+        return Paused.transition(events, mission_id)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.pause_mission.failure,
-            handler=lambda _: Monitor.transition_with_existing_mission(mission_id),
+            handler=lambda _: Monitor.transition_with_existing_mission(
+                events, mission_id
+            ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.pause_mission.success,
@@ -38,13 +40,13 @@ def Pausing(events: Events, mission_id: str) -> StateDef:
 
 
 def transition_and_pause_mission_and_reply_to_API(
+    events: Events,
     mission_id: str,
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
+    def _side_effect(events: Events) -> None:
         events.api_requests.pause_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
         events.action_requests.pause_mission.trigger_request(EmptyMessage())
-        return Pausing(events, mission_id=mission_id)
 
-    return _transition
+    return Transition(Pausing(events, mission_id=mission_id), _side_effect)

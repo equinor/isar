@@ -19,12 +19,14 @@ def StoppingPausedReturnHome(events: Events, mission: Mission) -> StateDef:
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.stop_mission.failure,
             handler=lambda _: InterventionNeeded.transition(
-                "Failed to stop paused return home mission"
+                events, "Failed to stop paused return home mission"
             ),
         ),
         EventHandlerMapping[AbortedMission | EmptyMessage](
             event=events.action_requests.stop_mission.success,
-            handler=lambda _: Monitor.transition_and_start_mission(mission, True),
+            handler=lambda _: Monitor.transition_and_start_mission(
+                events, mission, True
+            ),
         ),
     ]
     return StateDef(
@@ -34,9 +36,10 @@ def StoppingPausedReturnHome(events: Events, mission: Mission) -> StateDef:
 
 
 def transition_and_stop_return_home_and_reply_to_API(
+    events: Events,
     mission: Mission,
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
+    def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
 
         response = MissionStartResponse(
@@ -45,6 +48,4 @@ def transition_and_stop_return_home_and_reply_to_API(
         )
         events.api_requests.start_mission.trigger_response(response)
 
-        return StoppingPausedReturnHome(events, mission)
-
-    return _transition
+    return Transition(StoppingPausedReturnHome(events, mission), _side_effect)

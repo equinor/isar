@@ -20,29 +20,29 @@ def Paused(events: Events, mission_id: str) -> StateDef:
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.stop_mission.request,
             handler=lambda _: StoppingPausedMission.transition_and_trigger_stop(
-                mission_id, True
+                events, mission_id, True
             ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.resume_mission.request,
             handler=lambda _: Resuming.transition_resume_mission_and_respond_to_API(
-                mission_id
+                events, mission_id
             ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.robot_async_events.battery_below_mission_threshold,
-            handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(),
+            handler=lambda _: StoppingGoToRecharge.transition_and_stop_mission(events),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.send_to_lockdown.request,
             handler=lambda _: StoppingGoToLockdown.transition_and_stop_mission(
-                mission_id
+                events, mission_id
             ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.set_maintenance_mode.request,
             handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(
-                mission_id
+                events, mission_id
             ),
         ),
     ]
@@ -52,8 +52,5 @@ def Paused(events: Events, mission_id: str) -> StateDef:
     )
 
 
-def transition(mission_id: str) -> Transition:
-    def _transition(events: Events) -> StateDef:
-        return Paused(events, mission_id)
-
-    return _transition
+def transition(events: Events, mission_id: str) -> Transition:
+    return Transition(Paused(events, mission_id))

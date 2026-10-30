@@ -24,28 +24,30 @@ def RechargingWithMission(events: Events, mission: AbortedMission) -> StateDef:
         events.api_requests.stop_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
-        return Recharging.transition()
+        return Recharging.transition(events)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.robot_async_events.battery_above_recharge_threshold,
             handler=lambda _: Monitor.transition_and_start_mission(
-                mission, should_respond_to_API_request=False
+                events, mission, should_respond_to_API_request=False
             ),
         ),
         EventHandlerMapping[RobotStatus](
             event=events.robot_async_events.robot_status_update,
             handler=lambda robot_status: (
-                Offline.transition() if robot_status == RobotStatus.Offline else None
+                Offline.transition(events)
+                if robot_status == RobotStatus.Offline
+                else None
             ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: Lockdown.transition_and_respond_to_api(),
+            handler=lambda _: Lockdown.transition_and_respond_to_api(events),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: Maintenance.transition_and_reply_to_API(),
+            handler=lambda _: Maintenance.transition_and_reply_to_API(events),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.stop_mission.request,
@@ -58,8 +60,5 @@ def RechargingWithMission(events: Events, mission: AbortedMission) -> StateDef:
     )
 
 
-def transition(mission: AbortedMission) -> Transition:
-    def _transition(events: Events) -> StateDef:
-        return RechargingWithMission(events, mission=mission)
-
-    return _transition
+def transition(events: Events, mission: AbortedMission) -> Transition:
+    return Transition(RechargingWithMission(events, mission=mission))

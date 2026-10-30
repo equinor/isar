@@ -17,7 +17,7 @@ def LockdownWithMission(events: Events, mission: AbortedMission) -> StateDef:
         _: EmptyMessage,
     ) -> Transition:
         events.api_requests.release_from_lockdown.trigger_response(EmptyMessage())
-        return Monitor.transition_and_start_mission(mission)
+        return Monitor.transition_and_start_mission(events, mission)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
@@ -32,11 +32,10 @@ def LockdownWithMission(events: Events, mission: AbortedMission) -> StateDef:
     )
 
 
-def transition(mission: AbortedMission) -> Transition:
-    def _transition(events: Events) -> StateDef:
+def transition(events: Events, mission: AbortedMission) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )
-        return LockdownWithMission(events, mission)
 
-    return _transition
+    return Transition(LockdownWithMission(events, mission), _side_effect)

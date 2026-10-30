@@ -21,21 +21,23 @@ def UnknownStatus(events: Events) -> StateDef:
         robot_status: RobotStatus,
     ) -> Transition | None:
         if robot_status == RobotStatus.Home:
-            return Home.transition()
+            return Home.transition(events)
         elif robot_status == RobotStatus.Available:
-            return AwaitNextMission.transition()
+            return AwaitNextMission.transition(events)
         elif robot_status == RobotStatus.Offline:
-            return Offline.transition()
+            return Offline.transition(events)
         elif robot_status == RobotStatus.TeleOperation:
-            return Maintenance.transition_without_replying_to_API()
+            return Maintenance.transition_without_replying_to_API(events)
         elif robot_status == RobotStatus.Busy:
-            return StoppingUnknownMission.transition()
+            return StoppingUnknownMission.transition(events)
         return None
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.stop_mission.request,
-            handler=lambda _: StoppingUnknownMission.transition_and_respond_to_API(),
+            handler=lambda _: StoppingUnknownMission.transition_and_respond_to_API(
+                events
+            ),
         ),
         EventHandlerMapping[RobotStatus](
             event=events.robot_async_events.robot_status_update,
@@ -43,7 +45,7 @@ def UnknownStatus(events: Events) -> StateDef:
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: Maintenance.transition_and_reply_to_API(),
+            handler=lambda _: Maintenance.transition_and_reply_to_API(events),
         ),
     ]
     return StateDef(
@@ -52,5 +54,5 @@ def UnknownStatus(events: Events) -> StateDef:
     )
 
 
-def transition() -> Transition:
-    return UnknownStatus
+def transition(events: Events) -> Transition:
+    return Transition(UnknownStatus(events))

@@ -17,7 +17,7 @@ def Lockdown(events: Events) -> StateDef:
         _: EmptyMessage,
     ) -> Transition:
         events.api_requests.release_from_lockdown.trigger_response(EmptyMessage())
-        return Home.transition()
+        return Home.transition(events)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
@@ -32,15 +32,14 @@ def Lockdown(events: Events) -> StateDef:
     )
 
 
-def transition_without_responding_to_api() -> Transition:
-    return Lockdown
+def transition_without_responding_to_api(events: Events) -> Transition:
+    return Transition(Lockdown(events))
 
 
-def transition_and_respond_to_api() -> Transition:
-    def _transition(events: Events) -> StateDef:
+def transition_and_respond_to_api(events: Events) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.api_requests.send_to_lockdown.trigger_response(
             LockdownResponse(lockdown_started=True)
         )
-        return Lockdown(events)
 
-    return _transition
+    return Transition(Lockdown(events), _side_effect)

@@ -24,7 +24,7 @@ def StoppingDueToMaintenance(events: Events, mission_id: str | None = None) -> S
             )
         )
         return InterventionNeeded.transition(
-            "Failed to stop mission when entering maintenance mode"
+            events, "Failed to stop mission when entering maintenance mode"
         )
 
     def _successful_stop_event_handler(
@@ -35,7 +35,7 @@ def StoppingDueToMaintenance(events: Events, mission_id: str | None = None) -> S
                 mission_id,
                 "Mission aborted, robot being sent to maintenance",
             )
-        return Maintenance.transition_and_reply_to_API()
+        return Maintenance.transition_and_reply_to_API(events)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
@@ -54,10 +54,10 @@ def StoppingDueToMaintenance(events: Events, mission_id: str | None = None) -> S
 
 
 def transition_and_stop_mission(
+    events: Events,
     mission_id: str | None = None,
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
+    def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
-        return StoppingDueToMaintenance(events, mission_id)
 
-    return _transition
+    return Transition(StoppingDueToMaintenance(events, mission_id), _side_effect)

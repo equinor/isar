@@ -24,17 +24,19 @@ def StoppingGoToLockdown(events: Events, mission_id: str) -> StateDef:
                 failure_reason="Failed to stop ongoing mission",
             )
         )
-        return Monitor.transition_with_existing_mission(mission_id)
+        return Monitor.transition_with_existing_mission(events, mission_id)
 
     def _successful_stop_event_handler(
         mission: AbortedMission | EmptyMessage,
     ) -> Transition:
         if isinstance(mission, AbortedMission):
             return GoingToLockdownWithMission.transition_and_start_mission_and_report_to_api(
-                mission
+                events, mission
             )
         else:
-            return GoingToLockdown.transition_and_start_mission_and_report_to_api()
+            return GoingToLockdown.transition_and_start_mission_and_report_to_api(
+                events
+            )
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
@@ -52,9 +54,8 @@ def StoppingGoToLockdown(events: Events, mission_id: str) -> StateDef:
     )
 
 
-def transition_and_stop_mission(mission_id: str) -> Transition:
-    def _transition(events: Events) -> StateDef:
+def transition_and_stop_mission(events: Events, mission_id: str) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
-        return StoppingGoToLockdown(events, mission_id)
 
-    return _transition
+    return Transition(StoppingGoToLockdown(events, mission_id), _side_effect)

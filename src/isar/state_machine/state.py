@@ -9,11 +9,29 @@ from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Event, Events, _get_events_hash
 from isar.state_machine.states_enum import States
 
-Transition = Callable[[Events], "StateDef"]
-
 states_list: list[str] = []
 
 P = ParamSpec("P")
+
+
+@dataclass
+class StateDef:
+    name: States
+    handlers: list[EventHandlerMapping]
+    timers: list[TimeoutHandlerMapping] | None = None
+
+
+SideEffect = Callable[[Events], None]
+
+
+@dataclass
+class Transition:
+    def __init__(self, state_def: StateDef, side_effect: SideEffect | None = None):
+        self.state_def = state_def
+        self.side_effect = side_effect
+
+    state_def: StateDef
+    side_effect: SideEffect | None
 
 
 @dataclass
@@ -27,13 +45,6 @@ class TimeoutHandlerMapping:
     name: str
     timeout_in_seconds: float
     handler: Callable[[], Transition | None]
-
-
-@dataclass
-class StateDef:
-    name: States
-    handlers: list[EventHandlerMapping]
-    timers: list[TimeoutHandlerMapping] | None = None
 
 
 def state_definition[**P](

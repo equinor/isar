@@ -18,7 +18,7 @@ def test_mqtt_mission_status_sent_on_mission_stopped(events: Events) -> None:
 
     assert events.mqtt_queue.qsize() == 1
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
 
     assert current_state.name is States.AwaitNextMission
 
@@ -35,5 +35,5 @@ def test_stopping_mission_fails(events: Events) -> None:
 
     assert events.mqtt_queue.empty()
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Monitor

@@ -21,7 +21,7 @@ def test_transitioning_to_returning_home_from_stopping_when_return_home_failed(
     )
 
     transition = event_handler.handler(EmptyMessage())
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
 
     assert current_state.name is States.Monitor
 
@@ -38,7 +38,7 @@ def test_transition_from_pausing_return_home_to_returning_home(events: Events) -
     )
     transition = event_handler.handler(error_event)
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.ReturningHome
 
 
@@ -53,7 +53,7 @@ def test_transition_from_resuming_return_home_to_returning_home_state(
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.ReturningHome
 
 
@@ -68,7 +68,7 @@ def test_transition_from_returning_home_to_home_robot_status_not_updated(
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Home
     assert not events.robot_async_events.robot_status_update.check()
 
@@ -90,6 +90,6 @@ def test_return_home_starts_when_battery_is_low(events: Events) -> None:
 
     transition = timer.handler()
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
 
     assert current_state.name is States.ReturningHome

@@ -46,12 +46,14 @@ def test_stored_mission_is_forwarded_to_robot(
 ) -> None:
     start = mocker.spy(service.robot, "initiate_mission")
 
-    state = transition_and_start_mission(stored_mission)(events)
+    transition = transition_and_start_mission(events, stored_mission)
+    transition.side_effect(events)
+
     success = service._start_mission_handler(
         events.action_requests.execute_mission.request.consume_event()
     )
 
-    assert state.name == States.Monitor
+    assert transition.state_def.name == States.Monitor
     assert success
     start.assert_called_once_with(stored_mission)
 
@@ -216,7 +218,9 @@ def test_terminal_state_publishes_mission_outcome(
         )
     handler = state.get_event_handler_by_event(result_event)
 
-    next_state = State(handler.handler(result)(events))
+    transition = handler.handler(result)
+
+    next_state = State(transition.state_def)
 
     assert next_state.name == States.AwaitNextMission
     payload = json.loads(events.mqtt_queue.get().payload)

@@ -17,7 +17,7 @@ def test_stopping_paused_mission_fails(events: Events) -> None:
 
     assert events.mqtt_queue.empty()
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Paused
 
 
@@ -31,5 +31,5 @@ def test_stopping_paused_mission_succeeds(events: Events) -> None:
 
     assert events.mqtt_queue.qsize() == 1
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.AwaitNextMission

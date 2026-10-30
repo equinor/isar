@@ -23,7 +23,9 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    assert transition.side_effect is not None
+    transition.side_effect(events)
+    current_state = State(transition.state_def)
 
     assert events.api_requests.send_to_lockdown.response.has_event()
     assert current_state.name is States.GoingToLockdown
@@ -41,7 +43,7 @@ def test_transition_from_return_home_paused_to_going_to_lockdown(
         )
     )
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.InterventionNeeded
 
 
@@ -60,7 +62,9 @@ def test_stopping_lockdown_transitions_to_going_to_lockdown(events: Events) -> N
 
     transition = event_handler.handler(aborted_mission)
 
-    current_state = State(transition(events))
+    assert transition.side_effect is not None
+    transition.side_effect(events)
+    current_state = State(transition.state_def)
     assert current_state.name is States.GoingToLockdownWithMission
 
     assert events.api_requests.send_to_lockdown.response.check().lockdown_started
@@ -83,7 +87,9 @@ def test_continuing_mission_after_lockdown(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    assert transition.side_effect is not None
+    transition.side_effect(events)
+    current_state = State(transition.state_def)
     assert current_state.name is States.Monitor
 
     assert events.api_requests.release_from_lockdown.response.has_event()
@@ -100,7 +106,7 @@ def test_return_home_transitions_to_going_to_lockdown(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.GoingToLockdown
 
 
@@ -113,7 +119,7 @@ def test_recharging_transitions_to_going_to_lockdown(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.GoingToLockdown
 
 
@@ -126,7 +132,9 @@ def test_await_next_mission_transitions_to_going_to_lockdown(events: Events) -> 
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    assert transition.side_effect is not None
+    transition.side_effect(events)
+    current_state = State(transition.state_def)
     assert current_state.name is States.GoingToLockdown
 
     assert events.api_requests.send_to_lockdown.response.check()

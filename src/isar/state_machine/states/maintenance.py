@@ -20,7 +20,7 @@ def Maintenance(events: Events) -> StateDef:
             EmptyMessage()
         )
 
-        return UnknownStatus.transition()
+        return UnknownStatus.transition(events)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
@@ -35,15 +35,14 @@ def Maintenance(events: Events) -> StateDef:
     )
 
 
-def transition_and_reply_to_API() -> Transition:
-    def _transition(events: Events) -> StateDef:
+def transition_and_reply_to_API(events: Events) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.api_requests.set_maintenance_mode.trigger_response(
             MaintenanceResponse(is_maintenance_mode=True)
         )
-        return Maintenance(events)
 
-    return _transition
+    return Transition(Maintenance(events), _side_effect)
 
 
-def transition_without_replying_to_API() -> Transition:
-    return Maintenance
+def transition_without_replying_to_API(events: Events) -> Transition:
+    return Transition(Maintenance(events))

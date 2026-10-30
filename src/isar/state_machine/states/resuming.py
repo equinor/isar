@@ -21,12 +21,12 @@ def Resuming(events: Events, mission_id: str) -> StateDef:
         events.mqtt_queue.publish_mission_status(
             mission_id, MissionStatus.InProgress, None
         )
-        return Monitor.transition_with_existing_mission(mission_id)
+        return Monitor.transition_with_existing_mission(events, mission_id)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.resume_mission.failure,
-            handler=lambda _: Paused.transition(mission_id),
+            handler=lambda _: Paused.transition(events, mission_id),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.resume_mission.success,
@@ -40,13 +40,13 @@ def Resuming(events: Events, mission_id: str) -> StateDef:
 
 
 def transition_resume_mission_and_respond_to_API(
+    events: Events,
     mission_id: str,
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
+    def _side_effect(events: Events) -> None:
         events.api_requests.resume_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
         events.action_requests.resume_mission.trigger_request(EmptyMessage())
-        return Resuming(events, mission_id)
 
-    return _transition
+    return Transition(Resuming(events, mission_id), _side_effect)

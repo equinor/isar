@@ -22,14 +22,14 @@ def Offline(events: Events) -> StateDef:
         if robot_status == RobotStatus.Offline:
             return None
         elif robot_status == RobotStatus.Home:
-            return Home.transition()
+            return Home.transition(events)
         elif robot_status == RobotStatus.Available:
             return InterventionNeeded.transition(
-                "Robot not home after going online. Localisation likely needed"
+                events, "Robot not home after going online. Localisation likely needed"
             )
         elif robot_status == RobotStatus.TeleOperation:
-            return Maintenance.transition_without_replying_to_API()
-        return UnknownStatus.transition()
+            return Maintenance.transition_without_replying_to_API(events)
+        return UnknownStatus.transition(events)
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[RobotStatus](
@@ -38,7 +38,7 @@ def Offline(events: Events) -> StateDef:
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: Maintenance.transition_and_reply_to_API(),
+            handler=lambda _: Maintenance.transition_and_reply_to_API(events),
         ),
     ]
     return StateDef(
@@ -47,5 +47,5 @@ def Offline(events: Events) -> StateDef:
     )
 
 
-def transition() -> Transition:
-    return Offline
+def transition(events: Events) -> Transition:
+    return Transition(Offline(events))

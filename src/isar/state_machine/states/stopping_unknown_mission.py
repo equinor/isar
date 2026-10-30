@@ -18,12 +18,12 @@ def StoppingUnknownMission(events: Events) -> StateDef:
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.stop_mission.failure,
             handler=lambda _: InterventionNeeded.transition(
-                "Failed to stop unknown mission"
+                events, "Failed to stop unknown mission"
             ),
         ),
         EventHandlerMapping[AbortedMission | EmptyMessage](
             event=events.action_requests.stop_mission.success,
-            handler=lambda _: AwaitNextMission.transition(),
+            handler=lambda _: AwaitNextMission.transition(events),
         ),
     ]
     return StateDef(
@@ -32,20 +32,18 @@ def StoppingUnknownMission(events: Events) -> StateDef:
     )
 
 
-def transition() -> Transition:
-    def _transition(events: Events) -> StateDef:
+def transition(events: Events) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
-        return StoppingUnknownMission(events)
 
-    return _transition
+    return Transition(StoppingUnknownMission(events), _side_effect)
 
 
-def transition_and_respond_to_API() -> Transition:
-    def _transition(events: Events) -> StateDef:
+def transition_and_respond_to_API(events: Events) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
         events.api_requests.stop_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
-        return StoppingUnknownMission(events)
 
-    return _transition
+    return Transition(StoppingUnknownMission(events), _side_effect)

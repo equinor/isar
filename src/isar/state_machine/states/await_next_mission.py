@@ -23,27 +23,35 @@ def AwaitNextMission(events: Events) -> StateDef:
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[Mission](
             event=events.api_requests.start_mission.request,
-            handler=lambda mission: Monitor.transition_and_start_mission(mission, True),
+            handler=lambda mission: Monitor.transition_and_start_mission(
+                events, mission, True
+            ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.return_home.request,
-            handler=lambda _: ReturningHome.transition_and_start_mission(True),
+            handler=lambda _: ReturningHome.transition_and_start_mission(events, True),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.stop_mission.request,
-            handler=lambda _: StoppingUnknownMission.transition_and_respond_to_API(),
+            handler=lambda _: StoppingUnknownMission.transition_and_respond_to_API(
+                events
+            ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: GoingToLockdown.transition_and_start_mission_and_report_to_api(),
+            handler=lambda _: GoingToLockdown.transition_and_start_mission_and_report_to_api(
+                events
+            ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.robot_async_events.battery_below_mission_threshold,
-            handler=lambda _: GoingToRecharging.transition_and_start_return_home(),
+            handler=lambda _: GoingToRecharging.transition_and_start_return_home(
+                events
+            ),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: Maintenance.transition_and_reply_to_API(),
+            handler=lambda _: Maintenance.transition_and_reply_to_API(events),
         ),
     ]
 
@@ -51,7 +59,7 @@ def AwaitNextMission(events: Events) -> StateDef:
         TimeoutHandlerMapping(
             name="should_return_home_timer",
             timeout_in_seconds=settings.RETURN_HOME_DELAY,
-            handler=lambda: ReturningHome.transition_and_start_mission(),
+            handler=lambda: ReturningHome.transition_and_start_mission(events),
         )
     ]
 
@@ -62,5 +70,5 @@ def AwaitNextMission(events: Events) -> StateDef:
     )
 
 
-def transition() -> Transition:
-    return AwaitNextMission
+def transition(events: Events) -> Transition:
+    return Transition(AwaitNextMission(events))

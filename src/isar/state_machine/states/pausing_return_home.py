@@ -17,11 +17,11 @@ def PausingReturnHome(events: Events) -> StateDef:
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.pause_mission.failure,
-            handler=lambda _: ReturningHome.transition_to_existing_mission(),
+            handler=lambda _: ReturningHome.transition_to_existing_mission(events),
         ),
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.pause_mission.success,
-            handler=lambda _: ReturnHomePaused.transition(),
+            handler=lambda _: ReturnHomePaused.transition(events),
         ),
     ]
     return StateDef(
@@ -30,12 +30,11 @@ def PausingReturnHome(events: Events) -> StateDef:
     )
 
 
-def transition_and_pause_mission_and_reply_to_API() -> Transition:
-    def _transition(events: Events) -> StateDef:
+def transition_and_pause_mission_and_reply_to_API(events: Events) -> Transition:
+    def _side_effect(events: Events) -> None:
         events.api_requests.pause_mission.trigger_response(
             ControlMissionResponse(success=True)
         )
         events.action_requests.pause_mission.trigger_request(EmptyMessage())
-        return PausingReturnHome(events)
 
-    return _transition
+    return Transition(PausingReturnHome(events), _side_effect)

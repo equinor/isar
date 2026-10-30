@@ -20,7 +20,7 @@ def test_home_transitions_to_maintenance_mode_when_teleoperating(
 
     assert transition is not None
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Maintenance
 
 
@@ -37,7 +37,7 @@ def test_unknown_status_transitions_to_maintenance_mode_when_teleoperating(
 
     assert transition is not None
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Maintenance
 
 
@@ -54,5 +54,5 @@ def test_offline_transitions_to_maintenance_mode_when_teleoperating(
 
     assert transition is not None
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Maintenance

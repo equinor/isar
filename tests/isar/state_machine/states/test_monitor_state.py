@@ -47,7 +47,9 @@ def test_stopping_to_recharge_goes_to_intervention_needed(events: Events) -> Non
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    assert transition.side_effect is not None
+    transition.side_effect(events)
+    current_state = State(transition.state_def)
 
     assert not events.mqtt_queue.empty()
     assert current_state.name is States.InterventionNeeded
@@ -64,7 +66,7 @@ def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
     )
 
     transition = event_handler.handler(EmptyMessage())
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
 
     assert current_state.name is States.Monitor
 
@@ -82,7 +84,7 @@ def test_stopping_lockdown_failing_to_monitor(events: Events) -> None:
 
     assert events.mqtt_queue.empty()
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Monitor
 
 
@@ -98,7 +100,7 @@ def test_transition_from_pausing_to_monitor(events: Events) -> None:
     )
     transition = event_handler.handler(error_event)
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Monitor
 
 
@@ -111,7 +113,7 @@ def test_transition_from_resuming_to_monitor(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Monitor
 
 
@@ -208,7 +210,9 @@ def test_transition_from_monitor_to_stopping_to_recharge(events: Events) -> None
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    assert transition.side_effect is not None
+    transition.side_effect(events)
+    current_state = State(transition.state_def)
 
     assert current_state.name is States.StoppingGoToRecharge
     assert not events.api_requests.stop_mission.response.has_event()

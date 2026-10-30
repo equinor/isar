@@ -14,7 +14,7 @@ def test_transition_from_pausing_to_paused(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    current_state = State(transition.state_def)
     assert current_state.name is States.Paused
 
 
@@ -27,7 +27,9 @@ def test_transition_from_paused_to_stopping_paused_mission(events: Events) -> No
 
     transition = event_handler.handler("test_id")
 
-    current_state = State(transition(events))
+    assert transition.side_effect is not None
+    transition.side_effect(events)
+    current_state = State(transition.state_def)
 
     assert current_state.name is States.StoppingPausedMission
     assert events.api_requests.stop_mission.response.has_event()
@@ -42,7 +44,9 @@ def test_transition_from_paused_to_stopping_to_recharge(events: Events) -> None:
 
     transition = event_handler.handler(EmptyMessage())
 
-    current_state = State(transition(events))
+    assert transition.side_effect is not None
+    transition.side_effect(events)
+    current_state = State(transition.state_def)
 
     assert current_state.name is States.StoppingGoToRecharge
     assert not events.api_requests.stop_mission.response.has_event()

@@ -18,11 +18,13 @@ def StoppingReturnHome(events: Events, mission: Mission) -> StateDef:
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](
             event=events.action_requests.stop_mission.failure,
-            handler=lambda _: ReturningHome.transition_to_existing_mission(),
+            handler=lambda _: ReturningHome.transition_to_existing_mission(events),
         ),
         EventHandlerMapping[AbortedMission | EmptyMessage](
             event=events.action_requests.stop_mission.success,
-            handler=lambda _: Monitor.transition_and_start_mission(mission, True),
+            handler=lambda _: Monitor.transition_and_start_mission(
+                events, mission, True
+            ),
         ),
     ]
     return StateDef(
@@ -32,15 +34,15 @@ def StoppingReturnHome(events: Events, mission: Mission) -> StateDef:
 
 
 def transition_and_stop_return_home_and_reply_to_API(
+    events: Events,
     mission: Mission,
 ) -> Transition:
-    def _transition(events: Events) -> StateDef:
+    def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
         response = MissionStartResponse(
             mission_id=mission.id,
             mission_started=True,
         )
         events.api_requests.start_mission.trigger_response(response)
-        return StoppingReturnHome(events, mission)
 
-    return _transition
+    return Transition(StoppingReturnHome(events, mission), _side_effect)
