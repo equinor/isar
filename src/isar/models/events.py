@@ -207,3 +207,43 @@ class RobotAsyncEvents:
         self.battery_above_recharge_threshold: Event[EmptyMessage] = Event(
             "battery_above_recharge_threshold"
         )
+
+
+def _get_events_hash(events: Events) -> str:
+    """
+    A function which returns a string containing the values inside all events.
+    Useful for checking if changes have occured.
+    """
+    api_requests = ",".join(
+        [
+            name + ":" + str(value.request.check()) + str(value.response.check())
+            for name, value in events.api_requests.__dict__.items()
+        ]
+    )
+    action_requests = ",".join(
+        [
+            name
+            + ":"
+            + str(value.failure.check())
+            + str(value.request.check())
+            + str(value.success.check())
+            for name, value in events.action_requests.__dict__.items()
+        ]
+    )
+    robot_events = ",".join(
+        [
+            name + ":" + str(value.check())
+            for name, value in events.robot_async_events.__dict__.items()
+        ]
+    )
+    mqtt_event = str(events.mqtt_queue.queue.qsize())
+    upload_inspection_event = str(events.upload_inspection_event.check())
+    upload_task_event = str(events.upload_task_event.check())
+    return (
+        api_requests
+        + action_requests
+        + robot_events
+        + mqtt_event
+        + upload_inspection_event
+        + upload_task_event
+    )

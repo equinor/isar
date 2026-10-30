@@ -12,7 +12,7 @@ from isar.services.service_connections.persistent_memory import (
     create_persistent_robot_state,
     read_persistent_robot_state,
 )
-from isar.state_machine.state import State, StateDef, Transition
+from isar.state_machine.state import State, StateDef, Transition, states_list
 from isar.state_machine.state_metrics import StateMetricsPublisher
 from isar.state_machine.states.going_to_lockdown import GoingToLockdown
 from isar.state_machine.states.maintenance import Maintenance
@@ -38,6 +38,13 @@ class StateMachine:
             Instance of MQTT queue which has a publish function
 
         """
+        assert len(set(states_list)) == len(
+            states_list
+        ), "Not all states have unique names"
+        assert len(States) == len(
+            states_list
+        ), "Not all enums in States have a matching state definition"
+
         self.logger = logging.getLogger("state_machine")
 
         self.events: Events = events
@@ -90,6 +97,9 @@ class StateMachine:
                     break
 
                 state_definition = transition(self.events)
+                assert (
+                    state_definition.name.name in states_list
+                ), f"Attempted to transition to unregistered state {state_definition.name.name}. Use the @state_definition decorator"
                 self.logger.debug(
                     f"Transitioning from {self.current_state.name.name} to {state_definition.name.name}"
                 )

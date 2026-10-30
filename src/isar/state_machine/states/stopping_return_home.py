@@ -2,11 +2,17 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import MissionStartResponse
 from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.state import (
+    EventHandlerMapping,
+    StateDef,
+    Transition,
+    state_definition,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
 
 
+@state_definition
 def StoppingReturnHome(events: Events, mission: Mission) -> StateDef:
 
     event_handlers: list[EventHandlerMapping] = [
