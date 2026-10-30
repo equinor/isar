@@ -1,5 +1,6 @@
 from collections import deque
 from http import HTTPStatus
+import time
 
 import sqlalchemy
 from fastapi.encoders import jsonable_encoder
@@ -19,7 +20,7 @@ from isar.services.service_connections.persistent_memory import (
 )
 from isar.state_machine.state_machine import read_or_create_persistent_mode
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission.status import MissionStatus, RobotStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from tests.test_mocks.mission_definition import DummyMissionDefinition
 from tests.test_mocks.robot_interface import StubRobot
 from tests.test_mocks.state_machine_mocks import (
@@ -92,6 +93,8 @@ def test_lockdown_mode(
         == States.Home
     )
 
+    mocker.patch.object(StubRobot, "task_status", return_value=TaskStatus.InProgress)
+
     mocker.patch.object(
         StubRobot, "mission_status", return_value=MissionStatus.InProgress
     )  # The robot will not go to awaiting next mission after mission has started, it should remain in monitor. In order to test the "stop" functionality.
@@ -117,7 +120,7 @@ def test_lockdown_mode(
 
     wait_until(
         lambda: state_machine_thread_with_db.state_machine.current_state.name
-        == States.Lockdown,
+        == States.LockdownWithMission,
         timeout=10.0,
     )
 
@@ -138,8 +141,8 @@ def test_lockdown_mode(
             States.Home,
             States.Monitor,
             States.StoppingGoToLockdown,
-            States.GoingToLockdown,
-            States.Lockdown,
+            States.GoingToLockdownWithMission,
+            States.LockdownWithMission,
         ]
     )
     wait_until(
