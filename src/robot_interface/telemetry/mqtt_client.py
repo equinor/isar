@@ -1,11 +1,10 @@
 import json
 import logging
-import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from logging import Logger
-from threading import Thread
+from threading import Event, Thread
 
 from paho.mqtt.properties import Properties
 
@@ -37,13 +36,14 @@ class MqttTelemetryPublisher(Thread):
         self.telemetry_method: Callable[[], str] = parameters.method
         self.topic: str = f"isar/{settings.ISAR_ID}/{parameters.topic}"
         self.interval: float = parameters.interval
+        self.shutdown_requested = Event()
 
         self.logger: Logger = logging.getLogger(f"telemetry - {parameters.name}")
 
-        Thread.__init__(self, name=f"Telemetry thread - {parameters.name}")
+        Thread.__init__(self, name=f"Telemetry thread - {parameters.name}", daemon=True)
 
     def stop(self) -> None:
-        return
+        self.shutdown_requested.set()
 
     def run(self) -> None:
         robot_name = settings.ROBOT_NAME
@@ -51,8 +51,7 @@ class MqttTelemetryPublisher(Thread):
         topic: str
         payload: str
 
-        while True:
-            time.sleep(self.interval)
+        while not self.shutdown_requested.wait(self.interval):
             try:
                 payload_str = self.telemetry_method()
                 payload_dict = json.loads(payload_str)
@@ -75,6 +74,9 @@ class MqttTelemetryPublisher(Thread):
             except Exception as e:  # noqa: BLE001
                 self.logger.error(f"Unexpected error in MQTT telemetry publisher: {e}")
                 continue
+
+            if self.shutdown_requested.is_set():
+                return
 
             properties: Properties = props_expiry(settings.MQTT_TELEMETRY_EXPIRY)
 
