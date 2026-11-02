@@ -9,6 +9,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
@@ -54,5 +55,6 @@ def UnknownStatus(events: Events) -> StateDef:
     )
 
 
+@transition_definition
 def transition(events: Events) -> Transition:
     return Transition(UnknownStatus(events))

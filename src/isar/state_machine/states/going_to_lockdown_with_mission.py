@@ -7,6 +7,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
@@ -56,6 +57,7 @@ def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> State
     )
 
 
+@transition_definition
 def transition_and_start_mission_and_report_to_api(
     events: Events,
     mission: AbortedMission,
@@ -69,6 +71,7 @@ def transition_and_start_mission_and_report_to_api(
     return Transition(GoingToLockdownWithMission(events, mission), _side_effect)
 
 
+@transition_definition
 def transition_to_existing_mission_and_report_to_api(
     events: Events,
     mission: AbortedMission,

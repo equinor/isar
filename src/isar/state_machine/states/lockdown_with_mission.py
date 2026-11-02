@@ -6,6 +6,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 
@@ -32,6 +33,7 @@ def LockdownWithMission(events: Events, mission: AbortedMission) -> StateDef:
     )
 
 
+@transition_definition
 def transition(events: Events, mission: AbortedMission) -> Transition:
     def _side_effect(events: Events) -> None:
         events.api_requests.send_to_lockdown.trigger_response(

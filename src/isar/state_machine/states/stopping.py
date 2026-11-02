@@ -7,6 +7,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
@@ -44,6 +45,7 @@ def Stopping(events: Events, mission_id: str) -> StateDef:
     )
 
 
+@transition_definition
 def transition_and_trigger_stop_and_respond_to_API(
     events: Events,
     mission_id: str,

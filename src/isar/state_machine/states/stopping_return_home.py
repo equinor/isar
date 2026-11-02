@@ -7,6 +7,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.mission import Mission
@@ -33,6 +34,7 @@ def StoppingReturnHome(events: Events, mission: Mission) -> StateDef:
     )
 
 
+@transition_definition
 def transition_and_stop_return_home_and_reply_to_API(
     events: Events,
     mission: Mission,

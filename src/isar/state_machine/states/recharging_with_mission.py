@@ -10,6 +10,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
@@ -60,5 +61,6 @@ def RechargingWithMission(events: Events, mission: AbortedMission) -> StateDef:
     )
 
 
+@transition_definition
 def transition(events: Events, mission: AbortedMission) -> Transition:
     return Transition(RechargingWithMission(events, mission=mission))

@@ -7,6 +7,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 
@@ -32,6 +33,7 @@ def StoppingUnknownMission(events: Events) -> StateDef:
     )
 
 
+@transition_definition
 def transition(events: Events) -> Transition:
     def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
@@ -39,6 +41,7 @@ def transition(events: Events) -> Transition:
     return Transition(StoppingUnknownMission(events), _side_effect)
 
 
+@transition_definition
 def transition_and_respond_to_API(events: Events) -> Transition:
     def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())

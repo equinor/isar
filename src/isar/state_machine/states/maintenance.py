@@ -6,6 +6,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 
@@ -35,6 +36,7 @@ def Maintenance(events: Events) -> StateDef:
     )
 
 
+@transition_definition
 def transition_and_reply_to_API(events: Events) -> Transition:
     def _side_effect(events: Events) -> None:
         events.api_requests.set_maintenance_mode.trigger_response(
@@ -44,5 +46,6 @@ def transition_and_reply_to_API(events: Events) -> Transition:
     return Transition(Maintenance(events), _side_effect)
 
 
+@transition_definition
 def transition_without_replying_to_API(events: Events) -> Transition:
     return Transition(Maintenance(events))

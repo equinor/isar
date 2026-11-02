@@ -7,6 +7,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 
@@ -53,6 +54,7 @@ def StoppingDueToMaintenance(events: Events, mission_id: str | None = None) -> S
     )
 
 
+@transition_definition
 def transition_and_stop_mission(
     events: Events,
     mission_id: str | None = None,

@@ -11,6 +11,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
@@ -83,6 +84,7 @@ def Monitor(events: Events, mission_id: str) -> StateDef:
     )
 
 
+@transition_definition
 def transition_and_start_mission(
     events: Events, mission: Mission, should_respond_to_API_request: bool = False
 ) -> Transition:
@@ -101,5 +103,6 @@ def transition_and_start_mission(
     return Transition(Monitor(events, mission_id=mission.id), _side_effect)
 
 
+@transition_definition
 def transition_with_existing_mission(events: Events, mission_id: str) -> Transition:
     return Transition(Monitor(events, mission_id=mission_id))

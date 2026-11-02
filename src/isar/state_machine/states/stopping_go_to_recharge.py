@@ -7,6 +7,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 
@@ -42,6 +43,7 @@ def StoppingGoToRecharge(events: Events) -> StateDef:
     )
 
 
+@transition_definition
 def transition_and_stop_mission(events: Events) -> Transition:
     def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())

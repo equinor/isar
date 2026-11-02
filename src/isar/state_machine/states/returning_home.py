@@ -12,6 +12,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
@@ -79,6 +80,7 @@ def ReturningHome(
     )
 
 
+@transition_definition
 def transition_and_start_mission(
     events: Events,
     should_respond_to_API_request: bool = False,
@@ -93,5 +95,6 @@ def transition_and_start_mission(
     return Transition(ReturningHome(events, retries=retries), _side_effect)
 
 
+@transition_definition
 def transition_to_existing_mission(events: Events) -> Transition:
     return Transition(ReturningHome(events))

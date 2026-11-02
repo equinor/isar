@@ -8,6 +8,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 
@@ -54,6 +55,7 @@ def StoppingGoToLockdown(events: Events, mission_id: str) -> StateDef:
     )
 
 
+@transition_definition
 def transition_and_stop_mission(events: Events, mission_id: str) -> Transition:
     def _side_effect(events: Events) -> None:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())

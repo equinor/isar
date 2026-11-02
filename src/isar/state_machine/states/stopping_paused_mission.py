@@ -7,6 +7,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus
@@ -39,6 +40,7 @@ def StoppingPausedMission(events: Events, mission_id: str) -> StateDef:
     )
 
 
+@transition_definition
 def transition_and_trigger_stop(
     events: Events, mission_id: str, should_respond_to_API_request: bool = False
 ) -> Transition:

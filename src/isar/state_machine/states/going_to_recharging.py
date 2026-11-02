@@ -7,6 +7,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
@@ -39,6 +40,7 @@ def GoingToRecharging(events: Events) -> StateDef:
     )
 
 
+@transition_definition
 def transition_and_start_return_home(events: Events) -> Transition:
     def _side_effect(events: Events) -> None:
         events.action_requests.return_home.trigger_request(EmptyMessage())
@@ -46,5 +48,6 @@ def transition_and_start_return_home(events: Events) -> Transition:
     return Transition(GoingToRecharging(events), _side_effect)
 
 
+@transition_definition
 def transition_to_existing_mission(events: Events) -> Transition:
     return Transition(GoingToRecharging(events))

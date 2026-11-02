@@ -81,6 +81,24 @@ def state_definition[**P](
     return wrapper
 
 
+def transition_definition[**P](
+    transition_func: Callable[Concatenate[Events, P], Transition],
+) -> Callable[Concatenate[Events, P], Transition]:
+    transition_name: str = transition_func.__name__
+    module: str = transition_func.__module__
+
+    def wrapper(events: Events, *args: P.args, **kwargs: P.kwargs) -> Transition:
+        events_hash = _get_events_hash(events)
+        transition = transition_func(events, *args, **kwargs)
+        assert (
+            _get_events_hash(events) == events_hash
+        ), f"Transition '{transition_name}' in module '{module}' has side effects in its definition"
+
+        return transition
+
+    return wrapper
+
+
 class State:
     def __init__(
         self,

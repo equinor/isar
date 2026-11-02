@@ -9,6 +9,7 @@ from isar.state_machine.state import (
     StateDef,
     Transition,
     state_definition,
+    transition_definition,
 )
 from isar.state_machine.states_enum import States
 
@@ -52,5 +53,6 @@ def Paused(events: Events, mission_id: str) -> StateDef:
     )
 
 
+@transition_definition
 def transition(events: Events, mission_id: str) -> Transition:
     return Transition(Paused(events, mission_id))
