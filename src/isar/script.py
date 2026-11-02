@@ -21,6 +21,7 @@ from isar.services.service_connections.mqtt.robot_heartbeat_publisher import (
 from isar.services.service_connections.mqtt.robot_info_publisher import (
     RobotInfoPublisher,
 )
+from isar.shutdown import stop_telemetry_publishers
 from isar.state_machine.state_machine import StateMachine
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
@@ -72,23 +73,16 @@ def print_startup_info() -> None:
     print_setting("Robot capabilities", robot_settings.CAPABILITIES)
 
 
-def start() -> None:
-    injector: ApplicationContainer = get_injector()
-
-    setup_loggers()
-    setup_open_telemetry()
-    instrument_fastapi(injector.api().app)
-    logger: Logger = logging.getLogger("main")
-
-    print_startup_info()
-
+def _start_threads(
+    injector: ApplicationContainer,
+    threads: list[Thread],
+    telemetry_threads: list[MqttTelemetryPublisher],
+) -> None:
     state_machine: StateMachine = injector.state_machine()
     robot_interface: RobotInterface = injector.robot_interface()
     events: Events = injector.events()
     robot: RobotService = injector.robot()
     inspection_service: RobotInspectionService = injector.inspection_service()
-
-    threads: list[Thread] = []
 
     api: API = injector.api()
     api_thread: Thread = Thread(target=api.server.run, name="ISAR API", daemon=True)
@@ -164,6 +158,7 @@ def start() -> None:
         telemetry_thread = MqttTelemetryPublisher(
             events.mqtt_queue, telemetry_parameter
         )
+        telemetry_threads.append(telemetry_thread)
         telemetry_thread.start()
         threads.append(telemetry_thread)
 
@@ -172,16 +167,32 @@ def start() -> None:
         utility_thread.start()
         threads.append(utility_thread)
 
+
+def start() -> None:
+    injector: ApplicationContainer = get_injector()
+
+    setup_loggers()
+    setup_open_telemetry()
+    instrument_fastapi(injector.api().app)
+    logger: Logger = logging.getLogger("main")
+
+    print_startup_info()
+
+    api: API = injector.api()
+    robot: RobotService = injector.robot()
+    threads: list[Thread] = []
+    telemetry_threads: list[MqttTelemetryPublisher] = []
     shutdown_requested = Event()
 
     def request_shutdown(*_: Any) -> None:
         shutdown_requested.set()
 
-    signal.signal(signal.SIGTERM, request_shutdown)
-    signal.signal(signal.SIGINT, request_shutdown)
-
     exit_code = 0
     try:
+        _start_threads(injector, threads, telemetry_threads)
+        signal.signal(signal.SIGTERM, request_shutdown)
+        signal.signal(signal.SIGINT, request_shutdown)
+
         while not shutdown_requested.is_set():
             for thread in threads:
                 if not thread.is_alive():
@@ -195,6 +206,8 @@ def start() -> None:
             shutdown_requested.wait(settings.FSM_SLEEP_TIME)
     finally:
         api.server.should_exit = True
+        if not stop_telemetry_publishers(telemetry_threads):
+            exit_code = 1
         if robot.mission_recorder is not None:
             robot.mission_recorder.close()
 
