@@ -23,6 +23,7 @@ def stub_inspection_value() -> CO2Measurement:
         id="scalar-inspection-id",
         value=412.5,
         unit="ppm",
+        decimal_places=2,
         metadata=GasMeasurementMetadata(
             start_time=datetime(2026, 9, 24, 12, tzinfo=UTC),
             robot_pose=stub_pose(),
