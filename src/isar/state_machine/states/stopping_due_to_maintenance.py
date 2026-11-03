@@ -22,9 +22,13 @@ def StoppingDueToMaintenance(events: Events, mission_id: str | None = None) -> S
         )
 
     def _successful_stop_event_handler(
-        _: AbortedMission | MissionCompleted | EmptyMessage,
+        stop_result: AbortedMission | MissionCompleted | EmptyMessage,
     ) -> Transition:
-        if mission_id:
+        if isinstance(stop_result, MissionCompleted) and mission_id:
+            events.mqtt_queue.publish_mission_status(
+                mission_id, stop_result.status, None
+            )
+        elif mission_id:
             events.mqtt_queue.publish_mission_aborted(
                 mission_id,
                 "Mission aborted, robot being sent to maintenance",

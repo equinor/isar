@@ -21,14 +21,18 @@ def StoppingGoToLockdown(events: Events, mission_id: str) -> StateDef:
         return Monitor.transition_with_existing_mission(mission_id)
 
     def _successful_stop_event_handler(
-        mission: AbortedMission | MissionCompleted | EmptyMessage,
+        stop_result: AbortedMission | MissionCompleted | EmptyMessage,
     ) -> Transition:
-        if isinstance(mission, AbortedMission):
+
+        if isinstance(stop_result, AbortedMission):
             return GoingToLockdownWithMission.transition_and_start_mission_and_report_to_api(
-                mission
+                stop_result
             )
-        else:
-            return GoingToLockdown.transition_and_start_mission_and_report_to_api()
+        elif isinstance(stop_result, MissionCompleted) and mission_id:
+            events.mqtt_queue.publish_mission_status(
+                mission_id, stop_result.status, None
+            )
+        return GoingToLockdown.transition_and_start_mission_and_report_to_api()
 
     event_handlers: list[EventHandlerMapping] = [
         EventHandlerMapping[EmptyMessage](

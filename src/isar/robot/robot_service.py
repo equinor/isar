@@ -28,6 +28,7 @@ from isar.robot.robot_stop_mission import robot_stop_mission
 from isar.storage.recording_publisher import BlobRecordingPublisher
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.status import MissionStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.robot_interface import RobotInterface
 
@@ -162,10 +163,11 @@ class RobotService:
                         continued_mission
                     )
                     return
-                self.action_requests.stop_mission.trigger_success_response(
-                    MissionCompleted()
-                )
-                return
+                if aborted_mission.tasks:
+                    self.action_requests.stop_mission.trigger_success_response(
+                        MissionCompleted.from_mission(aborted_mission)
+                    )
+                    return
 
         self.action_requests.stop_mission.trigger_success_response(EmptyMessage())
 
@@ -225,6 +227,7 @@ class RobotService:
                 lambda task: self.upload_task_event.trigger_event((task, mission)),
                 self.mqtt_queue,
             )
+
             if is_aborted:
                 return remaining_mission
 
@@ -235,9 +238,30 @@ class RobotService:
                 self.action_requests.execute_mission.trigger_failure_response(
                     error_message
                 )
+            elif (
+                remaining_mission is not None
+                and remaining_mission.tasks
+                and not remaining_mission._get_unfinished_tasks()
+            ):
+                mission_completed = MissionCompleted.from_mission(remaining_mission)
+                if mission_completed.status == MissionStatus.Failed:
+                    self.action_requests.execute_mission.trigger_failure_response(
+                        ErrorMessage(
+                            ErrorReason.RobotActionException, "All the tasks failed"
+                        )
+                    )
+                else:
+                    self.action_requests.execute_mission.trigger_success_response(
+                        mission_completed
+                    )
             else:
+                status = (
+                    mission.status
+                    if mission.status == MissionStatus.PartiallySuccessful
+                    else MissionStatus.Successful
+                )
                 self.action_requests.execute_mission.trigger_success_response(
-                    EmptyMessage()
+                    MissionCompleted(status)
                 )
         except asyncio.CancelledError:
             pass

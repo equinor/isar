@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from isar.models.events import AbortedMission, EmptyMessage, Events, MissionCompleted
 from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.states.going_to_recharging_with_mission import (
@@ -8,6 +10,7 @@ from isar.state_machine.states.going_to_recharging_with_mission import (
 from isar.state_machine.states.returning_home import ReturningHome
 from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRecharge
 from isar.state_machine.states_enum import States
+from robot_interface.models.mission.status import MissionStatus
 
 
 def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_tasks(
@@ -18,23 +21,41 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_task
         events.action_requests.stop_mission.success
     )
 
-    transition = event_handler.handler(MissionCompleted())
+    transition = event_handler.handler(MissionCompleted(MissionStatus.Successful))
 
-    aborted_mission = json.loads(events.mqtt_queue.get().payload)
-    assert aborted_mission["mission_id"] == "id"
-    assert (
-        aborted_mission["reason"]
-        == "Mission aborted because the robot began recharging after all tasks completed"
-    )
+    message = json.loads(events.mqtt_queue.get().payload)
+    assert message["mission_id"] == "id"
+    assert message["status"] == MissionStatus.Successful.value
 
     current_state = State(transition(events))
     assert current_state.name is States.GoingToRecharging
 
 
+@pytest.mark.parametrize(
+    "status",
+    [MissionStatus.Successful, MissionStatus.PartiallySuccessful, MissionStatus.Failed],
+)
+def test_stopping_to_recharge_reports_completed_mission_outcome(
+    events: Events, status: MissionStatus
+) -> None:
+    current_state = State(StoppingGoToRecharge(events, mission_id="id"))
+    handler = current_state.get_event_handler_by_event(
+        events.action_requests.stop_mission.success
+    )
+
+    transition = handler.handler(MissionCompleted(status))
+
+    message = json.loads(events.mqtt_queue.get().payload)
+    assert message["mission_id"] == "id"
+    assert message["status"] == status.value
+    assert State(transition(events)).name is States.GoingToRecharging
+    assert events.action_requests.return_home.request.has_event()
+
+
 def test_stopping_to_recharge_goes_to_going_to_recharging_with_aborted_mission(
     events: Events,
 ) -> None:
-    current_state = State(StoppingGoToRecharge(events))
+    current_state = State(StoppingGoToRecharge(events, "id"))
     event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
         events.action_requests.stop_mission.success
     )
