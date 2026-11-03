@@ -49,7 +49,7 @@ class RobotBatteryThread(Thread):
                     continue
 
                 if (
-                    battery_level > settings.ROBOT_BATTERY_RECHARGE_THRESHOLD
+                    battery_level >= settings.ROBOT_BATTERY_RECHARGE_THRESHOLD
                     and last_battery_value < settings.ROBOT_BATTERY_RECHARGE_THRESHOLD
                 ):
                     self.battery_above_recharge_threshold_event.trigger_event(
@@ -57,21 +57,21 @@ class RobotBatteryThread(Thread):
                     )
                 elif (
                     battery_level < settings.ROBOT_BATTERY_RECHARGE_THRESHOLD
-                    and last_battery_value > settings.ROBOT_BATTERY_RECHARGE_THRESHOLD
+                    and last_battery_value >= settings.ROBOT_BATTERY_RECHARGE_THRESHOLD
                 ):
                     self.battery_above_recharge_threshold_event.clear_event()
 
                 if (
                     battery_level < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
                     and last_battery_value
-                    > settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
+                    >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
                 ):
                     self.battery_below_mission_threshold_event.trigger_event(
                         EmptyMessage()
                     )
 
                 elif (
-                    battery_level > settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
+                    battery_level >= settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
                     and last_battery_value
                     < settings.ROBOT_MISSION_BATTERY_START_THRESHOLD
                 ):
