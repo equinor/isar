@@ -3,7 +3,7 @@ import asyncio
 import pytest
 from pytest_mock import MockerFixture
 
-from isar.models.events import EmptyMessage
+from isar.models.events import EmptyMessage, MissionCompleted
 from isar.robot.robot_service import RobotService
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -94,7 +94,7 @@ def test_successful_stop_returns_remaining_work_without_completing_mission(
     if task_status == TaskStatus.Cancelled:
         assert response == mission
     else:
-        assert isinstance(response, EmptyMessage)
+        assert isinstance(response, MissionCompleted | EmptyMessage)
     assert not service.action_requests.stop_mission.failure.has_event()
     assert (
         service.action_requests.execute_mission.success.consume_event(),

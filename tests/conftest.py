@@ -342,7 +342,7 @@ def all_state_functions(
             GoingToRechargingWithMission,
             (events, mission),
         ),
-        States.StoppingGoToRecharge: (StoppingGoToRecharge, (events,)),
+        States.StoppingGoToRecharge: (StoppingGoToRecharge, (events, "")),
         States.Maintenance: (Maintenance, (events,)),
         States.StoppingDueToMaintenance: (StoppingDueToMaintenance, (events,)),
         States.StoppingPausedMission: (StoppingPausedMission, (events, "")),

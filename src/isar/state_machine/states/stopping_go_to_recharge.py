@@ -6,7 +6,7 @@ from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 
 
-def StoppingGoToRecharge(events: Events, mission_id: str | None = None) -> StateDef:
+def StoppingGoToRecharge(events: Events, mission_id: str) -> StateDef:
 
     def _mission_stopped_event_handler(
         stop_result: AbortedMission | MissionCompleted | EmptyMessage,
@@ -16,9 +16,8 @@ def StoppingGoToRecharge(events: Events, mission_id: str | None = None) -> State
                 stop_result
             )
         if isinstance(stop_result, MissionCompleted) and mission_id:
-            events.mqtt_queue.publish_mission_aborted(
-                mission_id,
-                "Mission aborted because the robot began recharging after all tasks completed",
+            events.mqtt_queue.publish_mission_status(
+                mission_id, stop_result.status, None
             )
         return GoingToRecharging.transition_and_start_return_home()
 
@@ -40,7 +39,7 @@ def StoppingGoToRecharge(events: Events, mission_id: str | None = None) -> State
     )
 
 
-def transition_and_stop_mission(mission_id: str | None = None) -> Transition:
+def transition_and_stop_mission(mission_id: str) -> Transition:
     def _transition(events: Events) -> StateDef:
         events.action_requests.stop_mission.trigger_request(EmptyMessage())
         return StoppingGoToRecharge(events, mission_id)

@@ -6,7 +6,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
-from isar.models.events import EmptyMessage, Event, Events
+from isar.models.events import EmptyMessage, Event, Events, MissionCompleted
 from isar.robot.robot_service import RobotService
 from isar.state_machine.state import State
 from isar.state_machine.states.monitor import Monitor, transition_and_start_mission
@@ -108,7 +108,7 @@ def test_stored_monitor_reports_terminal_outcome(
     asyncio.run(service._monitor_mission_handler(stored_mission))
 
     if terminal_status == MissionStatus.Successful:
-        assert isinstance(response.success.consume_event(), EmptyMessage)
+        assert isinstance(response.success.consume_event(), MissionCompleted)
         assert not response.failure.has_event()
     else:
         assert response.failure.consume_event() == ErrorMessage(
@@ -195,7 +195,10 @@ def test_terminal_state_publishes_mission_outcome(
     stored_mission: Mission, events: Events, outcome: MissionStatus
 ) -> None:
     result_event: (
-        Event[Mission | EmptyMessage] | Event[EmptyMessage] | Event[ErrorMessage]
+        Event[Mission | MissionCompleted | EmptyMessage]
+        | Event[EmptyMessage]
+        | Event[MissionCompleted]
+        | Event[ErrorMessage]
     )
     result: EmptyMessage | ErrorMessage
     if outcome == MissionStatus.Cancelled:
