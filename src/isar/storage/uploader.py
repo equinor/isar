@@ -142,6 +142,7 @@ def _publish_inspection_value(
         inspection_description=inspection.metadata.inspection_description,
         value=inspection.value,
         unit=inspection.unit,
+        decimal_places=inspection.decimal_places,
         x=inspection.metadata.robot_pose.position.x,
         y=inspection.metadata.robot_pose.position.y,
         z=inspection.metadata.robot_pose.position.z,

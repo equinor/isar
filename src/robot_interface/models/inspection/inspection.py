@@ -63,6 +63,7 @@ class Inspection(BaseModel):
 class InspectionValue(Inspection):
     value: float = Field(frozen=True)
     unit: str = Field(frozen=True)
+    decimal_places: int | None = Field(default=None, frozen=True, strict=True, ge=0)
 
 
 class InspectionBlob(Inspection):

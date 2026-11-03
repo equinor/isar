@@ -140,6 +140,7 @@ class InspectionValuePayload(BaseModel):
     inspection_description: str | None = None
     value: float
     unit: str
+    decimal_places: int | None = None
     x: float
     y: float
     z: float

@@ -173,7 +173,9 @@ def test_uploads_scalar_as_json(uploader: Uploader, mocker: MockerFixture) -> No
 
     uploader.upload_inspection(inspection, Mission(id="mission-id", name="Mission"))
 
-    assert json.loads(blob.upload_blob.call_args.kwargs["data"]) == expected
+    uploaded = json.loads(blob.upload_blob.call_args.kwargs["data"])
+    assert uploaded == expected
+    assert (uploaded["value"], uploaded["decimal_places"]) == (412.5, 2)
     filename = container.get_blob_client.call_args.args[0]
     assert "__CO2Measurement__" in filename and filename.endswith(".json")
     assert inspection.metadata.file_type == "txt"
@@ -201,6 +203,7 @@ def test_publishes_scalar_fields_with_blob_reference(uploader: Uploader) -> None
         "inspection_description": "Carbon dioxide",
         "value": 412.5,
         "unit": "ppm",
+        "decimal_places": 2,
         "x": 0.0,
         "y": 0.0,
         "z": 0.0,
