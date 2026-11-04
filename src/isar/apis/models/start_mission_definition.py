@@ -58,8 +58,9 @@ class StartMissionTaskDefinition(BaseModel):
 
 class StartMissionDefinition(BaseModel):
     id: str = Field()
-    tasks: list[StartMissionTaskDefinition]
+    tasks: list[StartMissionTaskDefinition] = Field(default_factory=list)
     name: str | None = None
+    robot_mission_id: str | None = Field(default=None, pattern=r"\S")
 
 
 class StopMissionDefinition(BaseModel):
@@ -73,13 +74,18 @@ class MissionFormatError(Exception):
 def to_isar_mission(
     start_mission_definition: StartMissionDefinition,
 ) -> Mission:
+    if (
+        start_mission_definition.robot_mission_id is not None
+        and start_mission_definition.tasks
+    ):
+        raise MissionFormatError("Stored missions cannot contain inspection tasks")
     isar_tasks: list[TASKS] = []
 
     for task_definition in start_mission_definition.tasks:
         task: TASKS = to_inspection_task(task_definition)
         isar_tasks.append(task)
 
-    if not isar_tasks:
+    if not isar_tasks and start_mission_definition.robot_mission_id is None:
         raise MissionFormatError("Mission does not contain any valid tasks")
 
     isar_mission_name: str = (
@@ -91,6 +97,7 @@ def to_isar_mission(
     return Mission(
         id=start_mission_definition.id,
         tasks=isar_tasks,
+        robot_mission_id=start_mission_definition.robot_mission_id,
         name=isar_mission_name,
     )
 

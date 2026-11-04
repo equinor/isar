@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from typing import Self
+
+from pydantic import BaseModel, Field, model_validator
 
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
@@ -9,8 +11,15 @@ class Mission(BaseModel):
     id: str = Field(frozen=True)
     tasks: list[TASKS] = Field(default_factory=list, frozen=True)
     name: str = Field(frozen=True)
+    robot_mission_id: str | None = Field(default=None, frozen=True, pattern=r"\S")
     status: MissionStatus = MissionStatus.NotStarted
     error_message: ErrorMessage | None = Field(default=None)
+
+    @model_validator(mode="after")
+    def validate_stored_mission(self) -> Self:
+        if self.robot_mission_id is not None and self.tasks:
+            raise ValueError("Stored missions cannot contain inspection tasks")
+        return self
 
     def _get_unfinished_tasks(self) -> list[TASKS]:
         return [
