@@ -37,6 +37,11 @@ class RobotInterface(metaclass=ABCMeta):
     def initiate_mission(self, mission: Mission) -> None:
         """Send a mission to the robot and initiate execution of the mission
 
+        A non-None mission.robot_mission_id requests a stored routine with no tasks.
+        Supporting integrations advertise stored_mission and correlate the robot
+        run with mission.id for mission_status polling. Unsupported stored missions
+        and unknown references must raise RobotInfeasibleMissionException.
+
         Parameters
         ----------
         mission: Mission

@@ -211,7 +211,8 @@ async def robot_monitor_mission(
 
     task_iterator: Iterator[TASKS] = iter(mission.tasks)
     current_task: TASKS | None = get_next_task(task_iterator)
-    current_task.status = TaskStatus.NotStarted  # type: ignore
+    if current_task is not None:
+        current_task.status = TaskStatus.NotStarted
 
     mission_status: MissionStatus = MissionStatus.InProgress
     try:
@@ -231,6 +232,9 @@ async def robot_monitor_mission(
                 )
                 mission_status = MissionStatus.Failed
 
+            if not mission.tasks:
+                mission.status = mission_status
+
             should_wait_for_task_status = (
                 current_task is not None
                 and mission_status in [MissionStatus.Successful, MissionStatus.Failed]
@@ -241,13 +245,20 @@ async def robot_monitor_mission(
                 MissionStatus.InProgress,
                 MissionStatus.Paused,
             ]:
-                if error_message is None and mission_status in [
-                    MissionStatus.Failed,
-                    MissionStatus.Cancelled,
-                ]:
+                if error_message is None and (
+                    mission_status in [MissionStatus.Failed, MissionStatus.Cancelled]
+                    or (
+                        not mission.tasks
+                        and mission_status == MissionStatus.PartiallySuccessful
+                    )
+                ):
                     error_message = ErrorMessage(
                         error_reason=None,
-                        error_description="The mission was reported as failed by the robot",
+                        error_description=(
+                            f"Stored mission reported as {mission_status.value} by the robot"
+                            if not mission.tasks
+                            else "The mission was reported as failed by the robot"
+                        ),
                     )
                 return error_message, mission, False
 

@@ -3,6 +3,7 @@ import os
 
 import pytest
 from alitra import Frame, Orientation, Pose, Position
+from pydantic import ValidationError
 
 from isar.apis.models.start_mission_definition import (
     InspectionTypes,
@@ -18,6 +19,7 @@ from robot_interface.models.mission.task import (
     TakeAcousticMeasurement,
     TakeImage,
 )
+from tests.test_mocks.mission_definition import DummyMissionDefinition
 
 
 def test_to_isar_mission() -> None:
@@ -193,3 +195,30 @@ def test_missing_acoustic_parameters_is_a_mission_format_error() -> None:
 
     with pytest.raises(MissionFormatError):
         _build_mission_with_inspection_payload(payload)
+
+
+def test_stored_mission_preserves_reference_and_execution_id() -> None:
+    mission = to_isar_mission(
+        StartMissionDefinition.model_validate(
+            {
+                "id": "execution-id",
+                "name": "Weekly diagnostic",
+                "robot_mission_id": "DiagnosticRoutine",
+            }
+        )
+    )
+    assert mission.id == "execution-id"
+    assert mission.name == "Weekly diagnostic"
+    assert mission.tasks == []
+    assert mission.robot_mission_id == "DiagnosticRoutine"
+    assert Mission.model_validate_json(mission.model_dump_json()) == mission
+
+
+def test_robot_interface_rejects_stored_mission_with_tasks() -> None:
+    with pytest.raises(ValidationError, match="cannot contain inspection tasks"):
+        Mission(
+            id="id",
+            name="name",
+            robot_mission_id="DiagnosticRoutine",
+            tasks=DummyMissionDefinition.default_mission.tasks,
+        )
