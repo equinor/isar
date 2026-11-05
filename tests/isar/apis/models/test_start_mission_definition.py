@@ -1,5 +1,4 @@
-import json
-import os
+from pathlib import Path
 
 import pytest
 from alitra import Frame, Orientation, Pose, Position
@@ -22,9 +21,8 @@ from robot_interface.models.mission.task import (
 from tests.test_mocks.mission_definition import DummyMissionDefinition
 
 
-def test_to_isar_mission() -> None:
-    DUMMY_MISSION_NAME = "mission_name"
-
+@pytest.mark.parametrize("from_json", [False, True], ids=["model", "json"])
+def test_image_mission_conversion(from_json: bool) -> None:
     task_pose = Pose(
         position=Position(x=1, y=1, z=1, frame=Frame("robot")),
         orientation=Orientation(x=1, y=1, z=1, w=1, frame=Frame("robot")),
@@ -37,53 +35,42 @@ def test_to_isar_mission() -> None:
         inspection_target=Position(x=1, y=1, z=1, frame=Frame("robot")),
     )
     mission_definition = StartMissionDefinition(
-        tasks=[task_definition], name=DUMMY_MISSION_NAME, id="test-id2"
+        tasks=[task_definition], name="mission_name", id="test-id2"
     )
-
-    isar_mission: Mission = to_isar_mission(mission_definition)
-
-    assert len(isar_mission.id) > 1
-    assert isar_mission.name == DUMMY_MISSION_NAME
-    assert len(isar_mission.tasks) == 1
-
-    first_task = isar_mission.tasks[0]
-    assert len(first_task.id) > 1
-
-    assert isinstance(first_task, TakeImage)
-
-    assert first_task.target == Position(x=1, y=1, z=1, frame=Frame(name="robot"))
-    assert len(first_task.id) > 1
-    assert first_task.robot_pose == Pose(
-        position=Position(x=1, y=1, z=1, frame=Frame(name="robot")),
-        orientation=Orientation(x=1, y=1, z=1, w=1, frame=Frame(name="robot")),
-        frame=Frame(name="robot"),
+    expected = Mission(
+        id="test-id2",
+        name="mission_name",
+        tasks=[
+            TakeImage(id="test-id", robot_pose=task_pose, target=task_pose.position)
+        ],
     )
+    if from_json:
+        path = Path(__file__).with_name("example_mission_definition.json")
+        mission_definition = StartMissionDefinition.model_validate_json(
+            path.read_text()
+        )
+        expected_pose = Pose(
+            position=Position(0.0, 0.0, 0.0, frame=Frame("robot")),
+            orientation=Orientation(0.0, 0.0, 0.0, 0.0, frame=Frame("robot")),
+            frame=Frame("robot"),
+        )
+        expected = Mission(
+            id="generated_mission_id",
+            name="my-mission",
+            tasks=[
+                TakeImage(
+                    id="generated_task_id",
+                    robot_pose=expected_pose,
+                    target=expected_pose.position,
+                    analysis_types=["anonymize"],
+                    tag_id="MY-TAG-123",
+                )
+            ],
+        )
 
+    mission = to_isar_mission(mission_definition)
 
-def test_mission_definition_from_json_to_isar_mission() -> None:
-    dirname = os.path.dirname(__file__)
-    filepath = os.path.join(dirname, "example_mission_definition.json")
-
-    with open(filepath) as f:
-        datax = json.load(f)
-        mission_definition = StartMissionDefinition(**datax)
-
-    isar_mission: Mission = to_isar_mission(mission_definition)
-    assert len(isar_mission.id) > 1
-    assert isar_mission.name == "my-mission"
-
-    assert len(isar_mission.tasks) == 1
-    task = isar_mission.tasks[0]
-    assert len(task.id) > 1
-    assert isinstance(task, TakeImage)
-    assert task.robot_pose == Pose(
-        position=Position(0.0, 0.0, 0.0, frame=Frame("robot")),
-        orientation=Orientation(0.0, 0.0, 0.0, 0.0, frame=Frame("robot")),
-        frame=Frame("robot"),
-    )
-    assert task.type == "take_image"
-    assert task.target == Position(0.0, 0.0, 0.0, frame=Frame("robot"))
-    assert task.analysis_types == ["anonymize"]
+    assert mission == expected
 
 
 def _build_mission_with_inspection_payload(inspection_payload: dict) -> Mission:
@@ -155,41 +142,30 @@ def _acoustic_payload(roi: dict | None = None) -> dict:
     return payload
 
 
-def test_acoustic_measurement_defaults_roi_to_none() -> None:
-    mission = _build_mission_with_inspection_payload(_acoustic_payload())
+@pytest.mark.parametrize(
+    "roi",
+    [None, Roi(x=760, y=400, width=133, height=160)],
+    ids=["omitted", "specified"],
+)
+def test_acoustic_measurement_forwards_roi(roi: Roi | None) -> None:
+    payload = _acoustic_payload(roi.model_dump() if roi is not None else None)
+
+    mission = _build_mission_with_inspection_payload(payload)
+
     task = mission.tasks[0]
     assert isinstance(task, TakeAcousticMeasurement)
-    assert task.roi is None
-
-
-def test_acoustic_measurement_forwards_roi_to_task() -> None:
-    mission = _build_mission_with_inspection_payload(
-        _acoustic_payload(
-            roi={"x": 760, "y": 400, "width": 133, "height": 160},
-        )
-    )
-    task = mission.tasks[0]
-    assert isinstance(task, TakeAcousticMeasurement)
-    assert task.roi == Roi(x=760, y=400, width=133, height=160)
+    assert task.roi == roi
 
 
 # A malformed mission is the caller's mistake, so it must surface as
 # MissionFormatError, which the scheduling controller answers with 400. A bare
 # ValueError escapes that handler and becomes an opaque 500.
-def test_missing_duration_is_a_mission_format_error() -> None:
-    # Video inspections require a duration.
+@pytest.mark.parametrize("inspection_type", ["Video", "AcousticMeasurement"])
+def test_missing_inspection_parameters_is_a_mission_format_error(
+    inspection_type: str,
+) -> None:
     payload = {
-        "type": "Video",
-        "inspection_target": {"x": 0, "y": 0, "z": 0, "frame": {"name": "robot"}},
-    }
-
-    with pytest.raises(MissionFormatError):
-        _build_mission_with_inspection_payload(payload)
-
-
-def test_missing_acoustic_parameters_is_a_mission_format_error() -> None:
-    payload = {
-        "type": "AcousticMeasurement",
+        "type": inspection_type,
         "inspection_target": {"x": 0, "y": 0, "z": 0, "frame": {"name": "robot"}},
     }
 
@@ -198,20 +174,32 @@ def test_missing_acoustic_parameters_is_a_mission_format_error() -> None:
 
 
 def test_stored_mission_preserves_reference_and_execution_id() -> None:
-    mission = to_isar_mission(
-        StartMissionDefinition.model_validate(
-            {
-                "id": "execution-id",
-                "name": "Weekly diagnostic",
-                "robot_mission_id": "DiagnosticRoutine",
-            }
-        )
+    definition = StartMissionDefinition(
+        id="execution-id",
+        name="Weekly diagnostic",
+        robot_mission_id="DiagnosticRoutine",
     )
-    assert mission.id == "execution-id"
-    assert mission.name == "Weekly diagnostic"
-    assert mission.tasks == []
-    assert mission.robot_mission_id == "DiagnosticRoutine"
-    assert Mission.model_validate_json(mission.model_dump_json()) == mission
+
+    mission = to_isar_mission(definition)
+
+    assert mission == Mission(
+        id="execution-id",
+        name="Weekly diagnostic",
+        robot_mission_id="DiagnosticRoutine",
+        tasks=[],
+    )
+
+
+def test_stored_mission_survives_json_round_trip() -> None:
+    mission = Mission(
+        id="execution-id",
+        name="Weekly diagnostic",
+        robot_mission_id="DiagnosticRoutine",
+    )
+
+    restored = Mission.model_validate_json(mission.model_dump_json())
+
+    assert restored == mission
 
 
 def test_robot_interface_rejects_stored_mission_with_tasks() -> None:

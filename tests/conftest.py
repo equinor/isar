@@ -80,6 +80,7 @@ from tests.test_mocks.state_machine_mocks import (
     RobotServiceThreadMock,
     StateMachineThreadMock,
 )
+from tests.test_mocks.task import StubTask
 
 
 @pytest.fixture(autouse=True)
@@ -184,6 +185,11 @@ def access_token() -> str:
 def events(container: ApplicationContainer) -> Events:
     """Fixture to provide a test with the global event queues."""
     return container.events()
+
+
+@pytest.fixture()
+def mission() -> Mission:
+    return Mission(id="id", name="Mission", tasks=[StubTask.take_image()])
 
 
 @pytest.fixture()

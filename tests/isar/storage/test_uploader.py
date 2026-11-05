@@ -1,6 +1,7 @@
 import json
 from uuid import uuid4
 
+import pytest
 from alitra import Frame, Orientation, Pose, Position
 from pytest_mock import MockerFixture
 
@@ -40,47 +41,42 @@ def test_should_upload_from_queue(uploader: Uploader) -> None:
     )
     mission: Mission = Mission(id="id", name="Dummy misson", tasks=[take_image_task])
 
-    assert isinstance(mission.tasks[0], TakeImage)
-    inspection = InspectionBlob(metadata=stub_image_metadata(), id=mission.tasks[0].id)
+    inspection = InspectionBlob(metadata=stub_image_metadata(), id=take_image_task.id)
 
     storage_handler: StorageFake = uploader.storage_handlers[0]  # type: ignore
 
     uploader.upload_inspection(inspection, mission)
+
     assert inspection in storage_handler.stored_inspections
 
 
-def test_should_retry_failed_upload_from_queue(
-    uploader: Uploader, mocker: MockerFixture
+@pytest.mark.parametrize(
+    ("failure_count", "attempt_limit", "uploaded"),
+    [
+        pytest.param(3, 4, True, id="succeeds-on-last-attempt"),
+        pytest.param(5, 3, False, id="exhausts-retries"),
+    ],
+)
+def test_upload_respects_retry_limit(
+    uploader: Uploader,
+    mocker: MockerFixture,
+    failure_count: int,
+    attempt_limit: int,
+    uploaded: bool,
 ) -> None:
     mocker.patch.object(settings, "UPLOAD_FAILURE_MAX_WAIT", 0.0001)
-    mocker.patch.object(settings, "UPLOAD_FAILURE_ATTEMPTS_LIMIT", 4)
+    mocker.patch.object(settings, "UPLOAD_FAILURE_ATTEMPTS_LIMIT", attempt_limit)
     INSPECTION_ID = "123-456"
     inspection = InspectionBlob(metadata=stub_image_metadata(), id=INSPECTION_ID)
     mission: Mission = Mission(id="id", name="Dummy Mission")
 
     storage_handler: StorageFake = uploader.storage_handlers[0]  # type: ignore
 
-    storage_handler.failure_count = 3
+    storage_handler.failure_count = failure_count
+
     uploader.upload_inspection(inspection, mission)
 
-    assert storage_handler.blob_exists(inspection)
-
-
-def test_should_eventually_give_up_failed_upload_from_queue(
-    uploader: Uploader, mocker: MockerFixture
-) -> None:
-    mocker.patch.object(settings, "UPLOAD_FAILURE_MAX_WAIT", 0.0001)
-    mocker.patch.object(settings, "UPLOAD_FAILURE_ATTEMPTS_LIMIT", 3)
-    INSPECTION_ID = "123-456"
-    inspection = InspectionBlob(metadata=stub_image_metadata(), id=INSPECTION_ID)
-    mission: Mission = Mission(id="id", name="Dummy Mission")
-
-    storage_handler: StorageFake = uploader.storage_handlers[0]  # type: ignore
-
-    storage_handler.failure_count = 5
-    uploader.upload_inspection(inspection, mission)
-
-    assert not storage_handler.blob_exists(inspection)
+    assert storage_handler.blob_exists(inspection) is uploaded
 
 
 def test_should_not_publish_when_blob_paths_are_empty(uploader: Uploader) -> None:
@@ -98,9 +94,16 @@ def test_should_not_publish_when_blob_paths_are_empty(uploader: Uploader) -> Non
     assert uploader.mqtt_queue.qsize() == 0
 
 
-def test_publishes_required_analysis_when_present(uploader: Uploader) -> None:
+@pytest.mark.parametrize(
+    "analysis_types",
+    [None, ["anonymize", "thermal-reading"]],
+    ids=["absent", "present"],
+)
+def test_publishes_required_analysis(
+    uploader: Uploader, analysis_types: list[str] | None
+) -> None:
     inspection = InspectionBlob(
-        metadata=stub_image_metadata(analysis_types=["anonymize", "thermal-reading"]),
+        metadata=stub_image_metadata(analysis_types=analysis_types),
         id=str(uuid4()),
     )
     mission = Mission(id="id", name="m")
@@ -110,20 +113,7 @@ def test_publishes_required_analysis_when_present(uploader: Uploader) -> None:
     assert uploader.mqtt_queue.qsize() == 1
 
     payload = json.loads(uploader.mqtt_queue.get().payload)
-    assert payload["required_analysis"] == ["anonymize", "thermal-reading"]
-
-
-def test_publishes_null_required_analysis_when_absent(uploader: Uploader) -> None:
-    inspection = InspectionBlob(
-        metadata=stub_image_metadata(analysis_types=None), id=str(uuid4())
-    )
-    mission = Mission(id="id", name="m")
-
-    uploader.upload_inspection(inspection, mission)
-    assert uploader.mqtt_queue.qsize() == 1
-
-    payload = json.loads(uploader.mqtt_queue.get().payload)
-    assert payload["required_analysis"] is None
+    assert payload["required_analysis"] == analysis_types
 
 
 def test_publishes_inspection_metadata(uploader: Uploader) -> None:
@@ -133,10 +123,15 @@ def test_publishes_inspection_metadata(uploader: Uploader) -> None:
     uploader.upload_inspection(inspection, mission)
 
     payload = json.loads(uploader.mqtt_queue.get().payload)
-    assert payload["mission_name"] == mission.name
-    assert payload["file_type"] == inspection.metadata.file_type
-    assert payload["duration"] is None
-    assert payload["acoustic_metadata"] is None
+    assert {
+        key: payload[key]
+        for key in ("mission_name", "file_type", "duration", "acoustic_metadata")
+    } == {
+        "mission_name": mission.name,
+        "file_type": inspection.metadata.file_type,
+        "duration": None,
+        "acoustic_metadata": None,
+    }
     assert "blob_storage_metadata_path" not in payload
 
 
@@ -175,7 +170,6 @@ def test_uploads_scalar_as_json(uploader: Uploader, mocker: MockerFixture) -> No
 
     uploaded = json.loads(blob.upload_blob.call_args.kwargs["data"])
     assert uploaded == expected
-    assert (uploaded["value"], uploaded["decimal_places"]) == (412.5, 2)
     filename = container.get_blob_client.call_args.args[0]
     assert "__CO2Measurement__" in filename and filename.endswith(".json")
     assert inspection.metadata.file_type == "txt"
