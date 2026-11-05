@@ -4,10 +4,9 @@ import asyncio
 import json
 from pathlib import Path
 from typing import Any, BinaryIO
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 import pytest
-from azure.core.exceptions import ResourceExistsError
 from pytest_mock import MockerFixture
 
 from isar.robot.robot_service import RobotService
@@ -30,23 +29,25 @@ def recording_mission() -> Mission:
     )
 
 
-def test_start_only_after_robot_confirmation(
-    mocked_robot_service: RobotService, mocker: MockerFixture
+@pytest.mark.parametrize("confirmed", [False, True], ids=["rejected", "confirmed"])
+def test_recording_starts_only_after_robot_confirmation(
+    mocked_robot_service: RobotService, mocker: MockerFixture, confirmed: bool
 ) -> None:
     service = mocked_robot_service
     recorder = service.mission_recorder = Mock()
-    start = mocker.patch(
+    mocker.patch(
         "isar.robot.robot_service.robot_start_mission",
-        return_value=ErrorMessage(
-            error_reason=ErrorReason.RobotUnknownErrorException,
-            error_description="failed",
+        return_value=(
+            None
+            if confirmed
+            else ErrorMessage(ErrorReason.RobotUnknownErrorException, "failed")
         ),
     )
-    assert not service._start_mission_handler(recording_mission())
-    recorder.start.assert_not_called()
-    start.return_value = None
-    assert service._start_mission_handler(recording_mission())
-    recorder.start.assert_called_once_with("recording-mission")
+    mission = recording_mission()
+
+    service._start_mission_handler(mission)
+
+    assert recorder.start.call_args_list == ([call(mission.id)] if confirmed else [])
 
 
 @pytest.mark.parametrize("recorder_available", [False, True])
@@ -58,7 +59,11 @@ def test_mission_starts_when_recording_is_unavailable(
     recorder.start.side_effect = RuntimeError("disk unavailable")
     service.mission_recorder = recorder if recorder_available else None
     mocker.patch("isar.robot.robot_service.robot_start_mission", return_value=None)
-    assert service._start_mission_handler(recording_mission())
+    mission = recording_mission()
+
+    success = service._start_mission_handler(mission)
+
+    assert success
 
 
 def test_pause_resume_keeps_one_logical_recording(
@@ -69,8 +74,10 @@ def test_pause_resume_keeps_one_logical_recording(
     mocker.patch("isar.robot.robot_service.robot_pause_mission", return_value=None)
     mocker.patch("isar.robot.robot_service.robot_resume_mission", return_value=None)
     service._start_recording("mission")
+
     service._pause_mission_handler()
     service._resume_mission_handler()
+
     recorder.start.assert_called_once_with("mission")
     recorder.stop.assert_not_called()
 
@@ -82,7 +89,9 @@ def test_successful_stop_without_monitor_finalizes_recording(
     recorder = service.mission_recorder = Mock()
     service._start_recording("mission")
     mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
+
     asyncio.run(service._stop_mission_handler(None))
+
     recorder.stop.assert_called_once_with("mission", False)
 
 
@@ -97,7 +106,9 @@ def test_terminal_monitor_stops_correct_mission(
         "isar.robot.robot_service.robot_monitor_mission",
         return_value=(None, mission, False),
     )
+
     asyncio.run(service._monitor_mission_handler(mission))
+
     recorder.stop.assert_called_once_with(mission.id, False)
     assert service.recording_mission_id == "newer-mission"
 
@@ -109,7 +120,19 @@ def publisher() -> BlobRecordingPublisher:
     return publisher
 
 
-def test_recording_storage_reuses_inspection_connection_lazily(
+def test_recording_storage_does_not_connect_on_construction(
+    mocker: MockerFixture,
+) -> None:
+    create_client = mocker.patch(
+        "isar.storage.recording_publisher.BlobServiceClient.from_connection_string"
+    )
+
+    BlobRecordingPublisher("robot")
+
+    create_client.assert_not_called()
+
+
+def test_recording_storage_caches_inspection_storage_connection(
     mocker: MockerFixture,
 ) -> None:
     mocker.patch(
@@ -120,57 +143,75 @@ def test_recording_storage_reuses_inspection_connection_lazily(
         "isar.storage.recording_publisher.BlobServiceClient.from_connection_string"
     )
     publisher = BlobRecordingPublisher("robot")
-    create_client.assert_not_called()
 
     container = publisher._container
+    cached_container = publisher._container
 
     create_client.assert_called_once_with("inspection-storage")
     create_client.return_value.get_container_client.assert_called_once_with(
         "mission-recordings"
     )
-    assert container is publisher._container
-    create_client.assert_called_once()
+    assert container is cached_container
 
 
-def test_video_upload_failure_preserves_source_and_retry_uses_stable_path(
-    publisher: BlobRecordingPublisher, tmp_path: Path
-) -> None:
+@pytest.fixture
+def artifact(tmp_path: Path) -> RecordingArtifact:
     source = tmp_path / "vendor-export.webm"
     source.write_bytes(b"completed footage")
-    artifact = RecordingArtifact("front", "camera-key", source, "video/webm")
-    container: Any = publisher._container
-    container.create_container.side_effect = ResourceExistsError()
+    return RecordingArtifact("front", "camera-key", source, "video/webm")
+
+
+def test_video_upload_failure_preserves_source(
+    publisher: BlobRecordingPublisher, artifact: RecordingArtifact
+) -> None:
+    container = publisher._container
     container.upload_blob.side_effect = OSError("unavailable")
 
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match="unavailable"):
         asyncio.run(publisher.publish_video("mission", artifact))
-    assert source.read_bytes() == b"completed footage"
 
-    uploads: list[tuple[str, bytes, dict[str, Any]]] = []
+    assert artifact.path.read_bytes() == b"completed footage"
+
+
+def test_video_upload_retry_uses_stable_path_and_content(
+    publisher: BlobRecordingPublisher, artifact: RecordingArtifact
+) -> None:
+    container = publisher._container
+    container.upload_blob.side_effect = OSError("unavailable")
+    with pytest.raises(OSError, match="unavailable"):
+        asyncio.run(publisher.publish_video("mission", artifact))
+    uploads: list[tuple[str, bytes, bool, str]] = []
 
     def capture_upload(name: str, data: BinaryIO, **options: Any) -> None:
-        uploads.append((name, data.read(), options))
+        uploads.append(
+            (
+                name,
+                data.read(),
+                options["overwrite"],
+                options["content_settings"].content_type,
+            )
+        )
 
     container.upload_blob.side_effect = capture_upload
+
     first = asyncio.run(publisher.publish_video("mission", artifact))
     second = asyncio.run(publisher.publish_video("mission", artifact))
 
     assert first == second == "mission/camera-key.webm"
-    assert source.read_bytes() == b"completed footage"
-    assert all(
-        name == first and data == b"completed footage" for name, data, _ in uploads
+    assert (
+        uploads
+        == [("mission/camera-key.webm", b"completed footage", True, "video/webm")] * 2
     )
-    assert all(options["overwrite"] for _, _, options in uploads)
-    assert uploads[0][2]["content_settings"].content_type == "video/webm"
+    assert artifact.path.read_bytes() == b"completed footage"
 
 
-def test_manifest_translates_references_and_preserves_driver_state(
-    publisher: BlobRecordingPublisher,
-) -> None:
-    class DriverCamera(CameraRecording):
-        source_codec: str
+class DriverCamera(CameraRecording):
+    source_codec: str
 
-    session = RecordingSession[DriverCamera](
+
+@pytest.fixture
+def recording_session() -> RecordingSession[DriverCamera]:
+    return RecordingSession[DriverCamera](
         run_id="mission",
         status="Ready",
         cameras={
@@ -183,17 +224,38 @@ def test_manifest_translates_references_and_preserves_driver_state(
             )
         },
     )
-    original = session.model_dump()
 
-    asyncio.run(publisher.publish_session(session))
+
+def test_manifest_translates_driver_references(
+    publisher: BlobRecordingPublisher, recording_session: RecordingSession[DriverCamera]
+) -> None:
+    asyncio.run(publisher.publish_session(recording_session))
 
     container: Any = publisher._container
     name, content = container.upload_blob.call_args.args
-    manifest = json.loads(content)
-    camera = manifest["cameras"]["front"]
     assert name == "mission/session.json"
-    assert manifest["isarId"] == "robot"
-    assert camera["sourceCodec"] == "H264"
-    assert camera["blobName"] == "mission/front.mp4"
-    assert "artifactReference" not in camera
-    assert session.model_dump() == original
+    assert json.loads(content) == {
+        "runId": "mission",
+        "status": "Ready",
+        "isarId": "robot",
+        "gaps": [],
+        "cameras": {
+            "front": {
+                "cameraId": "front",
+                "key": "front",
+                "status": "Ready",
+                "sourceCodec": "H264",
+                "blobName": "mission/front.mp4",
+            }
+        },
+    }
+
+
+def test_manifest_publication_preserves_driver_state(
+    publisher: BlobRecordingPublisher, recording_session: RecordingSession[DriverCamera]
+) -> None:
+    original = recording_session.model_dump()
+
+    asyncio.run(publisher.publish_session(recording_session))
+
+    assert recording_session.model_dump() == original

@@ -15,7 +15,10 @@ from isar.apis.models.start_mission_definition import StopMissionDefinition
 from isar.config.settings import robot_settings
 from isar.models.events import EventTimeoutError
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+from isar.state_machine.state import State
+from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states_enum import States
+from robot_interface.models.mission.mission import Mission
 from tests.test_mocks.mission_definition import DummyMissionDefinition
 
 dummy_mission = DummyMissionDefinition.default_mission
@@ -89,6 +92,23 @@ class TestStartMission:
         )
         assert response.status_code == HTTPStatus.CONFLICT
 
+    @pytest.mark.parametrize("state", [States.Maintenance, States.Lockdown])
+    def test_safety_modes_reject_new_missions(
+        self,
+        client: TestClient,
+        state_machine: StateMachine,
+        all_states_dict: dict[States, State],
+        state: States,
+    ) -> None:
+        state_machine.current_state = all_states_dict[state]
+
+        response = client.post(
+            url=self.schedule_start_mission_path,
+            json=jsonable_encoder(self.dummy_start_mission_content),
+        )
+
+        assert response.status_code == HTTPStatus.CONFLICT
+
     @mock.patch.object(
         SchedulingUtilities, "_verify_valid_state", lambda self, event: None
     )
@@ -128,6 +148,7 @@ class TestStartMission:
     ) -> None:
         mocker.patch.object(robot_settings, "CAPABILITIES", ["stored_mission"])
         start = mocker.patch.object(SchedulingUtilities, "start_mission")
+
         response = client.post(
             self.schedule_start_mission_path,
             json={
@@ -138,15 +159,20 @@ class TestStartMission:
                 }
             },
         )
+
         assert response.status_code == HTTPStatus.OK
         assert response.json() == {
             "id": "run-id",
             "tasks": [],
         }
-        mission = start.call_args.kwargs["mission"]
-        assert mission.robot_mission_id == "DiagnosticRoutine"
-        assert mission.id == "run-id"
-        assert mission.tasks == []
+        start.assert_called_once_with(
+            mission=Mission(
+                id="run-id",
+                name="Weekly diagnostic",
+                robot_mission_id="DiagnosticRoutine",
+                tasks=[],
+            )
+        )
 
     @pytest.mark.parametrize(
         ("definition", "capabilities", "expected_status"),

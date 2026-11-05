@@ -46,73 +46,93 @@ class TestAuthentication:
 
 
 class TestBuildAzureScheme:
-    def test_defaults_to_single_tenant_azure_scheme(
-        self, monkeypatch: MonkeyPatch
+    @pytest.mark.parametrize(
+        ("config_url", "expected_type"),
+        [
+            pytest.param(None, SingleTenantAzureAuthorizationCodeBearer, id="azure"),
+            pytest.param(
+                "http://keycloak:8080/realms/robotics/.well-known/openid-configuration",
+                AzureAuthorizationCodeBearerBase,
+                id="custom-openid",
+            ),
+        ],
+    )
+    def test_selects_configured_identity_provider(
+        self,
+        monkeypatch: MonkeyPatch,
+        config_url: str | None,
+        expected_type: type[AzureAuthorizationCodeBearerBase],
     ) -> None:
-        monkeypatch.setattr(settings, "OPENID_CONFIG_URL", None)
+        monkeypatch.setattr(settings, "OPENID_CONFIG_URL", config_url)
 
         scheme = build_azure_scheme()
 
-        assert isinstance(scheme, SingleTenantAzureAuthorizationCodeBearer)
-        assert scheme.openid_config.config_url is None
+        assert type(scheme) is expected_type
+        assert scheme.openid_config.config_url == config_url
         assert scheme.openid_config.tenant_id == settings.AZURE_TENANT_ID
-        assert scheme.app_client_id == settings.AZURE_CLIENT_ID
 
-    def test_openid_config_url_is_honoured(self, monkeypatch: MonkeyPatch) -> None:
-        config_url = (
-            "http://keycloak:8080/realms/robotics/.well-known/openid-configuration"
-        )
+    @pytest.mark.parametrize(
+        "config_url",
+        [None, "http://keycloak:8080/realms/robotics/.well-known/openid-configuration"],
+        ids=["azure", "custom-openid"],
+    )
+    def test_provider_keeps_client_and_issuer_validation(
+        self, monkeypatch: MonkeyPatch, config_url: str | None
+    ) -> None:
+        monkeypatch.setattr(settings, "OPENID_CONFIG_URL", config_url)
+
+        scheme = build_azure_scheme()
+
+        assert scheme.app_client_id == settings.AZURE_CLIENT_ID
+        assert scheme.validate_iss is True
+
+    @pytest.mark.parametrize("custom_urls", [False, True], ids=["fallback", "custom"])
+    def test_openapi_urls(self, monkeypatch: MonkeyPatch, custom_urls: bool) -> None:
         authorization_url = (
             "http://keycloak:8080/realms/robotics/protocol/openid-connect/auth"
         )
         token_url = "http://keycloak:8080/realms/robotics/protocol/openid-connect/token"
-
-        monkeypatch.setattr(settings, "OPENID_CONFIG_URL", config_url)
-        monkeypatch.setattr(settings, "OPENAPI_AUTHORIZATION_URL", authorization_url)
-        monkeypatch.setattr(settings, "OPENAPI_TOKEN_URL", token_url)
-
-        scheme = build_azure_scheme()
-
-        assert not isinstance(scheme, SingleTenantAzureAuthorizationCodeBearer)
-        assert isinstance(scheme, AzureAuthorizationCodeBearerBase)
-        assert scheme.openid_config.config_url == config_url
-        assert scheme.authorization_url == authorization_url
-        assert scheme.token_url == token_url
-        assert scheme.app_client_id == settings.AZURE_CLIENT_ID
-        assert scheme.validate_iss is True
-
-    def test_openapi_urls_fall_back_to_azure_when_unset(
-        self, monkeypatch: MonkeyPatch
-    ) -> None:
         monkeypatch.setattr(
             settings,
             "OPENID_CONFIG_URL",
             "http://keycloak:8080/realms/robotics/.well-known/openid-configuration",
         )
-        monkeypatch.setattr(settings, "OPENAPI_AUTHORIZATION_URL", None)
-        monkeypatch.setattr(settings, "OPENAPI_TOKEN_URL", None)
+        monkeypatch.setattr(
+            settings,
+            "OPENAPI_AUTHORIZATION_URL",
+            authorization_url if custom_urls else None,
+        )
+        monkeypatch.setattr(
+            settings, "OPENAPI_TOKEN_URL", token_url if custom_urls else None
+        )
+        azure_base = (
+            f"https://login.microsoftonline.com/{settings.AZURE_TENANT_ID}/oauth2/v2.0"
+        )
 
         scheme = build_azure_scheme()
 
-        assert scheme.authorization_url is not None
-        assert settings.AZURE_TENANT_ID in scheme.authorization_url
+        assert (scheme.authorization_url, scheme.token_url) == (
+            (authorization_url, token_url)
+            if custom_urls
+            else (f"{azure_base}/authorize", f"{azure_base}/token")
+        )
 
-    def test_scope_defaults_to_the_entra_shaped_scope(
-        self, monkeypatch: MonkeyPatch
+    @pytest.mark.parametrize("scope", [None, "isar-api"], ids=["default", "custom"])
+    def test_advertises_configured_scope(
+        self, monkeypatch: MonkeyPatch, scope: str | None
     ) -> None:
-        monkeypatch.setattr(settings, "OPENID_SCOPE", None)
+        monkeypatch.setattr(settings, "OPENID_SCOPE", scope)
+        expected = (
+            {"isar-api": "isar-api"}
+            if scope
+            else {
+                f"api://{settings.AZURE_CLIENT_ID}/user_impersonation": "user_impersonation"
+            }
+        )
 
         scheme = build_azure_scheme()
 
-        expected = f"api://{settings.AZURE_CLIENT_ID}/user_impersonation"
-        assert advertised_scopes(scheme) == {expected: "user_impersonation"}
-
-    def test_openid_scope_is_honoured(self, monkeypatch: MonkeyPatch) -> None:
-        monkeypatch.setattr(settings, "OPENID_SCOPE", "isar-api")
-
-        scheme = build_azure_scheme()
-
-        assert advertised_scopes(scheme) == {"isar-api": "isar-api"}
+        assert advertised_scopes(scheme) == expected
         assert scheme.app_client_id == settings.AZURE_CLIENT_ID
 
 
