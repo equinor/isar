@@ -16,7 +16,7 @@ from robot_interface.models.exceptions.event_exceptions import (
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus
 from robot_interface.models.mission.task import InspectionTask
 
 
@@ -28,22 +28,6 @@ class EmptyMessage:
 @dataclass
 class MissionCompleted:
     status: MissionStatus
-
-    @classmethod
-    def from_mission(cls, mission: Mission) -> MissionCompleted:
-        """Determine the outcome of a mission whose tasks have all finished."""
-        if mission._get_unfinished_tasks():
-            raise ValueError("Cannot determine the outcome of unfinished tasks")
-        task_statuses = [task.status for task in mission.tasks]
-        if mission.status == MissionStatus.PartiallySuccessful:
-            return cls(MissionStatus.PartiallySuccessful)
-        elif all(status == TaskStatus.Successful for status in task_statuses):
-            return cls(MissionStatus.Successful)
-        elif not task_statuses or all(
-            status == TaskStatus.Failed for status in task_statuses
-        ):
-            return cls(MissionStatus.Failed)
-        return cls(MissionStatus.PartiallySuccessful)
 
 
 AbortedMission = Mission
@@ -203,9 +187,9 @@ class RobotActionEvent[T1, T2, T3]:
 
 class RobotActionRequests:
     def __init__(self) -> None:
-        self.execute_mission: RobotActionEvent[
-            Mission, MissionCompleted | EmptyMessage, ErrorMessage
-        ] = RobotActionEvent("execute_mission")
+        self.execute_mission: RobotActionEvent[Mission, EmptyMessage, ErrorMessage] = (
+            RobotActionEvent("execute_mission")
+        )
         self.return_home: RobotActionEvent[EmptyMessage, EmptyMessage, ErrorMessage] = (
             RobotActionEvent("return_home")
         )

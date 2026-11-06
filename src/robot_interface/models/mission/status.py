@@ -8,7 +8,6 @@ class MissionStatus(str, Enum):
     Failed = "failed"
     Cancelled = "cancelled"
     Successful = "successful"
-    PartiallySuccessful = "partially_successful"
 
 
 class TaskStatus(str, Enum):
@@ -18,7 +17,6 @@ class TaskStatus(str, Enum):
     Failed = "failed"
     Cancelled = "cancelled"
     Successful = "successful"
-    PartiallySuccessful = "partially_successful"
 
 
 class RobotStatus(Enum):
