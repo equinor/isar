@@ -12,7 +12,6 @@ class Mission(BaseModel):
     tasks: list[TASKS] = Field(default_factory=list, frozen=True)
     name: str = Field(frozen=True)
     robot_mission_id: str | None = Field(default=None, frozen=True, pattern=r"\S")
-    status: MissionStatus = MissionStatus.NotStarted
     error_message: ErrorMessage | None = Field(default=None)
 
     @model_validator(mode="after")
