@@ -152,12 +152,16 @@ class RobotService:
                 aborted_mission = monitoring_mission
 
             if aborted_mission is not None:
-                unfinished_tasks = aborted_mission._get_unfinished_tasks()
-                if len(unfinished_tasks) > 0:
-                    continued_mission = Mission(
+                mission_status = aborted_mission.get_status_from_tasks()
+                if mission_status in [
+                    MissionStatus.InProgress,
+                    MissionStatus.NotStarted,
+                    MissionStatus.Paused,
+                ]:
+                    continued_mission = AbortedMission(
                         id=aborted_mission.id,
                         name=aborted_mission.name,
-                        tasks=unfinished_tasks,
+                        tasks=aborted_mission._get_unfinished_tasks(),
                     )
                     self.action_requests.stop_mission.trigger_success_response(
                         continued_mission
@@ -165,7 +169,7 @@ class RobotService:
                     return
                 if aborted_mission.tasks:
                     self.action_requests.stop_mission.trigger_success_response(
-                        MissionCompleted.from_mission(aborted_mission)
+                        MissionCompleted(aborted_mission.get_status_from_tasks())
                     )
                     return
 
@@ -243,8 +247,7 @@ class RobotService:
                 and remaining_mission.tasks
                 and not remaining_mission._get_unfinished_tasks()
             ):
-                mission_completed = MissionCompleted.from_mission(remaining_mission)
-                if mission_completed.status == MissionStatus.Failed:
+                if remaining_mission.get_status_from_tasks() == MissionStatus.Failed:
                     self.action_requests.execute_mission.trigger_failure_response(
                         ErrorMessage(
                             ErrorReason.RobotActionException, "All the tasks failed"
@@ -252,16 +255,11 @@ class RobotService:
                     )
                 else:
                     self.action_requests.execute_mission.trigger_success_response(
-                        mission_completed
+                        EmptyMessage()
                     )
             else:
-                status = (
-                    mission.status
-                    if mission.status == MissionStatus.PartiallySuccessful
-                    else MissionStatus.Successful
-                )
                 self.action_requests.execute_mission.trigger_success_response(
-                    MissionCompleted(status)
+                    EmptyMessage()
                 )
         except asyncio.CancelledError:
             pass
