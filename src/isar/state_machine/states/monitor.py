@@ -5,7 +5,7 @@ import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMai
 import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 from isar.apis.models.models import MissionStartResponse
-from isar.models.events import EmptyMessage, Events, MissionCompleted
+from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
@@ -16,14 +16,11 @@ from robot_interface.models.mission.status import MissionStatus
 def Monitor(events: Events, mission_id: str) -> StateDef:
 
     def _mission_success_event_handler(
-        result: EmptyMessage | MissionCompleted,
+        _: EmptyMessage,
     ) -> Transition:
-        mission_status = (
-            result.status
-            if isinstance(result, MissionCompleted)
-            else MissionStatus.Successful
+        events.mqtt_queue.publish_mission_status(
+            mission_id, MissionStatus.Successful, None
         )
-        events.mqtt_queue.publish_mission_status(mission_id, mission_status, None)
         return AwaitNextMission.transition()
 
     def _mission_failed_event_handler(
@@ -53,7 +50,7 @@ def Monitor(events: Events, mission_id: str) -> StateDef:
             event=events.action_requests.execute_mission.failure,
             handler=_mission_failed_event_handler,
         ),
-        EventHandlerMapping[EmptyMessage | MissionCompleted](
+        EventHandlerMapping[EmptyMessage](
             event=events.action_requests.execute_mission.success,
             handler=_mission_success_event_handler,
         ),

@@ -2,7 +2,6 @@ from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from robot_interface.models.mission.task import TASKS
 
@@ -12,8 +11,6 @@ class Mission(BaseModel):
     tasks: list[TASKS] = Field(default_factory=list, frozen=True)
     name: str = Field(frozen=True)
     robot_mission_id: str | None = Field(default=None, frozen=True, pattern=r"\S")
-    status: MissionStatus = MissionStatus.NotStarted
-    error_message: ErrorMessage | None = Field(default=None)
 
     @model_validator(mode="after")
     def validate_stored_mission(self) -> Self:
@@ -29,6 +26,16 @@ class Mission(BaseModel):
             not in [
                 TaskStatus.Failed,
                 TaskStatus.Successful,
-                TaskStatus.PartiallySuccessful,
             ]
         ]
+
+    def get_status_from_tasks(self) -> MissionStatus:
+        """Determine the outcome of a mission whose tasks have all finished."""
+        if self._get_unfinished_tasks():
+            return MissionStatus.InProgress
+        task_statuses = [task.status for task in self.tasks]
+        if not task_statuses or all(
+            status == TaskStatus.Failed for status in task_statuses
+        ):
+            return MissionStatus.Failed
+        return MissionStatus.Successful

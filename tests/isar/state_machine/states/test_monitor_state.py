@@ -1,11 +1,10 @@
 import json
 from collections import deque
 
-import pytest
 from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
-from isar.models.events import EmptyMessage, Events, MissionCompleted
+from isar.models.events import EmptyMessage, Events
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.state import EventHandlerMapping, State
 from isar.state_machine.states.monitor import Monitor
@@ -41,23 +40,17 @@ def _mock_robot_exception_with_message() -> RobotException:
     )
 
 
-@pytest.mark.parametrize(
-    "status",
-    [MissionStatus.Successful, MissionStatus.PartiallySuccessful, MissionStatus.Failed],
-)
-def test_monitor_reports_completed_mission_outcome(
-    events: Events, status: MissionStatus
-) -> None:
+def test_monitor_reports_completed_mission_outcome(events: Events) -> None:
     current_state = State(Monitor(events, "mission_id"))
     handler = current_state.get_event_handler_by_event(
         events.action_requests.execute_mission.success
     )
 
-    transition = handler.handler(MissionCompleted(status))
+    transition = handler.handler(EmptyMessage())
 
     message = json.loads(events.mqtt_queue.get().payload)
     assert message["mission_id"] == "mission_id"
-    assert message["status"] == status.value
+    assert message["status"] == MissionStatus.Successful
     assert State(transition(events)).name is States.AwaitNextMission
 
 
