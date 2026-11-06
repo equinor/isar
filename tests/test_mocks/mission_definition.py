@@ -7,7 +7,7 @@ from isar.apis.models.start_mission_definition import (
     StartMissionTaskDefinition,
 )
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, TaskStatus
+from robot_interface.models.mission.status import TaskStatus
 from tests.test_mocks.task import StubTask
 
 
@@ -35,7 +35,6 @@ class DummyMissionDefinition:
         tasks=[
             dummy_task_take_image_cancelled,
         ],
-        status=MissionStatus.Cancelled,
     )
     dummy_task_response_take_image = TaskResponse(
         id=dummy_task_take_image.id,
