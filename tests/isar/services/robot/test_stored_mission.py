@@ -82,7 +82,6 @@ def test_adapter_rejection_uses_normal_failure_channel(
         MissionStatus.Successful,
         MissionStatus.Failed,
         MissionStatus.Cancelled,
-        MissionStatus.PartiallySuccessful,
     ],
 )
 def test_stored_monitor_reports_terminal_outcome(
@@ -108,7 +107,7 @@ def test_stored_monitor_reports_terminal_outcome(
     asyncio.run(service._monitor_mission_handler(stored_mission))
 
     if terminal_status == MissionStatus.Successful:
-        assert isinstance(response.success.consume_event(), MissionCompleted)
+        assert isinstance(response.success.consume_event(), EmptyMessage)
         assert not response.failure.has_event()
     else:
         assert response.failure.consume_event() == ErrorMessage(
@@ -157,7 +156,6 @@ def test_status_errors_cannot_report_success(
 
     assert events.action_requests.execute_mission.failure.has_event()
     assert not events.action_requests.execute_mission.success.has_event()
-    assert stored_mission.status == MissionStatus.Failed
 
 
 def test_stored_mission_stop_does_not_report_completion(

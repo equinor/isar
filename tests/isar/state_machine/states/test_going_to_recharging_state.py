@@ -33,7 +33,7 @@ def test_stopping_to_recharge_goes_to_going_to_recharging_when_no_remaining_task
 
 @pytest.mark.parametrize(
     "status",
-    [MissionStatus.Successful, MissionStatus.PartiallySuccessful, MissionStatus.Failed],
+    [MissionStatus.Successful, MissionStatus.Failed],
 )
 def test_stopping_to_recharge_reports_completed_mission_outcome(
     events: Events, status: MissionStatus

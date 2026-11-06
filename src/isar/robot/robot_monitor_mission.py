@@ -28,7 +28,6 @@ def get_next_task(task_iterator: Iterator[TASKS]) -> TASKS | None:
 def is_finished(task_status: TaskStatus) -> bool:
     return (
         task_status == TaskStatus.Successful
-        or task_status == TaskStatus.PartiallySuccessful
         or task_status == TaskStatus.Cancelled
         or task_status == TaskStatus.Failed
     )
@@ -232,9 +231,6 @@ async def robot_monitor_mission(
                 )
                 mission_status = MissionStatus.Failed
 
-            if not mission.tasks:
-                mission.status = mission_status
-
             should_wait_for_task_status = (
                 current_task is not None
                 and mission_status in [MissionStatus.Successful, MissionStatus.Failed]
@@ -247,10 +243,6 @@ async def robot_monitor_mission(
             ]:
                 if error_message is None and (
                     mission_status in [MissionStatus.Failed, MissionStatus.Cancelled]
-                    or (
-                        not mission.tasks
-                        and mission_status == MissionStatus.PartiallySuccessful
-                    )
                 ):
                     error_message = ErrorMessage(
                         error_reason=None,

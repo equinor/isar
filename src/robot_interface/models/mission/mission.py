@@ -29,6 +29,16 @@ class Mission(BaseModel):
             not in [
                 TaskStatus.Failed,
                 TaskStatus.Successful,
-                TaskStatus.PartiallySuccessful,
             ]
         ]
+
+    def get_status_from_tasks(self) -> MissionStatus:
+        """Determine the outcome of a mission whose tasks have all finished."""
+        if self._get_unfinished_tasks():
+            return MissionStatus.InProgress
+        task_statuses = [task.status for task in self.tasks]
+        if not task_statuses or all(
+            status == TaskStatus.Failed for status in task_statuses
+        ):
+            return MissionStatus.Failed
+        return MissionStatus.Successful
