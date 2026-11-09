@@ -173,7 +173,10 @@ class RobotService:
                         MissionCompleted(aborted_mission.get_status_from_tasks())
                     )
                     return
-
+        else:
+            self.logger.warning(
+                "Received stop request while not monitoring any mission"
+            )
         self.action_requests.stop_mission.trigger_success_response(EmptyMessage())
 
     def _pause_mission_handler(self) -> None:
