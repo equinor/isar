@@ -26,6 +26,7 @@ from isar.robot.robot_start_mission import robot_start_mission
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import robot_stop_mission
 from isar.storage.recording_publisher import BlobRecordingPublisher
+from robot_interface.mission_recording import MissionRecorder
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
@@ -51,7 +52,7 @@ class RobotService:
         self.battery_thread: RobotBatteryThread | None = None
         self.status_thread: RobotStatusThread | None = None
         self.signal_exit: ThreadEvent = ThreadEvent()
-        self.mission_recorder = None
+        self.mission_recorder: MissionRecorder | None = None
         self.recording_mission_id: str | None = None
         if settings.RECORDING_ENABLED:
             try:
