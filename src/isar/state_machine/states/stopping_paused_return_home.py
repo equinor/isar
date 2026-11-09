@@ -18,7 +18,7 @@ def StoppingPausedReturnHome(events: Events, mission: Mission) -> StateDef:
         ),
         EventHandlerMapping[AbortedMission | MissionCompleted | EmptyMessage](
             event=events.action_requests.stop_mission.success,
-            handler=lambda _: Monitor.transition_and_start_mission(mission, True),
+            handler=lambda _: Monitor.transition_and_start_mission(mission, False),
         ),
     ]
     return StateDef(
