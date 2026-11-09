@@ -17,7 +17,7 @@ from isar.services.service_connections.persistent_memory import (
 )
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission.status import MissionStatus, RobotStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from tests.test_mocks.mission_definition import DummyMissionDefinition
 from tests.test_mocks.robot_interface import StubRobot
 from tests.test_mocks.state_machine_mocks import (
@@ -88,6 +88,13 @@ def running_mission(
     wait_until(
         lambda: state_machine_thread_with_db.state_machine.current_state.name
         == States.Monitor
+    )
+    robot = robot_service_thread.robot_service.robot
+    assert isinstance(robot, StubRobot)
+    wait_until(
+        lambda: robot.mission is not None
+        and all(task.status == TaskStatus.Successful for task in robot.mission.tasks),
+        timeout=10.0,
     )
     return state_machine_thread_with_db
 
