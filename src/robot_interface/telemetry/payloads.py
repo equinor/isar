@@ -122,7 +122,7 @@ class InspectionResultPayload(BaseModel):
     inspection_description: str | None = None
     required_analysis: list[str] | None = None
     timestamp: datetime
-    robot_pose: Pose
+    robot_pose: Pose | None = None
     target_position: Position | None = None
     file_type: str
     duration: float | None = None

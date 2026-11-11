@@ -115,7 +115,7 @@ def test_terminal_monitor_stops_correct_mission(
 
 @pytest.fixture
 def publisher() -> BlobRecordingPublisher:
-    publisher = BlobRecordingPublisher("robot")
+    publisher = BlobRecordingPublisher("robot", Mock())
     publisher._container = Mock()
     return publisher
 
@@ -127,7 +127,7 @@ def test_recording_storage_does_not_connect_on_construction(
         "isar.storage.recording_publisher.BlobServiceClient.from_connection_string"
     )
 
-    BlobRecordingPublisher("robot")
+    BlobRecordingPublisher("robot", Mock())
 
     create_client.assert_not_called()
 
@@ -139,18 +139,17 @@ def test_recording_storage_caches_inspection_storage_connection(
         "isar.storage.recording_publisher.settings.BLOB_STORAGE_CONNECTION_STRING_DATA",
         "inspection-storage",
     )
+    mocker.patch("isar.storage.recording_publisher.settings.BLOB_CONTAINER", "kaa")
     create_client = mocker.patch(
         "isar.storage.recording_publisher.BlobServiceClient.from_connection_string"
     )
-    publisher = BlobRecordingPublisher("robot")
+    publisher = BlobRecordingPublisher("robot", Mock())
 
     container = publisher._container
     cached_container = publisher._container
 
     create_client.assert_called_once_with("inspection-storage")
-    create_client.return_value.get_container_client.assert_called_once_with(
-        "mission-recordings"
-    )
+    create_client.return_value.get_container_client.assert_called_once_with("kaa")
     assert container is cached_container
 
 
@@ -171,6 +170,70 @@ def test_video_upload_failure_preserves_source(
         asyncio.run(publisher.publish_video("mission", artifact))
 
     assert artifact.path.read_bytes() == b"completed footage"
+
+
+@pytest.mark.parametrize("status", ["Recording", "Processing"])
+def test_unfinished_session_is_not_announced_to_sara(
+    publisher: BlobRecordingPublisher, status: Any
+) -> None:
+    session = RecordingSession[CameraRecording](
+        run_id="mission",
+        status=status,
+        cameras={
+            "front": CameraRecording(
+                camera_id="front",
+                key="front",
+                status="Ready",
+                artifact_reference="mission/front.mp4",
+            )
+        },
+    )
+
+    asyncio.run(publisher.publish_session(session))
+
+    queue: Any = publisher.mqtt_queue
+    queue.publish.assert_not_called()
+
+
+def test_finished_session_announces_ready_cameras_to_sara(
+    publisher: BlobRecordingPublisher, mocker: MockerFixture
+) -> None:
+    mocker.patch(
+        "isar.storage.recording_publisher.settings.BLOB_STORAGE_ACCOUNT_DATA", "raw"
+    )
+    mocker.patch("isar.storage.recording_publisher.settings.BLOB_CONTAINER", "kaa")
+    session = RecordingSession[CameraRecording](
+        run_id="mission",
+        status="Expired",
+        started_at="2026-11-11T10:00:00+00:00",
+        ended_at="2026-11-11T11:00:00+00:00",
+        cameras={
+            "front": CameraRecording(
+                camera_id="front",
+                key="front",
+                status="Ready",
+                artifact_reference="mission/front.mp4",
+            ),
+            "rear": CameraRecording(camera_id="rear", key="rear", status="Expired"),
+        },
+    )
+
+    asyncio.run(publisher.publish_session(session))
+
+    queue: Any = publisher.mqtt_queue
+    queue.publish.assert_called_once()
+    payload = json.loads(queue.publish.call_args.kwargs["payload"])
+    assert payload["inspection_id"] == "mission-front"
+    assert payload["mission_id"] == "mission"
+    assert payload["inspection_type"] == "Video"
+    assert payload["file_type"] == "mp4"
+    assert payload["timestamp"] == "2026-11-11T10:00:00Z"
+    assert payload["duration"] == 3600
+    assert payload["blob_storage_data_path"] == {
+        "storage_account": "raw",
+        "blob_container": "kaa",
+        "blob_name": "mission/front.mp4",
+    }
 
 
 def test_video_upload_retry_uses_stable_path_and_content(
