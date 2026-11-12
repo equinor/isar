@@ -62,6 +62,7 @@ def test_state_machine_ready_to_receive_mission(
             States.AwaitNextMission,
             States.ReturningHome,
             States.ReturnHomePaused,
+            States.Teleoperation,
         ],
         api_events.stop_mission: [
             States.Monitor,
@@ -83,7 +84,9 @@ def test_state_machine_ready_to_receive_mission(
             States.AwaitNextMission,
             States.Home,
             States.InterventionNeeded,
+            States.Teleoperation,
         ],
+        api_events.set_teleoperation_mode: all_states,
     }
 
     for event, valid_states in event_mappings.items():
