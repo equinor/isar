@@ -57,7 +57,7 @@ class RobotService:
         if settings.RECORDING_ENABLED:
             try:
                 self.mission_recorder = robot.get_mission_recorder(
-                    publisher=BlobRecordingPublisher(robot.isar_id)
+                    publisher=BlobRecordingPublisher(robot.isar_id, mqtt_queue)
                 )
             except Exception as error:  # noqa: BLE001
                 self.logger.warning("Recording unavailable (%s)", type(error).__name__)
