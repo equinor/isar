@@ -4,6 +4,7 @@ from dataclasses import fields
 
 from isar.models.events import Events
 from isar.state_machine.state import Branch, TimeoutHandler, TransitionDef
+from isar.state_machine.state_machine import adjacency, collect_edges
 from isar.state_machine.states import STATE_MODULES
 from isar.state_machine.states_enum import States
 
@@ -46,3 +47,16 @@ def test_every_handler_has_reachable_branches() -> None:
                 assert (
                     handler.timeout_in_seconds >= 0
                 ), f"{handler.name} in {module.state.name} has a negative timeout"
+
+
+def test_every_state_can_reach_every_other_state() -> None:
+    graph = adjacency(collect_edges(Events()))
+    for start in States:
+        reached, frontier = {start}, [start]
+        while frontier:
+            for target in graph[frontier.pop()] - reached:
+                reached.add(target)
+                frontier.append(target)
+        assert reached == set(
+            States
+        ), f"{start.name} cannot reach {set(States) - reached}"

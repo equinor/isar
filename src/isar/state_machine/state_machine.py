@@ -1,5 +1,9 @@
 import logging
 from collections import deque
+from collections.abc import Iterable
+from dataclasses import dataclass
+from types import ModuleType
+from typing import Any
 
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Event, Events
@@ -13,8 +17,15 @@ from isar.services.service_connections.persistent_memory import (
     read_persistent_robot_state,
 )
 from isar.state_machine.capabilities import ApiResponder, OutputEvents, RobotCommander
-from isar.state_machine.state import State, Transition
+from isar.state_machine.state import (
+    Branch,
+    State,
+    TimeoutHandler,
+    Transition,
+    TransitionDef,
+)
 from isar.state_machine.state_metrics import StateMetricsPublisher
+from isar.state_machine.states import STATE_MODULES
 from isar.state_machine.states import going_to_lockdown as GoingToLockdown
 from isar.state_machine.states import maintenance as Maintenance
 from isar.state_machine.states import unknown_status as UnknownStatus
@@ -197,3 +208,79 @@ def read_or_create_persistent_mode() -> RobotStartupMode:
             f"Created new persistent robot state for robot id {settings.ISAR_ID}. It is now set to: {startup_mode}."
         )
     return startup_mode
+
+
+@dataclass(frozen=True)
+class Edge:
+    source: States
+    target: States
+    trigger: Event[Any] | TimeoutHandler[Any]
+    guard: str | None
+    entry: str  # e.g. "Monitor.start_mission"
+
+
+def _entry_names(modules: Iterable[ModuleType]) -> dict[int, str]:
+    return {
+        id(value): f"{value.state_definition.name.name}.{attribute}"
+        for module in modules
+        for attribute, value in vars(module).items()
+        if isinstance(value, TransitionDef)
+    }
+
+
+def _guard_label(branch: Branch) -> str | None:
+    name = getattr(branch.transition_when, "__name__", "<lambda>")
+    return None if name in ("<lambda>", "_always") else name
+
+
+def collect_edges(
+    events: Events, modules: Iterable[ModuleType] = STATE_MODULES
+) -> list[Edge]:
+    """Builds every possible transition from the state definitions, without running any handlers."""
+    modules = list(modules)
+    entry_names = _entry_names(modules)
+    edges: list[Edge] = []
+
+    for module in modules:
+        state = module.state
+        triggers: list[tuple[Event[Any] | TimeoutHandler[Any], tuple[Branch, ...]]] = [
+            (on.event(events), on.branches) for on in state.handlers()
+        ]
+        triggers += [(timer, timer.branches) for timer in state.timers()]
+
+        for trigger, branches in triggers:
+            for branch in branches:
+                edges.append(
+                    Edge(
+                        source=state.name,
+                        target=branch.transition.state_definition.name,
+                        trigger=trigger,
+                        guard=_guard_label(branch),
+                        entry=entry_names.get(id(branch.transition), "<unnamed entry>"),
+                    )
+                )
+
+    return edges
+
+
+def adjacency(edges: Iterable[Edge]) -> dict[States, set[States]]:
+    graph: dict[States, set[States]] = {state: set() for state in States}
+    for edge in edges:
+        graph[edge.source].add(edge.target)
+    return graph
+
+
+def _trigger_label(trigger: Event[Any] | TimeoutHandler[Any]) -> str:
+    if isinstance(trigger, TimeoutHandler):
+        return f"after {trigger.timeout_in_seconds}s ({trigger.name})"
+    return trigger.name
+
+
+def to_mermaid(edges: Iterable[Edge], initial: States = States.UnknownStatus) -> str:
+    lines = ["stateDiagram", f"    [*] --> {initial.name}"]
+    for edge in edges:
+        label = _trigger_label(edge.trigger)
+        if edge.guard is not None:
+            label += f" [{edge.guard}]"
+        lines.append(f"    {edge.source.name} --> {edge.target.name}: {label}")
+    return "\n".join(lines)
