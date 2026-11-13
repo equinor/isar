@@ -1,74 +1,91 @@
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown_with_mission as LockdownWithMission
 from isar.apis.models.models import LockdownResponse
-from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import AbortedMission, EmptyMessage
+from isar.state_machine.capabilities import OutputEvents
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    forward,
+    forward_state_parameter,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.status import MissionStatus
 
 
-def GoingToLockdownWithMission(events: Events, mission: AbortedMission) -> StateDef:
+def _publish_lockdown_failed(
+    events: OutputEvents, mission: AbortedMission, error: ErrorMessage
+) -> None:
+    events.mqtt.publish_mission_status(mission.id, MissionStatus.Failed, error)
 
-    def _lockdown_mission_failed(error_message: ErrorMessage) -> Transition:
-        events.mqtt_queue.publish_mission_status(
-            mission.id,
-            MissionStatus.Failed,
-            error_message,
-        )
-        return InterventionNeeded.transition("Lockdown mission failed")
 
-    def _lockdown_mission_failed_to_resume(_: EmptyMessage) -> Transition:
-        events.mqtt_queue.publish_mission_status(
-            mission.id,
-            MissionStatus.Failed,
-            ErrorMessage(
-                ErrorReason.RobotActionException, "Failed to resume lockdown mission"
-            ),
-        )
-        return InterventionNeeded.transition("Failed to resume return to home mission")
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[ErrorMessage](
-            event=events.action_requests.return_home.failure,
-            handler=_lockdown_mission_failed,
+def _publish_resume_failed(
+    events: OutputEvents, mission: AbortedMission, _: EmptyMessage
+) -> None:
+    events.mqtt.publish_mission_status(
+        mission.id,
+        MissionStatus.Failed,
+        ErrorMessage(
+            ErrorReason.RobotActionException, "Failed to resume lockdown mission"
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.resume_mission.failure,
-            handler=_lockdown_mission_failed_to_resume,
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.return_home.success,
-            handler=lambda _: LockdownWithMission.transition(mission),
-        ),
-    ]
-    return StateDef(
-        name=States.GoingToLockdownWithMission,
-        handlers=event_handlers,
     )
 
 
-def transition_and_start_mission_and_report_to_api(
-    mission: AbortedMission,
-) -> Transition:
-    def _transition(events: Events) -> StateDef:
-        events.api_requests.send_to_lockdown.trigger_response(
-            LockdownResponse(lockdown_started=True)
-        )
+state: StateDef[AbortedMission] = StateDef(
+    name=States.GoingToLockdownWithMission,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.action_requests.return_home.failure,
+            branches=(
+                Branch(
+                    InterventionNeeded.transition,
+                    lambda _, __: "Lockdown mission failed",
+                    side_effect=_publish_lockdown_failed,
+                ),
+            ),
+        ),
+        EventHandler(
+            event=lambda e: e.action_requests.resume_mission.failure,
+            branches=(
+                Branch(
+                    InterventionNeeded.transition,
+                    lambda _, __: "Failed to resume return to home mission",
+                    side_effect=_publish_resume_failed,
+                ),
+            ),
+        ),
+        EventHandler(
+            event=lambda e: e.action_requests.return_home.success,
+            branches=(
+                Branch(
+                    LockdownWithMission.transition_and_respond_to_api,
+                    forward_state_parameter,
+                ),
+            ),
+        ),
+    ),
+)
 
-        events.action_requests.return_home.trigger_request(EmptyMessage())
-        return GoingToLockdownWithMission(events, mission)
 
-    return _transition
+def _respond(events: OutputEvents, _: AbortedMission) -> None:
+    events.api.respond(
+        lambda r: r.send_to_lockdown, LockdownResponse(lockdown_started=True)
+    )
 
 
-def transition_to_existing_mission_and_report_to_api(
-    mission: AbortedMission,
-) -> Transition:
-    def _transition(events: Events) -> StateDef:
-        events.api_requests.send_to_lockdown.trigger_response(
-            LockdownResponse(lockdown_started=True)
-        )
-        return GoingToLockdownWithMission(events, mission)
+def _respond_and_request_return_home(
+    events: OutputEvents, mission: AbortedMission
+) -> None:
+    _respond(events, mission)
+    events.robot.request(lambda a: a.return_home, EmptyMessage())
 
-    return _transition
+
+transition_with_existing_return_home_and_respond_to_api: TransitionDef[
+    AbortedMission, AbortedMission
+] = TransitionDef(state, forward, side_effect=_respond)
+transition_and_start_return_home_and_respond_to_api: TransitionDef[
+    AbortedMission, AbortedMission
+] = TransitionDef(state, forward, side_effect=_respond_and_request_return_home)

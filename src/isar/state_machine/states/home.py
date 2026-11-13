@@ -7,69 +7,89 @@ import isar.state_machine.states.recharging as Recharging
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_unknown_mission as StoppingUnknownMission
 import isar.state_machine.states.unknown_status as UnknownStatus
-from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.capabilities import OutputEvents
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    forward,
+    forward_event,
+)
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import RobotStatus
 
 
-def Home(events: Events) -> StateDef:
-
-    def _robot_status_event_handler(
-        robot_status: RobotStatus,
-    ) -> Transition | None:
-        if robot_status == RobotStatus.Home:
-            return None
-        elif robot_status == RobotStatus.Available:
-            return AwaitNextMission.transition()
-        elif robot_status == RobotStatus.Offline:
-            return Offline.transition()
-        elif robot_status == RobotStatus.TeleOperation:
-            return Maintenance.transition_without_replying_to_API()
-        return UnknownStatus.transition()
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[Mission](
-            event=events.api_requests.start_mission.request,
-            handler=lambda mission: Monitor.transition_and_start_mission(mission, True),
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.return_home.request,
-            handler=lambda _: ReturningHome.transition_and_start_mission(True),
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.stop_mission.request,
-            handler=lambda _: StoppingUnknownMission.transition_and_respond_to_API(),
-        ),
-        EventHandlerMapping[RobotStatus](
-            event=events.robot_async_events.robot_status_update,
-            handler=_robot_status_event_handler,
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: Lockdown.transition_and_respond_to_api(),
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.robot_async_events.battery_below_mission_threshold,
-            handler=lambda _: Recharging.transition(),
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: Maintenance.transition_and_reply_to_API(),
-        ),
-    ]
-    return StateDef(
-        name=States.Home,
-        handlers=event_handlers,
-    )
+def _clear_robot_status(events: OutputEvents, _: None) -> None:
+    # Avoids reading an outdated robot status after entering
+    events.robot.clear_robot_status()
 
 
-def transition() -> Transition:
-    def _transition(events: Events) -> StateDef:
-        # This clears the current robot status value, so we don't read an outdated value
-        events.robot_async_events.robot_status_update.clear_event()
+state: StateDef[None] = StateDef(
+    name=States.Home,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.api_requests.start_mission.request,
+            branches=(
+                Branch(
+                    Monitor.transition_and_start_mission_and_respond_to_api,
+                    forward_event,
+                ),
+            ),
+        ),
+        EventHandler(
+            event=lambda e: e.api_requests.return_home.request,
+            branches=(
+                Branch(
+                    ReturningHome.transition_and_return_home_and_respond_to_api,
+                    ReturningHome.initial_retries,
+                ),
+            ),
+        ),
+        EventHandler(
+            event=lambda e: e.api_requests.stop_mission.request,
+            branches=(
+                Branch(
+                    StoppingUnknownMission.transition_and_stop_mission_and_respond_to_api
+                ),
+            ),
+        ),
+        EventHandler(
+            event=lambda e: e.robot_async_events.robot_status_update,
+            branches=(
+                Branch(
+                    AwaitNextMission.transition,
+                    transition_when=lambda _, s: s == RobotStatus.Available,
+                ),
+                Branch(
+                    Offline.transition,
+                    transition_when=lambda _, s: s == RobotStatus.Offline,
+                ),
+                Branch(
+                    Maintenance.transition,
+                    transition_when=lambda _, s: s == RobotStatus.TeleOperation,
+                ),
+                Branch(
+                    UnknownStatus.transition,
+                    transition_when=lambda _, s: s != RobotStatus.Home,
+                ),
+            ),
+        ),
+        EventHandler(
+            event=lambda e: e.api_requests.send_to_lockdown.request,
+            branches=(Branch(Lockdown.transition_and_respond_to_api),),
+        ),
+        EventHandler(
+            event=lambda e: e.robot_async_events.battery_below_mission_threshold,
+            branches=(Branch(Recharging.transition),),
+        ),
+        EventHandler(
+            event=lambda e: e.api_requests.set_maintenance_mode.request,
+            branches=(Branch(Maintenance.transition_and_respond_to_api),),
+        ),
+    ),
+)
 
-        return Home(events)
-
-    return _transition
+transition: TransitionDef[None, None] = TransitionDef(
+    state, forward, side_effect=_clear_robot_status
+)

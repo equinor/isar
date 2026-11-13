@@ -6,80 +6,93 @@ import isar.state_machine.states.pausing_return_home as PausingReturnHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_return_home as StoppingReturnHome
 from isar.config.settings import settings
-from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import EmptyMessage
+from isar.state_machine.capabilities import OutputEvents
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    forward,
+    forward_event,
+)
 from isar.state_machine.states_enum import States
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
-from robot_interface.models.mission.mission import Mission
 
 
-def ReturningHome(
-    events: Events,
-    retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
-) -> StateDef:
+def initial_retries(_: object, __: object) -> int:
+    return settings.RETURN_HOME_RETRY_LIMIT - 1
 
-    def _mission_failed_event_handler(
-        _: ErrorMessage,
-    ) -> Transition:
-        if retries < 1:
-            return InterventionNeeded.transition(
-                f"Return home failed after {settings.RETURN_HOME_RETRY_LIMIT} attempts"
-            )
-        else:
-            return transition_and_start_mission(False, retries - 1)
 
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.pause_mission.request,
-            handler=lambda _: PausingReturnHome.transition_and_pause_mission_and_reply_to_API(),
-        ),
-        EventHandlerMapping[ErrorMessage](
-            event=events.action_requests.return_home.failure,
-            handler=_mission_failed_event_handler,
-        ),
-        EventHandlerMapping[Mission](
-            event=events.api_requests.start_mission.request,
-            handler=lambda mission: StoppingReturnHome.transition_and_stop_return_home_and_reply_to_API(
-                mission
+state: StateDef[int] = StateDef(
+    name=States.ReturningHome,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.api_requests.pause_mission.request,
+            branches=(
+                Branch(
+                    PausingReturnHome.transition_and_pause_return_home_and_respond_to_api
+                ),
             ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.return_home.success,
-            handler=lambda _: Home.transition(),
+        EventHandler(
+            event=lambda e: e.action_requests.return_home.failure,
+            branches=(
+                Branch(
+                    InterventionNeeded.transition,
+                    lambda _, __: f"Return home failed after {settings.RETURN_HOME_RETRY_LIMIT} attempts",
+                    transition_when=lambda retries, _: retries < 1,
+                ),
+                Branch(transition_and_return_home, lambda retries, _: retries - 1),
+            ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.robot_async_events.battery_below_mission_threshold,
-            handler=lambda _: GoingToRecharging.transition_to_existing_mission(),
+        EventHandler(
+            event=lambda e: e.api_requests.start_mission.request,
+            branches=(
+                Branch(
+                    StoppingReturnHome.transition_and_stop_return_home_and_respond_to_api,
+                    forward_event,
+                ),
+            ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
+        EventHandler(
+            event=lambda e: e.action_requests.return_home.success,
+            branches=(Branch(Home.transition),),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
+        EventHandler(
+            event=lambda e: e.robot_async_events.battery_below_mission_threshold,
+            branches=(Branch(GoingToRecharging.transition_with_existing_return_home),),
         ),
-    ]
-    return StateDef(
-        name=States.ReturningHome,
-        handlers=event_handlers,
-    )
+        EventHandler(
+            event=lambda e: e.api_requests.send_to_lockdown.request,
+            branches=(
+                Branch(
+                    GoingToLockdown.transition_with_existing_mission_and_respond_to_api
+                ),
+            ),
+        ),
+        EventHandler(
+            event=lambda e: e.api_requests.set_maintenance_mode.request,
+            branches=(Branch(StoppingDueToMaintenance.transition_and_stop_mission),),
+        ),
+    ),
+)
 
 
-def transition_and_start_mission(
-    should_respond_to_API_request: bool = False,
-    retries: int = settings.RETURN_HOME_RETRY_LIMIT - 1,
-) -> Transition:
-    def _transition(events: Events) -> StateDef:
-
-        events.action_requests.return_home.trigger_request(EmptyMessage())
-
-        if should_respond_to_API_request:
-            events.api_requests.return_home.trigger_response(EmptyMessage())
-        return ReturningHome(events, retries=retries)
-
-    return _transition
+def _request_return_home(events: OutputEvents, _: int) -> None:
+    events.robot.request(lambda a: a.return_home, EmptyMessage())
 
 
-def transition_to_existing_mission() -> Transition:
-    return ReturningHome
+def _request_return_home_and_respond(events: OutputEvents, retries: int) -> None:
+    _request_return_home(events, retries)
+    events.api.respond(lambda r: r.return_home, EmptyMessage())
+
+
+transition_and_return_home: TransitionDef[int, int] = TransitionDef(
+    state, forward, side_effect=_request_return_home
+)
+transition_and_return_home_and_respond_to_api: TransitionDef[int, int] = TransitionDef(
+    state, forward, side_effect=_request_return_home_and_respond
+)
+transition_with_existing_mission: TransitionDef[None, int] = TransitionDef(
+    state, lambda _: initial_retries(None, None)
+)
