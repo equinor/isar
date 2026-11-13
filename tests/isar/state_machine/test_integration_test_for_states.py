@@ -118,8 +118,6 @@ def test_state_machine_failed_dependency(
             States.ReturningHome,
             States.ReturningHome,
             States.ReturningHome,
-            States.ReturningHome,
-            States.ReturningHome,
             States.InterventionNeeded,
         ]
     )
