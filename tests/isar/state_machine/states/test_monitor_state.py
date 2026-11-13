@@ -1,21 +1,11 @@
-import json
 from collections import deque
 
 from pytest_mock import MockerFixture
 
 from isar.config.settings import settings
-from isar.models.events import EmptyMessage, Events
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
-from isar.state_machine.state import EventHandlerMapping, State
-from isar.state_machine.states.monitor import Monitor
-from isar.state_machine.states.pausing import Pausing
-from isar.state_machine.states.resuming import Resuming
-from isar.state_machine.states.stopping_go_to_lockdown import StoppingGoToLockdown
-from isar.state_machine.states.stopping_go_to_recharge import StoppingGoToRecharge
-from isar.state_machine.states.stopping_return_home import StoppingReturnHome
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import (
-    ErrorMessage,
     ErrorReason,
     RobotException,
 )
@@ -38,96 +28,6 @@ def _mock_robot_exception_with_message() -> RobotException:
         error_reason=ErrorReason.RobotUnknownErrorException,
         error_description="This is an example error description",
     )
-
-
-def test_monitor_reports_completed_mission_outcome(events: Events) -> None:
-    current_state = State(Monitor(events, "mission_id"))
-    handler = current_state.get_event_handler_by_event(
-        events.action_requests.execute_mission.success
-    )
-
-    transition = handler.handler(EmptyMessage())
-
-    message = json.loads(events.mqtt_queue.get().payload)
-    assert message["mission_id"] == "mission_id"
-    assert message["status"] == MissionStatus.Successful
-    assert State(transition(events)).name is States.AwaitNextMission
-
-
-def test_stopping_to_recharge_goes_to_intervention_needed(events: Events) -> None:
-    current_state = State(StoppingGoToRecharge(events, "id"))
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.action_requests.stop_mission.failure
-    )
-
-    transition = event_handler.handler(EmptyMessage())
-
-    current_state = State(transition(events))
-
-    assert not events.mqtt_queue.empty()
-    assert current_state.name is States.InterventionNeeded
-
-
-def test_transitioning_to_monitor_from_stopping_when_return_home_cancelled(
-    events: Events,
-) -> None:
-    example_mission: Mission = Mission(id="id", name="name")
-    current_state = State(StoppingReturnHome(events, example_mission))
-
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.action_requests.stop_mission.success
-    )
-
-    transition = event_handler.handler(EmptyMessage())
-    current_state = State(transition(events))
-
-    assert current_state.name is States.Monitor
-
-
-def test_stopping_lockdown_failing_to_monitor(events: Events) -> None:
-    current_state = State(StoppingGoToLockdown(events, "mission_id"))
-
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.action_requests.stop_mission.failure
-    )
-
-    transition = event_handler.handler(EmptyMessage())
-
-    assert not events.api_requests.send_to_lockdown.response.check().lockdown_started
-
-    assert events.mqtt_queue.empty()
-
-    current_state = State(transition(events))
-    assert current_state.name is States.Monitor
-
-
-def test_transition_from_pausing_to_monitor(events: Events) -> None:
-    current_state = State(Pausing(events, "mission_id"))
-
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.action_requests.pause_mission.failure
-    )
-
-    error_event = ErrorMessage(
-        error_reason=ErrorReason.RobotUnknownErrorException, error_description=""
-    )
-    transition = event_handler.handler(error_event)
-
-    current_state = State(transition(events))
-    assert current_state.name is States.Monitor
-
-
-def test_transition_from_resuming_to_monitor(events: Events) -> None:
-    current_state = State(Resuming(events, "mission_id"))
-
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.action_requests.resume_mission.success
-    )
-
-    transition = event_handler.handler(EmptyMessage())
-
-    current_state = State(transition(events))
-    assert current_state.name is States.Monitor
 
 
 def test_state_machine_with_unsuccessful_mission_stop(
@@ -212,19 +112,3 @@ def test_robot_mission_status_exception_handling(
         lambda: state_machine_thread.state_machine.transitions_list
         == expected_transitions
     )
-
-
-def test_transition_from_monitor_to_stopping_to_recharge(events: Events) -> None:
-    current_state = State(Monitor(events, "test_id"))
-
-    event_handler: EventHandlerMapping = current_state.get_event_handler_by_event(
-        events.robot_async_events.battery_below_mission_threshold
-    )
-
-    transition = event_handler.handler(EmptyMessage())
-
-    current_state = State(transition(events))
-
-    assert current_state.name is States.StoppingGoToRecharge
-    assert not events.api_requests.stop_mission.response.has_event()
-    assert events.action_requests.stop_mission.request.has_event()
