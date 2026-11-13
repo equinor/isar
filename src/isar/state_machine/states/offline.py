@@ -2,44 +2,46 @@ import isar.state_machine.states.home as Home
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.unknown_status as UnknownStatus
-from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    forward,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
-
-def Offline(events: Events) -> StateDef:
-
-    def _robot_status_event_handler(
-        robot_status: RobotStatus,
-    ) -> Transition | None:
-        if robot_status == RobotStatus.Offline:
-            return None
-        elif robot_status == RobotStatus.Home:
-            return Home.transition()
-        elif robot_status == RobotStatus.Available:
-            return InterventionNeeded.transition(
-                "Robot not home after going online. Localisation likely needed"
-            )
-        elif robot_status == RobotStatus.TeleOperation:
-            return Maintenance.transition_without_replying_to_API()
-        return UnknownStatus.transition()
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[RobotStatus](
-            event=events.robot_async_events.robot_status_update,
-            handler=_robot_status_event_handler,
+state: StateDef[None] = StateDef(
+    name=States.Offline,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.robot_async_events.robot_status_update,
+            branches=(
+                Branch(
+                    Home.transition,
+                    transition_when=lambda _, s: s == RobotStatus.Home,
+                ),
+                Branch(
+                    InterventionNeeded.transition,
+                    lambda _, __: "Robot not home after going online. Localisation likely needed",
+                    transition_when=lambda _, s: s == RobotStatus.Available,
+                ),
+                Branch(
+                    Maintenance.transition,
+                    transition_when=lambda _, s: s == RobotStatus.TeleOperation,
+                ),
+                Branch(
+                    UnknownStatus.transition,
+                    transition_when=lambda _, s: s != RobotStatus.Offline,
+                ),
+            ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: Maintenance.transition_and_reply_to_API(),
+        EventHandler(
+            event=lambda e: e.api_requests.set_maintenance_mode.request,
+            branches=(Branch(Maintenance.transition_and_respond_to_api),),
         ),
-    ]
-    return StateDef(
-        name=States.Offline,
-        handlers=event_handlers,
-    )
+    ),
+)
 
-
-def transition() -> Transition:
-    return Offline
+transition: TransitionDef[None, None] = TransitionDef(state, forward)

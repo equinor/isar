@@ -1,16 +1,15 @@
 import asyncio
-import json
 from unittest.mock import call
 
 import pytest
 from pytest_mock import MockerFixture
 
+import isar.state_machine.states.monitor as Monitor
+import isar.state_machine.states.stopping as Stopping
 from isar.config.settings import settings
-from isar.models.events import EmptyMessage, Event, Events, MissionCompleted
+from isar.models.events import EmptyMessage, Events, MissionCompleted
 from isar.robot.robot_service import RobotService
-from isar.state_machine.state import State
-from isar.state_machine.states.monitor import Monitor, transition_and_start_mission
-from isar.state_machine.states.stopping import Stopping
+from isar.state_machine.capabilities import ApiResponder, OutputEvents, RobotCommander
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -20,7 +19,13 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
+from tests.isar.state_machine.state_definitions.state_machine_driver import (
+    StateMachineDriver,
+    state_machine_driver,
+)
 from tests.test_mocks.robot_interface import StubRobot
+
+__all__ = ["state_machine_driver"]
 
 
 @pytest.fixture
@@ -45,13 +50,22 @@ def test_stored_mission_is_forwarded_to_robot(
     mocker: MockerFixture,
 ) -> None:
     start = mocker.spy(service.robot, "initiate_mission")
+    transition = Monitor.transition_and_start_mission
+    assert transition.side_effect is not None
 
-    state = transition_and_start_mission(stored_mission)(events)
+    transition.side_effect(
+        OutputEvents(
+            api=ApiResponder(events.api_requests),
+            robot=RobotCommander(events.action_requests, events.robot_async_events),
+            mqtt=events.mqtt_queue,
+        ),
+        stored_mission,
+    )
     success = service._start_mission_handler(
         events.action_requests.execute_mission.request.consume_event()
     )
 
-    assert state.name == States.Monitor
+    assert transition.state_definition.name == States.Monitor
     assert success
     start.assert_called_once_with(stored_mission)
 
@@ -190,40 +204,36 @@ def test_stored_mission_stop_does_not_report_completion(
     [MissionStatus.Successful, MissionStatus.Failed, MissionStatus.Cancelled],
 )
 def test_terminal_state_publishes_mission_outcome(
-    stored_mission: Mission, events: Events, outcome: MissionStatus
+    stored_mission: Mission,
+    state_machine_driver: StateMachineDriver,
+    outcome: MissionStatus,
 ) -> None:
-    result_event: (
-        Event[Mission | MissionCompleted | EmptyMessage]
-        | Event[EmptyMessage]
-        | Event[MissionCompleted]
-        | Event[ErrorMessage]
-    )
-    result: EmptyMessage | ErrorMessage
     if outcome == MissionStatus.Cancelled:
-        state = State(Stopping(events, stored_mission.id))
-        result_event = events.action_requests.stop_mission.success
-        result = EmptyMessage()
+        stop_result: Mission | MissionCompleted | EmptyMessage = EmptyMessage()
+        state_machine_driver.enter(Stopping.state, stored_mission.id)
+        next_state = state_machine_driver.send(
+            state_machine_driver.events.action_requests.stop_mission.success,
+            stop_result,
+        )
+    elif outcome == MissionStatus.Successful:
+        state_machine_driver.enter(Monitor.state, stored_mission.id)
+        next_state = state_machine_driver.send(
+            state_machine_driver.events.action_requests.execute_mission.success,
+            EmptyMessage(),
+        )
     else:
-        state = State(Monitor(events, stored_mission.id))
-        result_event = (
-            events.action_requests.execute_mission.success
-            if outcome == MissionStatus.Successful
-            else events.action_requests.execute_mission.failure
+        state_machine_driver.enter(Monitor.state, stored_mission.id)
+        next_state = state_machine_driver.send(
+            state_machine_driver.events.action_requests.execute_mission.failure,
+            ErrorMessage(None, "Stored mission failed"),
         )
-        result = (
-            EmptyMessage()
-            if outcome == MissionStatus.Successful
-            else ErrorMessage(None, "Stored mission failed")
-        )
-    handler = state.get_event_handler_by_event(result_event)
 
-    next_state = State(handler.handler(result)(events))
-
-    assert next_state.name == States.AwaitNextMission
-    payload = json.loads(events.mqtt_queue.get().payload)
+    assert next_state == States.AwaitNextMission
+    mqtt = state_machine_driver.outputs().mqtt
+    assert len(mqtt) == 1
+    payload = mqtt[0]
     assert {"mission_id": payload["mission_id"], "status": payload["status"]} == {
         "mission_id": stored_mission.id,
         "status": outcome.value,
     }
     assert {"task_id", "reason"}.isdisjoint(payload)
-    assert events.mqtt_queue.empty()

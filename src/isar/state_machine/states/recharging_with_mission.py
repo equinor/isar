@@ -4,56 +4,57 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.recharging as Recharging
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import AbortedMission, EmptyMessage
+from isar.state_machine.capabilities import OutputEvents
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    forward,
+    forward_state_parameter,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
 
-def RechargingWithMission(events: Events, mission: AbortedMission) -> StateDef:
+def _accept_stop(events: OutputEvents, _: AbortedMission, __: EmptyMessage) -> None:
+    events.api.respond(lambda r: r.stop_mission, ControlMissionResponse(success=True))
 
-    def _stop_mission_event_handler(
-        _: EmptyMessage,
-    ) -> Transition | None:
-        events.api_requests.stop_mission.trigger_response(
-            ControlMissionResponse(success=True)
-        )
-        return Recharging.transition()
 
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[EmptyMessage](
-            event=events.robot_async_events.battery_above_recharge_threshold,
-            handler=lambda _: Monitor.transition_and_start_mission(
-                mission, should_respond_to_API_request=False
+state: StateDef[AbortedMission] = StateDef(
+    name=States.RechargingWithMission,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.robot_async_events.battery_above_recharge_threshold,
+            branches=(
+                Branch(Monitor.transition_and_start_mission, forward_state_parameter),
             ),
         ),
-        EventHandlerMapping[RobotStatus](
-            event=events.robot_async_events.robot_status_update,
-            handler=lambda robot_status: (
-                Offline.transition() if robot_status == RobotStatus.Offline else None
+        EventHandler(
+            event=lambda e: e.robot_async_events.robot_status_update,
+            branches=(
+                Branch(
+                    Offline.transition,
+                    transition_when=lambda _, s: s == RobotStatus.Offline,
+                ),
             ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: Lockdown.transition_and_respond_to_api(),
+        EventHandler(
+            event=lambda e: e.api_requests.send_to_lockdown.request,
+            branches=(Branch(Lockdown.transition_and_respond_to_api),),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: Maintenance.transition_and_reply_to_API(),
+        EventHandler(
+            event=lambda e: e.api_requests.set_maintenance_mode.request,
+            branches=(Branch(Maintenance.transition_and_respond_to_api),),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.stop_mission.request,
-            handler=_stop_mission_event_handler,
+        EventHandler(
+            event=lambda e: e.api_requests.stop_mission.request,
+            branches=(Branch(Recharging.transition, side_effect=_accept_stop),),
         ),
-    ]
-    return StateDef(
-        name=States.RechargingWithMission,
-        handlers=event_handlers,
-    )
+    ),
+)
 
-
-def transition(mission: AbortedMission) -> Transition:
-    def _transition(events: Events) -> StateDef:
-        return RechargingWithMission(events, mission=mission)
-
-    return _transition
+transition: TransitionDef[AbortedMission, AbortedMission] = TransitionDef(
+    state, forward
+)

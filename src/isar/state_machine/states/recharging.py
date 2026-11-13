@@ -2,39 +2,41 @@ import isar.state_machine.states.home as Home
 import isar.state_machine.states.lockdown as Lockdown
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.offline as Offline
-from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    forward,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 
-
-def Recharging(events: Events) -> StateDef:
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[EmptyMessage](
-            event=events.robot_async_events.battery_above_recharge_threshold,
-            handler=lambda _: Home.transition(),
+state: StateDef[None] = StateDef(
+    name=States.Recharging,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.robot_async_events.battery_above_recharge_threshold,
+            branches=(Branch(Home.transition),),
         ),
-        EventHandlerMapping[RobotStatus](
-            event=events.robot_async_events.robot_status_update,
-            handler=lambda robot_status: (
-                Offline.transition() if robot_status == RobotStatus.Offline else None
+        EventHandler(
+            event=lambda e: e.robot_async_events.robot_status_update,
+            branches=(
+                Branch(
+                    Offline.transition,
+                    transition_when=lambda _, s: s == RobotStatus.Offline,
+                ),
             ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: Lockdown.transition_and_respond_to_api(),
+        EventHandler(
+            event=lambda e: e.api_requests.send_to_lockdown.request,
+            branches=(Branch(Lockdown.transition_and_respond_to_api),),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: Maintenance.transition_and_reply_to_API(),
+        EventHandler(
+            event=lambda e: e.api_requests.set_maintenance_mode.request,
+            branches=(Branch(Maintenance.transition_and_respond_to_api),),
         ),
-    ]
-    return StateDef(
-        name=States.Recharging,
-        handlers=event_handlers,
-    )
+    ),
+)
 
-
-def transition() -> Transition:
-    return Recharging
+transition: TransitionDef[None, None] = TransitionDef(state, forward)

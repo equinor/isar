@@ -1,53 +1,63 @@
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown as Lockdown
 from isar.apis.models.models import LockdownResponse
-from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import EmptyMessage
+from isar.state_machine.capabilities import OutputEvents
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    forward,
+)
 from isar.state_machine.states_enum import States
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
-
-def GoingToLockdown(events: Events) -> StateDef:
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[ErrorMessage](
-            event=events.action_requests.return_home.failure,
-            handler=lambda _: InterventionNeeded.transition("Lockdown mission failed"),
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.resume_mission.failure,
-            handler=lambda _: InterventionNeeded.transition(
-                "Failed to resume return to home mission"
+state: StateDef[None] = StateDef(
+    name=States.GoingToLockdown,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.action_requests.return_home.failure,
+            branches=(
+                Branch(
+                    InterventionNeeded.transition,
+                    lambda _, __: "Lockdown mission failed",
+                ),
             ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.return_home.success,
-            handler=lambda _: Lockdown.transition_without_responding_to_api(),
+        EventHandler(
+            event=lambda e: e.action_requests.resume_mission.failure,
+            branches=(
+                Branch(
+                    InterventionNeeded.transition,
+                    lambda _, __: "Failed to resume return to home mission",
+                ),
+            ),
         ),
-    ]
-    return StateDef(
-        name=States.GoingToLockdown,
-        handlers=event_handlers,
+        EventHandler(
+            event=lambda e: e.action_requests.return_home.success,
+            branches=(Branch(Lockdown.transition),),
+        ),
+    ),
+)
+
+
+def _respond(events: OutputEvents, _: None) -> None:
+    events.api.respond(
+        lambda r: r.send_to_lockdown, LockdownResponse(lockdown_started=True)
     )
 
 
-def transition_and_start_mission_and_report_to_api() -> Transition:
-    def _transition(events: Events) -> StateDef:
-        events.api_requests.send_to_lockdown.trigger_response(
-            LockdownResponse(lockdown_started=True)
-        )
-
-        events.action_requests.return_home.trigger_request(EmptyMessage())
-        return GoingToLockdown(events)
-
-    return _transition
+def _respond_and_request_return_home(events: OutputEvents, _: None) -> None:
+    _respond(events, None)
+    events.robot.request(lambda a: a.return_home, EmptyMessage())
 
 
-def transition_to_existing_mission_and_report_to_api() -> Transition:
-    def _transition(events: Events) -> StateDef:
-        events.api_requests.send_to_lockdown.trigger_response(
-            LockdownResponse(lockdown_started=True)
-        )
-        return GoingToLockdown(events)
-
-    return _transition
+transition_with_existing_mission: TransitionDef[None, None] = TransitionDef(
+    state, forward
+)
+transition_with_existing_mission_and_respond_to_api: TransitionDef[None, None] = (
+    TransitionDef(state, forward, side_effect=_respond)
+)
+transition_and_start_return_home_and_respond_to_api: TransitionDef[None, None] = (
+    TransitionDef(state, forward, side_effect=_respond_and_request_return_home)
+)

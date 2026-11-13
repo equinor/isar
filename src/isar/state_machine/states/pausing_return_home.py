@@ -1,35 +1,37 @@
 import isar.state_machine.states.return_home_paused as ReturnHomePaused
 import isar.state_machine.states.returning_home as ReturningHome
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import EmptyMessage
+from isar.state_machine.capabilities import OutputEvents
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    forward,
+)
 from isar.state_machine.states_enum import States
 
-
-def PausingReturnHome(events: Events) -> StateDef:
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.pause_mission.failure,
-            handler=lambda _: ReturningHome.transition_to_existing_mission(),
+state: StateDef[None] = StateDef(
+    name=States.PausingReturnHome,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.action_requests.pause_mission.failure,
+            branches=(Branch(ReturningHome.transition_with_existing_mission),),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.pause_mission.success,
-            handler=lambda _: ReturnHomePaused.transition(),
+        EventHandler(
+            event=lambda e: e.action_requests.pause_mission.success,
+            branches=(Branch(ReturnHomePaused.transition),),
         ),
-    ]
-    return StateDef(
-        name=States.PausingReturnHome,
-        handlers=event_handlers,
-    )
+    ),
+)
 
 
-def transition_and_pause_mission_and_reply_to_API() -> Transition:
-    def _transition(events: Events) -> StateDef:
-        events.api_requests.pause_mission.trigger_response(
-            ControlMissionResponse(success=True)
-        )
-        events.action_requests.pause_mission.trigger_request(EmptyMessage())
-        return PausingReturnHome(events)
+def _respond_and_request_pause(events: OutputEvents, _: None) -> None:
+    events.api.respond(lambda r: r.pause_mission, ControlMissionResponse(success=True))
+    events.robot.request(lambda a: a.pause_mission, EmptyMessage())
 
-    return _transition
+
+transition_and_pause_return_home_and_respond_to_api: TransitionDef[None, None] = (
+    TransitionDef(state, forward, side_effect=_respond_and_request_pause)
+)

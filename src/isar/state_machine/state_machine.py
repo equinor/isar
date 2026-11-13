@@ -12,32 +12,19 @@ from isar.services.service_connections.persistent_memory import (
     create_persistent_robot_state,
     read_persistent_robot_state,
 )
-from isar.state_machine.state import State, StateDef, Transition
+from isar.state_machine.capabilities import ApiResponder, OutputEvents, RobotCommander
+from isar.state_machine.state import State, Transition
 from isar.state_machine.state_metrics import StateMetricsPublisher
-from isar.state_machine.states.going_to_lockdown import GoingToLockdown
-from isar.state_machine.states.maintenance import Maintenance
-from isar.state_machine.states.unknown_status import UnknownStatus
+from isar.state_machine.states import going_to_lockdown as GoingToLockdown
+from isar.state_machine.states import maintenance as Maintenance
+from isar.state_machine.states import unknown_status as UnknownStatus
 from isar.state_machine.states_enum import States
 
 
 class StateMachine:
     """Handles state transitions for supervisory robot control."""
 
-    def __init__(
-        self,
-        events: Events,
-        mqtt_queue: MQTTQueue,
-    ):
-        """Initializes the state machine.
-
-        Parameters
-        ----------
-        events : Events
-            Events used for API and robot service communication.
-        mqtt_queue : MQTTQueue
-            Instance of MQTT queue which has a publish function
-
-        """
+    def __init__(self, events: Events, mqtt_queue: MQTTQueue) -> None:
         self.logger = logging.getLogger("state_machine")
 
         self.events: Events = events
@@ -45,8 +32,13 @@ class StateMachine:
 
         self.signal_exit: Event[EmptyMessage] = Event("signal_state_machine_exit")
 
-        current_state_definition: StateDef = UnknownStatus(self.events)
+        self._output_events = OutputEvents(
+            api=ApiResponder(events.api_requests),
+            robot=RobotCommander(events.action_requests, events.robot_async_events),
+            mqtt=mqtt_queue,
+        )
 
+        initial = Transition(UnknownStatus.transition, None)
         if not settings.USE_DB:
             self.logger.warning(
                 "Not using ISAR database. Restarting ISAR will forget the state, including maintenance mode. "
@@ -57,11 +49,13 @@ class StateMachine:
                 f"Connected to robot status database and the startup mode was: {robot_startup_mode}. "
             )
             if robot_startup_mode == RobotStartupMode.Maintenance:
-                current_state_definition = Maintenance(self.events)
+                initial = Transition(Maintenance.transition, None)
             elif robot_startup_mode == RobotStartupMode.Lockdown:
-                current_state_definition = GoingToLockdown(self.events)
+                initial = Transition(
+                    GoingToLockdown.transition_with_existing_mission, None
+                )
 
-        self.current_state = State(current_state_definition, self.signal_exit)
+        self.current_state: State = self._enter(initial)
 
         self.transitions_list: deque[States] = deque(
             [], settings.STATE_TRANSITIONS_LOG_LENGTH
@@ -71,7 +65,17 @@ class StateMachine:
             current_state_provider=lambda: self.current_state.name
         )
 
-    #################################################################################
+    def _enter[A](self, transition: Transition[A]) -> State:
+        entry = transition.transition_function
+        if entry.side_effect is not None:
+            entry.side_effect(self._output_events, transition.transition_input)
+        return State(
+            entry.state_definition,
+            entry.state_param(transition.transition_input),
+            self.events,
+            self._output_events,
+            self.signal_exit,
+        )
 
     def current_state_handles_event(self, event: Event) -> bool:
         return self.current_state.handles_event(event)
@@ -81,7 +85,7 @@ class StateMachine:
         try:
             while True:
                 self.update_state(self.current_state)
-                transition: Transition | None = self.current_state.run()
+                transition = self.current_state.run()
 
                 if transition is None:  # Expected when the thread is killed
                     self.logger.warning(
@@ -89,11 +93,10 @@ class StateMachine:
                     )
                     break
 
-                state_definition = transition(self.events)
                 self.logger.debug(
-                    f"Transitioning from {self.current_state.name.name} to {state_definition.name.name}"
+                    f"Transitioning from {self.current_state.name.name} to {transition.transition_function.state_definition.name.name}"
                 )
-                self.current_state = State(state_definition, self.signal_exit)
+                self.current_state = self._enter(transition)
         except Exception as e:  # noqa: BLE001
             self.logger.error(f"Unhandled exception in state machine: {e!s}")
 

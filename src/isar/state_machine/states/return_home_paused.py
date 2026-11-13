@@ -3,50 +3,61 @@ import isar.state_machine.states.resuming_return_home as ResumingReturnHome
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_paused_return_home as StoppingPausedReturnHome
-from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import EmptyMessage
+from isar.state_machine.capabilities import OutputEvents
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    forward,
+    forward_event,
+)
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission.mission import Mission
 
 
-def ReturnHomePaused(events: Events) -> StateDef:
+def _request_resume(events: OutputEvents, _: None, __: EmptyMessage) -> None:
+    events.robot.request(lambda a: a.resume_mission, EmptyMessage())
 
-    def _send_to_lockdown_event_handler(
-        _: EmptyMessage,
-    ) -> Transition:
-        events.action_requests.resume_mission.trigger_request(EmptyMessage())
 
-        return GoingToLockdown.transition_to_existing_mission_and_report_to_api()
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.resume_mission.request,
-            handler=lambda _: ResumingReturnHome.transition_and_resume_mission_and_reply_to_API(),
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.robot_async_events.battery_below_mission_threshold,
-            handler=lambda _: ReturningHome.transition_to_existing_mission(),
-        ),
-        EventHandlerMapping[Mission](
-            event=events.api_requests.start_mission.request,
-            handler=lambda mission: StoppingPausedReturnHome.transition_and_stop_return_home_and_reply_to_API(
-                mission
+state: StateDef[None] = StateDef(
+    name=States.ReturnHomePaused,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.api_requests.resume_mission.request,
+            branches=(
+                Branch(
+                    ResumingReturnHome.transition_and_resume_return_home_and_respond_to_api
+                ),
             ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.send_to_lockdown.request,
-            handler=_send_to_lockdown_event_handler,
+        EventHandler(
+            event=lambda e: e.robot_async_events.battery_below_mission_threshold,
+            branches=(Branch(ReturningHome.transition_with_existing_mission),),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: StoppingDueToMaintenance.transition_and_stop_mission(),
+        EventHandler(
+            event=lambda e: e.api_requests.start_mission.request,
+            branches=(
+                Branch(
+                    StoppingPausedReturnHome.transition_and_stop_return_home_and_respond_to_api,
+                    forward_event,
+                ),
+            ),
         ),
-    ]
-    return StateDef(
-        name=States.ReturnHomePaused,
-        handlers=event_handlers,
-    )
+        EventHandler(
+            event=lambda e: e.api_requests.send_to_lockdown.request,
+            branches=(
+                Branch(
+                    GoingToLockdown.transition_with_existing_mission_and_respond_to_api,
+                    side_effect=_request_resume,
+                ),
+            ),
+        ),
+        EventHandler(
+            event=lambda e: e.api_requests.set_maintenance_mode.request,
+            branches=(Branch(StoppingDueToMaintenance.transition_and_stop_mission),),
+        ),
+    ),
+)
 
-
-def transition() -> Transition:
-    return ReturnHomePaused
+transition: TransitionDef[None, None] = TransitionDef(state, forward)

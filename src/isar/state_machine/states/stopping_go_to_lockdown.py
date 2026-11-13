@@ -2,57 +2,82 @@ import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.going_to_lockdown_with_mission as GoingToLockdownWithMission
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
-from isar.models.events import AbortedMission, EmptyMessage, Events, MissionCompleted
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import AbortedMission, EmptyMessage, MissionCompleted
+from isar.state_machine.capabilities import OutputEvents
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    forward,
+    forward_state_parameter,
+)
 from isar.state_machine.states_enum import States
 
+type StopResult = AbortedMission | MissionCompleted | EmptyMessage
 
-def StoppingGoToLockdown(events: Events, mission_id: str) -> StateDef:
 
-    def _failed_stop_event_handler(
-        _: EmptyMessage,
-    ) -> Transition:
-        events.api_requests.send_to_lockdown.trigger_response(
-            LockdownResponse(
-                lockdown_started=False,
-                failure_reason="Failed to stop ongoing mission",
-            )
-        )
-        return Monitor.transition_with_existing_mission(mission_id)
-
-    def _successful_stop_event_handler(
-        stop_result: AbortedMission | MissionCompleted | EmptyMessage,
-    ) -> Transition:
-
-        if isinstance(stop_result, AbortedMission):
-            return GoingToLockdownWithMission.transition_and_start_mission_and_report_to_api(
-                stop_result
-            )
-        elif isinstance(stop_result, MissionCompleted) and mission_id:
-            events.mqtt_queue.publish_mission_status(
-                mission_id, stop_result.status, None
-            )
-        return GoingToLockdown.transition_and_start_mission_and_report_to_api()
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.stop_mission.failure,
-            handler=_failed_stop_event_handler,
+def _reject_lockdown(events: OutputEvents, _: str, __: EmptyMessage) -> None:
+    events.api.respond(
+        lambda r: r.send_to_lockdown,
+        LockdownResponse(
+            lockdown_started=False,
+            failure_reason="Failed to stop ongoing mission",
         ),
-        EventHandlerMapping[AbortedMission | MissionCompleted | EmptyMessage](
-            event=events.action_requests.stop_mission.success,
-            handler=_successful_stop_event_handler,
-        ),
-    ]
-    return StateDef(
-        name=States.StoppingGoToLockdown,
-        handlers=event_handlers,
     )
 
 
-def transition_and_stop_mission(mission_id: str) -> Transition:
-    def _transition(events: Events) -> StateDef:
-        events.action_requests.stop_mission.trigger_request(EmptyMessage())
-        return StoppingGoToLockdown(events, mission_id)
+def _publish_completed(
+    events: OutputEvents, mission_id: str, stop_result: StopResult
+) -> None:
+    if isinstance(stop_result, MissionCompleted) and mission_id:
+        events.mqtt.publish_mission_status(mission_id, stop_result.status, None)
 
-    return _transition
+
+def _was_aborted(_: str, stop_result: StopResult) -> bool:
+    return isinstance(stop_result, AbortedMission)
+
+
+def _aborted_mission(_: str, stop_result: StopResult) -> AbortedMission:
+    assert isinstance(stop_result, AbortedMission)
+    return stop_result
+
+
+state: StateDef[str] = StateDef(
+    name=States.StoppingGoToLockdown,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.action_requests.stop_mission.failure,
+            branches=(
+                Branch(
+                    Monitor.transition_with_existing_mission,
+                    forward_state_parameter,
+                    side_effect=_reject_lockdown,
+                ),
+            ),
+        ),
+        EventHandler(
+            event=lambda e: e.action_requests.stop_mission.success,
+            branches=(
+                Branch(
+                    GoingToLockdownWithMission.transition_and_start_return_home_and_respond_to_api,
+                    _aborted_mission,
+                    transition_when=_was_aborted,
+                ),
+                Branch(
+                    GoingToLockdown.transition_and_start_return_home_and_respond_to_api,
+                    side_effect=_publish_completed,
+                ),
+            ),
+        ),
+    ),
+)
+
+
+def _request_stop(events: OutputEvents, _: str) -> None:
+    events.robot.request(lambda a: a.stop_mission, EmptyMessage())
+
+
+transition_and_stop_mission: TransitionDef[str, str] = TransitionDef(
+    state, forward, side_effect=_request_stop
+)

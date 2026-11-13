@@ -1,44 +1,52 @@
 import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging as Recharging
-from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import EmptyMessage
+from isar.state_machine.capabilities import OutputEvents
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    forward,
+)
 from isar.state_machine.states_enum import States
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 
-
-def GoingToRecharging(events: Events) -> StateDef:
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[ErrorMessage](
-            event=events.action_requests.return_home.failure,
-            handler=lambda _: InterventionNeeded.transition(
-                "Return home to recharge failed"
+state: StateDef[None] = StateDef(
+    name=States.GoingToRecharging,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.action_requests.return_home.failure,
+            branches=(
+                Branch(
+                    InterventionNeeded.transition,
+                    lambda _, __: "Return home to recharge failed",
+                ),
             ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.return_home.success,
-            handler=lambda _: Recharging.transition(),
+        EventHandler(
+            event=lambda e: e.action_requests.return_home.success,
+            branches=(Branch(Recharging.transition),),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: GoingToLockdown.transition_to_existing_mission_and_report_to_api(),
+        EventHandler(
+            event=lambda e: e.api_requests.send_to_lockdown.request,
+            branches=(
+                Branch(
+                    GoingToLockdown.transition_with_existing_mission_and_respond_to_api
+                ),
+            ),
         ),
-    ]
-    return StateDef(
-        name=States.GoingToRecharging,
-        handlers=event_handlers,
-    )
+    ),
+)
 
 
-def transition_and_start_return_home() -> Transition:
-    def _transition(events: Events) -> StateDef:
-
-        events.action_requests.return_home.trigger_request(EmptyMessage())
-        return GoingToRecharging(events)
-
-    return _transition
+def _request_return_home(events: OutputEvents, _: None) -> None:
+    events.robot.request(lambda a: a.return_home, EmptyMessage())
 
 
-def transition_to_existing_mission() -> Transition:
-    return GoingToRecharging
+transition_with_existing_return_home: TransitionDef[None, None] = TransitionDef(
+    state, forward
+)
+transition_and_start_return_home: TransitionDef[None, None] = TransitionDef(
+    state, forward, side_effect=_request_return_home
+)
