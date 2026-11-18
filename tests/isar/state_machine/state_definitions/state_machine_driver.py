@@ -13,10 +13,16 @@ from isar.state_machine.states_enum import States
 
 
 @dataclass(frozen=True)
+class MqttMessage:
+    topic: str
+    payload: dict[str, Any]
+
+
+@dataclass(frozen=True)
 class Outputs:
     api_responses: dict[str, Any]
     robot_requests: dict[str, Any]
-    mqtt: list[dict[str, Any]]
+    mqtt: list[MqttMessage]
 
 
 class _Clock:
@@ -86,9 +92,9 @@ class StateMachineDriver:
             for name, action in vars(self.events.action_requests).items()
             if isinstance(action, RobotActionEvent) and action.request.has_event()
         }
-        mqtt: list[dict[str, Any]] = []
+        mqtt: list[MqttMessage] = []
         while (message := self.events.mqtt_queue.get()) is not None:
-            mqtt.append(json.loads(message.payload))
+            mqtt.append(MqttMessage(message.topic, json.loads(message.payload)))
         return Outputs(api_responses, robot_requests, mqtt)
 
 
