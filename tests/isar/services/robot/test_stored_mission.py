@@ -231,7 +231,7 @@ def test_terminal_state_publishes_mission_outcome(
     assert next_state == States.AwaitNextMission
     mqtt = state_machine_driver.outputs().mqtt
     assert len(mqtt) == 1
-    payload = mqtt[0]
+    payload = mqtt[0].payload
     assert {"mission_id": payload["mission_id"], "status": payload["status"]} == {
         "mission_id": stored_mission.id,
         "status": outcome.value,
