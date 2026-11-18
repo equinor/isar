@@ -32,6 +32,7 @@ class States(str, Enum):
     StoppingDueToMaintenance = "stopping_due_to_maintenance"
     StoppingPausedMission = "stopping_paused_mission"
     StoppingPausedReturnHome = "stopping_paused_return_home"
+    Teleoperation = "teleoperation"
 
     def __repr__(self) -> str:
         return self.value
@@ -68,4 +69,5 @@ STATE_TO_CODE: dict[States, int] = {
     States.UnknownStatus: 27,
     States.GoingToLockdownWithMission: 28,
     States.LockdownWithMission: 29,
+    States.Teleoperation: 30,
 }
