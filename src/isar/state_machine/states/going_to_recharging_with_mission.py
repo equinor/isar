@@ -24,8 +24,11 @@ def _publish_mission_failed(
     events.mqtt.publish_mission_status(mission.id, MissionStatus.Failed, error)
 
 
-def _accept_stop(events: OutputEvents, _: AbortedMission, __: EmptyMessage) -> None:
+def _accept_stop(
+    events: OutputEvents, mission: AbortedMission, __: EmptyMessage
+) -> None:
     events.api.respond(lambda r: r.stop_mission, ControlMissionResponse(success=True))
+    events.mqtt.publish_mission_status(mission.id, MissionStatus.Cancelled, None)
 
 
 state: StateDef[AbortedMission] = StateDef(

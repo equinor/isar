@@ -11,9 +11,12 @@ from isar.state_machine.state import (
     forward_transition_parameter,
 )
 from isar.state_machine.states_enum import States
+from robot_interface.models.mission.status import MissionStatus
 
 
-def _reject_maintenance(events: OutputEvents, _: str | None, __: EmptyMessage) -> None:
+def _reject_maintenance(
+    events: OutputEvents, mission_id: str | None, __: EmptyMessage
+) -> None:
     events.api.respond(
         lambda r: r.set_maintenance_mode,
         MaintenanceResponse(
@@ -21,6 +24,8 @@ def _reject_maintenance(events: OutputEvents, _: str | None, __: EmptyMessage) -
             failure_reason="Failed to stop ongoing mission",
         ),
     )
+    if mission_id is not None:
+        events.mqtt.publish_mission_status(mission_id, MissionStatus.Failed, None)
 
 
 def _publish_mission_result(
@@ -29,7 +34,8 @@ def _publish_mission_result(
     stop_result: AbortedMission | MissionCompleted | EmptyMessage,
 ) -> None:
     assert isinstance(stop_result, MissionCompleted)
-    events.mqtt.publish_mission_status(mission_id, stop_result.status, None)
+    if mission_id is not None:
+        events.mqtt.publish_mission_status(mission_id, stop_result.status, None)
 
 
 def _publish_mission_aborted(
@@ -37,9 +43,10 @@ def _publish_mission_aborted(
     mission_id: str | None,
     _: AbortedMission | MissionCompleted | EmptyMessage,
 ) -> None:
-    events.mqtt.publish_mission_aborted(
-        mission_id, "Mission aborted, robot being sent to maintenance"
-    )
+    if mission_id is not None:
+        events.mqtt.publish_mission_aborted(
+            mission_id, "Mission aborted, robot being sent to maintenance"
+        )
 
 
 state: StateDef[str | None] = StateDef(

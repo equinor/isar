@@ -234,11 +234,20 @@ def state_cases(events: Events) -> list[StateCases]:
                         robot={"return_home": ANY},
                         param_after=MISSION,
                     ),
+                    "empty stop result": Expect(
+                        EMPTY,
+                        States.GoingToRecharging,
+                        robot={"return_home": ANY},
+                        mqtt=[mission_status(MissionStatus.Cancelled)],
+                    ),
                 },
                 events.action_requests.stop_mission.failure: Expect(
                     EMPTY,
                     States.InterventionNeeded,
-                    mqtt=[intervention("Failed to stop mission when battery was low")],
+                    mqtt=[
+                        mission_status(MissionStatus.Failed),
+                        intervention("Failed to stop mission when battery was low"),
+                    ],
                 ),
             },
         ),
@@ -306,9 +315,10 @@ def state_cases(events: Events) -> list[StateCases]:
                         )
                     },
                     mqtt=[
+                        mission_status(MissionStatus.Failed),
                         intervention(
                             "Failed to stop mission when entering maintenance mode"
-                        )
+                        ),
                     ],
                 ),
             },
@@ -376,7 +386,10 @@ def state_cases(events: Events) -> list[StateCases]:
             MISSION,
             on={
                 events.api_requests.stop_mission.request: Expect(
-                    EMPTY, States.GoingToRecharging, api={"stop_mission": ANY}
+                    EMPTY,
+                    States.GoingToRecharging,
+                    api={"stop_mission": ANY},
+                    mqtt=[mission_status(MissionStatus.Cancelled)],
                 ),
                 events.api_requests.send_to_lockdown.request: Expect(
                     EMPTY,
@@ -426,16 +439,27 @@ def state_cases(events: Events) -> list[StateCases]:
                     mqtt=[mission_status(MissionStatus.InProgress)],
                 ),
                 events.api_requests.stop_mission.request: Expect(
-                    EMPTY, States.Recharging, api={"stop_mission": ANY}
+                    EMPTY,
+                    States.Recharging,
+                    api={"stop_mission": ANY},
+                    mqtt=[mission_status(MissionStatus.Cancelled)],
                 ),
                 events.robot_async_events.robot_status_update: Expect(
-                    RobotStatus.Offline, States.Offline
+                    RobotStatus.Offline,
+                    States.Offline,
+                    mqtt=[mission_status(MissionStatus.Failed)],
                 ),
                 events.api_requests.send_to_lockdown.request: Expect(
-                    EMPTY, States.Lockdown, api=LOCKDOWN_STARTED
+                    EMPTY,
+                    States.Lockdown,
+                    api=LOCKDOWN_STARTED,
+                    mqtt=[mission_status(MissionStatus.Cancelled)],
                 ),
                 events.api_requests.set_maintenance_mode.request: Expect(
-                    EMPTY, States.Maintenance, api=MAINTENANCE_STARTED
+                    EMPTY,
+                    States.Maintenance,
+                    api=MAINTENANCE_STARTED,
+                    mqtt=[mission_status(MissionStatus.Cancelled)],
                 ),
             },
         ),
