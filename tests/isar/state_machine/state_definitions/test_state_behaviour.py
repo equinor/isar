@@ -847,8 +847,8 @@ def test_state_behaviour(
         assert outputs.api_responses == expect.api, case.name
         assert outputs.robot_requests == expect.robot, case.name
         assert len(outputs.mqtt) == len(expect.mqtt), case.name
-        for payload, expected in zip(outputs.mqtt, expect.mqtt):
-            assert expected.items() <= payload.items(), case.name
+        for message, expected in zip(outputs.mqtt, expect.mqtt):
+            assert expected.items() <= message.payload.items(), case.name
 
 
 def test_await_next_mission_returns_home_after_delay(
