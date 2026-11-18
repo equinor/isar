@@ -15,11 +15,26 @@ from isar.state_machine.state import (
     forward_transition_parameter,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission.status import RobotStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus
 
 
-def _accept_stop(events: OutputEvents, _: AbortedMission, __: EmptyMessage) -> None:
+def _accept_stop(
+    events: OutputEvents, mission: AbortedMission, __: EmptyMessage
+) -> None:
     events.api.respond(lambda r: r.stop_mission, ControlMissionResponse(success=True))
+    events.mqtt.publish_mission_status(mission.id, MissionStatus.Cancelled, None)
+
+
+def _report_mission_cancelled(
+    events: OutputEvents, mission: AbortedMission, __: EmptyMessage
+) -> None:
+    events.mqtt.publish_mission_status(mission.id, MissionStatus.Cancelled, None)
+
+
+def _report_mission_failed(
+    events: OutputEvents, mission: AbortedMission, __: EmptyMessage
+) -> None:
+    events.mqtt.publish_mission_status(mission.id, MissionStatus.Failed, None)
 
 
 state: StateDef[AbortedMission] = StateDef(
@@ -37,16 +52,27 @@ state: StateDef[AbortedMission] = StateDef(
                 Branch(
                     Offline.transition,
                     transition_when=lambda _, s: s == RobotStatus.Offline,
+                    side_effect=_report_mission_failed,
                 ),
             ),
         ),
         EventHandler(
             event=lambda e: e.api_requests.send_to_lockdown.request,
-            branches=(Branch(Lockdown.transition_and_respond_to_api),),
+            branches=(
+                Branch(
+                    Lockdown.transition_and_respond_to_api,
+                    side_effect=_report_mission_cancelled,
+                ),
+            ),
         ),
         EventHandler(
             event=lambda e: e.api_requests.set_maintenance_mode.request,
-            branches=(Branch(Maintenance.transition_and_respond_to_api),),
+            branches=(
+                Branch(
+                    Maintenance.transition_and_respond_to_api,
+                    side_effect=_report_mission_cancelled,
+                ),
+            ),
         ),
         EventHandler(
             event=lambda e: e.api_requests.stop_mission.request,

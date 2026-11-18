@@ -11,6 +11,7 @@ from isar.state_machine.state import (
     forward_transition_parameter,
 )
 from isar.state_machine.states_enum import States
+from robot_interface.models.mission.status import MissionStatus
 
 type StopResult = AbortedMission | MissionCompleted | EmptyMessage
 
@@ -20,6 +21,10 @@ def _publish_completed(
 ) -> None:
     if isinstance(stop_result, MissionCompleted) and mission_id:
         events.mqtt.publish_mission_status(mission_id, stop_result.status, None)
+
+
+def _publish_failed(events: OutputEvents, mission_id: str, _: EmptyMessage) -> None:
+    events.mqtt.publish_mission_status(mission_id, MissionStatus.Failed, None)
 
 
 def _was_aborted(_: str, stop_result: StopResult) -> bool:
@@ -40,6 +45,7 @@ state: StateDef[str] = StateDef(
                 Branch(
                     InterventionNeeded.transition,
                     lambda _, __: "Failed to stop mission when battery was low",
+                    side_effect=_publish_failed,
                 ),
             ),
         ),
