@@ -39,6 +39,7 @@ class RecordingSession[Camera: CameraRecording](RecordingModel):
     run_id: str
     status: SessionStatus
     cameras: dict[str, Camera]
+    mission_name: str | None = None
     gaps: list[RecordingGap] = Field(default_factory=list)
     isar_id: str | None = None
     started_at: str | None = None

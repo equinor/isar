@@ -110,7 +110,7 @@ class BlobRecordingPublisher:
             robot_name=settings.ROBOT_NAME,
             inspection_id=f"{session.run_id}-{camera.key}",
             mission_id=session.run_id,
-            mission_name="",
+            mission_name=session.mission_name or "",
             blob_storage_data_path=BlobStoragePath(
                 storage_account=settings.BLOB_STORAGE_ACCOUNT_DATA,
                 blob_container=settings.BLOB_CONTAINER,

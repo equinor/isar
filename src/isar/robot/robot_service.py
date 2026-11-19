@@ -62,10 +62,10 @@ class RobotService:
             except Exception as error:  # noqa: BLE001
                 self.logger.warning("Recording unavailable (%s)", type(error).__name__)
 
-    def _start_recording(self, mission_id: str) -> None:
+    def _start_recording(self, mission_id: str, mission_name: str) -> None:
         if self.mission_recorder is not None:
             try:
-                self.mission_recorder.start(mission_id)
+                self.mission_recorder.start(mission_id, mission_name)
                 self.recording_mission_id = mission_id
             except Exception as error:  # noqa: BLE001
                 self.logger.warning("Recording start failed (%s)", type(error).__name__)
@@ -108,7 +108,7 @@ class RobotService:
             self.action_requests.return_home.trigger_failure_response(error_message)
             return False
         self.logger.info("Received confirmation that return home mission has started")
-        self._start_recording(mission_id)
+        self._start_recording(mission_id, "Return home")
         return True
 
     def _start_mission_handler(self, mission: Mission) -> bool:
@@ -124,7 +124,7 @@ class RobotService:
             self.action_requests.execute_mission.trigger_failure_response(error_message)
             return False
         self.logger.info("Received confirmation that mission has started")
-        self._start_recording(mission.id)
+        self._start_recording(mission.id, mission.name)
         return True
 
     async def _stop_mission_handler(

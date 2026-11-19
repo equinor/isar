@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 class MissionRecorder(ABC):
     @abstractmethod
-    def start(self, mission_id: str) -> None:
+    def start(self, mission_id: str, mission_name: str) -> None:
         """Schedule capture without blocking robot execution; repeated starts are safe."""
 
     @abstractmethod
