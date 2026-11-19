@@ -27,6 +27,7 @@ from isar.robot.robot_service import RobotService
 from isar.robot.robot_status import RobotStatusThread
 from isar.services.service_connections.persistent_memory import Base
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+from isar.state_machine import state as state_module
 from isar.state_machine.output_events import ApiResponder, OutputEvents, RobotCommander
 from isar.state_machine.state import State
 from isar.state_machine.state_machine import StateMachine
@@ -35,6 +36,10 @@ from isar.state_machine.states_enum import States
 from isar.storage.storage_interface import StorageInterface
 from isar.storage.uploader import Uploader
 from robot_interface.models.mission.mission import Mission
+from tests.isar.state_machine.state_definitions.state_machine_driver import (
+    StateMachineDriver,
+    StateTimeoutDriver,
+)
 from tests.test_mocks.blob_storage import StorageFake
 from tests.test_mocks.robot_interface import StubRobot
 from tests.test_mocks.state_machine_mocks import (
@@ -310,3 +315,13 @@ def setup_db_connection_string() -> Generator[str]:
         Base.metadata.create_all(engine)
 
         yield connection_url
+
+
+@pytest.fixture()
+def state_machine_driver(
+    events: Events, monkeypatch: pytest.MonkeyPatch
+) -> Generator[StateMachineDriver]:
+    machine = StateMachine(events, events.mqtt_queue)
+    timeout = StateTimeoutDriver(machine.signal_exit)
+    monkeypatch.setattr(state_module, "time", timeout)
+    yield StateMachineDriver(machine, timeout)

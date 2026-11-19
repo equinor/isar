@@ -21,11 +21,8 @@ from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
 from tests.isar.state_machine.state_definitions.state_machine_driver import (
     StateMachineDriver,
-    state_machine_driver,
 )
 from tests.test_mocks.robot_interface import StubRobot
-
-__all__ = ["state_machine_driver"]
 
 
 @pytest.fixture
