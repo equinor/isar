@@ -12,10 +12,7 @@ from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
 from tests.isar.state_machine.state_definitions.state_machine_driver import (
     StateMachineDriver,
-    state_machine_driver,
 )
-
-__all__ = ["state_machine_driver"]
 
 _target: StateDef[str] = StateDef(name=States.Paused, handlers=lambda: ())
 

@@ -14,11 +14,8 @@ from tests.isar.state_machine.state_definitions.state_machine_driver import (
     MqttMessage,
     Outputs,
     StateMachineDriver,
-    state_machine_driver,
 )
 from tests.isar.state_machine.state_definitions.test_state_behaviour import all_cases
-
-__all__ = ["state_machine_driver"]
 
 
 @dataclass(frozen=True)

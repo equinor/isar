@@ -49,10 +49,7 @@ from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
 from tests.isar.state_machine.state_definitions.state_machine_driver import (
     StateMachineDriver,
-    state_machine_driver,
 )
-
-__all__ = ["state_machine_driver"]
 
 MISSION = Mission(id="id", name="mission", tasks=[])
 ERROR = ErrorMessage(
