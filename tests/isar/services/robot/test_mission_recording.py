@@ -47,7 +47,9 @@ def test_recording_starts_only_after_robot_confirmation(
 
     service._start_mission_handler(mission)
 
-    assert recorder.start.call_args_list == ([call(mission.id)] if confirmed else [])
+    assert recorder.start.call_args_list == (
+        [call(mission.id, mission.name)] if confirmed else []
+    )
 
 
 @pytest.mark.parametrize("recorder_available", [False, True])
@@ -73,12 +75,12 @@ def test_pause_resume_keeps_one_logical_recording(
     recorder = service.mission_recorder = Mock()
     mocker.patch("isar.robot.robot_service.robot_pause_mission", return_value=None)
     mocker.patch("isar.robot.robot_service.robot_resume_mission", return_value=None)
-    service._start_recording("mission")
+    service._start_recording("mission", "Recording")
 
     service._pause_mission_handler()
     service._resume_mission_handler()
 
-    recorder.start.assert_called_once_with("mission")
+    recorder.start.assert_called_once_with("mission", "Recording")
     recorder.stop.assert_not_called()
 
 
@@ -87,7 +89,7 @@ def test_successful_stop_without_monitor_finalizes_recording(
 ) -> None:
     service = mocked_robot_service
     recorder = service.mission_recorder = Mock()
-    service._start_recording("mission")
+    service._start_recording("mission", "Recording")
     mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
 
     asyncio.run(service._stop_mission_handler(None))
@@ -101,7 +103,7 @@ def test_terminal_monitor_stops_correct_mission(
     service = mocked_robot_service
     recorder = service.mission_recorder = Mock()
     mission = recording_mission()
-    service._start_recording("newer-mission")
+    service._start_recording("newer-mission", "Recording")
     mocker.patch(
         "isar.robot.robot_service.robot_monitor_mission",
         return_value=(None, mission, False),
@@ -204,6 +206,7 @@ def test_finished_session_announces_ready_cameras_to_sara(
     mocker.patch("isar.storage.recording_publisher.settings.BLOB_CONTAINER", "kaa")
     session = RecordingSession[CameraRecording](
         run_id="mission",
+        mission_name="Perimeter",
         status="Expired",
         started_at="2026-11-11T10:00:00+00:00",
         ended_at="2026-11-11T11:00:00+00:00",
@@ -225,6 +228,7 @@ def test_finished_session_announces_ready_cameras_to_sara(
     payload = json.loads(queue.publish.call_args.kwargs["payload"])
     assert payload["inspection_id"] == "mission-front"
     assert payload["mission_id"] == "mission"
+    assert payload["mission_name"] == "Perimeter"
     assert payload["inspection_type"] == "Video"
     assert payload["file_type"] == "mp4"
     assert payload["timestamp"] == "2026-11-11T10:00:00Z"
