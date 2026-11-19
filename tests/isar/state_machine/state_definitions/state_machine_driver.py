@@ -1,12 +1,8 @@
 import json
-from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Any
 
-import pytest
-
-from isar.models.events import APIEvent, EmptyMessage, Event, Events, RobotActionEvent
-from isar.state_machine import state as state_module
+from isar.models.events import APIEvent, EmptyMessage, Event, RobotActionEvent
 from isar.state_machine.state import State, StateDef
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states_enum import States
@@ -25,7 +21,7 @@ class Outputs:
     mqtt: list[MqttMessage]
 
 
-class _Clock:
+class StateTimeoutDriver:
     """Stands in for the time module in state.py. Sleeping ends State.run after one iteration."""
 
     def __init__(self, signal_exit: Event[EmptyMessage]) -> None:
@@ -49,10 +45,10 @@ class _Clock:
 class StateMachineDriver:
     """Drives a real StateMachine one event at a time and records what it outputs."""
 
-    def __init__(self, machine: StateMachine, clock: _Clock) -> None:
+    def __init__(self, machine: StateMachine, timeout: StateTimeoutDriver) -> None:
         self.machine = machine
         self.events = machine.events
-        self._clock = clock
+        self._timeout = timeout
 
     @property
     def state(self) -> State:
@@ -74,7 +70,7 @@ class StateMachineDriver:
 
     def step(self, elapsed_seconds: float = 0.0) -> States:
         self.machine.signal_exit.clear_event()
-        self._clock.elapse_after_entry(elapsed_seconds)
+        self._timeout.elapse_after_entry(elapsed_seconds)
         transition = self.state.run()
         if transition is not None:
             self.machine.current_state = self.machine._transition_to_state(transition)
@@ -96,13 +92,3 @@ class StateMachineDriver:
         while (message := self.events.mqtt_queue.get()) is not None:
             mqtt.append(MqttMessage(message.topic, json.loads(message.payload)))
         return Outputs(api_responses, robot_requests, mqtt)
-
-
-@pytest.fixture()
-def state_machine_driver(
-    events: Events, monkeypatch: pytest.MonkeyPatch
-) -> Generator[StateMachineDriver]:
-    machine = StateMachine(events, events.mqtt_queue)
-    clock = _Clock(machine.signal_exit)
-    monkeypatch.setattr(state_module, "time", clock)
-    yield StateMachineDriver(machine, clock)
