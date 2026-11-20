@@ -1,6 +1,6 @@
 import logging
 from collections import deque
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from types import ModuleType
 from typing import Any
@@ -19,6 +19,7 @@ from isar.services.service_connections.persistent_memory import (
 from isar.state_machine.state import (
     Branch,
     State,
+    StateDef,
     TimeoutHandler,
     Transition,
     TransitionDef,
@@ -208,6 +209,7 @@ class Edge:
     trigger: Event[Any] | TimeoutHandler[Any]
     guard: str | None
     entry: str  # e.g. "Monitor.start_mission"
+    effects: tuple[Callable[[Any], None], ...]
 
 
 def _entry_names(modules: Iterable[ModuleType]) -> dict[int, str]:
@@ -233,9 +235,9 @@ def collect_edges(
     edges: list[Edge] = []
 
     for module in modules:
-        state = module.state
+        state: StateDef = module.state
         triggers: list[tuple[Event[Any] | TimeoutHandler[Any], tuple[Branch, ...]]] = [
-            (on.event(events), on.branches) for on in state.handlers()
+            (handler.event(events), handler.branches) for handler in state.handlers()
         ]
         triggers += [(timer, timer.branches) for timer in state.timers()]
 
@@ -248,6 +250,13 @@ def collect_edges(
                         trigger=trigger,
                         guard=_guard_label(branch),
                         entry=entry_names.get(id(branch.transition), "<unnamed entry>"),
+                        effects=(
+                            *(effect.target(events) for effect in branch.side_effects),
+                            *(
+                                effect.target(events)
+                                for effect in branch.transition.side_effects
+                            ),
+                        ),
                     )
                 )
 
