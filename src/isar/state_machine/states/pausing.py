@@ -1,44 +1,66 @@
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.paused as Paused
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import EmptyMessage
+from isar.models.mqtt_queue import MissionStatusUpdate
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    HandlerEffect,
+    StateDef,
+    TransitionDef,
+    TransitionEffect,
+    forward_state_parameter,
+    forward_transition_parameter,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus
 
-
-def Pausing(events: Events, mission_id: str) -> StateDef:
-
-    def _successful_pause_event_handler(
-        _: EmptyMessage,
-    ) -> Transition:
-        events.mqtt_queue.publish_mission_status(mission_id, MissionStatus.Paused, None)
-        return Paused.transition(mission_id)
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.pause_mission.failure,
-            handler=lambda _: Monitor.transition_with_existing_mission(mission_id),
+state: StateDef[str] = StateDef(
+    name=States.Pausing,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.action_requests.pause_mission.failure,
+            branches=(
+                Branch(
+                    Monitor.transition_with_existing_mission, forward_state_parameter
+                ),
+            ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.pause_mission.success,
-            handler=_successful_pause_event_handler,
+        EventHandler(
+            event=lambda e: e.action_requests.pause_mission.success,
+            branches=(
+                Branch(
+                    Paused.transition,
+                    forward_state_parameter,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.mqtt_queue.publish_mission_progress,
+                            lambda mission_id, _: MissionStatusUpdate(
+                                mission_id, MissionStatus.Paused
+                            ),
+                        ),
+                    ),
+                ),
+            ),
         ),
-    ]
-    return StateDef(
-        name=States.Pausing,
-        handlers=event_handlers,
+    ),
+)
+
+
+transition_and_pause_mission_and_respond_to_api: TransitionDef[str, str] = (
+    TransitionDef(
+        state,
+        forward_transition_parameter,
+        effects=(
+            TransitionEffect(
+                lambda e: e.api_requests.pause_mission.trigger_response,
+                lambda _: ControlMissionResponse(success=True),
+            ),
+            TransitionEffect(
+                lambda e: e.action_requests.pause_mission.trigger_request,
+                lambda _: EmptyMessage(),
+            ),
+        ),
     )
-
-
-def transition_and_pause_mission_and_reply_to_API(
-    mission_id: str,
-) -> Transition:
-    def _transition(events: Events) -> StateDef:
-        events.api_requests.pause_mission.trigger_response(
-            ControlMissionResponse(success=True)
-        )
-        events.action_requests.pause_mission.trigger_request(EmptyMessage())
-        return Pausing(events, mission_id=mission_id)
-
-    return _transition
+)

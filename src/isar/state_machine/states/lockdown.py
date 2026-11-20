@@ -1,40 +1,44 @@
 import isar.state_machine.states.home as Home
 from isar.apis.models.models import LockdownResponse
-from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import EmptyMessage
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    HandlerEffect,
+    StateDef,
+    TransitionDef,
+    TransitionEffect,
+)
 from isar.state_machine.states_enum import States
 
-
-def Lockdown(events: Events) -> StateDef:
-
-    def _release_from_lockdown_handler(
-        _: EmptyMessage,
-    ) -> Transition:
-        events.api_requests.release_from_lockdown.trigger_response(EmptyMessage())
-        return Home.transition()
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.release_from_lockdown.request,
-            handler=_release_from_lockdown_handler,
+state: StateDef[None] = StateDef(
+    name=States.Lockdown,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.api_requests.release_from_lockdown.request,
+            branches=(
+                Branch(
+                    Home.transition,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.api_requests.release_from_lockdown.trigger_response,
+                            lambda _, __: EmptyMessage(),
+                        ),
+                    ),
+                ),
+            ),
         ),
-    ]
-
-    return StateDef(
-        name=States.Lockdown,
-        handlers=event_handlers,
-    )
+    ),
+)
 
 
-def transition_without_responding_to_api() -> Transition:
-    return Lockdown
-
-
-def transition_and_respond_to_api() -> Transition:
-    def _transition(events: Events) -> StateDef:
-        events.api_requests.send_to_lockdown.trigger_response(
-            LockdownResponse(lockdown_started=True)
-        )
-        return Lockdown(events)
-
-    return _transition
+transition: TransitionDef[None, None] = TransitionDef(state)
+transition_and_respond_to_api: TransitionDef[None, None] = TransitionDef(
+    state,
+    effects=(
+        TransitionEffect(
+            lambda e: e.api_requests.send_to_lockdown.trigger_response,
+            lambda _: LockdownResponse(lockdown_started=True),
+        ),
+    ),
+)

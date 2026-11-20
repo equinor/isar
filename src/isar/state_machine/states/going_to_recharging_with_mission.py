@@ -3,65 +3,89 @@ import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging_with_mission as RechargingWithMission
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import AbortedMission, EmptyMessage
+from isar.models.mqtt_queue import MissionStatusUpdate
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    HandlerEffect,
+    StateDef,
+    TransitionDef,
+    TransitionEffect,
+    forward_state_parameter,
+    forward_transition_parameter,
+)
 from isar.state_machine.states_enum import States
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.status import MissionStatus
 
-
-def GoingToRechargingWithMission(events: Events, mission: AbortedMission) -> StateDef:
-
-    def _mission_failed_event_handler(
-        error_message: ErrorMessage,
-    ) -> Transition:
-        events.mqtt_queue.publish_mission_status(
-            mission.id,
-            MissionStatus.Failed,
-            error_message,
-        )
-        return InterventionNeeded.transition("Return home to recharge failed")
-
-    def _stop_mission_event_handler(
-        _: EmptyMessage,
-    ) -> Transition | None:
-        events.api_requests.stop_mission.trigger_response(
-            ControlMissionResponse(success=True)
-        )
-        return GoingToRecharging.transition_to_existing_mission()
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[ErrorMessage](
-            event=events.action_requests.return_home.failure,
-            handler=_mission_failed_event_handler,
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.return_home.success,
-            handler=lambda _: RechargingWithMission.transition(mission),
-        ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: GoingToLockdownWithMission.transition_to_existing_mission_and_report_to_api(
-                mission
+state: StateDef[AbortedMission] = StateDef(
+    name=States.GoingToRechargingWithMission,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.action_requests.return_home.failure,
+            branches=(
+                Branch(
+                    InterventionNeeded.transition,
+                    lambda _, __: "Return home to recharge failed",
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.mqtt_queue.publish_mission_result,
+                            lambda mission, error: MissionStatusUpdate(
+                                mission.id, MissionStatus.Failed, error
+                            ),
+                        ),
+                    ),
+                ),
             ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.stop_mission.request,
-            handler=_stop_mission_event_handler,
+        EventHandler(
+            event=lambda e: e.action_requests.return_home.success,
+            branches=(
+                Branch(RechargingWithMission.transition, forward_state_parameter),
+            ),
         ),
-    ]
-    return StateDef(
-        name=States.GoingToRechargingWithMission,
-        handlers=event_handlers,
+        EventHandler(
+            event=lambda e: e.api_requests.send_to_lockdown.request,
+            branches=(
+                Branch(
+                    GoingToLockdownWithMission.transition_with_existing_return_home_and_respond_to_api,
+                    forward_state_parameter,
+                ),
+            ),
+        ),
+        EventHandler(
+            event=lambda e: e.api_requests.stop_mission.request,
+            branches=(
+                Branch(
+                    GoingToRecharging.transition_with_existing_return_home,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.api_requests.stop_mission.trigger_response,
+                            lambda _, __: ControlMissionResponse(success=True),
+                        ),
+                        HandlerEffect(
+                            lambda e: e.mqtt_queue.publish_mission_result,
+                            lambda mission, _: MissionStatusUpdate(
+                                mission.id, MissionStatus.Cancelled
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    ),
+)
+
+
+transition_and_start_return_home: TransitionDef[AbortedMission, AbortedMission] = (
+    TransitionDef(
+        state,
+        forward_transition_parameter,
+        effects=(
+            TransitionEffect(
+                lambda e: e.action_requests.return_home.trigger_request,
+                lambda _: EmptyMessage(),
+            ),
+        ),
     )
-
-
-def transition_and_start_return_home(
-    mission: AbortedMission,
-) -> Transition:
-    def _transition(events: Events) -> StateDef:
-
-        events.action_requests.return_home.trigger_request(EmptyMessage())
-        return GoingToRechargingWithMission(events, mission=mission)
-
-    return _transition
+)

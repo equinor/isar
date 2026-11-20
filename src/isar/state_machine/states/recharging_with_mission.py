@@ -1,59 +1,90 @@
+from typing import Any
+
 import isar.state_machine.states.lockdown as Lockdown
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.recharging as Recharging
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.events import AbortedMission, EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import AbortedMission
+from isar.models.mqtt_queue import MissionStatusUpdate
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    HandlerEffect,
+    StateDef,
+    TransitionDef,
+    forward_state_parameter,
+    forward_transition_parameter,
+)
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission.status import RobotStatus
+from robot_interface.models.mission.status import MissionStatus, RobotStatus
+
+_report_mission_cancelled: HandlerEffect[AbortedMission, Any] = HandlerEffect(
+    lambda e: e.mqtt_queue.publish_mission_result,
+    lambda mission, _: MissionStatusUpdate(mission.id, MissionStatus.Cancelled),
+)
+_report_mission_failed: HandlerEffect[AbortedMission, Any] = HandlerEffect(
+    lambda e: e.mqtt_queue.publish_mission_result,
+    lambda mission, _: MissionStatusUpdate(mission.id, MissionStatus.Failed),
+)
 
 
-def RechargingWithMission(events: Events, mission: AbortedMission) -> StateDef:
-
-    def _stop_mission_event_handler(
-        _: EmptyMessage,
-    ) -> Transition | None:
-        events.api_requests.stop_mission.trigger_response(
-            ControlMissionResponse(success=True)
-        )
-        return Recharging.transition()
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[EmptyMessage](
-            event=events.robot_async_events.battery_above_recharge_threshold,
-            handler=lambda _: Monitor.transition_and_start_mission(
-                mission, should_respond_to_API_request=False
+state: StateDef[AbortedMission] = StateDef(
+    name=States.RechargingWithMission,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.robot_async_events.battery_above_recharge_threshold,
+            branches=(
+                Branch(Monitor.transition_and_start_mission, forward_state_parameter),
             ),
         ),
-        EventHandlerMapping[RobotStatus](
-            event=events.robot_async_events.robot_status_update,
-            handler=lambda robot_status: (
-                Offline.transition() if robot_status == RobotStatus.Offline else None
+        EventHandler(
+            event=lambda e: e.robot_async_events.robot_status_update,
+            branches=(
+                Branch(
+                    Offline.transition,
+                    transition_when=lambda _, s: s == RobotStatus.Offline,
+                    effects=(_report_mission_failed,),
+                ),
             ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.send_to_lockdown.request,
-            handler=lambda _: Lockdown.transition_and_respond_to_api(),
+        EventHandler(
+            event=lambda e: e.api_requests.send_to_lockdown.request,
+            branches=(
+                Branch(
+                    Lockdown.transition_and_respond_to_api,
+                    effects=(_report_mission_cancelled,),
+                ),
+            ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.set_maintenance_mode.request,
-            handler=lambda _: Maintenance.transition_and_reply_to_API(),
+        EventHandler(
+            event=lambda e: e.api_requests.set_maintenance_mode.request,
+            branches=(
+                Branch(
+                    Maintenance.transition_and_respond_to_api,
+                    effects=(_report_mission_cancelled,),
+                ),
+            ),
         ),
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.stop_mission.request,
-            handler=_stop_mission_event_handler,
+        EventHandler(
+            event=lambda e: e.api_requests.stop_mission.request,
+            branches=(
+                Branch(
+                    Recharging.transition,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.api_requests.stop_mission.trigger_response,
+                            lambda _, __: ControlMissionResponse(success=True),
+                        ),
+                        _report_mission_cancelled,
+                    ),
+                ),
+            ),
         ),
-    ]
-    return StateDef(
-        name=States.RechargingWithMission,
-        handlers=event_handlers,
-    )
+    ),
+)
 
-
-def transition(mission: AbortedMission) -> Transition:
-    def _transition(events: Events) -> StateDef:
-        return RechargingWithMission(events, mission=mission)
-
-    return _transition
+transition: TransitionDef[AbortedMission, AbortedMission] = TransitionDef(
+    state, forward_transition_parameter
+)

@@ -1,43 +1,44 @@
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import MaintenanceResponse
-from isar.models.events import EmptyMessage, Events
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import EmptyMessage
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    HandlerEffect,
+    StateDef,
+    TransitionDef,
+    TransitionEffect,
+)
 from isar.state_machine.states_enum import States
 
-
-def Maintenance(events: Events) -> StateDef:
-
-    def _release_from_maintenance_handler(
-        _: EmptyMessage,
-    ) -> Transition:
-        events.api_requests.release_from_maintenance_mode.trigger_response(
-            EmptyMessage()
-        )
-
-        return UnknownStatus.transition()
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[EmptyMessage](
-            event=events.api_requests.release_from_maintenance_mode.request,
-            handler=_release_from_maintenance_handler,
+state: StateDef[None] = StateDef(
+    name=States.Maintenance,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.api_requests.release_from_maintenance_mode.request,
+            branches=(
+                Branch(
+                    UnknownStatus.transition,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.api_requests.release_from_maintenance_mode.trigger_response,
+                            lambda _, __: EmptyMessage(),
+                        ),
+                    ),
+                ),
+            ),
         ),
-    ]
-
-    return StateDef(
-        name=States.Maintenance,
-        handlers=event_handlers,
-    )
+    ),
+)
 
 
-def transition_and_reply_to_API() -> Transition:
-    def _transition(events: Events) -> StateDef:
-        events.api_requests.set_maintenance_mode.trigger_response(
-            MaintenanceResponse(is_maintenance_mode=True)
-        )
-        return Maintenance(events)
-
-    return _transition
-
-
-def transition_without_replying_to_API() -> Transition:
-    return Maintenance
+transition: TransitionDef[None, None] = TransitionDef(state)
+transition_and_respond_to_api: TransitionDef[None, None] = TransitionDef(
+    state,
+    effects=(
+        TransitionEffect(
+            lambda e: e.api_requests.set_maintenance_mode.trigger_response,
+            lambda _: MaintenanceResponse(is_maintenance_mode=True),
+        ),
+    ),
+)

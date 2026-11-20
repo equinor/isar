@@ -1,49 +1,69 @@
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import ControlMissionResponse
-from isar.models.events import AbortedMission, EmptyMessage, Events, MissionCompleted
-from isar.state_machine.state import EventHandlerMapping, StateDef, Transition
+from isar.models.events import EmptyMessage
+from isar.models.mqtt_queue import MissionStatusUpdate
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    HandlerEffect,
+    StateDef,
+    TransitionDef,
+    TransitionEffect,
+    forward_state_parameter,
+    forward_transition_parameter,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.status import MissionStatus
 
-
-def Stopping(events: Events, mission_id: str) -> StateDef:
-
-    def _successful_stop_event_handler(
-        _: AbortedMission | MissionCompleted | EmptyMessage,
-    ) -> Transition:
-        events.mqtt_queue.publish_mission_status(
-            mission_id,
-            MissionStatus.Cancelled,
-            ErrorMessage(ErrorReason.RobotActionException, "Mission stopped by user"),
-        )
-        return AwaitNextMission.transition()
-
-    event_handlers: list[EventHandlerMapping] = [
-        EventHandlerMapping[EmptyMessage](
-            event=events.action_requests.stop_mission.failure,
-            handler=lambda _: Monitor.transition_with_existing_mission(mission_id),
+state: StateDef[str] = StateDef(
+    name=States.Stopping,
+    handlers=lambda: (
+        EventHandler(
+            event=lambda e: e.action_requests.stop_mission.failure,
+            branches=(
+                Branch(
+                    Monitor.transition_with_existing_mission, forward_state_parameter
+                ),
+            ),
         ),
-        EventHandlerMapping[AbortedMission | MissionCompleted | EmptyMessage](
-            event=events.action_requests.stop_mission.success,
-            handler=_successful_stop_event_handler,
+        EventHandler(
+            event=lambda e: e.action_requests.stop_mission.success,
+            branches=(
+                Branch(
+                    AwaitNextMission.transition,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.mqtt_queue.publish_mission_result,
+                            lambda mission_id, _: MissionStatusUpdate(
+                                mission_id,
+                                MissionStatus.Cancelled,
+                                ErrorMessage(
+                                    ErrorReason.RobotActionException,
+                                    "Mission stopped by user",
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
         ),
-    ]
-    return StateDef(
-        name=States.Stopping,
-        handlers=event_handlers,
-    )
+    ),
+)
 
 
-def transition_and_trigger_stop_and_respond_to_API(
-    mission_id: str,
-) -> Transition:
-    def _transition(events: Events) -> StateDef:
-        events.action_requests.stop_mission.trigger_request(EmptyMessage())
-        events.api_requests.stop_mission.trigger_response(
-            ControlMissionResponse(success=True)
-        )
-        return Stopping(events, mission_id)
-
-    return _transition
+transition_and_stop_mission_and_respond_to_api: TransitionDef[str, str] = TransitionDef(
+    state,
+    forward_transition_parameter,
+    effects=(
+        TransitionEffect(
+            lambda e: e.action_requests.stop_mission.trigger_request,
+            lambda _: EmptyMessage(),
+        ),
+        TransitionEffect(
+            lambda e: e.api_requests.stop_mission.trigger_response,
+            lambda _: ControlMissionResponse(success=True),
+        ),
+    ),
+)
