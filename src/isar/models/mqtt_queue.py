@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from queue import Empty, Full, Queue
+from typing import Literal
 
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.properties import Properties
@@ -33,6 +34,24 @@ class MQTTQueueMessage:
     qos: int
     retain: bool
     properties: Properties | None
+
+
+type MissionCompletedStatus = Literal[
+    MissionStatus.Failed, MissionStatus.Successful, MissionStatus.Cancelled
+]
+
+
+@dataclass(frozen=True)
+class MissionResultStatus:
+    mission_id: str
+    status: MissionCompletedStatus
+    error_message: ErrorMessage | None = None
+
+
+@dataclass(frozen=True)
+class MissionAborted:
+    mission_id: str
+    reason: str
 
 
 class MQTTQueue:
@@ -104,17 +123,28 @@ class MQTTQueue:
             properties=props_expiry(settings.MQTT_MISSION_TASK_AND_STATUS_EXPIRY),
         )
 
-    def publish_mission_status(
+    def publish_mission_in_progress(self, mission_id: str) -> None:
+        self._publish_mission_status(mission_id, MissionStatus.InProgress)
+
+    def publish_mission_paused(self, mission_id: str) -> None:
+        self._publish_mission_status(mission_id, MissionStatus.Paused)
+
+    def publish_mission_result(self, update: MissionResultStatus) -> None:
+        self._publish_mission_status(
+            update.mission_id, update.status, update.error_message
+        )
+
+    def _publish_mission_status(
         self,
         mission_id: str,
-        mission_status: MissionStatus,
-        error_message: ErrorMessage | None,
+        status: MissionStatus,
+        error_message: ErrorMessage | None = None,
     ) -> None:
         payload: MissionPayload = MissionPayload(
             isar_id=settings.ISAR_ID,
             robot_name=settings.ROBOT_NAME,
             mission_id=mission_id,
-            status=mission_status,
+            status=status,
             error_reason=error_message.error_reason if error_message else None,
             error_description=(
                 error_message.error_description if error_message else None
@@ -146,14 +176,12 @@ class MQTTQueue:
             properties=props_expiry(settings.MQTT_MISSION_TASK_AND_STATUS_EXPIRY),
         )
 
-    def publish_mission_aborted(
-        self, current_mission_id: str | None, reason: str
-    ) -> None:
+    def publish_mission_aborted(self, aborted: MissionAborted) -> None:
         payload: MissionAbortedPayload = MissionAbortedPayload(
             isar_id=settings.ISAR_ID,
             robot_name=settings.ROBOT_NAME,
-            mission_id=current_mission_id,
-            reason=reason,
+            mission_id=aborted.mission_id,
+            reason=aborted.reason,
             timestamp=datetime.now(UTC),
         )
 

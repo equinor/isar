@@ -6,6 +6,7 @@ import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 from isar.apis.models.models import MissionStartResponse
 from isar.models.events import EmptyMessage
+from isar.models.mqtt_queue import MissionResultStatus
 from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
@@ -24,13 +25,17 @@ from robot_interface.models.mission.status import MissionStatus
 def _publish_mission_successful(
     events: OutputEvents, mission_id: str, _: EmptyMessage
 ) -> None:
-    events.mqtt.publish_mission_status(mission_id, MissionStatus.Successful, None)
+    events.mqtt.publish_mission_result(
+        MissionResultStatus(mission_id, MissionStatus.Successful)
+    )
 
 
 def _publish_mission_failed(
     events: OutputEvents, mission_id: str, error: ErrorMessage
 ) -> None:
-    events.mqtt.publish_mission_status(mission_id, MissionStatus.Failed, error)
+    events.mqtt.publish_mission_result(
+        MissionResultStatus(mission_id, MissionStatus.Failed, error)
+    )
 
 
 state: StateDef[str] = StateDef(
@@ -105,7 +110,7 @@ state: StateDef[str] = StateDef(
 
 def _start_mission(events: OutputEvents, mission: Mission) -> None:
     events.robot.request(lambda a: a.execute_mission, mission)
-    events.mqtt.publish_mission_status(mission.id, MissionStatus.InProgress, None)
+    events.mqtt.publish_mission_in_progress(mission.id)
 
 
 def _start_mission_and_respond(events: OutputEvents, mission: Mission) -> None:

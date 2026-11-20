@@ -2,6 +2,7 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.maintenance as Maintenance
 from isar.apis.models.models import MaintenanceResponse
 from isar.models.events import AbortedMission, EmptyMessage, MissionCompleted
+from isar.models.mqtt_queue import MissionAborted, MissionResultStatus
 from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
@@ -25,7 +26,9 @@ def _reject_maintenance(
         ),
     )
     if mission_id is not None:
-        events.mqtt.publish_mission_status(mission_id, MissionStatus.Failed, None)
+        events.mqtt.publish_mission_result(
+            MissionResultStatus(mission_id, MissionStatus.Failed)
+        )
 
 
 def _publish_mission_result(
@@ -35,7 +38,9 @@ def _publish_mission_result(
 ) -> None:
     assert isinstance(stop_result, MissionCompleted)
     if mission_id is not None:
-        events.mqtt.publish_mission_status(mission_id, stop_result.status, None)
+        events.mqtt.publish_mission_result(
+            MissionResultStatus(mission_id, stop_result.status)
+        )
 
 
 def _publish_mission_aborted(
@@ -45,7 +50,9 @@ def _publish_mission_aborted(
 ) -> None:
     if mission_id is not None:
         events.mqtt.publish_mission_aborted(
-            mission_id, "Mission aborted, robot being sent to maintenance"
+            MissionAborted(
+                mission_id, "Mission aborted, robot being sent to maintenance"
+            )
         )
 
 

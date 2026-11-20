@@ -3,6 +3,7 @@ import isar.state_machine.states.going_to_lockdown_with_mission as GoingToLockdo
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import AbortedMission, EmptyMessage, MissionCompleted
+from isar.models.mqtt_queue import MissionResultStatus
 from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
@@ -31,7 +32,9 @@ def _publish_completed(
     stop_result: AbortedMission | MissionCompleted,
 ) -> None:
     if isinstance(stop_result, MissionCompleted):
-        events.mqtt.publish_mission_status(mission_id, stop_result.status, None)
+        events.mqtt.publish_mission_result(
+            MissionResultStatus(mission_id, stop_result.status)
+        )
 
 
 def _was_aborted(_: str, stop_result: AbortedMission | MissionCompleted) -> bool:

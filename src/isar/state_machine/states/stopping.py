@@ -2,6 +2,7 @@ import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import AbortedMission, EmptyMessage, MissionCompleted
+from isar.models.mqtt_queue import MissionResultStatus
 from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
@@ -21,10 +22,12 @@ def _publish_cancelled(
     mission_id: str,
     _: AbortedMission | MissionCompleted,
 ) -> None:
-    events.mqtt.publish_mission_status(
-        mission_id,
-        MissionStatus.Cancelled,
-        ErrorMessage(ErrorReason.RobotActionException, "Mission stopped by user"),
+    events.mqtt.publish_mission_result(
+        MissionResultStatus(
+            mission_id,
+            MissionStatus.Cancelled,
+            ErrorMessage(ErrorReason.RobotActionException, "Mission stopped by user"),
+        )
     )
 
 

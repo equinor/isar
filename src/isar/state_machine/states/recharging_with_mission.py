@@ -5,6 +5,7 @@ import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.recharging as Recharging
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import AbortedMission, EmptyMessage
+from isar.models.mqtt_queue import MissionResultStatus
 from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
@@ -22,19 +23,25 @@ def _accept_stop(
     events: OutputEvents, mission: AbortedMission, __: EmptyMessage
 ) -> None:
     events.api.respond(lambda r: r.stop_mission, ControlMissionResponse(success=True))
-    events.mqtt.publish_mission_status(mission.id, MissionStatus.Cancelled, None)
+    events.mqtt.publish_mission_result(
+        MissionResultStatus(mission.id, MissionStatus.Cancelled)
+    )
 
 
 def _report_mission_cancelled(
     events: OutputEvents, mission: AbortedMission, __: EmptyMessage
 ) -> None:
-    events.mqtt.publish_mission_status(mission.id, MissionStatus.Cancelled, None)
+    events.mqtt.publish_mission_result(
+        MissionResultStatus(mission.id, MissionStatus.Cancelled)
+    )
 
 
 def _report_mission_failed(
     events: OutputEvents, mission: AbortedMission, __: EmptyMessage
 ) -> None:
-    events.mqtt.publish_mission_status(mission.id, MissionStatus.Failed, None)
+    events.mqtt.publish_mission_result(
+        MissionResultStatus(mission.id, MissionStatus.Failed)
+    )
 
 
 state: StateDef[AbortedMission] = StateDef(

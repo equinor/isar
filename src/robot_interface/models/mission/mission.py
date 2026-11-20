@@ -29,6 +29,12 @@ class Mission(BaseModel):
             ]
         ]
 
+    def is_failed(self) -> bool:
+        return self.get_status_from_tasks() == MissionStatus.Failed
+
+    def is_successful(self) -> bool:
+        return self.get_status_from_tasks() == MissionStatus.Successful
+
     def get_status_from_tasks(self) -> MissionStatus:
         """Determine the outcome of a mission whose tasks have all finished."""
         if self._get_unfinished_tasks():

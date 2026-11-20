@@ -12,11 +12,10 @@ from isar.state_machine.state import (
     forward_transition_parameter,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.mission.status import MissionStatus
 
 
 def _publish_paused(events: OutputEvents, mission_id: str, _: EmptyMessage) -> None:
-    events.mqtt.publish_mission_status(mission_id, MissionStatus.Paused, None)
+    events.mqtt.publish_mission_paused(mission_id)
 
 
 state: StateDef[str] = StateDef(
