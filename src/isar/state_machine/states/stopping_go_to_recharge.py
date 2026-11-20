@@ -2,6 +2,7 @@ import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.going_to_recharging_with_mission as GoingToRechargingWithMission
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 from isar.models.events import AbortedMission, EmptyMessage, MissionCompleted
+from isar.models.mqtt_queue import MissionStatusUpdate
 from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
@@ -20,11 +21,15 @@ def _publish_completed(
     events: OutputEvents, mission_id: str, stop_result: StopResult
 ) -> None:
     if isinstance(stop_result, MissionCompleted) and mission_id:
-        events.mqtt.publish_mission_status(mission_id, stop_result.status, None)
+        events.mqtt.publish_mission_result(
+            MissionStatusUpdate(mission_id, stop_result.status)
+        )
 
 
 def _publish_failed(events: OutputEvents, mission_id: str, _: EmptyMessage) -> None:
-    events.mqtt.publish_mission_status(mission_id, MissionStatus.Failed, None)
+    events.mqtt.publish_mission_result(
+        MissionStatusUpdate(mission_id, MissionStatus.Failed)
+    )
 
 
 def _was_aborted(_: str, stop_result: StopResult) -> bool:

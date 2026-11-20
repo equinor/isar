@@ -35,6 +35,19 @@ class MQTTQueueMessage:
     properties: Properties | None
 
 
+@dataclass(frozen=True)
+class MissionStatusUpdate:
+    mission_id: str | None
+    status: MissionStatus
+    error: ErrorMessage | None = None
+
+
+@dataclass(frozen=True)
+class MissionAborted:
+    mission_id: str | None
+    reason: str
+
+
 class MQTTQueue:
     queue: Queue[MQTTQueueMessage]
 
@@ -104,17 +117,21 @@ class MQTTQueue:
             properties=props_expiry(settings.MQTT_MISSION_TASK_AND_STATUS_EXPIRY),
         )
 
-    def publish_mission_status(
-        self,
-        mission_id: str,
-        mission_status: MissionStatus,
-        error_message: ErrorMessage | None,
-    ) -> None:
+    def publish_mission_progress(self, update: MissionStatusUpdate) -> None:
+        """For a mission that is still ongoing, such as InProgress or Paused."""
+        self._publish_mission_status(update)
+
+    def publish_mission_result(self, update: MissionStatusUpdate) -> None:
+        """For a mission that has ended, such as Successful, Failed or Cancelled."""
+        self._publish_mission_status(update)
+
+    def _publish_mission_status(self, update: MissionStatusUpdate) -> None:
+        error_message = update.error
         payload: MissionPayload = MissionPayload(
             isar_id=settings.ISAR_ID,
             robot_name=settings.ROBOT_NAME,
-            mission_id=mission_id,
-            status=mission_status,
+            mission_id=update.mission_id,
+            status=update.status,
             error_reason=error_message.error_reason if error_message else None,
             error_description=(
                 error_message.error_description if error_message else None
@@ -123,7 +140,7 @@ class MQTTQueue:
         )
 
         self.publish(
-            topic=settings.TOPIC_ISAR_MISSION + f"/{mission_id}",
+            topic=settings.TOPIC_ISAR_MISSION + f"/{update.mission_id}",
             payload=payload.model_dump_json(),
             qos=1,
             retain=True,
@@ -146,14 +163,12 @@ class MQTTQueue:
             properties=props_expiry(settings.MQTT_MISSION_TASK_AND_STATUS_EXPIRY),
         )
 
-    def publish_mission_aborted(
-        self, current_mission_id: str | None, reason: str
-    ) -> None:
+    def publish_mission_aborted(self, aborted: MissionAborted) -> None:
         payload: MissionAbortedPayload = MissionAbortedPayload(
             isar_id=settings.ISAR_ID,
             robot_name=settings.ROBOT_NAME,
-            mission_id=current_mission_id,
-            reason=reason,
+            mission_id=aborted.mission_id,
+            reason=aborted.reason,
             timestamp=datetime.now(UTC),
         )
 

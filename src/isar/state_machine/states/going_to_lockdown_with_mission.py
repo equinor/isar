@@ -2,6 +2,7 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown_with_mission as LockdownWithMission
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import AbortedMission, EmptyMessage
+from isar.models.mqtt_queue import MissionStatusUpdate
 from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
@@ -19,18 +20,22 @@ from robot_interface.models.mission.status import MissionStatus
 def _publish_lockdown_failed(
     events: OutputEvents, mission: AbortedMission, error: ErrorMessage
 ) -> None:
-    events.mqtt.publish_mission_status(mission.id, MissionStatus.Failed, error)
+    events.mqtt.publish_mission_result(
+        MissionStatusUpdate(mission.id, MissionStatus.Failed, error)
+    )
 
 
 def _publish_resume_failed(
     events: OutputEvents, mission: AbortedMission, _: EmptyMessage
 ) -> None:
-    events.mqtt.publish_mission_status(
-        mission.id,
-        MissionStatus.Failed,
-        ErrorMessage(
-            ErrorReason.RobotActionException, "Failed to resume lockdown mission"
-        ),
+    events.mqtt.publish_mission_result(
+        MissionStatusUpdate(
+            mission.id,
+            MissionStatus.Failed,
+            ErrorMessage(
+                ErrorReason.RobotActionException, "Failed to resume lockdown mission"
+            ),
+        )
     )
 
 

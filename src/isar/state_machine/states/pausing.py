@@ -2,6 +2,7 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.paused as Paused
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import EmptyMessage
+from isar.models.mqtt_queue import MissionStatusUpdate
 from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
@@ -16,7 +17,9 @@ from robot_interface.models.mission.status import MissionStatus
 
 
 def _publish_paused(events: OutputEvents, mission_id: str, _: EmptyMessage) -> None:
-    events.mqtt.publish_mission_status(mission_id, MissionStatus.Paused, None)
+    events.mqtt.publish_mission_progress(
+        MissionStatusUpdate(mission_id, MissionStatus.Paused)
+    )
 
 
 state: StateDef[str] = StateDef(
