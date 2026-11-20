@@ -1,6 +1,6 @@
 import logging
 from collections import deque
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from types import ModuleType
 from typing import Any
@@ -208,6 +208,8 @@ class Edge:
     trigger: Event[Any] | TimeoutHandler[Any]
     guard: str | None
     entry: str  # e.g. "Monitor.start_mission"
+    # What the branch and then the entered transition send to, in order
+    effects: tuple[Callable[[Any], None], ...]
 
 
 def _entry_names(modules: Iterable[ModuleType]) -> dict[int, str]:
@@ -248,6 +250,13 @@ def collect_edges(
                         trigger=trigger,
                         guard=_guard_label(branch),
                         entry=entry_names.get(id(branch.transition), "<unnamed entry>"),
+                        effects=(
+                            *(effect.target(events) for effect in branch.effects),
+                            *(
+                                effect.target(events)
+                                for effect in branch.transition.effects
+                            ),
+                        ),
                     )
                 )
 
