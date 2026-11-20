@@ -4,6 +4,7 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging_with_mission as RechargingWithMission
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import AbortedMission, EmptyMessage
+from isar.models.mqtt_queue import MissionResultStatus
 from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
@@ -21,14 +22,18 @@ from robot_interface.models.mission.status import MissionStatus
 def _publish_mission_failed(
     events: OutputEvents, mission: AbortedMission, error: ErrorMessage
 ) -> None:
-    events.mqtt.publish_mission_status(mission.id, MissionStatus.Failed, error)
+    events.mqtt.publish_mission_result(
+        MissionResultStatus(mission.id, MissionStatus.Failed, error)
+    )
 
 
 def _accept_stop(
     events: OutputEvents, mission: AbortedMission, __: EmptyMessage
 ) -> None:
     events.api.respond(lambda r: r.stop_mission, ControlMissionResponse(success=True))
-    events.mqtt.publish_mission_status(mission.id, MissionStatus.Cancelled, None)
+    events.mqtt.publish_mission_result(
+        MissionResultStatus(mission.id, MissionStatus.Cancelled)
+    )
 
 
 state: StateDef[AbortedMission] = StateDef(

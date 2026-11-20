@@ -10,6 +10,7 @@ from isar.models.events import (
     Event,
     Events,
     MissionCompleted,
+    MissionCompletedStatus,
     RobotActionRequests,
     RobotAsyncEvents,
 )
@@ -168,7 +169,16 @@ class RobotService:
                 tasks=unfinished_tasks,
             )
         else:
-            response = MissionCompleted(aborted_mission.get_status_from_tasks())
+            completed_status: MissionCompletedStatus = (
+                MissionStatus.Successful
+                if aborted_mission.is_successful()
+                else (
+                    MissionStatus.Failed
+                    if aborted_mission.is_failed()
+                    else MissionStatus.Cancelled
+                )
+            )
+            response = MissionCompleted(completed_status)
         self.action_requests.stop_mission.trigger_success_response(response)
 
     def _pause_mission_handler(self) -> None:
@@ -241,7 +251,7 @@ class RobotService:
             elif (
                 remaining_mission is not None
                 and remaining_mission.tasks
-                and remaining_mission.get_status_from_tasks() == MissionStatus.Failed
+                and remaining_mission.is_failed()
             ):
                 self.action_requests.execute_mission.trigger_failure_response(
                     ErrorMessage(

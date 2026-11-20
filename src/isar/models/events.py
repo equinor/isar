@@ -8,7 +8,7 @@ from isar.apis.models.models import (
     MaintenanceResponse,
     MissionStartResponse,
 )
-from isar.models.mqtt_queue import MQTTQueue
+from isar.models.mqtt_queue import MissionCompletedStatus, MQTTQueue
 from robot_interface.models.exceptions.event_exceptions import (
     EventConflictError,
     EventTimeoutError,
@@ -16,7 +16,7 @@ from robot_interface.models.exceptions.event_exceptions import (
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
-from robot_interface.models.mission.status import MissionStatus, RobotStatus
+from robot_interface.models.mission.status import RobotStatus
 from robot_interface.models.mission.task import InspectionTask
 
 
@@ -27,7 +27,7 @@ class EmptyMessage:
 
 @dataclass
 class MissionCompleted:
-    status: MissionStatus
+    status: MissionCompletedStatus
 
 
 AbortedMission = Mission
