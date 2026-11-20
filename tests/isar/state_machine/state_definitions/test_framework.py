@@ -3,10 +3,13 @@
 from isar.models.events import EmptyMessage
 from isar.state_machine.state import (
     Branch,
+    ClearEvent,
     EventHandler,
+    HandlerEffect,
     StateDef,
     TimeoutHandler,
     TransitionDef,
+    TransitionEffect,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
@@ -21,7 +24,11 @@ def _source(calls: list[str]) -> StateDef[int]:
     to_target: TransitionDef[int, str] = TransitionDef(
         _target,
         lambda value: f"param-{value}",
-        side_effect=lambda _, value: calls.append(f"transition {value}"),
+        effects=(
+            TransitionEffect(
+                lambda _: calls.append, lambda value: f"transition {value}"
+            ),
+        ),
     )
     return StateDef(
         name=States.Monitor,
@@ -33,8 +40,16 @@ def _source(calls: list[str]) -> StateDef[int]:
                         to_target,
                         lambda param, _: param + 1,
                         transition_when=lambda _, status: status == RobotStatus.Busy,
-                        side_effect=lambda _, param, status: calls.append(
-                            f"handler {param} {status.name}"
+                        effects=(
+                            HandlerEffect(
+                                lambda _: calls.append,
+                                lambda param, status: f"handler {param} {status.name}",
+                            ),
+                            HandlerEffect(
+                                lambda _: calls.append,
+                                lambda param, _: f"skipped {param}",
+                                when=lambda _, status: status != RobotStatus.Busy,
+                            ),
                         ),
                     ),
                     Branch(
@@ -127,3 +142,18 @@ def test_exit_signal_stops_the_state_without_transitioning(
     state_machine_driver.machine.signal_exit.trigger_event(EmptyMessage())
 
     assert state_machine_driver.state.run() is None
+
+
+def test_clear_event_discards_what_is_waiting_when_the_transition_is_entered(
+    state_machine_driver: StateMachineDriver,
+) -> None:
+    status = state_machine_driver.events.robot_async_events.robot_status_update
+    status.trigger_event(RobotStatus.Busy)
+    entry: TransitionDef[None, str] = TransitionDef(
+        _target,
+        effects=(ClearEvent(lambda e: e.robot_async_events.robot_status_update),),
+    )
+
+    entry.run_effects(state_machine_driver.events, None)
+
+    assert not status.has_event()

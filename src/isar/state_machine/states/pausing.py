@@ -3,24 +3,18 @@ import isar.state_machine.states.paused as Paused
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import EmptyMessage
 from isar.models.mqtt_queue import MissionStatusUpdate
-from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
     EventHandler,
+    HandlerEffect,
     StateDef,
     TransitionDef,
+    TransitionEffect,
     forward_state_parameter,
     forward_transition_parameter,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus
-
-
-def _publish_paused(events: OutputEvents, mission_id: str, _: EmptyMessage) -> None:
-    events.mqtt.publish_mission_progress(
-        MissionStatusUpdate(mission_id, MissionStatus.Paused)
-    )
-
 
 state: StateDef[str] = StateDef(
     name=States.Pausing,
@@ -39,7 +33,14 @@ state: StateDef[str] = StateDef(
                 Branch(
                     Paused.transition,
                     forward_state_parameter,
-                    side_effect=_publish_paused,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.mqtt_queue.publish_mission_progress,
+                            lambda mission_id, _: MissionStatusUpdate(
+                                mission_id, MissionStatus.Paused
+                            ),
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -47,13 +48,19 @@ state: StateDef[str] = StateDef(
 )
 
 
-def _respond_and_request_pause(events: OutputEvents, _: str) -> None:
-    events.api.respond(lambda r: r.pause_mission, ControlMissionResponse(success=True))
-    events.robot.request(lambda a: a.pause_mission, EmptyMessage())
-
-
 transition_and_pause_mission_and_respond_to_api: TransitionDef[str, str] = (
     TransitionDef(
-        state, forward_transition_parameter, side_effect=_respond_and_request_pause
+        state,
+        forward_transition_parameter,
+        effects=(
+            TransitionEffect(
+                lambda e: e.api_requests.pause_mission.trigger_response,
+                lambda _: ControlMissionResponse(success=True),
+            ),
+            TransitionEffect(
+                lambda e: e.action_requests.pause_mission.trigger_request,
+                lambda _: EmptyMessage(),
+            ),
+        ),
     )
 )

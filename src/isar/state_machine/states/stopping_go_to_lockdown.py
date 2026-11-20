@@ -4,12 +4,13 @@ import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import AbortedMission, EmptyMessage, MissionCompleted
 from isar.models.mqtt_queue import MissionStatusUpdate
-from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
     EventHandler,
+    HandlerEffect,
     StateDef,
     TransitionDef,
+    TransitionEffect,
     forward_state_parameter,
     forward_transition_parameter,
 )
@@ -18,23 +19,15 @@ from isar.state_machine.states_enum import States
 type StopResult = AbortedMission | MissionCompleted | EmptyMessage
 
 
-def _reject_lockdown(events: OutputEvents, _: str, __: EmptyMessage) -> None:
-    events.api.respond(
-        lambda r: r.send_to_lockdown,
-        LockdownResponse(
-            lockdown_started=False,
-            failure_reason="Failed to stop ongoing mission",
-        ),
-    )
+def _is_completed(mission_id: str, stop_result: StopResult) -> bool:
+    return isinstance(stop_result, MissionCompleted) and bool(mission_id)
 
 
-def _publish_completed(
-    events: OutputEvents, mission_id: str, stop_result: StopResult
-) -> None:
-    if isinstance(stop_result, MissionCompleted) and mission_id:
-        events.mqtt.publish_mission_result(
-            MissionStatusUpdate(mission_id, stop_result.status)
-        )
+def _completed_mission_status(
+    mission_id: str, stop_result: StopResult
+) -> MissionStatusUpdate:
+    assert isinstance(stop_result, MissionCompleted)
+    return MissionStatusUpdate(mission_id, stop_result.status)
 
 
 def _was_aborted(_: str, stop_result: StopResult) -> bool:
@@ -55,7 +48,15 @@ state: StateDef[str] = StateDef(
                 Branch(
                     Monitor.transition_with_existing_mission,
                     forward_state_parameter,
-                    side_effect=_reject_lockdown,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.api_requests.send_to_lockdown.trigger_response,
+                            lambda _, __: LockdownResponse(
+                                lockdown_started=False,
+                                failure_reason="Failed to stop ongoing mission",
+                            ),
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -69,7 +70,13 @@ state: StateDef[str] = StateDef(
                 ),
                 Branch(
                     GoingToLockdown.transition_and_start_return_home_and_respond_to_api,
-                    side_effect=_publish_completed,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.mqtt_queue.publish_mission_result,
+                            _completed_mission_status,
+                            when=_is_completed,
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -77,10 +84,13 @@ state: StateDef[str] = StateDef(
 )
 
 
-def _request_stop(events: OutputEvents, _: str) -> None:
-    events.robot.request(lambda a: a.stop_mission, EmptyMessage())
-
-
 transition_and_stop_mission: TransitionDef[str, str] = TransitionDef(
-    state, forward_transition_parameter, side_effect=_request_stop
+    state,
+    forward_transition_parameter,
+    effects=(
+        TransitionEffect(
+            lambda e: e.action_requests.stop_mission.trigger_request,
+            lambda _: EmptyMessage(),
+        ),
+    ),
 )

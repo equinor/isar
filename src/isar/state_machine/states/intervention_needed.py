@@ -3,15 +3,16 @@ import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.models.events import EmptyMessage
-from isar.state_machine.output_events import OutputEvents
-from isar.state_machine.state import Branch, EventHandler, StateDef, TransitionDef
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    HandlerEffect,
+    StateDef,
+    TransitionDef,
+    TransitionEffect,
+)
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
-
-
-def _accept_release(events: OutputEvents, _: None, __: EmptyMessage) -> None:
-    events.api.respond(lambda r: r.release_intervention_needed, EmptyMessage())
-
 
 state: StateDef[None] = StateDef(
     name=States.InterventionNeeded,
@@ -26,7 +27,17 @@ state: StateDef[None] = StateDef(
         ),
         EventHandler(
             event=lambda e: e.api_requests.release_intervention_needed.request,
-            branches=(Branch(UnknownStatus.transition, side_effect=_accept_release),),
+            branches=(
+                Branch(
+                    UnknownStatus.transition,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.api_requests.release_intervention_needed.trigger_response,
+                            lambda _, __: EmptyMessage(),
+                        ),
+                    ),
+                ),
+            ),
         ),
         EventHandler(
             event=lambda e: e.api_requests.set_maintenance_mode.request,
@@ -45,10 +56,11 @@ state: StateDef[None] = StateDef(
 )
 
 
-def _publish_intervention_needed(events: OutputEvents, reason: str) -> None:
-    events.mqtt.publish_intervention_needed(error_message=reason)
-
-
 transition: TransitionDef[str, None] = TransitionDef(
-    state, side_effect=_publish_intervention_needed
+    state,
+    effects=(
+        TransitionEffect(
+            lambda e: e.mqtt_queue.publish_intervention_needed, lambda reason: reason
+        ),
+    ),
 )

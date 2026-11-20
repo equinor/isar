@@ -3,41 +3,19 @@ import isar.state_machine.states.lockdown_with_mission as LockdownWithMission
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import AbortedMission, EmptyMessage
 from isar.models.mqtt_queue import MissionStatusUpdate
-from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
     EventHandler,
+    HandlerEffect,
     StateDef,
     TransitionDef,
+    TransitionEffect,
     forward_state_parameter,
     forward_transition_parameter,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.status import MissionStatus
-
-
-def _publish_lockdown_failed(
-    events: OutputEvents, mission: AbortedMission, error: ErrorMessage
-) -> None:
-    events.mqtt.publish_mission_result(
-        MissionStatusUpdate(mission.id, MissionStatus.Failed, error)
-    )
-
-
-def _publish_resume_failed(
-    events: OutputEvents, mission: AbortedMission, _: EmptyMessage
-) -> None:
-    events.mqtt.publish_mission_result(
-        MissionStatusUpdate(
-            mission.id,
-            MissionStatus.Failed,
-            ErrorMessage(
-                ErrorReason.RobotActionException, "Failed to resume lockdown mission"
-            ),
-        )
-    )
-
 
 state: StateDef[AbortedMission] = StateDef(
     name=States.GoingToLockdownWithMission,
@@ -48,7 +26,14 @@ state: StateDef[AbortedMission] = StateDef(
                 Branch(
                     InterventionNeeded.transition,
                     lambda _, __: "Lockdown mission failed",
-                    side_effect=_publish_lockdown_failed,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.mqtt_queue.publish_mission_result,
+                            lambda mission, error: MissionStatusUpdate(
+                                mission.id, MissionStatus.Failed, error
+                            ),
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -58,7 +43,19 @@ state: StateDef[AbortedMission] = StateDef(
                 Branch(
                     InterventionNeeded.transition,
                     lambda _, __: "Failed to resume return to home mission",
-                    side_effect=_publish_resume_failed,
+                    effects=(
+                        HandlerEffect(
+                            lambda e: e.mqtt_queue.publish_mission_result,
+                            lambda mission, _: MissionStatusUpdate(
+                                mission.id,
+                                MissionStatus.Failed,
+                                ErrorMessage(
+                                    ErrorReason.RobotActionException,
+                                    "Failed to resume lockdown mission",
+                                ),
+                            ),
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -75,24 +72,20 @@ state: StateDef[AbortedMission] = StateDef(
 )
 
 
-def _respond(events: OutputEvents, _: AbortedMission) -> None:
-    events.api.respond(
-        lambda r: r.send_to_lockdown, LockdownResponse(lockdown_started=True)
-    )
-
-
-def _respond_and_request_return_home(
-    events: OutputEvents, mission: AbortedMission
-) -> None:
-    _respond(events, mission)
-    events.robot.request(lambda a: a.return_home, EmptyMessage())
-
+_respond: TransitionEffect[AbortedMission] = TransitionEffect(
+    lambda e: e.api_requests.send_to_lockdown.trigger_response,
+    lambda _: LockdownResponse(lockdown_started=True),
+)
+_request_return_home: TransitionEffect[AbortedMission] = TransitionEffect(
+    lambda e: e.action_requests.return_home.trigger_request,
+    lambda _: EmptyMessage(),
+)
 
 transition_with_existing_return_home_and_respond_to_api: TransitionDef[
     AbortedMission, AbortedMission
-] = TransitionDef(state, forward_transition_parameter, side_effect=_respond)
+] = TransitionDef(state, forward_transition_parameter, effects=(_respond,))
 transition_and_start_return_home_and_respond_to_api: TransitionDef[
     AbortedMission, AbortedMission
 ] = TransitionDef(
-    state, forward_transition_parameter, side_effect=_respond_and_request_return_home
+    state, forward_transition_parameter, effects=(_respond, _request_return_home)
 )

@@ -2,8 +2,13 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.lockdown as Lockdown
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import EmptyMessage
-from isar.state_machine.output_events import OutputEvents
-from isar.state_machine.state import Branch, EventHandler, StateDef, TransitionDef
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    TransitionEffect,
+)
 from isar.state_machine.states_enum import States
 
 state: StateDef[None] = StateDef(
@@ -35,24 +40,19 @@ state: StateDef[None] = StateDef(
 )
 
 
-def _respond(events: OutputEvents, _: None) -> None:
-    events.api.respond(
-        lambda r: r.send_to_lockdown, LockdownResponse(lockdown_started=True)
-    )
-
-
-def _respond_and_request_return_home(events: OutputEvents, _: None) -> None:
-    _respond(events, None)
-    events.robot.request(lambda a: a.return_home, EmptyMessage())
-
+_respond: TransitionEffect[None] = TransitionEffect(
+    lambda e: e.api_requests.send_to_lockdown.trigger_response,
+    lambda _: LockdownResponse(lockdown_started=True),
+)
+_request_return_home: TransitionEffect[None] = TransitionEffect(
+    lambda e: e.action_requests.return_home.trigger_request,
+    lambda _: EmptyMessage(),
+)
 
 transition_with_existing_mission: TransitionDef[None, None] = TransitionDef(state)
 transition_with_existing_mission_and_respond_to_api: TransitionDef[None, None] = (
-    TransitionDef(state, side_effect=_respond)
+    TransitionDef(state, effects=(_respond,))
 )
 transition_and_start_return_home_and_respond_to_api: TransitionDef[None, None] = (
-    TransitionDef(
-        state,
-        side_effect=_respond_and_request_return_home,
-    )
+    TransitionDef(state, effects=(_respond, _request_return_home))
 )

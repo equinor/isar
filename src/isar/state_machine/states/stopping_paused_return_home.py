@@ -2,12 +2,12 @@ import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import MissionStartResponse
 from isar.models.events import EmptyMessage
-from isar.state_machine.output_events import OutputEvents
 from isar.state_machine.state import (
     Branch,
     EventHandler,
     StateDef,
     TransitionDef,
+    TransitionEffect,
     forward_state_parameter,
     forward_transition_parameter,
 )
@@ -36,16 +36,21 @@ state: StateDef[Mission] = StateDef(
 )
 
 
-def _request_stop_and_respond(events: OutputEvents, mission: Mission) -> None:
-    events.robot.request(lambda a: a.stop_mission, EmptyMessage())
-    events.api.respond(
-        lambda r: r.start_mission,
-        MissionStartResponse(mission_id=mission.id, mission_started=True),
-    )
-
-
 transition_and_stop_return_home_and_respond_to_api: TransitionDef[Mission, Mission] = (
     TransitionDef(
-        state, forward_transition_parameter, side_effect=_request_stop_and_respond
+        state,
+        forward_transition_parameter,
+        effects=(
+            TransitionEffect(
+                lambda e: e.action_requests.stop_mission.trigger_request,
+                lambda _: EmptyMessage(),
+            ),
+            TransitionEffect(
+                lambda e: e.api_requests.start_mission.trigger_response,
+                lambda mission: MissionStartResponse(
+                    mission_id=mission.id, mission_started=True
+                ),
+            ),
+        ),
     )
 )
