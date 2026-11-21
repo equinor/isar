@@ -4,6 +4,7 @@ import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_unknown_mission as StoppingUnknownMission
+import isar.state_machine.states.teleoperation as Teleoperation
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Events
 from isar.state_machine.state import (
@@ -42,6 +43,10 @@ def AwaitNextMission(events: Events) -> StateDef:
         EventHandlerMapping[EmptyMessage](
             event=events.api_requests.set_maintenance_mode.request,
             handler=lambda _: Maintenance.transition_and_reply_to_API(),
+        ),
+        EventHandlerMapping[EmptyMessage](
+            event=events.api_requests.set_teleoperation_mode.request,
+            handler=lambda _: Teleoperation.transition_and_reply_to_API(),
         ),
     ]
 
