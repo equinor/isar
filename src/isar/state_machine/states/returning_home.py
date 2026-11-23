@@ -7,12 +7,13 @@ import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMai
 import isar.state_machine.states.stopping_return_home as StoppingReturnHome
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage
-from isar.state_machine.output_events import OutputEvents
+from isar.state_machine.output_events import OutputEvent
 from isar.state_machine.state import (
     Branch,
     EventHandler,
     StateDef,
     TransitionDef,
+    TransitionEffect,
     forward_event,
     forward_transition_parameter,
 )
@@ -75,27 +76,35 @@ state: StateDef[int] = StateDef(
 )
 
 
-def _request_return_home(events: OutputEvents, _: int) -> None:
-    events.robot.request(lambda a: a.return_home, EmptyMessage())
-
-
-def _request_return_home_and_respond(events: OutputEvents, retries: int) -> None:
-    _request_return_home(events, retries)
-    events.api.respond(lambda r: r.return_home, EmptyMessage())
-
-
 transition_and_retry_return_home: TransitionDef[int, int] = TransitionDef(
-    state, forward_transition_parameter, side_effect=_request_return_home
+    state,
+    forward_transition_parameter,
+    side_effects=(
+        TransitionEffect(
+            OutputEvent.robot_request(lambda a: a.return_home),
+            lambda _: EmptyMessage(),
+        ),
+    ),
+)
+_request_return_home: TransitionEffect[None] = TransitionEffect(
+    OutputEvent.robot_request(lambda a: a.return_home),
+    lambda _: EmptyMessage(),
 )
 transition_and_return_home: TransitionDef[None, int] = TransitionDef(
     state,
     lambda _: settings.RETURN_HOME_RETRY_LIMIT - 1,
-    side_effect=_request_return_home,
+    side_effects=(_request_return_home,),
 )
 transition_and_return_home_and_respond_to_api: TransitionDef[None, int] = TransitionDef(
     state,
     lambda _: settings.RETURN_HOME_RETRY_LIMIT - 1,
-    side_effect=_request_return_home_and_respond,
+    side_effects=(
+        _request_return_home,
+        TransitionEffect(
+            OutputEvent.api_response(lambda a: a.return_home),
+            lambda _: EmptyMessage(),
+        ),
+    ),
 )
 transition_with_existing_mission: TransitionDef[None, int] = TransitionDef(
     state, lambda _: settings.RETURN_HOME_RETRY_LIMIT - 1

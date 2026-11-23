@@ -1,12 +1,15 @@
 """Behaviour of the framework itself, tested once with minimal ad-hoc states."""
 
 from isar.models.events import EmptyMessage
+from isar.state_machine.output_events import OutputEvent
 from isar.state_machine.state import (
     Branch,
     EventHandler,
+    HandlerEffect,
     StateDef,
     TimeoutHandler,
     TransitionDef,
+    TransitionEffect,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import RobotStatus
@@ -21,7 +24,11 @@ def _source(calls: list[str]) -> StateDef[int]:
     to_target: TransitionDef[int, str] = TransitionDef(
         _target,
         lambda value: f"param-{value}",
-        side_effect=lambda _, value: calls.append(f"transition {value}"),
+        side_effects=(
+            TransitionEffect(
+                OutputEvent(lambda _: calls.append), lambda value: f"transition {value}"
+            ),
+        ),
     )
     return StateDef(
         name=States.Monitor,
@@ -33,8 +40,20 @@ def _source(calls: list[str]) -> StateDef[int]:
                         to_target,
                         lambda param, _: param + 1,
                         transition_when=lambda _, status: status == RobotStatus.Busy,
-                        side_effect=lambda _, param, status: calls.append(
-                            f"handler {param} {status.name}"
+                        side_effects=(
+                            HandlerEffect(
+                                OutputEvent(lambda _: calls.append),
+                                lambda param, status: f"handler {param} {status.name}",
+                            ),
+                            HandlerEffect(
+                                OutputEvent(lambda _: calls.append),
+                                lambda param, _: f"handler {param} skipped",
+                                when=lambda param, _: False,
+                            ),
+                            HandlerEffect(
+                                OutputEvent(lambda _: calls.append),
+                                lambda param, status: f"handler {param} second",
+                            ),
                         ),
                     ),
                     Branch(
@@ -65,7 +84,7 @@ def test_first_matching_branch_is_taken_and_side_effects_run_in_order(
 
     assert new_state is States.Paused
     assert state_machine_driver.state.param == "param-2"
-    assert calls == ["handler 1 Busy", "transition 2"]
+    assert calls == ["handler 1 Busy", "handler 1 second", "transition 2"]
 
 
 def test_event_matching_no_branch_is_consumed_and_ignored(
@@ -127,3 +146,20 @@ def test_exit_signal_stops_the_state_without_transitioning(
     state_machine_driver.machine.signal_exit.trigger_event(EmptyMessage())
 
     assert state_machine_driver.state.run() is None
+
+
+def test_clear_event_discards_what_is_waiting_when_the_transition_is_entered(
+    state_machine_driver: StateMachineDriver,
+) -> None:
+    status = state_machine_driver.events.robot_async_events.robot_status_update
+    status.trigger_event(RobotStatus.Busy)
+    entry: TransitionDef[None, str] = TransitionDef(
+        _target,
+        side_effects=(
+            TransitionEffect(OutputEvent.clear_robot_status(), lambda _: None),
+        ),
+    )
+
+    entry.run_effects(state_machine_driver.events, None)
+
+    assert not status.has_event()

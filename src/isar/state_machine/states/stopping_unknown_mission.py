@@ -2,8 +2,14 @@ import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import EmptyMessage
-from isar.state_machine.output_events import OutputEvents
-from isar.state_machine.state import Branch, EventHandler, StateDef, TransitionDef
+from isar.state_machine.output_events import OutputEvent
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    TransitionEffect,
+)
 from isar.state_machine.states_enum import States
 
 state: StateDef[None] = StateDef(
@@ -26,18 +32,23 @@ state: StateDef[None] = StateDef(
 )
 
 
-def _request_stop(events: OutputEvents, _: None) -> None:
-    events.robot.request(lambda a: a.stop_mission, EmptyMessage())
-
-
-def _request_stop_and_respond(events: OutputEvents, _: None) -> None:
-    _request_stop(events, None)
-    events.api.respond(lambda r: r.stop_mission, ControlMissionResponse(success=True))
-
+_request_stop: TransitionEffect[None] = TransitionEffect(
+    OutputEvent.robot_request(lambda a: a.stop_mission),
+    lambda _: EmptyMessage(),
+)
 
 transition_and_stop_mission: TransitionDef[None, None] = TransitionDef(
-    state, side_effect=_request_stop
+    state, side_effects=(_request_stop,)
 )
 transition_and_stop_mission_and_respond_to_api: TransitionDef[None, None] = (
-    TransitionDef(state, side_effect=_request_stop_and_respond)
+    TransitionDef(
+        state,
+        side_effects=(
+            _request_stop,
+            TransitionEffect(
+                OutputEvent.api_response(lambda a: a.stop_mission),
+                lambda _: ControlMissionResponse(success=True),
+            ),
+        ),
+    )
 )

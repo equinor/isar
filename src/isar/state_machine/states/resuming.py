@@ -2,23 +2,18 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.paused as Paused
 from isar.apis.models.models import ControlMissionResponse
 from isar.models.events import EmptyMessage
-from isar.state_machine.output_events import OutputEvents
+from isar.state_machine.output_events import OutputEvent
 from isar.state_machine.state import (
     Branch,
     EventHandler,
+    HandlerEffect,
     StateDef,
     TransitionDef,
+    TransitionEffect,
     forward_state_parameter,
     forward_transition_parameter,
 )
 from isar.state_machine.states_enum import States
-
-
-def _publish_in_progress(
-    events: OutputEvents, mission_id: str, _: EmptyMessage
-) -> None:
-    events.mqtt.publish_mission_in_progress(mission_id)
-
 
 state: StateDef[str] = StateDef(
     name=States.Resuming,
@@ -33,7 +28,12 @@ state: StateDef[str] = StateDef(
                 Branch(
                     Monitor.transition_with_existing_mission,
                     forward_state_parameter,
-                    side_effect=_publish_in_progress,
+                    side_effects=(
+                        HandlerEffect(
+                            OutputEvent.mqtt(lambda q: q.publish_mission_in_progress),
+                            lambda mission_id, _: mission_id,
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -41,13 +41,19 @@ state: StateDef[str] = StateDef(
 )
 
 
-def _respond_and_request_resume(events: OutputEvents, _: str) -> None:
-    events.api.respond(lambda r: r.resume_mission, ControlMissionResponse(success=True))
-    events.robot.request(lambda a: a.resume_mission, EmptyMessage())
-
-
 transition_and_resume_mission_and_respond_to_api: TransitionDef[str, str] = (
     TransitionDef(
-        state, forward_transition_parameter, side_effect=_respond_and_request_resume
+        state,
+        forward_transition_parameter,
+        side_effects=(
+            TransitionEffect(
+                OutputEvent.api_response(lambda a: a.resume_mission),
+                lambda _: ControlMissionResponse(success=True),
+            ),
+            TransitionEffect(
+                OutputEvent.robot_request(lambda a: a.resume_mission),
+                lambda _: EmptyMessage(),
+            ),
+        ),
     )
 )

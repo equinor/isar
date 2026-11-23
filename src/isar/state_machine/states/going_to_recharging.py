@@ -2,8 +2,14 @@ import isar.state_machine.states.going_to_lockdown as GoingToLockdown
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.recharging as Recharging
 from isar.models.events import EmptyMessage
-from isar.state_machine.output_events import OutputEvents
-from isar.state_machine.state import Branch, EventHandler, StateDef, TransitionDef
+from isar.state_machine.output_events import OutputEvent
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    StateDef,
+    TransitionDef,
+    TransitionEffect,
+)
 from isar.state_machine.states_enum import States
 
 state: StateDef[None] = StateDef(
@@ -34,11 +40,13 @@ state: StateDef[None] = StateDef(
 )
 
 
-def _request_return_home(events: OutputEvents, _: None) -> None:
-    events.robot.request(lambda a: a.return_home, EmptyMessage())
-
-
 transition_with_existing_return_home: TransitionDef[None, None] = TransitionDef(state)
 transition_and_start_return_home: TransitionDef[None, None] = TransitionDef(
-    state, side_effect=_request_return_home
+    state,
+    side_effects=(
+        TransitionEffect(
+            OutputEvent.robot_request(lambda a: a.return_home),
+            lambda _: EmptyMessage(),
+        ),
+    ),
 )

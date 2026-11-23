@@ -28,7 +28,6 @@ from isar.robot.robot_status import RobotStatusThread
 from isar.services.service_connections.persistent_memory import Base
 from isar.services.utilities.scheduling_utilities import SchedulingUtilities
 from isar.state_machine import state as state_module
-from isar.state_machine.output_events import ApiResponder, OutputEvents, RobotCommander
 from isar.state_machine.state import State
 from isar.state_machine.state_machine import StateMachine
 from isar.state_machine.states import STATE_MODULES
@@ -277,15 +276,9 @@ def mocked_robot_service(
 @pytest.fixture()
 def all_states_dict(container: ApplicationContainer) -> dict[States, State]:
     events = container.events()
-    handler_output = OutputEvents(
-        api=ApiResponder(events.api_requests),
-        robot=RobotCommander(events.action_requests, events.robot_async_events),
-        mqtt=container.mqtt_queue(),
-    )
     # The state parameter is only used when handling events, so None is sufficient here
     return {
-        module.state.name: State(module.state, None, events, handler_output)
-        for module in STATE_MODULES
+        module.state.name: State(module.state, None, events) for module in STATE_MODULES
     }
 
 

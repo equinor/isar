@@ -1,34 +1,47 @@
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import MaintenanceResponse
 from isar.models.events import EmptyMessage
-from isar.state_machine.output_events import OutputEvents
-from isar.state_machine.state import Branch, EventHandler, StateDef, TransitionDef
+from isar.state_machine.output_events import OutputEvent
+from isar.state_machine.state import (
+    Branch,
+    EventHandler,
+    HandlerEffect,
+    StateDef,
+    TransitionDef,
+    TransitionEffect,
+)
 from isar.state_machine.states_enum import States
-
-
-def _accept_release(events: OutputEvents, _: None, __: EmptyMessage) -> None:
-    events.api.respond(lambda r: r.release_from_maintenance_mode, EmptyMessage())
-
 
 state: StateDef[None] = StateDef(
     name=States.Maintenance,
     handlers=lambda: (
         EventHandler(
             event=lambda e: e.api_requests.release_from_maintenance_mode.request,
-            branches=(Branch(UnknownStatus.transition, side_effect=_accept_release),),
+            branches=(
+                Branch(
+                    UnknownStatus.transition,
+                    side_effects=(
+                        HandlerEffect(
+                            OutputEvent.api_response(
+                                lambda a: a.release_from_maintenance_mode
+                            ),
+                            lambda _, __: EmptyMessage(),
+                        ),
+                    ),
+                ),
+            ),
         ),
     ),
 )
 
 
-def _respond(events: OutputEvents, _: None) -> None:
-    events.api.respond(
-        lambda r: r.set_maintenance_mode,
-        MaintenanceResponse(is_maintenance_mode=True),
-    )
-
-
 transition: TransitionDef[None, None] = TransitionDef(state)
 transition_and_respond_to_api: TransitionDef[None, None] = TransitionDef(
-    state, side_effect=_respond
+    state,
+    side_effects=(
+        TransitionEffect(
+            OutputEvent.api_response(lambda a: a.set_maintenance_mode),
+            lambda _: MaintenanceResponse(is_maintenance_mode=True),
+        ),
+    ),
 )

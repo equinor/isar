@@ -3,33 +3,25 @@ import isar.state_machine.states.going_to_recharging_with_mission as GoingToRech
 import isar.state_machine.states.intervention_needed as InterventionNeeded
 from isar.models.events import AbortedMission, EmptyMessage, MissionCompleted
 from isar.models.mqtt_queue import MissionResultStatus
-from isar.state_machine.output_events import OutputEvents
+from isar.state_machine.output_events import OutputEvent
 from isar.state_machine.state import (
     Branch,
     EventHandler,
+    HandlerEffect,
     StateDef,
     TransitionDef,
+    TransitionEffect,
     forward_transition_parameter,
 )
 from isar.state_machine.states_enum import States
 from robot_interface.models.mission.status import MissionStatus
 
 
-def _publish_completed(
-    events: OutputEvents,
-    mission_id: str,
-    stop_result: AbortedMission | MissionCompleted,
-) -> None:
+def _completed_mission_status(
+    mission_id: str, stop_result: AbortedMission | MissionCompleted
+) -> MissionResultStatus:
     assert isinstance(stop_result, MissionCompleted)
-    events.mqtt.publish_mission_result(
-        MissionResultStatus(mission_id, stop_result.status)
-    )
-
-
-def _publish_failed(events: OutputEvents, mission_id: str, _: EmptyMessage) -> None:
-    events.mqtt.publish_mission_result(
-        MissionResultStatus(mission_id, MissionStatus.Failed)
-    )
+    return MissionResultStatus(mission_id, stop_result.status)
 
 
 def _was_aborted(_: str, stop_result: AbortedMission | MissionCompleted) -> bool:
@@ -52,7 +44,14 @@ state: StateDef[str] = StateDef(
                 Branch(
                     InterventionNeeded.transition,
                     lambda _, __: "Failed to stop mission when battery was low",
-                    side_effect=_publish_failed,
+                    side_effects=(
+                        HandlerEffect(
+                            OutputEvent.mqtt(lambda q: q.publish_mission_result),
+                            lambda mission_id, _: MissionResultStatus(
+                                mission_id, MissionStatus.Failed
+                            ),
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -66,7 +65,12 @@ state: StateDef[str] = StateDef(
                 ),
                 Branch(
                     GoingToRecharging.transition_and_start_return_home,
-                    side_effect=_publish_completed,
+                    side_effects=(
+                        HandlerEffect(
+                            OutputEvent.mqtt(lambda q: q.publish_mission_result),
+                            _completed_mission_status,
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -74,10 +78,13 @@ state: StateDef[str] = StateDef(
 )
 
 
-def _request_stop(events: OutputEvents, _: str) -> None:
-    events.robot.request(lambda a: a.stop_mission, EmptyMessage())
-
-
 transition_and_stop_mission: TransitionDef[str, str] = TransitionDef(
-    state, forward_transition_parameter, side_effect=_request_stop
+    state,
+    forward_transition_parameter,
+    side_effects=(
+        TransitionEffect(
+            OutputEvent.robot_request(lambda a: a.stop_mission),
+            lambda _: EmptyMessage(),
+        ),
+    ),
 )

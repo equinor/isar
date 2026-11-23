@@ -4,20 +4,16 @@ import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_paused_return_home as StoppingPausedReturnHome
 from isar.models.events import EmptyMessage
-from isar.state_machine.output_events import OutputEvents
+from isar.state_machine.output_events import OutputEvent
 from isar.state_machine.state import (
     Branch,
     EventHandler,
+    HandlerEffect,
     StateDef,
     TransitionDef,
     forward_event,
 )
 from isar.state_machine.states_enum import States
-
-
-def _request_resume(events: OutputEvents, _: None, __: EmptyMessage) -> None:
-    events.robot.request(lambda a: a.resume_mission, EmptyMessage())
-
 
 state: StateDef[None] = StateDef(
     name=States.ReturnHomePaused,
@@ -48,7 +44,12 @@ state: StateDef[None] = StateDef(
             branches=(
                 Branch(
                     GoingToLockdown.transition_with_existing_mission_and_respond_to_api,
-                    side_effect=_request_resume,
+                    side_effects=(
+                        HandlerEffect(
+                            OutputEvent.robot_request(lambda a: a.resume_mission),
+                            lambda _, __: EmptyMessage(),
+                        ),
+                    ),
                 ),
             ),
         ),
