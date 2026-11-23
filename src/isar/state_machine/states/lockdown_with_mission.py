@@ -1,21 +1,18 @@
 import isar.state_machine.states.monitor as Monitor
 from isar.apis.models.models import LockdownResponse
 from isar.models.events import AbortedMission, EmptyMessage
-from isar.state_machine.output_events import OutputEvents
+from isar.state_machine.output_events import OutputEvent
 from isar.state_machine.state import (
     Branch,
     EventHandler,
+    HandlerEffect,
     StateDef,
     TransitionDef,
+    TransitionEffect,
     forward_state_parameter,
     forward_transition_parameter,
 )
 from isar.state_machine.states_enum import States
-
-
-def _accept_release(events: OutputEvents, _: AbortedMission, __: EmptyMessage) -> None:
-    events.api.respond(lambda r: r.release_from_lockdown, EmptyMessage())
-
 
 state: StateDef[AbortedMission] = StateDef(
     name=States.LockdownWithMission,
@@ -26,7 +23,12 @@ state: StateDef[AbortedMission] = StateDef(
                 Branch(
                     Monitor.transition_and_start_mission,
                     forward_state_parameter,
-                    side_effect=_accept_release,
+                    side_effects=(
+                        HandlerEffect(
+                            OutputEvent.api_response(lambda a: a.release_from_lockdown),
+                            lambda _, __: EmptyMessage(),
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -34,12 +36,15 @@ state: StateDef[AbortedMission] = StateDef(
 )
 
 
-def _respond(events: OutputEvents, _: AbortedMission) -> None:
-    events.api.respond(
-        lambda r: r.send_to_lockdown, LockdownResponse(lockdown_started=True)
-    )
-
-
 transition_and_respond_to_api: TransitionDef[AbortedMission, AbortedMission] = (
-    TransitionDef(state, forward_transition_parameter, side_effect=_respond)
+    TransitionDef(
+        state,
+        forward_transition_parameter,
+        side_effects=(
+            TransitionEffect(
+                OutputEvent.api_response(lambda a: a.send_to_lockdown),
+                lambda _: LockdownResponse(lockdown_started=True),
+            ),
+        ),
+    )
 )

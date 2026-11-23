@@ -60,7 +60,6 @@ class StateMachineDriver:
             state_def,
             param,
             self.events,
-            self.machine._output_events,
             self.machine.signal_exit,
         )
 

@@ -5,38 +5,21 @@ import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMai
 import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
 import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 from isar.apis.models.models import MissionStartResponse
-from isar.models.events import EmptyMessage
 from isar.models.mqtt_queue import MissionResultStatus
-from isar.state_machine.output_events import OutputEvents
+from isar.state_machine.output_events import OutputEvent
 from isar.state_machine.state import (
     Branch,
     EventHandler,
+    HandlerEffect,
     StateDef,
     TransitionDef,
+    TransitionEffect,
     forward_state_parameter,
     forward_transition_parameter,
 )
 from isar.state_machine.states_enum import States
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus
-
-
-def _publish_mission_successful(
-    events: OutputEvents, mission_id: str, _: EmptyMessage
-) -> None:
-    events.mqtt.publish_mission_result(
-        MissionResultStatus(mission_id, MissionStatus.Successful)
-    )
-
-
-def _publish_mission_failed(
-    events: OutputEvents, mission_id: str, error: ErrorMessage
-) -> None:
-    events.mqtt.publish_mission_result(
-        MissionResultStatus(mission_id, MissionStatus.Failed, error)
-    )
-
 
 state: StateDef[str] = StateDef(
     name=States.Monitor,
@@ -64,7 +47,14 @@ state: StateDef[str] = StateDef(
             branches=(
                 Branch(
                     AwaitNextMission.transition,
-                    side_effect=_publish_mission_failed,
+                    side_effects=(
+                        HandlerEffect(
+                            OutputEvent.mqtt(lambda q: q.publish_mission_result),
+                            lambda mission_id, error: MissionResultStatus(
+                                mission_id, MissionStatus.Failed, error
+                            ),
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -73,7 +63,14 @@ state: StateDef[str] = StateDef(
             branches=(
                 Branch(
                     AwaitNextMission.transition,
-                    side_effect=_publish_mission_successful,
+                    side_effects=(
+                        HandlerEffect(
+                            OutputEvent.mqtt(lambda q: q.publish_mission_result),
+                            lambda mission_id, _: MissionResultStatus(
+                                mission_id, MissionStatus.Successful
+                            ),
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -108,24 +105,32 @@ state: StateDef[str] = StateDef(
 )
 
 
-def _start_mission(events: OutputEvents, mission: Mission) -> None:
-    events.robot.request(lambda a: a.execute_mission, mission)
-    events.mqtt.publish_mission_in_progress(mission.id)
-
-
-def _start_mission_and_respond(events: OutputEvents, mission: Mission) -> None:
-    _start_mission(events, mission)
-    events.api.respond(
-        lambda r: r.start_mission, MissionStartResponse(mission_started=True)
-    )
-
+_request_execute_mission: TransitionEffect[Mission] = TransitionEffect(
+    OutputEvent.robot_request(lambda a: a.execute_mission),
+    lambda mission: mission,
+)
+_publish_in_progress: TransitionEffect[Mission] = TransitionEffect(
+    OutputEvent.mqtt(lambda q: q.publish_mission_in_progress),
+    lambda mission: mission.id,
+)
 
 transition_and_start_mission: TransitionDef[Mission, str] = TransitionDef(
-    state, lambda mission: mission.id, side_effect=_start_mission
+    state,
+    lambda mission: mission.id,
+    side_effects=(_request_execute_mission, _publish_in_progress),
 )
 transition_and_start_mission_and_respond_to_api: TransitionDef[Mission, str] = (
     TransitionDef(
-        state, lambda mission: mission.id, side_effect=_start_mission_and_respond
+        state,
+        lambda mission: mission.id,
+        side_effects=(
+            _request_execute_mission,
+            _publish_in_progress,
+            TransitionEffect(
+                OutputEvent.api_response(lambda a: a.start_mission),
+                lambda _: MissionStartResponse(mission_started=True),
+            ),
+        ),
     )
 )
 transition_with_existing_mission: TransitionDef[str, str] = TransitionDef(

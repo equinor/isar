@@ -9,7 +9,6 @@ import isar.state_machine.states.stopping as Stopping
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Events, MissionCompleted
 from isar.robot.robot_service import RobotService
-from isar.state_machine.output_events import ApiResponder, OutputEvents, RobotCommander
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import (
     ErrorMessage,
@@ -48,16 +47,8 @@ def test_stored_mission_is_forwarded_to_robot(
 ) -> None:
     start = mocker.spy(service.robot, "initiate_mission")
     transition = Monitor.transition_and_start_mission
-    assert transition.side_effect is not None
 
-    transition.side_effect(
-        OutputEvents(
-            api=ApiResponder(events.api_requests),
-            robot=RobotCommander(events.action_requests, events.robot_async_events),
-            mqtt=events.mqtt_queue,
-        ),
-        stored_mission,
-    )
+    transition.run_effects(events, stored_mission)
     success = service._start_mission_handler(
         events.action_requests.execute_mission.request.consume_event()
     )

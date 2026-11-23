@@ -6,15 +6,39 @@ from typing import Any
 
 from isar.config.settings import settings
 from isar.models.events import EmptyMessage, Event, Events
-from isar.state_machine.output_events import OutputEvents
+from isar.state_machine.output_events import OutputEvent
 from isar.state_machine.states_enum import States
 
-type HandlerSideEffect[StateParam, EventType] = Callable[
-    [OutputEvents, StateParam, EventType], None
-]
-type TransitionSideEffect[TransitionParam] = Callable[
-    [OutputEvents, TransitionParam], None
-]
+
+class HandlerEffect[StateParam, EventType]:
+
+    def __init__[T](
+        self,
+        target: OutputEvent[T],
+        value: Callable[[StateParam, EventType], T],
+        when: Callable[[StateParam, EventType], bool] = lambda _, __: True,
+    ) -> None:
+        self.target: OutputEvent[Any] = target
+        self.value: Callable[[StateParam, EventType], Any] = value
+        self.when: Callable[[StateParam, EventType], bool] = when
+
+    def run(self, events: Events, param: StateParam, event_value: EventType) -> None:
+        if self.when(param, event_value):
+            self.target(events)(self.value(param, event_value))
+
+
+class TransitionEffect[TransitionParam]:
+
+    def __init__[T](
+        self,
+        target: OutputEvent[T],
+        value: Callable[[TransitionParam], T],
+    ) -> None:
+        self.target: OutputEvent[Any] = target
+        self.value: Callable[[TransitionParam], Any] = value
+
+    def run(self, events: Events, transition_input: TransitionParam) -> None:
+        self.target(events)(self.value(transition_input))
 
 
 def forward_transition_parameter[X](value: X) -> X:
@@ -41,7 +65,11 @@ class StateDef[StateParam]:
 class TransitionDef[TransitionParam, StateParam]:
     state_definition: StateDef[StateParam]
     state_param: Callable[[TransitionParam], StateParam] = lambda _: None
-    side_effect: TransitionSideEffect[TransitionParam] | None = None
+    side_effects: tuple[TransitionEffect[TransitionParam], ...] = ()
+
+    def run_effects(self, events: Events, transition_input: TransitionParam) -> None:
+        for effect in self.side_effects:
+            effect.run(events, transition_input)
 
 
 @dataclass(frozen=True)
@@ -51,7 +79,13 @@ class Branch[StateParam, EventType, TransitionParam]:
         lambda _, __: None
     )
     transition_when: Callable[[StateParam, EventType], bool] = lambda _, __: True
-    side_effect: HandlerSideEffect[StateParam, EventType] | None = None
+    side_effects: tuple[HandlerEffect[StateParam, EventType], ...] = ()
+
+    def run_effects(
+        self, events: Events, param: StateParam, event_value: EventType
+    ) -> None:
+        for effect in self.side_effects:
+            effect.run(events, param, event_value)
 
 
 @dataclass(frozen=True)
@@ -80,14 +114,13 @@ class State[StateParam]:
         spec: StateDef[StateParam],
         param: StateParam,
         events: Events,
-        output_events: OutputEvents,
         signal_exit_event: Event[EmptyMessage] | None = None,
     ) -> None:
         self.name = spec.name
         self.param = param
         self.logger = logging.getLogger("state_machine")
         self.signal_exit_event = signal_exit_event
-        self._output_events = output_events
+        self._events = events
         self._handlers = [
             (handler, handler.event(events)) for handler in spec.handlers()
         ]
@@ -137,8 +170,7 @@ class State[StateParam]:
     ) -> Transition | None:
         for branch in branches:
             if branch.transition_when(self.param, event_value):
-                if branch.side_effect is not None:
-                    branch.side_effect(self._output_events, self.param, event_value)
+                branch.run_effects(self._events, self.param, event_value)
                 return Transition(
                     branch.transition, branch.transition_args(self.param, event_value)
                 )

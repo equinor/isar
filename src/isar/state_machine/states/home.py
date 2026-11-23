@@ -7,12 +7,13 @@ import isar.state_machine.states.recharging as Recharging
 import isar.state_machine.states.returning_home as ReturningHome
 import isar.state_machine.states.stopping_unknown_mission as StoppingUnknownMission
 import isar.state_machine.states.unknown_status as UnknownStatus
-from isar.state_machine.output_events import OutputEvents
+from isar.state_machine.output_events import OutputEvent
 from isar.state_machine.state import (
     Branch,
     EventHandler,
     StateDef,
     TransitionDef,
+    TransitionEffect,
     forward_event,
 )
 from isar.state_machine.states_enum import States
@@ -83,11 +84,8 @@ state: StateDef[None] = StateDef(
 )
 
 
-def _clear_robot_status(events: OutputEvents, _: None) -> None:
-    # Avoids reading an outdated robot status after entering
-    events.robot.clear_robot_status()
-
-
+# Avoids reading an outdated robot status after entering
 transition: TransitionDef[None, None] = TransitionDef(
-    state, side_effect=_clear_robot_status
+    state,
+    side_effects=(TransitionEffect(OutputEvent.clear_robot_status(), lambda _: None),),
 )

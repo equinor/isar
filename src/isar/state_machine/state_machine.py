@@ -16,7 +16,6 @@ from isar.services.service_connections.persistent_memory import (
     create_persistent_robot_state,
     read_persistent_robot_state,
 )
-from isar.state_machine.output_events import ApiResponder, OutputEvents, RobotCommander
 from isar.state_machine.state import (
     Branch,
     State,
@@ -42,12 +41,6 @@ class StateMachine:
         self.mqtt_queue: MQTTQueue = mqtt_queue
 
         self.signal_exit: Event[EmptyMessage] = Event("signal_state_machine_exit")
-
-        self._output_events = OutputEvents(
-            api=ApiResponder(events.api_requests),
-            robot=RobotCommander(events.action_requests, events.robot_async_events),
-            mqtt=mqtt_queue,
-        )
 
         initial_transition = Transition(UnknownStatus.transition, None)
         if not settings.USE_DB:
@@ -78,13 +71,11 @@ class StateMachine:
 
     def _transition_to_state[A](self, transition: Transition[A]) -> State:
         entry = transition.transition_definition
-        if entry.side_effect is not None:
-            entry.side_effect(self._output_events, transition.transition_input)
+        entry.run_effects(self.events, transition.transition_input)
         return State(
             entry.state_definition,
             entry.state_param(transition.transition_input),
             self.events,
-            self._output_events,
             self.signal_exit,
         )
 
