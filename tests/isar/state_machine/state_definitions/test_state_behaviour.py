@@ -145,7 +145,7 @@ def state_cases(events: Events) -> list[StateCases]:
             "id",
             on={
                 events.action_requests.stop_mission.success: Expect(
-                    EMPTY,
+                    MISSION,
                     States.AwaitNextMission,
                     mqtt=[mission_status(MissionStatus.Cancelled)],
                 ),
@@ -159,7 +159,7 @@ def state_cases(events: Events) -> list[StateCases]:
             None,
             on={
                 events.action_requests.stop_mission.success: Expect(
-                    EMPTY, States.AwaitNextMission
+                    MISSION, States.AwaitNextMission
                 ),
                 events.action_requests.stop_mission.failure: Expect(
                     EMPTY,
@@ -173,7 +173,7 @@ def state_cases(events: Events) -> list[StateCases]:
             "id",
             on={
                 events.action_requests.stop_mission.success: Expect(
-                    EMPTY,
+                    MISSION,
                     States.AwaitNextMission,
                     mqtt=[mission_status(MissionStatus.Cancelled)],
                 ),
@@ -187,7 +187,7 @@ def state_cases(events: Events) -> list[StateCases]:
             MISSION,
             on={
                 events.action_requests.stop_mission.success: Expect(
-                    EMPTY,
+                    MISSION,
                     States.Monitor,
                     robot={"execute_mission": MISSION},
                     mqtt=[mission_status(MissionStatus.InProgress)],
@@ -202,7 +202,7 @@ def state_cases(events: Events) -> list[StateCases]:
             MISSION,
             on={
                 events.action_requests.stop_mission.success: Expect(
-                    EMPTY,
+                    MISSION,
                     States.Monitor,
                     robot={"execute_mission": MISSION},
                     mqtt=[mission_status(MissionStatus.InProgress)],
@@ -230,12 +230,6 @@ def state_cases(events: Events) -> list[StateCases]:
                         States.GoingToRechargingWithMission,
                         robot={"return_home": ANY},
                         param_after=MISSION,
-                    ),
-                    "empty stop result": Expect(
-                        EMPTY,
-                        States.GoingToRecharging,
-                        robot={"return_home": ANY},
-                        mqtt=[mission_status(MissionStatus.Cancelled)],
                     ),
                 },
                 events.action_requests.stop_mission.failure: Expect(
@@ -759,8 +753,10 @@ def state_cases(events: Events) -> list[StateCases]:
                 events.robot_async_events.robot_status_update: {
                     "busy": Expect(
                         RobotStatus.Busy,
-                        States.StoppingUnknownMission,
-                        robot={"stop_mission": ANY},
+                        States.InterventionNeeded,
+                        mqtt=[
+                            intervention("Detected unknown mission running on robot")
+                        ],
                     ),
                     "available": Expect(RobotStatus.Available, States.AwaitNextMission),
                     "teleoperation": Expect(

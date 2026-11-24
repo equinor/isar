@@ -44,7 +44,7 @@ def test_mission_succeeds_to_schedule(
 
 
 def test_mission_fails_to_stop(
-    mocked_robot_service: RobotService, mocker: MockerFixture
+    mocked_robot_service: RobotService, mocker: MockerFixture, mission: Mission
 ) -> None:
     mocker.patch(
         "isar.robot.robot_service.robot_stop_mission",
@@ -52,10 +52,46 @@ def test_mission_fails_to_stop(
     )
     response = mocked_robot_service.action_requests.stop_mission
 
-    asyncio.run(mocked_robot_service._stop_mission_handler(None))
+    async def stop_mission() -> None:
+        task = asyncio.create_task(
+            mocked_robot_service._monitor_mission_handler(mission)
+        )
+        await asyncio.sleep(0)
+        await mocked_robot_service._stop_mission_handler(task)
+
+    asyncio.run(stop_mission())
 
     assert isinstance(response.failure.consume_event(), EmptyMessage)
     assert not response.success.has_event()
+
+
+def test_successful_return_home_stop_returns_mission_completed(
+    mocked_robot_service: RobotService,
+    mocker: MockerFixture,
+) -> None:
+    service = mocked_robot_service
+    mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
+    mocker.patch(
+        "isar.robot.robot_service.robot_monitor_return_home_mission",
+        return_value=(None, True),
+    )
+
+    async def stop_mission() -> None:
+        monitor = asyncio.create_task(
+            service._monitor_return_home_handler("mission id mock")
+        )
+        await asyncio.sleep(0)
+        await service._stop_mission_handler(monitor)
+
+    asyncio.run(stop_mission())
+
+    response = service.action_requests.stop_mission.success.consume_event()
+    assert isinstance(response, MissionCompleted)
+    assert not service.action_requests.stop_mission.failure.has_event()
+    assert (
+        service.action_requests.execute_mission.success.consume_event(),
+        service.action_requests.execute_mission.failure.consume_event(),
+    ) == (None, None)
 
 
 @pytest.mark.parametrize(
@@ -63,7 +99,6 @@ def test_mission_fails_to_stop(
     [
         pytest.param(TaskStatus.Cancelled, id="remaining-tasks"),
         pytest.param(TaskStatus.Successful, id="completed-tasks"),
-        pytest.param(None, id="no-monitor"),
     ],
 )
 def test_successful_stop_returns_remaining_work_without_completing_mission(
@@ -86,7 +121,7 @@ def test_successful_stop_returns_remaining_work_without_completing_mission(
         if task_status is not None:
             monitor = asyncio.create_task(service._monitor_mission_handler(mission))
             await asyncio.sleep(0)
-        await service._stop_mission_handler(monitor)
+        await service._stop_mission_handler(monitor, mission)
 
     asyncio.run(stop_mission())
 
@@ -94,7 +129,7 @@ def test_successful_stop_returns_remaining_work_without_completing_mission(
     if task_status == TaskStatus.Cancelled:
         assert response == mission
     else:
-        assert isinstance(response, MissionCompleted | EmptyMessage)
+        assert isinstance(response, MissionCompleted)
     assert not service.action_requests.stop_mission.failure.has_event()
     assert (
         service.action_requests.execute_mission.success.consume_event(),

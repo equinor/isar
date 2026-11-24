@@ -169,7 +169,7 @@ def test_status_errors_cannot_report_success(
     assert not events.action_requests.execute_mission.success.has_event()
 
 
-def test_stored_mission_stop_does_not_report_completion(
+def test_stored_mission_stop_reports_aborted_mission(
     stored_mission: Mission,
     service: RobotService,
     events: Events,
@@ -187,7 +187,7 @@ def test_stored_mission_stop_does_not_report_completion(
     asyncio.run(stop_mission())
 
     assert isinstance(
-        events.action_requests.stop_mission.success.consume_event(), EmptyMessage
+        events.action_requests.stop_mission.success.consume_event(), Mission
     )
     assert (
         events.action_requests.execute_mission.success.consume_event(),
@@ -206,7 +206,7 @@ def test_terminal_state_publishes_mission_outcome(
     outcome: MissionStatus,
 ) -> None:
     if outcome == MissionStatus.Cancelled:
-        stop_result: Mission | MissionCompleted | EmptyMessage = EmptyMessage()
+        stop_result: Mission | MissionCompleted = stored_mission
         state_machine_driver.enter(Stopping.state, stored_mission.id)
         next_state = state_machine_driver.send(
             state_machine_driver.events.action_requests.stop_mission.success,
