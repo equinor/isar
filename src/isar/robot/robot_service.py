@@ -166,27 +166,18 @@ class RobotService:
             )
             return
 
-        mission_status = aborted_mission.get_status_from_tasks()
-        if mission_status in [
-            MissionStatus.InProgress,
-            MissionStatus.NotStarted,
-            MissionStatus.Paused,
-        ]:
-            continued_mission = AbortedMission(
+        response: AbortedMission | MissionCompleted
+        if not aborted_mission.tasks:
+            response = aborted_mission
+        elif unfinished_tasks := aborted_mission._get_unfinished_tasks():
+            response = AbortedMission(
                 id=aborted_mission.id,
                 name=aborted_mission.name,
-                tasks=aborted_mission._get_unfinished_tasks(),
-            )
-            self.action_requests.stop_mission.trigger_success_response(
-                continued_mission
-            )
-        elif aborted_mission.tasks:
-            self.action_requests.stop_mission.trigger_success_response(
-                MissionCompleted(aborted_mission.get_status_from_tasks())
+                tasks=unfinished_tasks,
             )
         else:
-            # This is only relevant for missions with no tasks
-            self.action_requests.stop_mission.trigger_success_response(aborted_mission)
+            response = MissionCompleted(aborted_mission.get_status_from_tasks())
+        self.action_requests.stop_mission.trigger_success_response(response)
 
     def _pause_mission_handler(self) -> None:
         error_message: ErrorMessage | None = robot_pause_mission(
@@ -258,18 +249,13 @@ class RobotService:
             elif (
                 remaining_mission is not None
                 and remaining_mission.tasks
-                and not remaining_mission._get_unfinished_tasks()
+                and remaining_mission.get_status_from_tasks() == MissionStatus.Failed
             ):
-                if remaining_mission.get_status_from_tasks() == MissionStatus.Failed:
-                    self.action_requests.execute_mission.trigger_failure_response(
-                        ErrorMessage(
-                            ErrorReason.RobotActionException, "All the tasks failed"
-                        )
+                self.action_requests.execute_mission.trigger_failure_response(
+                    ErrorMessage(
+                        ErrorReason.RobotActionException, "All the tasks failed"
                     )
-                else:
-                    self.action_requests.execute_mission.trigger_success_response(
-                        EmptyMessage()
-                    )
+                )
             else:
                 self.action_requests.execute_mission.trigger_success_response(
                     EmptyMessage()
@@ -299,16 +285,13 @@ class RobotService:
         monitoring_mission: Mission | None = None
 
         while not self.signal_exit.is_set():
-            return_home_request = (
-                self.action_requests.return_home.request.consume_event()
-            )
-            if return_home_request:
+            if self.action_requests.return_home.request.consume_event():
                 return_home_mission_id = str(uuid4())
-                success = self._start_return_home_handler(return_home_mission_id)
-                if success:
+                if self._start_return_home_handler(return_home_mission_id):
                     monitor_mission_task = asyncio.create_task(
                         self._monitor_return_home_handler(return_home_mission_id)
                     )
+                    monitoring_mission = None
 
             start_mission_request = (
                 self.action_requests.execute_mission.request.consume_event()
@@ -321,22 +304,13 @@ class RobotService:
                         self._monitor_mission_handler(start_mission_request)
                     )
 
-            pause_mission_request = (
-                self.action_requests.pause_mission.request.consume_event()
-            )
-            if pause_mission_request:
+            if self.action_requests.pause_mission.request.consume_event():
                 self._pause_mission_handler()
 
-            resume_mission_request = (
-                self.action_requests.resume_mission.request.consume_event()
-            )
-            if resume_mission_request:
+            if self.action_requests.resume_mission.request.consume_event():
                 self._resume_mission_handler()
 
-            stop_mission_request = (
-                self.action_requests.stop_mission.request.consume_event()
-            )
-            if stop_mission_request:
+            if self.action_requests.stop_mission.request.consume_event():
                 await self._stop_mission_handler(
                     monitor_mission_task, monitoring_mission
                 )
