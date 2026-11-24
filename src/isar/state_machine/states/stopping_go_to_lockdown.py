@@ -14,8 +14,6 @@ from isar.state_machine.state import (
 )
 from isar.state_machine.states_enum import States
 
-type StopResult = AbortedMission | MissionCompleted | EmptyMessage
-
 
 def _reject_lockdown(events: OutputEvents, _: str, __: EmptyMessage) -> None:
     events.api.respond(
@@ -28,17 +26,21 @@ def _reject_lockdown(events: OutputEvents, _: str, __: EmptyMessage) -> None:
 
 
 def _publish_completed(
-    events: OutputEvents, mission_id: str, stop_result: StopResult
+    events: OutputEvents,
+    mission_id: str,
+    stop_result: AbortedMission | MissionCompleted,
 ) -> None:
-    if isinstance(stop_result, MissionCompleted) and mission_id:
+    if isinstance(stop_result, MissionCompleted):
         events.mqtt.publish_mission_status(mission_id, stop_result.status, None)
 
 
-def _was_aborted(_: str, stop_result: StopResult) -> bool:
+def _was_aborted(_: str, stop_result: AbortedMission | MissionCompleted) -> bool:
     return isinstance(stop_result, AbortedMission)
 
 
-def _aborted_mission(_: str, stop_result: StopResult) -> AbortedMission:
+def _aborted_mission(
+    _: str, stop_result: AbortedMission | MissionCompleted
+) -> AbortedMission:
     assert isinstance(stop_result, AbortedMission)
     return stop_result
 

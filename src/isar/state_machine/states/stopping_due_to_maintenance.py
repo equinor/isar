@@ -31,7 +31,7 @@ def _reject_maintenance(
 def _publish_mission_result(
     events: OutputEvents,
     mission_id: str | None,
-    stop_result: AbortedMission | MissionCompleted | EmptyMessage,
+    stop_result: AbortedMission | MissionCompleted,
 ) -> None:
     assert isinstance(stop_result, MissionCompleted)
     if mission_id is not None:
@@ -41,7 +41,7 @@ def _publish_mission_result(
 def _publish_mission_aborted(
     events: OutputEvents,
     mission_id: str | None,
-    _: AbortedMission | MissionCompleted | EmptyMessage,
+    _: AbortedMission | MissionCompleted,
 ) -> None:
     if mission_id is not None:
         events.mqtt.publish_mission_aborted(

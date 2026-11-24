@@ -19,7 +19,7 @@ from robot_interface.models.mission.status import MissionStatus
 def _publish_cancelled(
     events: OutputEvents,
     mission_id: str,
-    _: AbortedMission | MissionCompleted | EmptyMessage,
+    _: AbortedMission | MissionCompleted,
 ) -> None:
     events.mqtt.publish_mission_status(
         mission_id,

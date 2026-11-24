@@ -132,6 +132,14 @@ class RobotService:
         monitor_mission_task: asyncio.Task[AbortedMission | None] | None,
         monitoring_mission: Mission | None = None,
     ) -> None:
+        if monitor_mission_task is None:  # The mission is already done
+            self.action_requests.stop_mission.trigger_success_response(
+                MissionCompleted(MissionStatus.Successful)
+            )
+            if self.recording_mission_id:
+                self._stop_recording(self.recording_mission_id)
+            return
+
         error_message: ErrorMessage | None = robot_stop_mission(
             self.signal_exit, self.robot, self.logger
         )
@@ -143,41 +151,42 @@ class RobotService:
 
         if self.recording_mission_id:
             self._stop_recording(self.recording_mission_id)
-        if monitor_mission_task is not None:
-            if not monitor_mission_task.done():
-                monitor_mission_task.cancel()
-            aborted_mission: AbortedMission | None = None
-            try:
-                aborted_mission = await monitor_mission_task
-            except asyncio.CancelledError:
-                aborted_mission = monitoring_mission
 
-            if aborted_mission is not None:
-                mission_status = aborted_mission.get_status_from_tasks()
-                if mission_status in [
-                    MissionStatus.InProgress,
-                    MissionStatus.NotStarted,
-                    MissionStatus.Paused,
-                ]:
-                    continued_mission = AbortedMission(
-                        id=aborted_mission.id,
-                        name=aborted_mission.name,
-                        tasks=aborted_mission._get_unfinished_tasks(),
-                    )
-                    self.action_requests.stop_mission.trigger_success_response(
-                        continued_mission
-                    )
-                    return
-                if aborted_mission.tasks:
-                    self.action_requests.stop_mission.trigger_success_response(
-                        MissionCompleted(aborted_mission.get_status_from_tasks())
-                    )
-                    return
-        else:
-            self.logger.warning(
-                "Received stop request while not monitoring any mission"
+        if not monitor_mission_task.done():
+            monitor_mission_task.cancel()
+        aborted_mission: AbortedMission | None = None
+        try:
+            aborted_mission = await monitor_mission_task
+        except asyncio.CancelledError:
+            aborted_mission = monitoring_mission
+
+        if aborted_mission is None:  # Return home missions
+            self.action_requests.stop_mission.trigger_success_response(
+                MissionCompleted(MissionStatus.Cancelled)
             )
-        self.action_requests.stop_mission.trigger_success_response(EmptyMessage())
+            return
+
+        mission_status = aborted_mission.get_status_from_tasks()
+        if mission_status in [
+            MissionStatus.InProgress,
+            MissionStatus.NotStarted,
+            MissionStatus.Paused,
+        ]:
+            continued_mission = AbortedMission(
+                id=aborted_mission.id,
+                name=aborted_mission.name,
+                tasks=aborted_mission._get_unfinished_tasks(),
+            )
+            self.action_requests.stop_mission.trigger_success_response(
+                continued_mission
+            )
+        elif aborted_mission.tasks:
+            self.action_requests.stop_mission.trigger_success_response(
+                MissionCompleted(aborted_mission.get_status_from_tasks())
+            )
+        else:
+            # This is only relevant for missions with no tasks
+            self.action_requests.stop_mission.trigger_success_response(aborted_mission)
 
     def _pause_mission_handler(self) -> None:
         error_message: ErrorMessage | None = robot_pause_mission(
@@ -226,7 +235,7 @@ class RobotService:
         except asyncio.CancelledError:
             pass
 
-    async def _monitor_mission_handler(self, mission: Mission) -> AbortedMission | None:
+    async def _monitor_mission_handler(self, mission: Mission) -> AbortedMission:
         remaining_mission: Mission | None = None
         try:
             error_message, remaining_mission, is_aborted = await robot_monitor_mission(

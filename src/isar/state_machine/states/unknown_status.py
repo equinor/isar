@@ -1,5 +1,6 @@
 import isar.state_machine.states.await_next_mission as AwaitNextMission
 import isar.state_machine.states.home as Home
+import isar.state_machine.states.intervention_needed as InterventionNeeded
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.stopping_unknown_mission as StoppingUnknownMission
@@ -38,7 +39,8 @@ state: StateDef[None] = StateDef(
                     transition_when=lambda _, s: s == RobotStatus.TeleOperation,
                 ),
                 Branch(
-                    StoppingUnknownMission.transition_and_stop_mission,
+                    InterventionNeeded.transition,
+                    lambda _, __: "Detected unknown mission running on robot",
                     transition_when=lambda _, s: s == RobotStatus.Busy,
                 ),
             ),
