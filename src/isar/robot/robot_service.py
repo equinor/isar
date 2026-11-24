@@ -331,8 +331,6 @@ class RobotService:
                 await self._stop_mission_handler(
                     monitor_mission_task, monitoring_mission
                 )
-                monitor_mission_task = None
-                monitoring_mission = None
 
             if monitor_mission_task is not None and monitor_mission_task.done():
                 try:
