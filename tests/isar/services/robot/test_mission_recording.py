@@ -84,18 +84,6 @@ def test_pause_resume_keeps_one_logical_recording(
     recorder.stop.assert_not_called()
 
 
-def test_successful_stop_without_monitor_finalizes_recording(
-    mocked_robot_service: RobotService, mocker: MockerFixture
-) -> None:
-    recorder = mocked_robot_service.mission_recorder = Mock()
-    mocked_robot_service._start_recording("mission", "Recording")
-    mocker.patch("isar.robot.robot_service.robot_stop_mission", return_value=None)
-
-    asyncio.run(mocked_robot_service._stop_mission_handler(None))
-
-    recorder.stop.assert_called_once_with("mission", False)
-
-
 def test_terminal_monitor_stops_correct_mission(
     mocked_robot_service: RobotService, mocker: MockerFixture
 ) -> None:

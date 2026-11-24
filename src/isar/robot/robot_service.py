@@ -129,17 +129,9 @@ class RobotService:
 
     async def _stop_mission_handler(
         self,
-        monitor_mission_task: asyncio.Task[AbortedMission | None] | None,
+        monitor_mission_task: asyncio.Task[AbortedMission | None],
         monitoring_mission: Mission | None = None,
     ) -> None:
-        if monitor_mission_task is None:  # The mission is already done
-            self.action_requests.stop_mission.trigger_success_response(
-                MissionCompleted(MissionStatus.Successful)
-            )
-            if self.recording_mission_id:
-                self._stop_recording(self.recording_mission_id)
-            return
-
         error_message: ErrorMessage | None = robot_stop_mission(
             self.signal_exit, self.robot, self.logger
         )
@@ -280,6 +272,17 @@ class RobotService:
         )
         self.battery_thread.start()
 
+    async def _await_monitor_task(
+        self, monitor_mission_task: asyncio.Task[AbortedMission | None] | None
+    ) -> None:
+        if monitor_mission_task is not None:
+            try:
+                await monitor_mission_task
+            except asyncio.CancelledError:  # This is not expected
+                self.logger.warning(
+                    "Mission monitor task was cancelled outside stop mission handler"
+                )
+
     async def _run_main_event_loop(self) -> None:
         monitor_mission_task: asyncio.Task[AbortedMission | None] | None = None
         monitoring_mission: Mission | None = None
@@ -288,6 +291,7 @@ class RobotService:
             if self.action_requests.return_home.request.consume_event():
                 return_home_mission_id = str(uuid4())
                 if self._start_return_home_handler(return_home_mission_id):
+                    await self._await_monitor_task(monitor_mission_task)
                     monitor_mission_task = asyncio.create_task(
                         self._monitor_return_home_handler(return_home_mission_id)
                     )
@@ -300,6 +304,7 @@ class RobotService:
                 success = self._start_mission_handler(start_mission_request)
                 if success:
                     monitoring_mission = start_mission_request
+                    await self._await_monitor_task(monitor_mission_task)
                     monitor_mission_task = asyncio.create_task(
                         self._monitor_mission_handler(start_mission_request)
                     )
@@ -311,19 +316,12 @@ class RobotService:
                 self._resume_mission_handler()
 
             if self.action_requests.stop_mission.request.consume_event():
+                assert (
+                    monitor_mission_task is not None
+                ), "Tried to stop mission without an active monitor task"
                 await self._stop_mission_handler(
                     monitor_mission_task, monitoring_mission
                 )
-
-            if monitor_mission_task is not None and monitor_mission_task.done():
-                try:
-                    await monitor_mission_task
-                except asyncio.CancelledError:  # This is not expected
-                    self.logger.warning(
-                        "Mission monitor task was cancelled outside stop mission handler"
-                    )
-                monitor_mission_task = None
-                monitoring_mission = None
 
             await asyncio.sleep(0.01)
 
