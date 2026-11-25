@@ -29,7 +29,6 @@ from isar.state_machine.states import (
     stopping_paused_mission,
     stopping_paused_return_home,
     stopping_return_home,
-    stopping_unknown_mission,
     unknown_status,
 )
 
@@ -62,6 +61,5 @@ STATE_MODULES: tuple[ModuleType, ...] = (
     stopping_paused_mission,
     stopping_paused_return_home,
     stopping_return_home,
-    stopping_unknown_mission,
     unknown_status,
 )
