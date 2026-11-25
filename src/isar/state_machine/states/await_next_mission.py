@@ -3,7 +3,6 @@ import isar.state_machine.states.going_to_recharging as GoingToRecharging
 import isar.state_machine.states.maintenance as Maintenance
 import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.returning_home as ReturningHome
-import isar.state_machine.states.stopping_unknown_mission as StoppingUnknownMission
 from isar.config.settings import settings
 from isar.state_machine.state import (
     Branch,
@@ -32,14 +31,6 @@ state: StateDef[None] = StateDef(
             branches=(
                 Branch(
                     ReturningHome.transition_and_return_home_and_respond_to_api,
-                ),
-            ),
-        ),
-        EventHandler(
-            event=lambda e: e.api_requests.stop_mission.request,
-            branches=(
-                Branch(
-                    StoppingUnknownMission.transition_and_stop_mission_and_respond_to_api
                 ),
             ),
         ),

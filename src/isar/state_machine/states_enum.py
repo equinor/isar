@@ -5,7 +5,6 @@ class States(str, Enum):
     Monitor = "monitor"
     ReturningHome = "returning_home"
     Stopping = "stopping"
-    StoppingUnknownMission = "stopping_unknown_mission"
     StoppingReturnHome = "stopping_return_home"
     Paused = "paused"
     Pausing = "pausing"
@@ -52,7 +51,6 @@ STATE_TO_CODE: dict[States, int] = {
     States.ResumingReturnHome: 11,
     States.ReturnHomePaused: 12,
     States.Stopping: 13,
-    States.StoppingUnknownMission: 14,
     States.StoppingReturnHome: 15,
     States.StoppingPausedMission: 16,
     States.StoppingPausedReturnHome: 17,

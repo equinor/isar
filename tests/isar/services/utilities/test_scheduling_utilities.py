@@ -67,10 +67,7 @@ def test_state_machine_ready_to_receive_mission(
             States.Monitor,
             States.GoingToRechargingWithMission,
             States.RechargingWithMission,
-            States.AwaitNextMission,
             States.Paused,
-            States.Home,
-            States.UnknownStatus,
         ],
         api_events.pause_mission: [States.Monitor, States.ReturningHome],
         api_events.resume_mission: [States.Paused, States.ReturnHomePaused],
@@ -189,6 +186,9 @@ def test_api_with_unsuccessful_return_home_stop(
 ) -> None:
     stopped_mission_response: ControlMissionResponse = ControlMissionResponse(
         success=False, failure_reason="ISAR failed to stop mission"
+    )
+    mocker.patch.object(
+        SchedulingUtilities, "_verify_valid_state", lambda self, event: None
     )
     mocker.patch.object(
         Event,

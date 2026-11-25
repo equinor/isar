@@ -33,7 +33,6 @@ import isar.state_machine.states.stopping_go_to_recharge as StoppingGoToRecharge
 import isar.state_machine.states.stopping_paused_mission as StoppingPausedMission
 import isar.state_machine.states.stopping_paused_return_home as StoppingPausedReturnHome
 import isar.state_machine.states.stopping_return_home as StoppingReturnHome
-import isar.state_machine.states.stopping_unknown_mission as StoppingUnknownMission
 import isar.state_machine.states.unknown_status as UnknownStatus
 from isar.apis.models.models import (
     LockdownResponse,
@@ -151,20 +150,6 @@ def state_cases(events: Events) -> list[StateCases]:
                 ),
                 events.action_requests.stop_mission.failure: Expect(
                     EMPTY, States.Monitor
-                ),
-            },
-        ),
-        StateCases(
-            StoppingUnknownMission.state,
-            None,
-            on={
-                events.action_requests.stop_mission.success: Expect(
-                    MISSION, States.AwaitNextMission
-                ),
-                events.action_requests.stop_mission.failure: Expect(
-                    EMPTY,
-                    States.InterventionNeeded,
-                    mqtt=[intervention("Failed to stop unknown mission")],
                 ),
             },
         ),
@@ -519,12 +504,6 @@ def state_cases(events: Events) -> list[StateCases]:
                     api={"return_home": ANY},
                     robot={"return_home": ANY},
                 ),
-                events.api_requests.stop_mission.request: Expect(
-                    EMPTY,
-                    States.StoppingUnknownMission,
-                    api={"stop_mission": ANY},
-                    robot={"stop_mission": ANY},
-                ),
                 events.api_requests.set_maintenance_mode.request: Expect(
                     EMPTY, States.Maintenance, api=MAINTENANCE_STARTED
                 ),
@@ -562,12 +541,6 @@ def state_cases(events: Events) -> list[StateCases]:
                     States.ReturningHome,
                     api={"return_home": ANY},
                     robot={"return_home": ANY},
-                ),
-                events.api_requests.stop_mission.request: Expect(
-                    EMPTY,
-                    States.StoppingUnknownMission,
-                    api={"stop_mission": ANY},
-                    robot={"stop_mission": ANY},
                 ),
                 events.api_requests.send_to_lockdown.request: Expect(
                     EMPTY, States.Lockdown, api=LOCKDOWN_STARTED
@@ -765,12 +738,6 @@ def state_cases(events: Events) -> list[StateCases]:
                     "home": Expect(RobotStatus.Home, States.Home),
                     "offline": Expect(RobotStatus.Offline, States.Offline),
                 },
-                events.api_requests.stop_mission.request: Expect(
-                    EMPTY,
-                    States.StoppingUnknownMission,
-                    api={"stop_mission": ANY},
-                    robot={"stop_mission": ANY},
-                ),
                 events.api_requests.set_maintenance_mode.request: Expect(
                     EMPTY, States.Maintenance, api=MAINTENANCE_STARTED
                 ),
