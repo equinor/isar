@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pytest
 
-from isar.models.events import Event, Events
+from isar.models.events import Event, Events, RobotActionEvent
 from isar.state_machine.state_machine import Edge, collect_edges
 from isar.state_machine.states_enum import States
 from tests.isar.state_machine.state_definitions.state_machine_driver import (
@@ -133,3 +133,35 @@ def test_send_to_lockdown_api_response_is_sent_after_the_request(
         )
         if path is not None:
             pytest.fail(describe([request_edge, *path]))
+
+
+def test_every_robot_action_request_target_handles_outcomes(
+    events: Events,
+) -> None:
+    edges = collect_edges(events)
+    actions = {
+        name: action
+        for name, action in vars(events.action_requests).items()
+        if isinstance(action, RobotActionEvent)
+    }
+    # Resuming a paused return-home into GoingToLockdown intentionally stays in
+    # GoingToLockdown on resume_mission.success and waits for return_home outcomes.
+    allowed_ignored_success = {("resume_mission", States.GoingToLockdown)}
+
+    missing: list[str] = []
+    for name, action in actions.items():
+        targets = {
+            edge.target for edge in edges if action.trigger_request in edge.effects
+        }
+        assert targets, f"No state transition requests action_requests.{name}"
+        for target in sorted(targets, key=lambda state: state.name):
+            handled_triggers = {edge.trigger for edge in edges if edge.source == target}
+            if action.failure not in handled_triggers:
+                missing.append(f"{target.name} does not handle {action.failure.name}")
+            if (
+                action.success not in handled_triggers
+                and (name, target) not in allowed_ignored_success
+            ):
+                missing.append(f"{target.name} does not handle {action.success.name}")
+
+    assert not missing, "\n".join(missing)
