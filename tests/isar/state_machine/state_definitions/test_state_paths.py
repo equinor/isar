@@ -25,10 +25,12 @@ def find_invalid_transition_path(
     while frontier:
         state, path = frontier.pop()
         for edge in edges:
-            if edge.source != state or satisfied_by(edge):
+            if edge.source != state:
                 continue
             if forbidden(edge):
                 return [*path, edge]
+            if satisfied_by(edge):
+                continue
             if edge.target not in seen:
                 seen.add(edge.target)
                 frontier.append((edge.target, [*path, edge]))
@@ -37,6 +39,24 @@ def find_invalid_transition_path(
 
 def describe(path: list[Edge]) -> str:
     return " -> ".join(f"{e.source.name} [{e.trigger.name}]" for e in path)
+
+
+def test_forbidden_trigger_takes_precedence_over_effect(events: Events) -> None:
+    request = events.api_requests.set_maintenance_mode.request
+    response = events.api_requests.set_maintenance_mode.trigger_response
+    edge = next(
+        edge
+        for edge in collect_edges(events)
+        if edge.trigger is request and response in edge.effects
+    )
+
+    path = find_invalid_transition_path(
+        [edge],
+        start=edge.source,
+        forbidden=lambda e: e.trigger is request,
+        satisfied_by=lambda e: response in e.effects,
+    )
+    assert path == [edge]
 
 
 def test_behaviour_cases_cover_every_branch(
@@ -71,3 +91,24 @@ def test_mission_result_is_reported_before_a_new_mission_starts(
     )
     if path is not None:
         pytest.fail(describe(path))
+
+
+def test_maintenance_api_response_is_sent_after_the_request(
+    events: Events,
+) -> None:
+    edges = collect_edges(events)
+    request = events.api_requests.set_maintenance_mode.request
+    response = events.api_requests.set_maintenance_mode.trigger_response
+
+    for request_edge in edges:
+        if request_edge.trigger is not request or response in request_edge.effects:
+            continue
+
+        path = find_invalid_transition_path(
+            edges,
+            start=request_edge.target,
+            forbidden=lambda e: e.trigger is request,
+            satisfied_by=lambda e: response in e.effects,
+        )
+        if path is not None:
+            pytest.fail(describe([request_edge, *path]))
