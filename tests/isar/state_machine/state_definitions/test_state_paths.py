@@ -112,3 +112,24 @@ def test_maintenance_api_response_is_sent_after_the_request(
         )
         if path is not None:
             pytest.fail(describe([request_edge, *path]))
+
+
+def test_send_to_lockdown_api_response_is_sent_after_the_request(
+    events: Events,
+) -> None:
+    edges = collect_edges(events)
+    request = events.api_requests.send_to_lockdown.request
+    response = events.api_requests.send_to_lockdown.trigger_response
+
+    for request_edge in edges:
+        if request_edge.trigger is not request or response in request_edge.effects:
+            continue
+
+        path = find_invalid_transition_path(
+            edges,
+            start=request_edge.target,
+            forbidden=lambda e: e.trigger is request,
+            satisfied_by=lambda e: response in e.effects,
+        )
+        if path is not None:
+            pytest.fail(describe([request_edge, *path]))
