@@ -54,7 +54,7 @@ def test_mission_drains_remaining_tasks_after_success(mocker: MockerFixture) -> 
     upload = Mock()
     mqtt_queue = Mock(spec=MQTTQueue)
 
-    error_message, _, is_aborted = asyncio.run(
+    error_message, is_aborted = asyncio.run(
         robot_monitor_mission(mission, robot, upload, mqtt_queue)
     )
 
@@ -83,7 +83,7 @@ def test_failed_or_cancelled_mission_publishes_terminal_task_status(
     mocker.patch.object(robot, "mission_status", return_value=mission_status)
     mqtt_queue = Mock(spec=MQTTQueue)
 
-    error_message, _, is_aborted = asyncio.run(
+    error_message, is_aborted = asyncio.run(
         robot_monitor_mission(mission, robot, Mock(), mqtt_queue)
     )
 
