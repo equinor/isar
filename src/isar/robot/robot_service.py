@@ -205,7 +205,6 @@ class RobotService:
 
     async def _monitor_return_home_handler(self, mission_id: str) -> None:
         error_message: ErrorMessage | None = None
-        is_aborted: bool = True
         try:
             error_message, is_aborted = await robot_monitor_return_home_mission(
                 mission_id, self.robot
