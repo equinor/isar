@@ -93,7 +93,7 @@ def test_terminal_monitor_stops_correct_mission(
     service._start_recording("newer-mission", "Recording")
     mocker.patch(
         "isar.robot.robot_service.robot_monitor_mission",
-        return_value=(None, mission, False),
+        return_value=(None, False),
     )
 
     asyncio.run(service._monitor_mission_handler(mission))

@@ -113,7 +113,7 @@ def test_successful_stop_returns_remaining_work_without_completing_mission(
         mission.tasks[0].status = task_status
     mocker.patch(
         "isar.robot.robot_service.robot_monitor_mission",
-        return_value=(None, mission, True),
+        return_value=(None, True),
     )
 
     async def stop_mission() -> None:
@@ -162,7 +162,7 @@ def test_monitor_mission_reports_outcome(
     error = ErrorMessage(ErrorReason.RobotUnknownErrorException, "test")
     mocker.patch(
         "isar.robot.robot_service.robot_monitor_mission",
-        return_value=(error if failed else None, None, False),
+        return_value=(error if failed else None, False),
     )
     response = mocked_robot_service.action_requests.execute_mission
 

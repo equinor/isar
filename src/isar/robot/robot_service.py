@@ -228,9 +228,8 @@ class RobotService:
             pass
 
     async def _monitor_mission_handler(self, mission: Mission) -> AbortedMission:
-        remaining_mission: Mission | None = None
         try:
-            error_message, remaining_mission, is_aborted = await robot_monitor_mission(
+            error_message, is_aborted = await robot_monitor_mission(
                 mission,
                 self.robot,
                 lambda task: self.upload_task_event.trigger_event((task, mission)),
@@ -238,7 +237,7 @@ class RobotService:
             )
 
             if is_aborted:
-                return remaining_mission
+                return mission
 
             self._stop_recording(mission.id, error_message is not None)
 
@@ -247,11 +246,7 @@ class RobotService:
                 self.action_requests.execute_mission.trigger_failure_response(
                     error_message
                 )
-            elif (
-                remaining_mission is not None
-                and remaining_mission.tasks
-                and remaining_mission.is_failed()
-            ):
+            elif mission.tasks and mission.is_failed():
                 self.action_requests.execute_mission.trigger_failure_response(
                     ErrorMessage(
                         ErrorReason.RobotActionException, "All the tasks failed"
@@ -263,7 +258,7 @@ class RobotService:
                 )
         except asyncio.CancelledError:
             pass
-        return mission if remaining_mission is None else remaining_mission
+        return mission
 
     def _register_status_threads(self) -> None:
         self.status_thread = RobotStatusThread(
