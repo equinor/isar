@@ -7,10 +7,19 @@ from pytest_mock import MockerFixture
 from isar.config.settings import settings
 from isar.models.mqtt_queue import MQTTQueue
 from isar.robot.robot_monitor_mission import (
+    get_mission_status,
+    get_task_status,
     robot_monitor_mission,
     robot_monitor_return_home_mission,
 )
-from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
+from robot_interface.models.exceptions.robot_exceptions import (
+    ErrorMessage,
+    ErrorReason,
+    RobotCommunicationException,
+    RobotException,
+    RobotMissionStatusException,
+    RobotTaskStatusException,
+)
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from robot_interface.models.mission.task import TakeImage
@@ -113,3 +122,56 @@ def test_return_home_mission_reports_failure(mocker: MockerFixture) -> None:
         error_reason=None,
         error_description="The mission was reported as failed by the robot",
     )
+
+
+def test_get_task_status_retries_communication_errors(mocker: MockerFixture) -> None:
+    robot = StubRobot()
+    poll = mocker.patch.object(
+        robot,
+        "task_status",
+        side_effect=[
+            RobotCommunicationException("temporary glitch"),
+            TaskStatus.InProgress,
+        ],
+    )
+
+    status = asyncio.run(get_task_status(robot, "task-1"))
+
+    assert status == TaskStatus.InProgress
+    assert poll.call_count == 2
+
+
+def test_get_mission_status_fails_immediately_on_non_communication_error(
+    mocker: MockerFixture,
+) -> None:
+    robot = StubRobot()
+    poll = mocker.patch.object(
+        robot,
+        "mission_status",
+        side_effect=RobotException(
+            error_reason=ErrorReason.RobotUnknownErrorException,
+            error_description="fatal error",
+        ),
+    )
+
+    with pytest.raises(RobotMissionStatusException) as exc_info:
+        asyncio.run(get_mission_status(robot, "m-1"))
+
+    assert exc_info.value.error_description == "fatal error"
+    assert poll.call_count == 1
+
+
+def test_get_task_status_raises_after_retry_limit(mocker: MockerFixture) -> None:
+    mocker.patch.object(settings, "REQUEST_STATUS_FAILURE_COUNTER_LIMIT", 2)
+    robot = StubRobot()
+    poll = mocker.patch.object(
+        robot,
+        "task_status",
+        side_effect=RobotCommunicationException("offline"),
+    )
+
+    with pytest.raises(RobotTaskStatusException) as exc_info:
+        asyncio.run(get_task_status(robot, "task-1"))
+
+    assert exc_info.value.error_description == "offline"
+    assert poll.call_count == 2

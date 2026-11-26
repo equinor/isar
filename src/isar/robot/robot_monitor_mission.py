@@ -41,46 +41,49 @@ def should_upload_inspections(task: TASKS) -> bool:
     return task.status == TaskStatus.Successful and isinstance(task, InspectionTask)
 
 
-async def get_task_status(
-    robot: RobotInterface,
-    task_id: str,
-) -> TaskStatus:
-    task_status: TaskStatus = TaskStatus.NotStarted
-    failed_task_error: ErrorMessage | None = None
-    request_status_failure_counter: int = 0
+async def _fetch_status[T](
+    fetch_call: Callable[[], T],
+    error_cls: type[RobotTaskStatusException | RobotMissionStatusException],
+    fallback_error_description: str,
+) -> T:
+    last_error: ErrorMessage | None = None
 
-    while (
-        request_status_failure_counter < settings.REQUEST_STATUS_FAILURE_COUNTER_LIMIT
-    ):
-        if request_status_failure_counter > 0:
+    for attempt in range(settings.REQUEST_STATUS_FAILURE_COUNTER_LIMIT):
+        if attempt > 0:
             await asyncio.sleep(settings.REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY)
 
         try:
-            task_status = robot.task_status(task_id)
-            request_status_failure_counter = 0
+            return fetch_call()
         except (
             RobotCommunicationTimeoutException,
             RobotCommunicationException,
         ) as e:
-            request_status_failure_counter += 1
-            failed_task_error = ErrorMessage(
+            last_error = ErrorMessage(
                 error_reason=e.error_reason,
                 error_description=e.error_description,
             )
-            continue
-
         except RobotException as e:
-            failed_task_error = ErrorMessage(
+            last_error = ErrorMessage(
                 error_reason=e.error_reason,
                 error_description=e.error_description,
             )
             break
 
-        return task_status
+    raise error_cls(
+        error_description=(
+            last_error.error_description if last_error else fallback_error_description
+        )
+    )
 
-    assert failed_task_error is not None
-    raise RobotTaskStatusException(
-        error_description=failed_task_error.error_description
+
+async def get_task_status(
+    robot: RobotInterface,
+    task_id: str,
+) -> TaskStatus:
+    return await _fetch_status(
+        fetch_call=lambda: robot.task_status(task_id),
+        error_cls=RobotTaskStatusException,
+        fallback_error_description="Task status request failed",
     )
 
 
@@ -88,45 +91,10 @@ async def get_mission_status(
     robot: RobotInterface,
     mission_id: str,
 ) -> MissionStatus:
-    mission_status: MissionStatus = MissionStatus.NotStarted
-    failed_mission_error: ErrorMessage | None = None
-    request_status_failure_counter: int = 0
-
-    while (
-        request_status_failure_counter < settings.REQUEST_STATUS_FAILURE_COUNTER_LIMIT
-    ):
-        if request_status_failure_counter > 0:
-            await asyncio.sleep(settings.REQUEST_STATUS_COMMUNICATION_RECONNECT_DELAY)
-
-        try:
-            mission_status = robot.mission_status(mission_id)
-            request_status_failure_counter = 0
-        except (
-            RobotCommunicationTimeoutException,
-            RobotCommunicationException,
-        ) as e:
-            request_status_failure_counter += 1
-            failed_mission_error = ErrorMessage(
-                error_reason=e.error_reason,
-                error_description=e.error_description,
-            )
-            continue
-
-        except RobotException as e:
-            failed_mission_error = ErrorMessage(
-                error_reason=e.error_reason,
-                error_description=e.error_description,
-            )
-            break
-
-        return mission_status
-
-    raise RobotMissionStatusException(
-        error_description=(
-            failed_mission_error.error_description
-            if failed_mission_error
-            else "Mission status thread cancelled"
-        )
+    return await _fetch_status(
+        fetch_call=lambda: robot.mission_status(mission_id),
+        error_cls=RobotMissionStatusException,
+        fallback_error_description="Mission status thread cancelled",
     )
 
 
