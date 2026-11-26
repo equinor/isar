@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from collections.abc import Callable, Iterator
-from typing import NamedTuple
+from typing import NamedTuple, TypeGuard
 
 from isar.config.settings import settings
 from isar.models.mqtt_queue import MQTTQueue
@@ -18,23 +18,29 @@ from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from robot_interface.models.mission.task import TASKS, InspectionTask
 from robot_interface.robot_interface import RobotInterface
 
+ACTIVE_MISSION_STATUSES = frozenset(
+    {
+        MissionStatus.NotStarted,
+        MissionStatus.InProgress,
+        MissionStatus.Paused,
+    }
+)
+FAILED_MISSION_STATUSES = frozenset(
+    {
+        MissionStatus.Failed,
+        MissionStatus.Cancelled,
+    }
+)
+FINISHED_TASK_STATUSES = frozenset(
+    {
+        TaskStatus.Successful,
+        TaskStatus.Cancelled,
+        TaskStatus.Failed,
+    }
+)
 
-def get_next_task(task_iterator: Iterator[TASKS]) -> TASKS | None:
-    try:
-        return next(task_iterator)
-    except StopIteration:
-        return None
 
-
-def is_finished(task_status: TaskStatus) -> bool:
-    return (
-        task_status == TaskStatus.Successful
-        or task_status == TaskStatus.Cancelled
-        or task_status == TaskStatus.Failed
-    )
-
-
-def should_upload_inspections(task: TASKS) -> bool:
+def should_upload_inspections(task: TASKS) -> TypeGuard[InspectionTask]:
     if settings.UPLOAD_INSPECTIONS_ASYNC:
         return False
 
@@ -103,9 +109,8 @@ async def get_and_report_task_status(
     robot: RobotInterface,
     mission_id: str,
     mqtt_queue: MQTTQueue,
-) -> TaskStatus:
+) -> TaskStatus | None:
     logger = logging.getLogger("robot")
-    new_task_status: TaskStatus | None = None
     try:
         new_task_status = await get_task_status(robot, current_task.id)
 
@@ -160,10 +165,10 @@ async def _advance_task(
     if task_status is None:
         # Currently we only stop mission monitoring after failing to get mission status
         return None
-    if is_finished(task_status):
+    if task_status in FINISHED_TASK_STATUSES:
         if should_upload_inspections(current_task):
-            request_inspection_upload(current_task)  # type: ignore
-        return get_next_task(task_iterator)
+            request_inspection_upload(current_task)
+        return next(task_iterator, None)
     return current_task
 
 
@@ -184,25 +189,17 @@ async def _monitor_mission(
     error_message: ErrorMessage | None = None
 
     task_iterator: Iterator[TASKS] = iter(tasks or ())
-    current_task: TASKS | None = get_next_task(task_iterator)
+    current_task: TASKS | None = next(task_iterator, None)
     if current_task is not None:
         current_task.status = TaskStatus.NotStarted
 
     mission_status: MissionStatus = MissionStatus.InProgress
     try:
-        while mission_status in [
-            MissionStatus.NotStarted,
-            MissionStatus.InProgress,
-            MissionStatus.Paused,
-        ]:
+        while mission_status in ACTIVE_MISSION_STATUSES:
             mission_status, error_message = await _poll_mission_status(
                 robot, mission_id
             )
-            if mission_status not in [
-                MissionStatus.NotStarted,
-                MissionStatus.InProgress,
-                MissionStatus.Paused,
-            ]:
+            if mission_status not in ACTIVE_MISSION_STATUSES:
                 break
 
             if (
@@ -237,7 +234,7 @@ async def _monitor_mission(
                 )
                 if current_task is not None:
                     await asyncio.sleep(settings.FSM_SLEEP_TIME)
-        elif mission_status in [MissionStatus.Failed, MissionStatus.Cancelled]:
+        elif mission_status in FAILED_MISSION_STATUSES:
             if current_task is not None and mqtt_queue is not None:
                 current_task.status = (
                     TaskStatus.Cancelled
