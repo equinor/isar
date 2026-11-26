@@ -5,6 +5,7 @@ from threading import Thread
 from robot_interface.mission_recording import MissionRecorder
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.polygon import Polygon
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig
@@ -331,6 +332,33 @@ class RobotInterface(metaclass=ABCMeta):
             Catches other RobotExceptions that may have occurred while retrieving the
             robot battery level. The fetching of robot battery level will
             be attempted again until success
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def update_exclusion_polygons(self, polygons: list[Polygon]) -> None:
+        """
+        Method which updates the exclusion polygons on the robot.
+
+        Parameters
+        ----------
+        polygons : list[Polygon]
+            List of polygons to be set as exclusion zones on the robot.
+
+        Raises
+        -------
+        RobotCommunicationException
+            Raised if the robot package is unable to communicate with the robot API.
+            The update of exclusion polygons will be attempted again until success
+        RobotAPIException
+            Raised if the robot package is able to communicate with the API but an error
+            occurred while interpreting the response. The update of exclusion polygons
+            will be attempted again until success
+        RobotException
+            Catches other RobotExceptions that may have occurred while updating the
+            exclusion polygons. The update of exclusion polygons will be attempted again
+            until success
 
         """
         raise NotImplementedError

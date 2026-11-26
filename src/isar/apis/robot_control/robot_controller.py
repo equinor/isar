@@ -6,6 +6,8 @@ from opentelemetry import trace
 from isar.apis.models.models import RobotInfoResponse
 from isar.config.settings import robot_settings, settings
 from isar.services.utilities.robot_utilities import RobotUtilities
+from isar.services.utilities.scheduling_utilities import SchedulingUtilities
+from robot_interface.models.mission.polygon import Polygon
 from robot_interface.models.robots.media import MediaConfig
 
 tracer = trace.get_tracer(__name__)
@@ -15,8 +17,10 @@ class RobotController:
     def __init__(
         self,
         robot_utilities: RobotUtilities,
+        scheduling_utilities: SchedulingUtilities,
     ):
         self.robot_utilities: RobotUtilities = robot_utilities
+        self.scheduling_utilities: SchedulingUtilities = scheduling_utilities
         self.logger = logging.getLogger("api")
 
     @tracer.start_as_current_span("generate_media_config")
@@ -39,3 +43,7 @@ class RobotController:
             robot_map_name=settings.DEFAULT_MAP,
             plant_short_name=settings.PLANT_SHORT_NAME,
         )
+
+    @tracer.start_as_current_span("update_exclusion_polygons")
+    def update_exclusion_polygons(self, polygons: list[Polygon]) -> None:
+        self.scheduling_utilities.update_exclusion_polygons(polygons)

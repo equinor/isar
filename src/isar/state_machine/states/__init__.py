@@ -22,6 +22,7 @@ from isar.state_machine.states import (
     resuming_return_home,
     return_home_paused,
     returning_home,
+    robot_update,
     stopping,
     stopping_due_to_maintenance,
     stopping_go_to_lockdown,
@@ -62,4 +63,5 @@ STATE_MODULES: tuple[ModuleType, ...] = (
     stopping_paused_return_home,
     stopping_return_home,
     unknown_status,
+    robot_update,
 )

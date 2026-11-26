@@ -17,6 +17,7 @@ from isar.models.events import (
 )
 from isar.state_machine.state_machine import StateMachine
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.polygon import Polygon
 
 T1 = TypeVar("T1")
 T2 = TypeVar("T2")
@@ -372,6 +373,23 @@ class SchedulingUtilities:
         except EventTimeoutError:
             error_message = (
                 "Cannot release robot from maintenance as it is not in maintenance"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+
+    def update_exclusion_polygons(self, polygons: list[Polygon]) -> None:
+        try:
+            self._send_command(polygons, self.api_events.update_exclusion_polygons)
+            self.logger.info("OK - Exclusion polygons updated")
+        except EventConflictError:
+            error_message = (
+                "Previous update exclusion polygons request is still being processed"
+            )
+            self.logger.warning(error_message)
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)
+        except EventTimeoutError:
+            error_message = (
+                "Cannot update exclusion polygons as the robot is not in a valid state"
             )
             self.logger.warning(error_message)
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=error_message)

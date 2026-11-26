@@ -342,6 +342,26 @@ class API:
 
         return router
 
+    def _create_config_router(self) -> APIRouter:
+        router: APIRouter = APIRouter(tags=["Config"])
+
+        authentication_dependency: Any = Security(self.authenticator.get_scheme())
+
+        router.add_api_route(
+            path="/config/update-exclusion-polygons",
+            endpoint=self.robot_controller.update_exclusion_polygons,
+            methods=["POST"],
+            dependencies=[authentication_dependency],
+            summary="Updates the exclusion polygons in the robot config",
+            responses={
+                HTTPStatus.OK.value: {
+                    "description": "Exclusion polygons were successfully updated",
+                },
+            },
+        )
+
+        return router
+
     def _log_startup_message(self) -> None:
         address_format = "%s://%s:%d/docs"
         message = f"Uvicorn running on {address_format} (Press CTRL+C to quit)"

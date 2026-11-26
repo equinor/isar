@@ -5,11 +5,14 @@ import isar.state_machine.states.monitor as Monitor
 import isar.state_machine.states.offline as Offline
 import isar.state_machine.states.recharging as Recharging
 import isar.state_machine.states.returning_home as ReturningHome
+import isar.state_machine.states.robot_update as RobotUpdate
 import isar.state_machine.states.unknown_status as UnknownStatus
+from isar.models.events import EmptyMessage
 from isar.state_machine.output_events import OutputEvent
 from isar.state_machine.state import (
     Branch,
     EventHandler,
+    HandlerEffect,
     StateDef,
     TransitionDef,
     TransitionEffect,
@@ -70,6 +73,23 @@ state: StateDef[None] = StateDef(
         EventHandler(
             event=lambda e: e.api_requests.set_maintenance_mode.request,
             branches=(Branch(Maintenance.transition_and_respond_to_api),),
+        ),
+        EventHandler(
+            event=lambda e: e.api_requests.update_exclusion_polygons.request,
+            branches=(
+                Branch(
+                    RobotUpdate.transition_and_update_exclusion_polygons,
+                    forward_event,
+                    side_effects=(
+                        HandlerEffect(
+                            OutputEvent.api_response(
+                                lambda a: a.update_exclusion_polygons
+                            ),
+                            lambda _, __: EmptyMessage(),
+                        ),
+                    ),
+                ),
+            ),
         ),
     ),
 )

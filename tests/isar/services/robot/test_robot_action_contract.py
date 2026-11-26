@@ -13,6 +13,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
     RobotNoMissionRunningException,
 )
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.polygon import Polygon
 from robot_interface.models.mission.status import MissionStatus, TaskStatus
 from tests.test_mocks.robot_interface import StubRobot
 
@@ -32,6 +33,7 @@ class MockRobotInterface(StubRobot):
         self.task_status_behavior: Callable[[str], TaskStatus] = (
             lambda _: TaskStatus.Successful
         )
+        self.update_exclusion_polygons_behavior: Callable[[Any], None] = lambda _: None
 
     def initiate_mission(self, mission: Mission) -> None:
         self.initiate_mission_behavior(mission)
@@ -53,6 +55,9 @@ class MockRobotInterface(StubRobot):
 
     def task_status(self, task_id: str) -> TaskStatus:
         return self.task_status_behavior(task_id)
+
+    def update_exclusion_polygons(self, polygons: list[Polygon]) -> None:
+        return self.update_exclusion_polygons_behavior(polygons)
 
 
 async def _wait_for_response(
@@ -196,6 +201,17 @@ ACTION_OUTCOMES: list[tuple[str, str, str, Callable[[MockRobotInterface], None]]
             _raise(RobotActionException("stop failed")),
         ),
     ),
+    (
+        "update_exclusion_polygons",
+        "robot_exception",
+        "failure",
+        lambda r: setattr(
+            r,
+            "update_exclusion_polygons_behavior",
+            _raise(RobotActionException("update exclusion polygons failed")),
+        ),
+    ),
+    ("update_exclusion_polygons", "success", "success", lambda _: None),
 ]
 
 
@@ -215,7 +231,11 @@ ALL_CASES = [
     (precondition, action_name, outcome_name, expected_channel, configure_robot)
     for precondition in ("idle", "monitoring_mission", "monitoring_return_home")
     for action_name, outcome_name, expected_channel, configure_robot in ACTION_OUTCOMES
-    if (precondition == "idle" or action_name not in ("execute_mission", "return_home"))
+    if (
+        precondition == "idle"
+        or action_name
+        not in ("execute_mission", "return_home", "update_exclusion_polygons")
+    )
     and (precondition != "idle" or action_name != "stop_mission")
 ]
 

@@ -16,6 +16,7 @@ from robot_interface.models.exceptions.event_exceptions import (
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage
 from robot_interface.models.inspection.inspection import Inspection
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.polygon import Polygon
 from robot_interface.models.mission.status import RobotStatus
 from robot_interface.models.mission.task import InspectionTask
 
@@ -157,6 +158,9 @@ class APIRequests:
         self.release_from_maintenance_mode: APIEvent[EmptyMessage, EmptyMessage] = (
             APIEvent("release_from_maintenance_mode")
         )
+        self.update_exclusion_polygons: APIEvent[list[Polygon], EmptyMessage] = (
+            APIEvent("update_exclusion_polygons")
+        )
 
 
 class RobotActionEvent[T1, T2, T3]:
@@ -202,6 +206,9 @@ class RobotActionRequests:
         self.resume_mission: RobotActionEvent[
             EmptyMessage, EmptyMessage, EmptyMessage
         ] = RobotActionEvent("resume_mission")
+        self.update_exclusion_polygons: RobotActionEvent[
+            list[Polygon], EmptyMessage, EmptyMessage
+        ] = RobotActionEvent("update_exclusion_polygons")
 
 
 class RobotAsyncEvents:

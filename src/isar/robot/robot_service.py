@@ -26,10 +26,12 @@ from isar.robot.robot_return_home import robot_return_home
 from isar.robot.robot_start_mission import robot_start_mission
 from isar.robot.robot_status import RobotStatusThread
 from isar.robot.robot_stop_mission import robot_stop_mission
+from isar.robot.robot_update_exclusion_polygons import robot_update_exclusion_polygons
 from isar.storage.recording_publisher import BlobRecordingPublisher
 from robot_interface.mission_recording import MissionRecorder
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.polygon import Polygon
 from robot_interface.models.mission.status import MissionStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.robot_interface import RobotInterface
@@ -203,6 +205,21 @@ class RobotService:
         else:
             self.action_requests.resume_mission.trigger_success_response(EmptyMessage())
 
+    def _update_exclusion_polygons(self, polygons: list[Polygon]) -> None:
+        error_message: ErrorMessage | None = robot_update_exclusion_polygons(
+            self.signal_exit, self.robot, self.logger, polygons
+        )
+
+        if error_message:
+            self.logger.warning(f"Failed to update exclusion polygons. {error_message}")
+            self.action_requests.update_exclusion_polygons.trigger_failure_response(
+                EmptyMessage()
+            )
+        else:
+            self.action_requests.update_exclusion_polygons.trigger_success_response(
+                EmptyMessage()
+            )
+
     async def _monitor_return_home_handler(self, mission_id: str) -> None:
         error_message: ErrorMessage | None = None
         try:
@@ -318,6 +335,12 @@ class RobotService:
 
             if self.action_requests.resume_mission.request.consume_event():
                 self._resume_mission_handler()
+
+            update_exclusion_polygons_request = (
+                self.action_requests.update_exclusion_polygons.request.consume_event()
+            )
+            if update_exclusion_polygons_request:
+                self._update_exclusion_polygons(update_exclusion_polygons_request)
 
             if self.action_requests.stop_mission.request.consume_event():
                 assert (
