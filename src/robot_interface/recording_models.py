@@ -2,6 +2,7 @@
 
 from typing import Literal
 
+from alitra import Pose
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
@@ -25,6 +26,57 @@ class RecordingGap(RecordingModel):
     reason: str
 
 
+class RecordingPosition(RecordingModel):
+    x: float
+    y: float
+    z: float
+
+
+class RecordingOrientation(RecordingModel):
+    x: float
+    y: float
+    z: float
+    w: float
+
+
+class RecordingPose(RecordingModel):
+    position: RecordingPosition
+    orientation: RecordingOrientation
+    frame: str = "asset"
+
+    @classmethod
+    def from_alitra(cls, pose: Pose) -> RecordingPose:
+        return cls(
+            position=RecordingPosition(
+                x=float(pose.position.x),
+                y=float(pose.position.y),
+                z=float(pose.position.z),
+            ),
+            orientation=RecordingOrientation(
+                x=float(pose.orientation.x),
+                y=float(pose.orientation.y),
+                z=float(pose.orientation.z),
+                w=float(pose.orientation.w),
+            ),
+            frame=pose.frame.name,
+        )
+
+
+class PoseSample(RecordingModel):
+    received_at: str
+    pose: RecordingPose
+    source_timestamp: str | None = None
+    map_name: str | None = None
+    confidence: float | None = None
+
+
+class SegmentTiming(RecordingModel):
+    segment_index: int
+    video_start_seconds: float
+    duration_seconds: float
+    capture_start_at: str | None = None
+
+
 class CameraRecording(RecordingModel):
     camera_id: str
     key: str
@@ -32,6 +84,7 @@ class CameraRecording(RecordingModel):
     artifact_reference: str | None = None
     # Older durable catalogs contain the published blob name directly.
     blob_name: str | None = None
+    segment_timings: list[SegmentTiming] | None = None
     error: str | None = None
 
 
@@ -41,6 +94,7 @@ class RecordingSession[Camera: CameraRecording](RecordingModel):
     cameras: dict[str, Camera]
     mission_name: str | None = None
     gaps: list[RecordingGap] = Field(default_factory=list)
+    pose_samples: list[PoseSample] | None = None
     isar_id: str | None = None
     started_at: str | None = None
     ended_at: str | None = None

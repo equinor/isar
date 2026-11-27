@@ -14,7 +14,13 @@ from isar.storage.recording_publisher import BlobRecordingPublisher
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
 from robot_interface.models.mission.task import TakeImage
-from robot_interface.recording_models import CameraRecording, RecordingSession
+from robot_interface.recording_models import (
+    CameraRecording,
+    PoseSample,
+    RecordingPose,
+    RecordingSession,
+    SegmentTiming,
+)
 from robot_interface.recording_publisher import RecordingArtifact
 from tests.test_mocks.inspection import stub_pose
 
@@ -313,3 +319,52 @@ def test_manifest_publication_preserves_driver_state(
     asyncio.run(publisher.publish_session(recording_session))
 
     assert recording_session.model_dump() == original
+
+
+def test_manifest_serializes_pose_samples_and_segment_timings(
+    publisher: BlobRecordingPublisher, recording_session: RecordingSession[DriverCamera]
+) -> None:
+    recording_session.pose_samples = [
+        PoseSample(
+            received_at="2026-11-27T10:00:03+00:00",
+            source_timestamp="2026-11-27T10:00:02+00:00",
+            pose=RecordingPose.from_alitra(stub_pose()),
+            map_name="test_map",
+            confidence=0.85,
+        )
+    ]
+    recording_session.cameras["front"].segment_timings = [
+        SegmentTiming(
+            segment_index=1,
+            video_start_seconds=0.0,
+            duration_seconds=12.5,
+            capture_start_at="2026-11-27T10:00:01+00:00",
+        )
+    ]
+
+    asyncio.run(publisher.publish_session(recording_session))
+
+    container: Any = publisher._container
+    _, content = container.upload_blob.call_args.args
+    published = json.loads(content)
+    assert published["poseSamples"] == [
+        {
+            "receivedAt": "2026-11-27T10:00:03+00:00",
+            "sourceTimestamp": "2026-11-27T10:00:02+00:00",
+            "pose": {
+                "position": {"x": 0.0, "y": 0.0, "z": 0.0},
+                "orientation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0},
+                "frame": "asset",
+            },
+            "mapName": "test_map",
+            "confidence": 0.85,
+        }
+    ]
+    assert published["cameras"]["front"]["segmentTimings"] == [
+        {
+            "segmentIndex": 1,
+            "videoStartSeconds": 0.0,
+            "durationSeconds": 12.5,
+            "captureStartAt": "2026-11-27T10:00:01+00:00",
+        }
+    ]
