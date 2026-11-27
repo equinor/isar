@@ -1,131 +1,108 @@
-flowchart TD
-    StoppingPausedReturnHome["StoppingPausedReturnHome"]
-    StoppingDueToMaintenance["StoppingDueToMaintenance"]
-    GoingToRecharging["GoingToRecharging"]
-    ResumingReturnHome["ResumingReturnHome"]
-    Recharging["Recharging"]
-    Monitor["Monitor"]
-    Home["Home"]
-    ReturningHome["ReturningHome"]
-    Maintenance["Maintenance"]
-    StoppingGoToRecharge["StoppingGoToRecharge"]
-    StoppingPausedMission["StoppingPausedMission"]
-    Offline["Offline"]
-    StoppingGoToLockdown["StoppingGoToLockdown"]
-    RechargingWithMission["RechargingWithMission"]
-    AwaitNextMission["AwaitNextMission"]
-    Stopping["Stopping"]
-    GoingToLockdown["GoingToLockdown"]
-    GoingToLockdownWithMission["GoingToLockdownWithMission"]
-    Paused["Paused"]
-    PausingReturnHome["PausingReturnHome"]
-    InterventionNeeded["InterventionNeeded"]
-    StoppingReturnHome["StoppingReturnHome"]
-    StoppingUnknownMission["StoppingUnknownMission"]
-    LockdownWithMission["LockdownWithMission"]
-    ReturnHomePaused["ReturnHomePaused"]
-    UnknownStatus["UnknownStatus"]
-    GoingToRechargingWithMission["GoingToRechargingWithMission"]
-    Resuming["Resuming"]
-    Pausing["Pausing"]
-    Lockdown["Lockdown"]
-    StoppingPausedReturnHome --> InterventionNeeded
-    StoppingPausedReturnHome --> Monitor
-    StoppingDueToMaintenance --> InterventionNeeded
-    StoppingDueToMaintenance --> Maintenance
-    GoingToRecharging --> GoingToLockdown
-    GoingToRecharging --> InterventionNeeded
-    GoingToRecharging --> Recharging
-    ResumingReturnHome --> ReturnHomePaused
-    ResumingReturnHome --> ReturningHome
-    Recharging --> Home
-    Recharging --> Lockdown
-    Recharging --> Maintenance
-    Recharging --> Offline
-    Monitor --> AwaitNextMission
-    Monitor --> Pausing
-    Monitor --> Stopping
-    Monitor --> StoppingDueToMaintenance
-    Monitor --> StoppingGoToLockdown
-    Monitor --> StoppingGoToRecharge
-    Home --> AwaitNextMission
-    Home --> Lockdown
-    Home --> Maintenance
-    Home --> Monitor
-    Home --> Offline
-    Home --> Recharging
-    Home --> ReturningHome
-    Home --> StoppingUnknownMission
-    Home --> UnknownStatus
-    ReturningHome --> GoingToLockdown
-    ReturningHome --> GoingToRecharging
-    ReturningHome --> Home
-    ReturningHome --> InterventionNeeded
-    ReturningHome --> PausingReturnHome
-    ReturningHome --> StoppingDueToMaintenance
-    ReturningHome --> StoppingReturnHome
-    Maintenance --> UnknownStatus
-    StoppingGoToRecharge --> GoingToRecharging
-    StoppingGoToRecharge --> GoingToRechargingWithMission
-    StoppingGoToRecharge --> InterventionNeeded
-    StoppingPausedMission --> AwaitNextMission
-    StoppingPausedMission --> Paused
-    Offline --> Home
-    Offline --> InterventionNeeded
-    Offline --> Maintenance
-    Offline --> UnknownStatus
-    StoppingGoToLockdown --> GoingToLockdown
-    StoppingGoToLockdown --> GoingToLockdownWithMission
-    StoppingGoToLockdown --> Monitor
-    RechargingWithMission --> Lockdown
-    RechargingWithMission --> Maintenance
-    RechargingWithMission --> Monitor
-    RechargingWithMission --> Offline
-    RechargingWithMission --> Recharging
-    AwaitNextMission --> GoingToLockdown
-    AwaitNextMission --> GoingToRecharging
-    AwaitNextMission --> Maintenance
-    AwaitNextMission --> Monitor
-    AwaitNextMission --> ReturningHome
-    AwaitNextMission --> StoppingUnknownMission
-    Stopping --> AwaitNextMission
-    Stopping --> Monitor
-    GoingToLockdown --> InterventionNeeded
-    GoingToLockdown --> Lockdown
-    GoingToLockdownWithMission --> InterventionNeeded
-    GoingToLockdownWithMission --> LockdownWithMission
-    Paused --> Resuming
-    Paused --> StoppingDueToMaintenance
-    Paused --> StoppingGoToLockdown
-    Paused --> StoppingGoToRecharge
-    Paused --> StoppingPausedMission
-    PausingReturnHome --> ReturnHomePaused
-    PausingReturnHome --> ReturningHome
-    InterventionNeeded --> Home
-    InterventionNeeded --> Maintenance
-    InterventionNeeded --> ReturningHome
-    InterventionNeeded --> UnknownStatus
-    StoppingReturnHome --> Monitor
-    StoppingReturnHome --> ReturningHome
-    StoppingUnknownMission --> AwaitNextMission
-    StoppingUnknownMission --> InterventionNeeded
-    LockdownWithMission --> Monitor
-    ReturnHomePaused --> GoingToLockdown
-    ReturnHomePaused --> ResumingReturnHome
-    ReturnHomePaused --> ReturningHome
-    ReturnHomePaused --> StoppingDueToMaintenance
-    ReturnHomePaused --> StoppingPausedReturnHome
-    UnknownStatus --> AwaitNextMission
-    UnknownStatus --> Home
-    UnknownStatus --> Maintenance
-    UnknownStatus --> Offline
-    UnknownStatus --> StoppingUnknownMission
-    GoingToRechargingWithMission --> GoingToLockdownWithMission
-    GoingToRechargingWithMission --> GoingToRecharging
-    GoingToRechargingWithMission --> InterventionNeeded
-    GoingToRechargingWithMission --> RechargingWithMission
-    Resuming --> Monitor
-    Resuming --> Paused
-    Pausing --> Monitor
-    Pausing --> Paused
-    Lockdown --> Home
+stateDiagram
+    [*] --> UnknownStatus
+    AwaitNextMission --> Monitor: api-start_mission-request
+    AwaitNextMission --> ReturningHome: api-return_home-request
+    AwaitNextMission --> GoingToLockdown: api-send_to_lockdown-request
+    AwaitNextMission --> GoingToRecharging: battery_below_mission_threshold
+    AwaitNextMission --> Maintenance: api-set_maintenance_mode-request
+    AwaitNextMission --> ReturningHome: after 10s (should_return_home_timer)
+    GoingToLockdown --> InterventionNeeded: robot-return_home-failure
+    GoingToLockdown --> InterventionNeeded: robot-resume_mission-failure
+    GoingToLockdown --> Lockdown: robot-return_home-success
+    GoingToLockdownWithMission --> InterventionNeeded: robot-return_home-failure
+    GoingToLockdownWithMission --> InterventionNeeded: robot-resume_mission-failure
+    GoingToLockdownWithMission --> LockdownWithMission: robot-return_home-success
+    GoingToRecharging --> InterventionNeeded: robot-return_home-failure
+    GoingToRecharging --> Recharging: robot-return_home-success
+    GoingToRecharging --> GoingToLockdown: api-send_to_lockdown-request
+    GoingToRechargingWithMission --> InterventionNeeded: robot-return_home-failure
+    GoingToRechargingWithMission --> RechargingWithMission: robot-return_home-success
+    GoingToRechargingWithMission --> GoingToLockdownWithMission: api-send_to_lockdown-request
+    GoingToRechargingWithMission --> GoingToRecharging: api-stop_mission-request
+    Home --> Monitor: api-start_mission-request
+    Home --> ReturningHome: api-return_home-request
+    Home --> AwaitNextMission: robot_status_update
+    Home --> Offline: robot_status_update
+    Home --> Maintenance: robot_status_update
+    Home --> UnknownStatus: robot_status_update
+    Home --> Lockdown: api-send_to_lockdown-request
+    Home --> Recharging: battery_below_mission_threshold
+    Home --> Maintenance: api-set_maintenance_mode-request
+    InterventionNeeded --> ReturningHome: api-return_home-request
+    InterventionNeeded --> UnknownStatus: api-release_intervention_needed-request
+    InterventionNeeded --> Maintenance: api-set_maintenance_mode-request
+    InterventionNeeded --> Home: robot_status_update
+    Lockdown --> Home: api-release_from_lockdown-request
+    LockdownWithMission --> Monitor: api-release_from_lockdown-request
+    Maintenance --> UnknownStatus: api-release_from_maintenance_mode-request
+    Monitor --> Stopping: api-stop_mission-request
+    Monitor --> Pausing: api-pause_mission-request
+    Monitor --> AwaitNextMission: robot-execute_mission-failure
+    Monitor --> AwaitNextMission: robot-execute_mission-success
+    Monitor --> StoppingGoToRecharge: battery_below_mission_threshold
+    Monitor --> StoppingGoToLockdown: api-send_to_lockdown-request
+    Monitor --> StoppingDueToMaintenance: api-set_maintenance_mode-request
+    Offline --> Home: robot_status_update
+    Offline --> InterventionNeeded: robot_status_update
+    Offline --> Maintenance: robot_status_update
+    Offline --> UnknownStatus: robot_status_update
+    Offline --> Maintenance: api-set_maintenance_mode-request
+    Paused --> StoppingPausedMission: api-stop_mission-request
+    Paused --> Resuming: api-resume_mission-request
+    Paused --> StoppingGoToRecharge: battery_below_mission_threshold
+    Paused --> StoppingGoToLockdown: api-send_to_lockdown-request
+    Paused --> StoppingDueToMaintenance: api-set_maintenance_mode-request
+    Pausing --> Monitor: robot-pause_mission-failure
+    Pausing --> Paused: robot-pause_mission-success
+    PausingReturnHome --> ReturningHome: robot-pause_mission-failure
+    PausingReturnHome --> ReturnHomePaused: robot-pause_mission-success
+    Recharging --> Home: battery_above_recharge_threshold
+    Recharging --> Offline: robot_status_update
+    Recharging --> Lockdown: api-send_to_lockdown-request
+    Recharging --> Maintenance: api-set_maintenance_mode-request
+    RechargingWithMission --> Monitor: battery_above_recharge_threshold
+    RechargingWithMission --> Offline: robot_status_update
+    RechargingWithMission --> Lockdown: api-send_to_lockdown-request
+    RechargingWithMission --> Maintenance: api-set_maintenance_mode-request
+    RechargingWithMission --> Recharging: api-stop_mission-request
+    Resuming --> Paused: robot-resume_mission-failure
+    Resuming --> Monitor: robot-resume_mission-success
+    ResumingReturnHome --> ReturnHomePaused: robot-resume_mission-failure
+    ResumingReturnHome --> ReturningHome: robot-resume_mission-success
+    ReturnHomePaused --> ResumingReturnHome: api-resume_mission-request
+    ReturnHomePaused --> ReturningHome: battery_below_mission_threshold
+    ReturnHomePaused --> StoppingPausedReturnHome: api-start_mission-request
+    ReturnHomePaused --> GoingToLockdown: api-send_to_lockdown-request
+    ReturnHomePaused --> StoppingDueToMaintenance: api-set_maintenance_mode-request
+    ReturningHome --> PausingReturnHome: api-pause_mission-request
+    ReturningHome --> InterventionNeeded: robot-return_home-failure
+    ReturningHome --> ReturningHome: robot-return_home-failure
+    ReturningHome --> StoppingReturnHome: api-start_mission-request
+    ReturningHome --> Home: robot-return_home-success
+    ReturningHome --> GoingToRecharging: battery_below_mission_threshold
+    ReturningHome --> GoingToLockdown: api-send_to_lockdown-request
+    ReturningHome --> StoppingDueToMaintenance: api-set_maintenance_mode-request
+    Stopping --> Monitor: robot-stop_mission-failure
+    Stopping --> AwaitNextMission: robot-stop_mission-success
+    StoppingDueToMaintenance --> InterventionNeeded: robot-stop_mission-failure
+    StoppingDueToMaintenance --> Maintenance: robot-stop_mission-success
+    StoppingDueToMaintenance --> Maintenance: robot-stop_mission-success
+    StoppingDueToMaintenance --> Maintenance: robot-stop_mission-success
+    StoppingGoToLockdown --> Monitor: robot-stop_mission-failure
+    StoppingGoToLockdown --> GoingToLockdownWithMission: robot-stop_mission-success [_was_aborted]
+    StoppingGoToLockdown --> GoingToLockdown: robot-stop_mission-success
+    StoppingGoToRecharge --> InterventionNeeded: robot-stop_mission-failure
+    StoppingGoToRecharge --> GoingToRechargingWithMission: robot-stop_mission-success [_was_aborted]
+    StoppingGoToRecharge --> GoingToRecharging: robot-stop_mission-success
+    StoppingPausedMission --> Paused: robot-stop_mission-failure
+    StoppingPausedMission --> AwaitNextMission: robot-stop_mission-success
+    StoppingPausedReturnHome --> InterventionNeeded: robot-stop_mission-failure
+    StoppingPausedReturnHome --> Monitor: robot-stop_mission-success
+    StoppingReturnHome --> ReturningHome: robot-stop_mission-failure
+    StoppingReturnHome --> Monitor: robot-stop_mission-success
+    UnknownStatus --> Home: robot_status_update
+    UnknownStatus --> AwaitNextMission: robot_status_update
+    UnknownStatus --> Offline: robot_status_update
+    UnknownStatus --> Maintenance: robot_status_update
+    UnknownStatus --> InterventionNeeded: robot_status_update
+    UnknownStatus --> Maintenance: api-set_maintenance_mode-request
