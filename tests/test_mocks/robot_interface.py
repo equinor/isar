@@ -12,6 +12,7 @@ from robot_interface.models.exceptions.robot_exceptions import (
 )
 from robot_interface.models.inspection.inspection import Image, Inspection
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.polygon import Polygon
 from robot_interface.models.mission.status import MissionStatus, RobotStatus, TaskStatus
 from robot_interface.models.mission.task import InspectionTask
 from robot_interface.models.robots.media import MediaConfig, MediaConnectionType
@@ -99,6 +100,9 @@ class StubRobot(RobotInterface):
 
     def get_battery_level(self) -> float:
         return 80.0
+
+    def update_exclusion_polygons(self, polygons: list[Polygon]) -> None:
+        return
 
 
 class StubRobotInitiateReturnHomeRaisesException(StubRobot):

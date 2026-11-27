@@ -53,7 +53,9 @@ class ApplicationContainer(containers.DeclarativeContainer):
         SchedulingController, scheduling_utilities=scheduling_utilities
     )
     robot_controller = providers.Singleton(
-        RobotController, robot_utilities=robot_utilities
+        RobotController,
+        robot_utilities=robot_utilities,
+        scheduling_utilities=scheduling_utilities,
     )
     api = providers.Singleton(
         API,

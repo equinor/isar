@@ -81,6 +81,9 @@ def test_state_machine_ready_to_receive_mission(
             States.Home,
             States.InterventionNeeded,
         ],
+        api_events.update_exclusion_polygons: [
+            States.Home,
+        ],
     }
 
     for event, valid_states in event_mappings.items():

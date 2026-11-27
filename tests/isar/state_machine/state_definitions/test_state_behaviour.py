@@ -26,6 +26,7 @@ import isar.state_machine.states.resuming as Resuming
 import isar.state_machine.states.resuming_return_home as ResumingReturnHome
 import isar.state_machine.states.return_home_paused as ReturnHomePaused
 import isar.state_machine.states.returning_home as ReturningHome
+import isar.state_machine.states.robot_update as RobotUpdate
 import isar.state_machine.states.stopping as Stopping
 import isar.state_machine.states.stopping_due_to_maintenance as StoppingDueToMaintenance
 import isar.state_machine.states.stopping_go_to_lockdown as StoppingGoToLockdown
@@ -45,6 +46,7 @@ from isar.state_machine.state import StateDef
 from isar.state_machine.states_enum import States
 from robot_interface.models.exceptions.robot_exceptions import ErrorMessage, ErrorReason
 from robot_interface.models.mission.mission import Mission
+from robot_interface.models.mission.polygon import Polygon
 from robot_interface.models.mission.status import MissionStatus, RobotStatus
 from tests.isar.state_machine.state_definitions.state_machine_driver import (
     StateMachineDriver,
@@ -55,10 +57,12 @@ ERROR = ErrorMessage(
     error_reason=ErrorReason.RobotUnknownErrorException, error_description=""
 )
 EMPTY = EmptyMessage()
+POLYGONS: list[Polygon] = []
 LOCKDOWN_STARTED = {"send_to_lockdown": LockdownResponse(lockdown_started=True)}
 MAINTENANCE_STARTED = {
     "set_maintenance_mode": MaintenanceResponse(is_maintenance_mode=True)
 }
+ROBOT_UPDATE_POLYGONS_STARTED = {"update_exclusion_polygons": ANY}
 
 
 def mission_status(status: MissionStatus) -> dict[str, Any]:
@@ -548,6 +552,12 @@ def state_cases(events: Events) -> list[StateCases]:
                 events.api_requests.set_maintenance_mode.request: Expect(
                     EMPTY, States.Maintenance, api=MAINTENANCE_STARTED
                 ),
+                events.api_requests.update_exclusion_polygons.request: Expect(
+                    POLYGONS,
+                    States.RobotUpdate,
+                    api=ROBOT_UPDATE_POLYGONS_STARTED,
+                    robot={"update_exclusion_polygons": POLYGONS},
+                ),
             },
         ),
         StateCases(
@@ -791,6 +801,20 @@ def state_cases(events: Events) -> list[StateCases]:
                 ),
                 events.api_requests.set_maintenance_mode.request: Expect(
                     EMPTY, States.Maintenance, api=MAINTENANCE_STARTED
+                ),
+            },
+        ),
+        StateCases(
+            RobotUpdate.state,
+            None,
+            on={
+                events.action_requests.update_exclusion_polygons.success: Expect(
+                    EMPTY, States.Home
+                ),
+                events.action_requests.update_exclusion_polygons.failure: Expect(
+                    EMPTY,
+                    States.InterventionNeeded,
+                    mqtt=[intervention("Failed to update exclusion polygons")],
                 ),
             },
         ),
